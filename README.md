@@ -44,6 +44,10 @@ docker compose down -v
 4. **Abrir el Command Palette**  
 - Presiona `Ctrl + Shift + P`.
 - Busca y selecciona la opción **"Dev Containers: Reopen in Container"**.
+
+5. **Como correr los servicios**
+- En `finance-api` dale al boton de (run o debug) arriba a la derecha
+- En `finance-web` haz: `sudo npm install` luego `sudo npm run start` ¡OJO! Importante el `sudo` al ejecutar comandos
 - Listo !!!
 
 last modified: 30/03/2026
