@@ -1,18 +1,21 @@
 {
   "name": "finance-web-dev",
   "build": {
+    "context": "../",
     "dockerfile": "Dockerfile"
   },
   "forwardPorts": [4200],
-  "containerEnv": {
-    "PORT": "4200"
-  },
+  "runArgs": [
+    "--network=finance-system_finance-net",
+    "--env-file=../.env.sample"
+  ],
   "customizations": {
     "vscode": {
       "extensions": [
         "angular.ng-template",
         "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode"
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss"
       ]
     }
   },

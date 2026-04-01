@@ -7,25 +7,15 @@
   "forwardPorts": [8080],
 
   "runArgs": [
-    "--network=finance-system_finance-net"
+    "--network=finance-system_finance-net",
+    "--env-file=../.env.sample"
   ],
-
-  "containerEnv": {
-    "BACKEND_PORT": "8080",
-    "DB_HOST": "serv-db",
-    "DB_PORT": "5432",
-    "DB_NAME": "finance_db",
-    "DB_USER": "finance_user",
-    "DB_PASSWORD": "finance_password"
-  },
 
   "customizations": {
     "vscode": {
       "extensions": [
         "vscjava.vscode-java-pack",
-        "vmware.vscode-spring-boot",
-        "ms-azuretools.vscode-docker",
-        "eamodio.gitlens"
+        "vmware.vscode-boot-dev-pack"
       ]
     }
   },
