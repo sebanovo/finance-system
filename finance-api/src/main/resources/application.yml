@@ -1,0 +1,36 @@
+
+server:
+  port: ${BACKEND_PORT:8080} 
+
+spring:
+  application:
+    name: finance-api
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    # Por defecto es true, pero es bueno tenerlo explícito
+    enabled: true
+    # Esto permite que Flyway cree la tabla flyway_schema_history si la DB ya tiene tablas
+    baseline-on-migrate: true
+    # Ubicación de migraciones para el esquema público (se ejecuta al arrancar la app)
+    locations: classpath:db/migration/shared
+
+springdoc:
+  api-docs:
+    # SwaggerUI path
+    path: /swagger-ui
+  swagger-ui:
+    persist-authorization: true
