@@ -11,6 +11,51 @@
   ],
   "customizations": {
     "vscode": {
+      "settings": {
+      "files.eol": "\n",
+      "editor.tabSize": 2,
+      "editor.insertSpaces": true,
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+      "editor.formatOnSave": true,
+      "[markdown]": {
+        "editor.quickSuggestions": {
+          "other": true,
+          "comments": true,
+          "strings": true
+        },
+        "editor.formatOnSave": true
+      },
+      "[json]": {
+        "editor.tabSize": 2,
+        "editor.quickSuggestions": {
+          "strings": true
+        },
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+      },
+      "[css]": {
+        "editor.formatOnSave": true
+      },
+      "[html]": {
+        "editor.formatOnSave": true
+      },
+      "[typescript]": {
+        "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+        "editor.formatOnSave": true
+      },
+      "[typescriptreact]": {
+        "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+        "editor.formatOnSave": true
+      },
+      "[javascript]": {
+        "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+        "editor.formatOnSave": true
+      },
+      "[javascriptreact]": {
+        "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+        "editor.formatOnSave": true
+      }
+    },
       "extensions": [
         "angular.ng-template",
         "dbaeumer.vscode-eslint",
