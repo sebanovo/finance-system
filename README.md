@@ -36,21 +36,28 @@ docker compose down -v
 1. **En VSCode**  
    Abrir `finance-api` o `finance-web`.
 
-3. **En otra ventana Ejecutar la base de datos (solo para finance-api)**  
+2. **En otra ventana Ejecutar la base de datos (solo para finance-api)**  
 
    ```bash
    docker compose up --build serv-db
 
-4. **Abrir el Command Palette**  
+3. **Abrir el Command Palette**  
 - Presiona `Ctrl + Shift + P`.
-- Busca y selecciona la opción **"Dev Containers: Reopen in Container"**.
+- Busca y selecciona la opción `Dev Containers: Reopen in Container.`
 
-5. **Como correr los servicios**
-- En `finance-api` dale al boton de (run o debug) arriba a la derecha
-- En `finance-web` haz: `sudo npm install` luego `sudo npm run start` ¡OJO! Importante el `sudo` al ejecutar comandos
+5. **Ejecutar proyectos**
+- En `finance-api`
+
+   ```bash
+   ./mvnw spring-boot:run
+   ```
+- En `finance-web`
+   ```bash
+   npm start
+   ```
 - Listo !!!
 
-last modified: 30/03/2026
+last modified: 2/04/2026
 
 
 
