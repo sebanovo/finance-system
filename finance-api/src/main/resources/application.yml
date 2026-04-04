@@ -1,36 +1,45 @@
-
 server:
-  port: ${BACKEND_PORT:8080} 
+  # Application port (defaults to 8080 if BACKEND_PORT is not set)
+  port: ${BACKEND_PORT:8080}
 
 spring:
   application:
+    # Application name (useful for logs and service identification)
     name: finance-api
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
+    # PostgreSQL connection using environment variables (Docker-friendly)
+    # Uses service name instead of localhost inside Docker network
+    url: jdbc:postgresql://${POSTGRES_SERV}:${POSTGRES_PORT}/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
+      # Do not auto-create or modify schema (handled by Flyway)
       ddl-auto: none
+    # Enable SQL logging for debugging (disable in production)
     show-sql: true
     properties:
       hibernate:
+        # Explicit PostgreSQL dialect for Hibernate
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   flyway:
-    # Por defecto es true, pero es bueno tenerlo explícito
+    # Enables Flyway database migrations on application startup
     enabled: true
-    # Esto permite que Flyway cree la tabla flyway_schema_history si la DB ya tiene tablas
+    # Allows Flyway to baseline an existing database
     baseline-on-migrate: true
-    # Ubicación de migraciones para el esquema público (se ejecuta al arrancar la app)
+    # Location of migration scripts inside the project
     locations: classpath:db/migration/shared
 
 springdoc:
   api-docs:
-    # SwaggerUI path
-    path: /swagger-ui
+    # OpenAPI JSON endpoint
+    path: /v3/api-docs
   swagger-ui:
+    # Swagger UI endpoint
+    path: /swagger-ui
+    # Keeps authorization tokens between page reloads
     persist-authorization: true

@@ -1,7 +1,8 @@
 FROM mcr.microsoft.com/devcontainers/java:1-21-bookworm
 
+WORKDIR /finance-api
 
-# limpiar repo problemático y agregar cliente postgres
+# Remove conflicting repo if present and install PostgreSQL client
 RUN rm -f /etc/apt/sources.list.d/yarn.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -9,4 +10,5 @@ RUN rm -f /etc/apt/sources.list.d/yarn.list \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+CMD ["sleep", "infinity"]
 

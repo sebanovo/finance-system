@@ -1,68 +1,36 @@
 {
   "name": "finance-web-dev",
   "build": {
-    "context": "../",
     "dockerfile": "Dockerfile"
   },
+  "workspaceFolder": "/finance-web",
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/finance-web,type=bind,consistency=cached"
+  ],
   "forwardPorts": [4200],
   "runArgs": [
     "--network=finance-system_finance-net",
-    "--env-file=../.env.sample"
+    "--env-file=../.env.sample",
+    "--hostname=thunder"
   ],
   "customizations": {
     "vscode": {
-      "settings": {
-      "files.eol": "\n",
-      "editor.tabSize": 2,
-      "editor.insertSpaces": true,
-      "editor.defaultFormatter": "esbenp.prettier-vscode",
-      "editor.formatOnSave": true,
-      "[markdown]": {
-        "editor.quickSuggestions": {
-          "other": true,
-          "comments": true,
-          "strings": true
-        },
-        "editor.formatOnSave": true
-      },
-      "[json]": {
-        "editor.tabSize": 2,
-        "editor.quickSuggestions": {
-          "strings": true
-        },
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.formatOnSave": true
-      },
-      "[css]": {
-        "editor.formatOnSave": true
-      },
-      "[html]": {
-        "editor.formatOnSave": true
-      },
-      "[typescript]": {
-        "editor.defaultFormatter": "dbaeumer.vscode-eslint",
-        "editor.formatOnSave": true
-      },
-      "[typescriptreact]": {
-        "editor.defaultFormatter": "dbaeumer.vscode-eslint",
-        "editor.formatOnSave": true
-      },
-      "[javascript]": {
-        "editor.defaultFormatter": "dbaeumer.vscode-eslint",
-        "editor.formatOnSave": true
-      },
-      "[javascriptreact]": {
-        "editor.defaultFormatter": "dbaeumer.vscode-eslint",
-        "editor.formatOnSave": true
-      }
-    },
       "extensions": [
         "angular.ng-template",
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
-        "bradlc.vscode-tailwindcss"
-      ]
+        "bradlc.vscode-tailwindcss",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit",
+          "source.organizeImports": "explicit"
+        }
+      }
     }
   },
+  "postCreateCommand": "npm install",
   "remoteUser": "root"
 }
