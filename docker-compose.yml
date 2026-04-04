@@ -1,7 +1,7 @@
 services:
   serv-finance-db:
     image: postgres:16
-    container_name: finance-db
+
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -23,7 +23,7 @@ services:
     build:
       context: ./finance-api
       dockerfile: Dockerfile.dev
-    container_name: serv-finance-api
+
     restart: unless-stopped
     env_file:
       - .env
@@ -42,7 +42,7 @@ services:
     build:
       context: ./finance-web
       dockerfile: Dockerfile.dev
-    container_name: finance-web
+
     restart: unless-stopped
     depends_on:
       - serv-finance-api
