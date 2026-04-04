@@ -15,6 +15,8 @@ public class AuthController {
 
     private final LoginTenantUserUseCase loginTenantUserUseCase;
     private final RefreshTenantTokenUseCase refreshTenantTokenUseCase;
+    private final ForgotPasswordUseCase forgotPasswordUseCase;
+    private final ResetPasswordUseCase resetPasswordUseCase;
     private final GetCurrentAuthenticatedTenantUserUseCase getCurrentAuthenticatedTenantUserUseCase;
     private final ChangePasswordUseCase changePasswordUseCase;
     private final LogoutTenantUserUseCase logoutTenantUserUseCase;
@@ -22,12 +24,16 @@ public class AuthController {
     public AuthController(
             LoginTenantUserUseCase loginTenantUserUseCase,
             RefreshTenantTokenUseCase refreshTenantTokenUseCase,
+            ForgotPasswordUseCase forgotPasswordUseCase,
+            ResetPasswordUseCase resetPasswordUseCase,
             GetCurrentAuthenticatedTenantUserUseCase getCurrentAuthenticatedTenantUserUseCase,
             ChangePasswordUseCase changePasswordUseCase,
             LogoutTenantUserUseCase logoutTenantUserUseCase
     ) {
         this.loginTenantUserUseCase = loginTenantUserUseCase;
         this.refreshTenantTokenUseCase = refreshTenantTokenUseCase;
+        this.forgotPasswordUseCase = forgotPasswordUseCase;
+        this.resetPasswordUseCase = resetPasswordUseCase;
         this.getCurrentAuthenticatedTenantUserUseCase = getCurrentAuthenticatedTenantUserUseCase;
         this.changePasswordUseCase = changePasswordUseCase;
         this.logoutTenantUserUseCase = logoutTenantUserUseCase;
@@ -46,6 +52,26 @@ public class AuthController {
         return ApiResponse.success(
                 "Token refreshed successfully",
                 refreshTenantTokenUseCase.execute(request)
+        );
+    }
+
+    @PostMapping("/forgot-password")
+    public ApiResponse<Map<String, String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        forgotPasswordUseCase.execute(request);
+
+        return ApiResponse.success(
+                "If the user exists, a password reset email has been sent",
+                Map.of("status", "ok")
+        );
+    }
+
+    @PostMapping("/reset-password")
+    public ApiResponse<Map<String, String>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        resetPasswordUseCase.execute(request);
+
+        return ApiResponse.success(
+                "Password reset successfully",
+                Map.of("status", "ok")
         );
     }
 

@@ -54,7 +54,9 @@ public class SecurityConfig {
                                 "/actuator/info",
                                 "/api/public/**",
                                 "/api/auth/login",
-                                "/api/auth/refresh"
+                                "/api/auth/refresh",
+                                "/api/auth/forgot-password",
+                                "/api/auth/reset-password"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

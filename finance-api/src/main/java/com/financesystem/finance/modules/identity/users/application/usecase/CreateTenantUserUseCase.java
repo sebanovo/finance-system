@@ -1,5 +1,7 @@
 package com.financesystem.finance.modules.identity.users.application.usecase;
 
+import com.financesystem.finance.modules.governance.audit.application.service.AuditTrailService;
+import com.financesystem.finance.modules.governance.audit.domain.model.AuditEventTypes;
 import com.financesystem.finance.modules.identity.users.application.dto.CreateTenantUserRequest;
 import com.financesystem.finance.modules.identity.users.application.dto.TenantUserResponse;
 import com.financesystem.finance.modules.identity.users.application.mapper.TenantUserMapper;
@@ -11,21 +13,26 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
+
 @Service
 public class CreateTenantUserUseCase {
 
     private final TenantUserRepository tenantUserRepository;
     private final TenantUserMapper tenantUserMapper;
     private final PasswordEncoder passwordEncoder;
+    private final AuditTrailService auditTrailService;
 
     public CreateTenantUserUseCase(
             TenantUserRepository tenantUserRepository,
             TenantUserMapper tenantUserMapper,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            AuditTrailService auditTrailService
     ) {
         this.tenantUserRepository = tenantUserRepository;
         this.tenantUserMapper = tenantUserMapper;
         this.passwordEncoder = passwordEncoder;
+        this.auditTrailService = auditTrailService;
     }
 
     @Transactional
@@ -51,6 +58,14 @@ public class CreateTenantUserUseCase {
         );
 
         TenantUser createdTenantUser = tenantUserRepository.save(tenantUserToCreate);
+
+        auditTrailService.recordTenantEvent(
+                AuditEventTypes.USER_CREATED,
+                "USER",
+                createdTenantUser.id().toString(),
+                Map.of("email", createdTenantUser.email())
+        );
+
         return tenantUserMapper.toResponse(createdTenantUser);
     }
 

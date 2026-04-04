@@ -2,6 +2,7 @@ package com.financesystem.finance.bootstrap.platform;
 
 import com.financesystem.finance.common.response.ApiResponse;
 import com.financesystem.finance.common.security.jwt.JwtTokenService;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +12,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/public/dev-token")
 @Profile("dev")
+@Hidden
 public class DevTokenController {
 
     private final JwtTokenService jwtTokenService;

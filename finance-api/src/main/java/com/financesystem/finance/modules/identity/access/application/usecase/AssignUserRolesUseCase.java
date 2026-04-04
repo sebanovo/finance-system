@@ -1,5 +1,7 @@
 package com.financesystem.finance.modules.identity.access.application.usecase;
 
+import com.financesystem.finance.modules.governance.audit.application.service.AuditTrailService;
+import com.financesystem.finance.modules.governance.audit.domain.model.AuditEventTypes;
 import com.financesystem.finance.modules.identity.access.application.dto.AssignUserRolesRequest;
 import com.financesystem.finance.modules.identity.access.application.dto.TenantRoleResponse;
 import com.financesystem.finance.modules.identity.access.application.dto.UserRolesResponse;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -25,19 +28,22 @@ public class AssignUserRolesUseCase {
     private final TenantRolePermissionRepository tenantRolePermissionRepository;
     private final TenantUserRoleRepository tenantUserRoleRepository;
     private final TenantRoleMapper tenantRoleMapper;
+    private final AuditTrailService auditTrailService;
 
     public AssignUserRolesUseCase(
             TenantUserRepository tenantUserRepository,
             TenantRoleRepository tenantRoleRepository,
             TenantRolePermissionRepository tenantRolePermissionRepository,
             TenantUserRoleRepository tenantUserRoleRepository,
-            TenantRoleMapper tenantRoleMapper
+            TenantRoleMapper tenantRoleMapper,
+            AuditTrailService auditTrailService
     ) {
         this.tenantUserRepository = tenantUserRepository;
         this.tenantRoleRepository = tenantRoleRepository;
         this.tenantRolePermissionRepository = tenantRolePermissionRepository;
         this.tenantUserRoleRepository = tenantUserRoleRepository;
         this.tenantRoleMapper = tenantRoleMapper;
+        this.auditTrailService = auditTrailService;
     }
 
     @Transactional
@@ -60,6 +66,13 @@ public class AssignUserRolesUseCase {
                         tenantRolePermissionRepository.findPermissionCodesByRoleId(role.id()).stream().toList()
                 ))
                 .toList();
+
+        auditTrailService.recordTenantEvent(
+                AuditEventTypes.USER_ROLES_ASSIGNED,
+                "USER",
+                userId.toString(),
+                Map.of("roleIds", roleIds)
+        );
 
         return new UserRolesResponse(userId, roleResponses);
     }

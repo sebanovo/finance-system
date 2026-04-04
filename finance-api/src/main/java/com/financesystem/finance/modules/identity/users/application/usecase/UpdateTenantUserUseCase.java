@@ -1,5 +1,7 @@
 package com.financesystem.finance.modules.identity.users.application.usecase;
 
+import com.financesystem.finance.modules.governance.audit.application.service.AuditTrailService;
+import com.financesystem.finance.modules.governance.audit.domain.model.AuditEventTypes;
 import com.financesystem.finance.modules.identity.users.application.dto.TenantUserResponse;
 import com.financesystem.finance.modules.identity.users.application.dto.UpdateTenantUserRequest;
 import com.financesystem.finance.modules.identity.users.application.mapper.TenantUserMapper;
@@ -10,6 +12,7 @@ import com.financesystem.finance.modules.identity.users.domain.repository.Tenant
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -17,13 +20,16 @@ public class UpdateTenantUserUseCase {
 
     private final TenantUserRepository tenantUserRepository;
     private final TenantUserMapper tenantUserMapper;
+    private final AuditTrailService auditTrailService;
 
     public UpdateTenantUserUseCase(
             TenantUserRepository tenantUserRepository,
-            TenantUserMapper tenantUserMapper
+            TenantUserMapper tenantUserMapper,
+            AuditTrailService auditTrailService
     ) {
         this.tenantUserRepository = tenantUserRepository;
         this.tenantUserMapper = tenantUserMapper;
+        this.auditTrailService = auditTrailService;
     }
 
     @Transactional
@@ -54,6 +60,14 @@ public class UpdateTenantUserUseCase {
         );
 
         TenantUser savedUser = tenantUserRepository.save(updatedUser);
+
+        auditTrailService.recordTenantEvent(
+                AuditEventTypes.USER_UPDATED,
+                "USER",
+                savedUser.id().toString(),
+                Map.of("email", savedUser.email())
+        );
+
         return tenantUserMapper.toResponse(savedUser);
     }
 

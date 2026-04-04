@@ -4,6 +4,8 @@ import com.financesystem.finance.common.security.JwtProperties;
 import com.financesystem.finance.common.security.jwt.JwtTokenService;
 import com.financesystem.finance.common.tenancy.context.TenantContext;
 import com.financesystem.finance.common.tenancy.context.TenantContextHolder;
+import com.financesystem.finance.modules.governance.audit.application.service.AuditTrailService;
+import com.financesystem.finance.modules.governance.audit.domain.model.AuditEventTypes;
 import com.financesystem.finance.modules.identity.access.domain.repository.TenantUserRoleRepository;
 import com.financesystem.finance.modules.identity.auth.application.dto.AuthTokenResponse;
 import com.financesystem.finance.modules.identity.auth.application.dto.LoginRequest;
@@ -14,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class LoginTenantUserUseCase {
@@ -23,19 +26,22 @@ public class LoginTenantUserUseCase {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenService jwtTokenService;
     private final JwtProperties jwtProperties;
+    private final AuditTrailService auditTrailService;
 
     public LoginTenantUserUseCase(
             TenantUserRepository tenantUserRepository,
             TenantUserRoleRepository tenantUserRoleRepository,
             PasswordEncoder passwordEncoder,
             JwtTokenService jwtTokenService,
-            JwtProperties jwtProperties
+            JwtProperties jwtProperties,
+            AuditTrailService auditTrailService
     ) {
         this.tenantUserRepository = tenantUserRepository;
         this.tenantUserRoleRepository = tenantUserRoleRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenService = jwtTokenService;
         this.jwtProperties = jwtProperties;
+        this.auditTrailService = auditTrailService;
     }
 
     public AuthTokenResponse execute(LoginRequest request) {
@@ -64,6 +70,16 @@ public class LoginTenantUserUseCase {
         String refreshToken = jwtTokenService.generateRefreshToken(
                 tenantUser.email(),
                 tenantContext.tenantSlug()
+        );
+
+        auditTrailService.recordTenantEvent(
+                AuditEventTypes.LOGIN,
+                "USER",
+                tenantUser.id().toString(),
+                Map.of(
+                        "email", tenantUser.email(),
+                        "roles", roles
+                )
         );
 
         return new AuthTokenResponse(

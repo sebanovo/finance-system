@@ -4,6 +4,8 @@ import com.financesystem.finance.common.response.ApiErrorResponse;
 import com.financesystem.finance.common.tenancy.exception.TenantResolutionException;
 import com.financesystem.finance.modules.identity.auth.domain.exception.AuthenticationFailedException;
 import jakarta.validation.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -15,6 +17,8 @@ import java.util.List;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleResourceNotFound(ResourceNotFoundException exception) {
@@ -70,7 +74,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleGenericException(Exception exception) {
+        logger.error("Unexpected internal error", exception);
+
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiErrorResponse.of("Unexpected internal error", List.of(exception.getMessage())));
+                .body(ApiErrorResponse.of("Unexpected internal error", List.of()));
     }
 }

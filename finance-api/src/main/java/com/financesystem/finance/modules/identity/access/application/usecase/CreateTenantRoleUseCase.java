@@ -1,5 +1,7 @@
 package com.financesystem.finance.modules.identity.access.application.usecase;
 
+import com.financesystem.finance.modules.governance.audit.application.service.AuditTrailService;
+import com.financesystem.finance.modules.governance.audit.domain.model.AuditEventTypes;
 import com.financesystem.finance.modules.identity.access.application.dto.CreateTenantRoleRequest;
 import com.financesystem.finance.modules.identity.access.application.dto.TenantRoleResponse;
 import com.financesystem.finance.modules.identity.access.application.mapper.TenantRoleMapper;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -22,17 +25,20 @@ public class CreateTenantRoleUseCase {
     private final TenantRolePermissionRepository tenantRolePermissionRepository;
     private final SystemPermissionRepository systemPermissionRepository;
     private final TenantRoleMapper tenantRoleMapper;
+    private final AuditTrailService auditTrailService;
 
     public CreateTenantRoleUseCase(
             TenantRoleRepository tenantRoleRepository,
             TenantRolePermissionRepository tenantRolePermissionRepository,
             SystemPermissionRepository systemPermissionRepository,
-            TenantRoleMapper tenantRoleMapper
+            TenantRoleMapper tenantRoleMapper,
+            AuditTrailService auditTrailService
     ) {
         this.tenantRoleRepository = tenantRoleRepository;
         this.tenantRolePermissionRepository = tenantRolePermissionRepository;
         this.systemPermissionRepository = systemPermissionRepository;
         this.tenantRoleMapper = tenantRoleMapper;
+        this.auditTrailService = auditTrailService;
     }
 
     @Transactional
@@ -58,6 +64,16 @@ public class CreateTenantRoleUseCase {
 
         TenantRole createdRole = tenantRoleRepository.save(roleToCreate);
         tenantRolePermissionRepository.replacePermissions(createdRole.id(), normalizedPermissionCodes);
+
+        auditTrailService.recordTenantEvent(
+                AuditEventTypes.ROLE_CREATED,
+                "ROLE",
+                createdRole.id().toString(),
+                Map.of(
+                        "name", createdRole.name(),
+                        "permissionCodes", normalizedPermissionCodes
+                )
+        );
 
         return tenantRoleMapper.toResponse(createdRole, normalizedPermissionCodes);
     }

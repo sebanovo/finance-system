@@ -1,5 +1,7 @@
 package com.financesystem.finance.modules.identity.access.application.usecase;
 
+import com.financesystem.finance.modules.governance.audit.application.service.AuditTrailService;
+import com.financesystem.finance.modules.governance.audit.domain.model.AuditEventTypes;
 import com.financesystem.finance.modules.identity.access.application.dto.TenantRoleResponse;
 import com.financesystem.finance.modules.identity.access.application.mapper.TenantRoleMapper;
 import com.financesystem.finance.modules.identity.access.domain.exception.TenantRoleNotFoundException;
@@ -9,6 +11,7 @@ import com.financesystem.finance.modules.identity.access.domain.repository.Tenan
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -17,15 +20,18 @@ public class DeactivateTenantRoleUseCase {
     private final TenantRoleRepository tenantRoleRepository;
     private final TenantRolePermissionRepository tenantRolePermissionRepository;
     private final TenantRoleMapper tenantRoleMapper;
+    private final AuditTrailService auditTrailService;
 
     public DeactivateTenantRoleUseCase(
             TenantRoleRepository tenantRoleRepository,
             TenantRolePermissionRepository tenantRolePermissionRepository,
-            TenantRoleMapper tenantRoleMapper
+            TenantRoleMapper tenantRoleMapper,
+            AuditTrailService auditTrailService
     ) {
         this.tenantRoleRepository = tenantRoleRepository;
         this.tenantRolePermissionRepository = tenantRolePermissionRepository;
         this.tenantRoleMapper = tenantRoleMapper;
+        this.auditTrailService = auditTrailService;
     }
 
     @Transactional
@@ -42,6 +48,13 @@ public class DeactivateTenantRoleUseCase {
         );
 
         TenantRole savedRole = tenantRoleRepository.save(updatedRole);
+
+        auditTrailService.recordTenantEvent(
+                AuditEventTypes.ROLE_DEACTIVATED,
+                "ROLE",
+                savedRole.id().toString(),
+                Map.of("name", savedRole.name())
+        );
 
         return tenantRoleMapper.toResponse(
                 savedRole,
