@@ -2,15 +2,30 @@ FROM eclipse-temurin:21-jdk
 
 WORKDIR /app
 
+# Basic tools for development and debugging inside the container.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash \
     curl \
+    git \
     procps \
+    netcat-openbsd \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
+# Copy Maven wrapper and project definition first
+# to leverage Docker layer caching for dependencies.
 COPY .mvn .mvn
 COPY mvnw pom.xml ./
+
 RUN chmod +x mvnw
 
+# Pre-download dependencies (faster startup during development)
+RUN ./mvnw dependency:go-offline
+
+# Copy the rest of the source code
+COPY . .
+
 EXPOSE 8080
+
+# Run Spring Boot in development mode
+CMD ["./mvnw", "spring-boot:run"]
