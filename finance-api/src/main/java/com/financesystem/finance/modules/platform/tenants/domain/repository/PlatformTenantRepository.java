@@ -1,0 +1,20 @@
+package com.financesystem.finance.modules.platform.tenants.domain.repository;
+
+import com.financesystem.finance.modules.platform.tenants.domain.model.PlatformTenant;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+public interface PlatformTenantRepository {
+
+    PlatformTenant save(PlatformTenant tenant);
+
+    Optional<PlatformTenant> findById(UUID id);
+
+    List<PlatformTenant> findAll();
+
+    boolean existsBySlug(String slug);
+
+    boolean existsBySchemaName(String schemaName);
+}
