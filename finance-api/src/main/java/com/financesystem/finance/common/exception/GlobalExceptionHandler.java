@@ -2,6 +2,7 @@ package com.financesystem.finance.common.exception;
 
 import com.financesystem.finance.common.response.ApiErrorResponse;
 import com.financesystem.finance.common.tenancy.exception.TenantResolutionException;
+import com.financesystem.finance.modules.identity.auth.domain.exception.AuthenticationFailedException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiErrorResponse> handleBusinessException(BusinessException exception) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiErrorResponse.of(exception.getMessage(), List.of()));
+    }
+
+    @ExceptionHandler(AuthenticationFailedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAuthenticationFailed(AuthenticationFailedException exception) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiErrorResponse.of(exception.getMessage(), List.of()));
     }
 

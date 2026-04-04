@@ -10,11 +10,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -29,6 +30,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenService jwtTokenService;
     private final TenancyProperties tenancyProperties;
     private final AuthenticationEntryPoint authenticationEntryPoint;
+    private final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
     public JwtAuthenticationFilter(
             JwtTokenService jwtTokenService,
@@ -42,7 +44,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return tenancyProperties.isPublicPath(request.getRequestURI());
+        String requestUri = request.getRequestURI();
+
+        if (tenancyProperties.isPublicPath(requestUri)) {
+            return true;
+        }
+
+        return antPathMatcher.match("/api/auth/login", requestUri)
+                || antPathMatcher.match("/api/auth/refresh", requestUri);
     }
 
     @Override

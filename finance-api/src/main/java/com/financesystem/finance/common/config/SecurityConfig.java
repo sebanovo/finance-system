@@ -52,7 +52,9 @@ public class SecurityConfig {
                                 "/api-docs/**",
                                 "/actuator/health",
                                 "/actuator/info",
-                                "/api/public/**"
+                                "/api/public/**",
+                                "/api/auth/login",
+                                "/api/auth/refresh"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
