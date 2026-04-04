@@ -1,16 +1,16 @@
 services:
-  serv-db:
+  serv-finance-db:
     image: postgres:16
-    container_name: finance_db
+
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "${POSTGRES_HOST_PORT}:5432"
     volumes:
-      - serv_pg_data:/var/lib/postgresql/data
+      - finance_db_data:/var/lib/postgresql/data
     networks:
       - finance-net
     healthcheck:
@@ -29,11 +29,13 @@ services:
     networks:
       - finance-net
 
-  serv-api:
+
+  serv-finance-api:
+
     build:
       context: ./finance-api
       dockerfile: Dockerfile.dev
-    container_name: finance_api
+
     restart: unless-stopped
     depends_on:
       serv-db:
@@ -63,6 +65,7 @@ services:
       PLATFORM_SUPERADMIN_PASSWORD: ${PLATFORM_SUPERADMIN_PASSWORD}
       PLATFORM_SUPERADMIN_FIRST_NAME: ${PLATFORM_SUPERADMIN_FIRST_NAME}
       PLATFORM_SUPERADMIN_LAST_NAME: ${PLATFORM_SUPERADMIN_LAST_NAME}
+
     ports:
       - "${BACKEND_PORT}:8080"
     volumes:
@@ -70,33 +73,42 @@ services:
       - maven_cache:/root/.m2
     working_dir: /app
     command: sh -c "sed -i 's/\r$//' ./mvnw && chmod +x ./mvnw && ./mvnw clean spring-boot:run"
+
+    depends_on:
+      serv-finance-db:
+        condition: service_healthy
+
     networks:
       - finance-net
 
-  serv-web:
+  serv-finance-web:
     build:
       context: ./finance-web
       dockerfile: Dockerfile.dev
-    container_name: finance_web
+
     restart: unless-stopped
     depends_on:
-      - serv-api
+      - serv-finance-api
     environment:
+      # enables file watching via polling (for live reload)
       CHOKIDAR_USEPOLLING: "true"
     ports:
       - "${FRONTEND_PORT}:4200"
     volumes:
       - ./finance-web:/app
-      - web_node_modules:/app/node_modules
+      - node_modules:/app/node_modules
     working_dir: /app
-    command: npm start
     networks:
       - finance-net
 
 volumes:
-  serv_pg_data:
+  finance_db_data:
   maven_cache:
-  web_node_modules:
+  node_modules:
 
 networks:
   finance-net:
+    # custom network name (avoid auto-generated compose name)
+    name: finance-system_finance-net
+    driver: bridge
+

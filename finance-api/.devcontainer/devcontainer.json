@@ -3,22 +3,30 @@
   "build": {
     "dockerfile": "Dockerfile"
   },
-
+  "workspaceFolder": "/finance-api",
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/finance-api,type=bind,consistency=cached",
+    "source=maven-repo,target=/root/.m2/repository,type=volume"
+  ],
   "forwardPorts": [8080],
-
   "runArgs": [
     "--network=finance-system_finance-net",
-    "--env-file=../.env.sample"
+    "--env-file=../.env.sample",
+    "--hostname=thunder"
   ],
-
   "customizations": {
     "vscode": {
       "extensions": [
         "vscjava.vscode-java-pack",
-        "vmware.vscode-boot-dev-pack"
-      ]
+        "vmware.vscode-boot-dev-pack",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "java.configuration.updateBuildConfiguration": "interactive",
+        "editor.formatOnSave": true
+      }
     }
   },
-
+  "postCreateCommand": "chmod +x mvnw && ./mvnw -q -DskipTests dependency:go-offline",
   "remoteUser": "root"
 }
