@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
@@ -15,9 +16,17 @@ public class PlatformBootstrapService {
     private static final Logger logger = LoggerFactory.getLogger(PlatformBootstrapService.class);
 
     private final JdbcTemplate jdbcTemplate;
+    private final PasswordEncoder passwordEncoder;
+    private final SuperadminBootstrapProperties superadminBootstrapProperties;
 
-    public PlatformBootstrapService(@Qualifier("targetDataSource") DataSource targetDataSource) {
+    public PlatformBootstrapService(
+            @Qualifier("targetDataSource") DataSource targetDataSource,
+            PasswordEncoder passwordEncoder,
+            SuperadminBootstrapProperties superadminBootstrapProperties
+    ) {
         this.jdbcTemplate = new JdbcTemplate(targetDataSource);
+        this.passwordEncoder = passwordEncoder;
+        this.superadminBootstrapProperties = superadminBootstrapProperties;
     }
 
     public void seedBasePlans() {
@@ -95,6 +104,34 @@ public class PlatformBootstrapService {
         }
 
         logger.info("Base system permissions seeded successfully.");
+    }
+
+    public void seedInitialPlatformSuperadmin() {
+        logger.info("Seeding initial platform superadmin...");
+
+        String email = superadminBootstrapProperties.getEmail().trim().toLowerCase();
+        String passwordHash = passwordEncoder.encode(superadminBootstrapProperties.getPassword());
+
+        jdbcTemplate.update(
+                """
+                INSERT INTO public.platform_superadmins (
+                    email, password_hash, first_name, last_name, active, created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?, true, NOW(), NOW())
+                ON CONFLICT (email) DO UPDATE SET
+                    password_hash = EXCLUDED.password_hash,
+                    first_name = EXCLUDED.first_name,
+                    last_name = EXCLUDED.last_name,
+                    active = true,
+                    updated_at = NOW()
+                """,
+                email,
+                passwordHash,
+                superadminBootstrapProperties.getFirstName(),
+                superadminBootstrapProperties.getLastName()
+        );
+
+        logger.info("Initial platform superadmin seeded successfully for email '{}'.", email);
     }
 
     private record PlanSeed(

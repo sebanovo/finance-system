@@ -39,3 +39,9 @@ app:
       secret: ${JWT_SECRET}
       access-expiration-ms: ${JWT_ACCESS_EXPIRATION:900000}
       refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION:604800000}
+  bootstrap:
+    superadmin:
+      email: ${PLATFORM_SUPERADMIN_EMAIL:superadmin@finance.local}
+      password: ${PLATFORM_SUPERADMIN_PASSWORD:SuperAdmin123!}
+      first-name: ${PLATFORM_SUPERADMIN_FIRST_NAME:Platform}
+      last-name: ${PLATFORM_SUPERADMIN_LAST_NAME:Admin}

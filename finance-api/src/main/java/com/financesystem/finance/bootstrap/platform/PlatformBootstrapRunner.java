@@ -29,6 +29,7 @@ public class PlatformBootstrapRunner implements ApplicationRunner {
 
         platformBootstrapService.seedBasePlans();
         platformBootstrapService.seedBaseSystemPermissions();
+        platformBootstrapService.seedInitialPlatformSuperadmin();
         tenantSchemaMigrationService.migrateRegisteredTenantSchemas();
 
         logger.info("Platform bootstrap runner completed successfully.");

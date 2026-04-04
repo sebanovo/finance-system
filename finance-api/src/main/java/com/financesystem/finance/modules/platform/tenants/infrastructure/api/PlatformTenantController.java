@@ -38,7 +38,7 @@ public class PlatformTenantController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
     public ApiResponse<PlatformTenantResponse> createTenant(@Valid @RequestBody CreateTenantRequest request) {
         return ApiResponse.success(
                 "Tenant created successfully",
@@ -47,7 +47,7 @@ public class PlatformTenantController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
     public ApiResponse<List<PlatformTenantResponse>> listTenants() {
         return ApiResponse.success(
                 "Tenants retrieved successfully",
@@ -56,7 +56,7 @@ public class PlatformTenantController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
     public ApiResponse<PlatformTenantResponse> getTenantById(@PathVariable UUID id) {
         return ApiResponse.success(
                 "Tenant retrieved successfully",
@@ -65,7 +65,7 @@ public class PlatformTenantController {
     }
 
     @PatchMapping("/{id}/activate")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
     public ApiResponse<PlatformTenantResponse> activateTenant(@PathVariable UUID id) {
         return ApiResponse.success(
                 "Tenant activated successfully",
@@ -74,7 +74,8 @@ public class PlatformTenantController {
     }
 
     @PatchMapping("/{id}/deactivate")
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
     public ApiResponse<PlatformTenantResponse> deactivateTenant(@PathVariable UUID id) {
         return ApiResponse.success(
                 "Tenant deactivated successfully",
