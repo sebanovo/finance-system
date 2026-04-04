@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS public.platform_plans (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code VARCHAR(50) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    description VARCHAR(255),
+    max_users INTEGER NOT NULL DEFAULT 10,
+    max_roles INTEGER NOT NULL DEFAULT 5,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

@@ -19,22 +19,65 @@ services:
       timeout: 5s
       retries: 5
 
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: finance_mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - finance-net
+
+
   serv-finance-api:
+
     build:
       context: ./finance-api
       dockerfile: Dockerfile.dev
 
     restart: unless-stopped
+    depends_on:
+      serv-db:
+        condition: service_healthy
     env_file:
       - .env
+    environment:
+      BACKEND_PORT: ${BACKEND_PORT}
+      DB_HOST: serv-db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION}
+      TENANT_HEADER_NAME: ${TENANT_HEADER_NAME}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      PASSWORD_RESET_EXPIRATION_MINUTES: ${PASSWORD_RESET_EXPIRATION_MINUTES}
+      PASSWORD_RESET_URL_BASE: ${PASSWORD_RESET_URL_BASE}
+      PLATFORM_SUPERADMIN_EMAIL: ${PLATFORM_SUPERADMIN_EMAIL}
+      PLATFORM_SUPERADMIN_PASSWORD: ${PLATFORM_SUPERADMIN_PASSWORD}
+      PLATFORM_SUPERADMIN_FIRST_NAME: ${PLATFORM_SUPERADMIN_FIRST_NAME}
+      PLATFORM_SUPERADMIN_LAST_NAME: ${PLATFORM_SUPERADMIN_LAST_NAME}
+
     ports:
       - "${BACKEND_PORT}:8080"
     volumes:
       - ./finance-api:/app
       - maven_cache:/root/.m2
+    working_dir: /app
+    command: sh -c "sed -i 's/\r$//' ./mvnw && chmod +x ./mvnw && ./mvnw clean spring-boot:run"
+
     depends_on:
       serv-finance-db:
         condition: service_healthy
+
     networks:
       - finance-net
 
@@ -68,3 +111,4 @@ networks:
     # custom network name (avoid auto-generated compose name)
     name: finance-system_finance-net
     driver: bridge
+
