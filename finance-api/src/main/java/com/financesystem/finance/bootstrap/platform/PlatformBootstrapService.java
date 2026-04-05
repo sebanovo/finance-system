@@ -33,23 +33,26 @@ public class PlatformBootstrapService {
         logger.info("Seeding base platform plans...");
 
         List<PlanSeed> plans = List.of(
-                new PlanSeed("BASIC", "Basic", "Basic subscription plan", 10, 5),
-                new PlanSeed("PRO", "Professional", "Professional subscription plan", 25, 10),
-                new PlanSeed("ENTERPRISE", "Enterprise", "Enterprise subscription plan", 9999, 999)
+                new PlanSeed("DEMO", "Demo", "Demo trial plan", 2, 2, "DEMO", 10),
+                new PlanSeed("BASIC", "Basic", "Basic subscription plan", 10, 5, "PAID", null),
+                new PlanSeed("PRO", "Professional", "Professional subscription plan", 25, 10, "PAID", null),
+                new PlanSeed("ENTERPRISE", "Enterprise", "Enterprise subscription plan", 9999, 999, "PAID", null)
         );
 
         for (PlanSeed plan : plans) {
             jdbcTemplate.update(
                     """
                     INSERT INTO public.platform_plans (
-                        code, name, description, max_users, max_roles, active, created_at, updated_at
+                        code, name, description, max_users, max_roles, plan_type, trial_days, active, created_at, updated_at
                     )
-                    VALUES (?, ?, ?, ?, ?, true, NOW(), NOW())
+                    VALUES (?, ?, ?, ?, ?, ?, ?, true, NOW(), NOW())
                     ON CONFLICT (code) DO UPDATE SET
                         name = EXCLUDED.name,
                         description = EXCLUDED.description,
                         max_users = EXCLUDED.max_users,
                         max_roles = EXCLUDED.max_roles,
+                        plan_type = EXCLUDED.plan_type,
+                        trial_days = EXCLUDED.trial_days,
                         active = true,
                         updated_at = NOW()
                     """,
@@ -57,7 +60,9 @@ public class PlatformBootstrapService {
                     plan.name(),
                     plan.description(),
                     plan.maxUsers(),
-                    plan.maxRoles()
+                    plan.maxRoles(),
+                    plan.planType(),
+                    plan.trialDays()
             );
         }
 
@@ -139,7 +144,9 @@ public class PlatformBootstrapService {
             String name,
             String description,
             int maxUsers,
-            int maxRoles
+            int maxRoles,
+            String planType,
+            Integer trialDays
     ) {
     }
 

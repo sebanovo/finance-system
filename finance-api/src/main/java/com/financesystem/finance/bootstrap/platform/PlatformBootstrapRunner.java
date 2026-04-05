@@ -1,6 +1,7 @@
 package com.financesystem.finance.bootstrap.platform;
 
 import com.financesystem.finance.common.tenancy.migration.TenantSchemaMigrationService;
+import com.financesystem.finance.modules.platform.subscriptions.application.service.PlatformSubscriptionLifecycleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
@@ -14,13 +15,16 @@ public class PlatformBootstrapRunner implements ApplicationRunner {
 
     private final PlatformBootstrapService platformBootstrapService;
     private final TenantSchemaMigrationService tenantSchemaMigrationService;
+    private final PlatformSubscriptionLifecycleService platformSubscriptionLifecycleService;
 
     public PlatformBootstrapRunner(
             PlatformBootstrapService platformBootstrapService,
-            TenantSchemaMigrationService tenantSchemaMigrationService
+            TenantSchemaMigrationService tenantSchemaMigrationService,
+            PlatformSubscriptionLifecycleService platformSubscriptionLifecycleService
     ) {
         this.platformBootstrapService = platformBootstrapService;
         this.tenantSchemaMigrationService = tenantSchemaMigrationService;
+        this.platformSubscriptionLifecycleService = platformSubscriptionLifecycleService;
     }
 
     @Override
@@ -31,6 +35,7 @@ public class PlatformBootstrapRunner implements ApplicationRunner {
         platformBootstrapService.seedBaseSystemPermissions();
         platformBootstrapService.seedInitialPlatformSuperadmin();
         tenantSchemaMigrationService.migrateRegisteredTenantSchemas();
+        platformSubscriptionLifecycleService.refreshExpiredSubscriptions();
 
         logger.info("Platform bootstrap runner completed successfully.");
     }

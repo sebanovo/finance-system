@@ -3,17 +3,17 @@ package com.financesystem.finance.modules.platform.tenants.application.usecase;
 import com.financesystem.finance.bootstrap.tenant.TenantBootstrapService;
 import com.financesystem.finance.common.tenancy.migration.TenantSchemaMigrationService;
 import com.financesystem.finance.common.tenancy.schema.TenantSchemaNamingStrategy;
-import com.financesystem.finance.modules.governance.audit.application.service.AuditTrailService;
+import com.financesystem.finance.modules.platform.subscriptions.application.service.PlatformSubscriptionProvisioningService;
 import com.financesystem.finance.modules.platform.tenants.application.dto.CreateTenantRequest;
 import com.financesystem.finance.modules.platform.tenants.application.dto.PlatformTenantResponse;
 import com.financesystem.finance.modules.platform.tenants.application.mapper.PlatformTenantMapper;
 import com.financesystem.finance.modules.platform.tenants.domain.model.PlatformTenant;
 import com.financesystem.finance.modules.platform.tenants.domain.model.PlatformTenantStatus;
 import com.financesystem.finance.modules.platform.tenants.domain.repository.PlatformTenantRepository;
-import com.financesystem.finance.modules.platform.tenants.infrastructure.persistence.PlatformPlanLookupService;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,21 +25,20 @@ class CreateTenantUseCaseTest {
     @Test
     void shouldCreateTenantAndRunBootstrapSuccessfully() {
         PlatformTenantRepository tenantRepository = mock(PlatformTenantRepository.class);
-        PlatformPlanLookupService planLookupService = mock(PlatformPlanLookupService.class);
         TenantSchemaNamingStrategy namingStrategy = mock(TenantSchemaNamingStrategy.class);
         TenantSchemaMigrationService migrationService = mock(TenantSchemaMigrationService.class);
         TenantBootstrapService bootstrapService = mock(TenantBootstrapService.class);
         PlatformTenantMapper mapper = mock(PlatformTenantMapper.class);
-        AuditTrailService auditTrailService = mock(AuditTrailService.class);
+        PlatformSubscriptionProvisioningService subscriptionProvisioningService =
+                mock(PlatformSubscriptionProvisioningService.class);
 
         CreateTenantUseCase useCase = new CreateTenantUseCase(
                 tenantRepository,
-                planLookupService,
                 namingStrategy,
                 migrationService,
                 bootstrapService,
                 mapper,
-                auditTrailService
+                subscriptionProvisioningService
         );
 
         CreateTenantRequest request = new CreateTenantRequest("FinanCruz Ltda", "financruz", "BASIC");
@@ -75,8 +74,8 @@ class CreateTenantUseCaseTest {
         when(namingStrategy.toSchemaName("financruz")).thenReturn("tenant_financruz");
         when(tenantRepository.existsBySlug("financruz")).thenReturn(false);
         when(tenantRepository.existsBySchemaName("tenant_financruz")).thenReturn(false);
-        when(planLookupService.findPlanIdByCodeOrDefault("BASIC")).thenReturn(planId);
         when(tenantRepository.save(any())).thenReturn(createdTenant);
+        when(tenantRepository.findById(tenantId)).thenReturn(Optional.of(createdTenant));
         when(mapper.toResponse(createdTenant)).thenReturn(expectedResponse);
 
         PlatformTenantResponse actualResponse = useCase.execute(request);
@@ -84,6 +83,6 @@ class CreateTenantUseCaseTest {
         assertEquals(expectedResponse, actualResponse);
         verify(migrationService).migrateSchema("tenant_financruz");
         verify(bootstrapService).initializeTenantData("tenant_financruz", "FinanCruz Ltda");
-        verify(auditTrailService).recordPlatformEvent(anyString(), eq("TENANT"), eq(tenantId.toString()), any());
+        verify(subscriptionProvisioningService).assignCurrentSubscription(tenantId, "BASIC", null, true);
     }
 }

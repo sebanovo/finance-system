@@ -30,6 +30,11 @@ public class PlatformPlanRepositoryAdapter implements PlatformPlanRepository {
     }
 
     @Override
+    public Optional<PlatformPlan> findByCode(String code) {
+        return jpaRepository.findByCode(code).map(this::toDomain);
+    }
+
+    @Override
     public List<PlatformPlan> findAll() {
         return jpaRepository.findAll()
                 .stream()
@@ -50,6 +55,8 @@ public class PlatformPlanRepositoryAdapter implements PlatformPlanRepository {
         entity.setDescription(plan.description());
         entity.setMaxUsers(plan.maxUsers());
         entity.setMaxRoles(plan.maxRoles());
+        entity.setPlanType(plan.planType());
+        entity.setTrialDays(plan.trialDays());
         entity.setActive(plan.active());
         return entity;
     }
@@ -62,6 +69,8 @@ public class PlatformPlanRepositoryAdapter implements PlatformPlanRepository {
                 entity.getDescription(),
                 entity.getMaxUsers(),
                 entity.getMaxRoles(),
+                entity.getPlanType(),
+                entity.getTrialDays(),
                 entity.isActive(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()

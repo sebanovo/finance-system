@@ -47,6 +47,11 @@ public class TenantUserRepositoryAdapter implements TenantUserRepository {
         return jpaRepository.existsByEmail(email);
     }
 
+    @Override
+    public long countActiveUsers() {
+        return jpaRepository.countByActiveTrue();
+    }
+
     private TenantUserEntity toEntity(TenantUser tenantUser) {
         TenantUserEntity entity = new TenantUserEntity();
         entity.setId(tenantUser.id());

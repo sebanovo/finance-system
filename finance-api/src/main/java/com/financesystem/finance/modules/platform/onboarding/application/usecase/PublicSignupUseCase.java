@@ -1,0 +1,97 @@
+package com.financesystem.finance.modules.platform.onboarding.application.usecase;
+
+import com.financesystem.finance.modules.governance.audit.application.service.AuditTrailService;
+import com.financesystem.finance.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance.modules.platform.onboarding.application.dto.PublicSignupRequest;
+import com.financesystem.finance.modules.platform.onboarding.application.dto.PublicSignupResponse;
+import com.financesystem.finance.modules.platform.onboarding.application.service.TenantOwnerAdminProvisioningService;
+import com.financesystem.finance.modules.platform.plans.domain.model.PlatformPlan;
+import com.financesystem.finance.modules.platform.plans.domain.repository.PlatformPlanRepository;
+import com.financesystem.finance.modules.platform.subscriptions.domain.model.PlatformSubscription;
+import com.financesystem.finance.modules.platform.subscriptions.domain.repository.PlatformSubscriptionRepository;
+import com.financesystem.finance.modules.platform.tenants.application.dto.CreateTenantRequest;
+import com.financesystem.finance.modules.platform.tenants.application.dto.PlatformTenantResponse;
+import com.financesystem.finance.modules.platform.tenants.application.usecase.CreateTenantUseCase;
+import com.financesystem.finance.modules.platform.tenants.domain.model.PlatformTenant;
+import com.financesystem.finance.modules.platform.tenants.domain.repository.PlatformTenantRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Map;
+
+@Service
+public class PublicSignupUseCase {
+
+    private final CreateTenantUseCase createTenantUseCase;
+    private final PlatformTenantRepository platformTenantRepository;
+    private final PlatformSubscriptionRepository platformSubscriptionRepository;
+    private final PlatformPlanRepository platformPlanRepository;
+    private final TenantOwnerAdminProvisioningService tenantOwnerAdminProvisioningService;
+    private final AuditTrailService auditTrailService;
+
+    public PublicSignupUseCase(
+            CreateTenantUseCase createTenantUseCase,
+            PlatformTenantRepository platformTenantRepository,
+            PlatformSubscriptionRepository platformSubscriptionRepository,
+            PlatformPlanRepository platformPlanRepository,
+            TenantOwnerAdminProvisioningService tenantOwnerAdminProvisioningService,
+            AuditTrailService auditTrailService
+    ) {
+        this.createTenantUseCase = createTenantUseCase;
+        this.platformTenantRepository = platformTenantRepository;
+        this.platformSubscriptionRepository = platformSubscriptionRepository;
+        this.platformPlanRepository = platformPlanRepository;
+        this.tenantOwnerAdminProvisioningService = tenantOwnerAdminProvisioningService;
+        this.auditTrailService = auditTrailService;
+    }
+
+    @Transactional
+    public PublicSignupResponse execute(PublicSignupRequest request) {
+        PlatformTenantResponse createdTenantResponse = createTenantUseCase.execute(
+                new CreateTenantRequest(
+                        request.companyName().trim(),
+                        request.tenantSlug().trim(),
+                        "DEMO"
+                )
+        );
+
+        PlatformTenant createdTenant = platformTenantRepository.findById(createdTenantResponse.id())
+                .orElseThrow();
+
+        tenantOwnerAdminProvisioningService.provisionOwnerAdmin(
+                createdTenant.schemaName(),
+                request.adminEmail(),
+                request.password(),
+                request.firstName(),
+                request.lastName()
+        );
+
+        PlatformSubscription currentSubscription = platformSubscriptionRepository.findCurrentByTenantId(createdTenant.id())
+                .orElseThrow();
+
+        PlatformPlan currentPlan = platformPlanRepository.findById(currentSubscription.planId()).orElseThrow();
+
+        auditTrailService.recordPlatformEvent(
+                AuditEventTypes.PUBLIC_SIGNUP_COMPLETED,
+                "TENANT",
+                createdTenant.id().toString(),
+                Map.of(
+                        "tenantSlug", createdTenant.slug(),
+                        "adminEmail", request.adminEmail().trim().toLowerCase(),
+                        "planCode", currentPlan.code()
+                )
+        );
+
+        return new PublicSignupResponse(
+                createdTenant.id(),
+                createdTenant.slug(),
+                createdTenant.name(),
+                request.adminEmail().trim().toLowerCase(),
+                "OWNER_ADMIN",
+                currentPlan.code(),
+                currentSubscription.status().name(),
+                currentSubscription.expiresAt(),
+                "Use /api/auth/login with X-Tenant-Slug = " + createdTenant.slug()
+        );
+    }
+}

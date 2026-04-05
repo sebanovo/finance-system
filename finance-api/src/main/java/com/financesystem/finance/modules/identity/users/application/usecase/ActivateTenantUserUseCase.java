@@ -8,6 +8,7 @@ import com.financesystem.finance.modules.identity.users.domain.exception.TenantU
 import com.financesystem.finance.modules.identity.users.domain.model.TenantUser;
 import com.financesystem.finance.modules.identity.users.domain.model.TenantUserStatus;
 import com.financesystem.finance.modules.identity.users.domain.repository.TenantUserRepository;
+import com.financesystem.finance.modules.platform.subscriptions.application.service.TenantPlanEnforcementService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,21 +21,30 @@ public class ActivateTenantUserUseCase {
     private final TenantUserRepository tenantUserRepository;
     private final TenantUserMapper tenantUserMapper;
     private final AuditTrailService auditTrailService;
+    private final TenantPlanEnforcementService tenantPlanEnforcementService;
 
     public ActivateTenantUserUseCase(
             TenantUserRepository tenantUserRepository,
             TenantUserMapper tenantUserMapper,
-            AuditTrailService auditTrailService
+            AuditTrailService auditTrailService,
+            TenantPlanEnforcementService tenantPlanEnforcementService
     ) {
         this.tenantUserRepository = tenantUserRepository;
         this.tenantUserMapper = tenantUserMapper;
         this.auditTrailService = auditTrailService;
+        this.tenantPlanEnforcementService = tenantPlanEnforcementService;
     }
 
     @Transactional
     public TenantUserResponse execute(UUID id) {
         TenantUser existingUser = tenantUserRepository.findById(id)
                 .orElseThrow(() -> new TenantUserNotFoundException("Tenant user not found with id: " + id));
+
+        if (!existingUser.active()) {
+            tenantPlanEnforcementService.assertCanActivateUser(
+                    tenantUserRepository.countActiveUsers()
+            );
+        }
 
         TenantUser updatedUser = new TenantUser(
                 existingUser.id(),

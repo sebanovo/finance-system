@@ -10,4 +10,6 @@ public interface TenantUserJpaRepository extends JpaRepository<TenantUserEntity,
     Optional<TenantUserEntity> findByEmail(String email);
 
     boolean existsByEmail(String email);
+
+    long countByActiveTrue();
 }

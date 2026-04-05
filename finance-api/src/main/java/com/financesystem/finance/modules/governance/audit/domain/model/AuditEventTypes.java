@@ -6,6 +6,9 @@ public final class AuditEventTypes {
     public static final String TENANT_ACTIVATED = "TENANT_ACTIVATED";
     public static final String TENANT_DEACTIVATED = "TENANT_DEACTIVATED";
 
+    public static final String SUBSCRIPTION_ASSIGNED = "SUBSCRIPTION_ASSIGNED";
+    public static final String PUBLIC_SIGNUP_COMPLETED = "PUBLIC_SIGNUP_COMPLETED";
+
     public static final String USER_CREATED = "USER_CREATED";
     public static final String USER_UPDATED = "USER_UPDATED";
     public static final String USER_ACTIVATED = "USER_ACTIVATED";

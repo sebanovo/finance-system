@@ -21,7 +21,7 @@ public class PlatformSuperadminController {
     }
 
     @GetMapping("/me")
-    @PreAuthorize("hasAnyRole('ADMIN','SUPERADMIN')")
+    @PreAuthorize("@authorizationGuards.isPlatformAuthenticated()")
     public ApiResponse<PlatformSuperadminResponse> me() {
         return ApiResponse.success(
                 "Platform superadmin retrieved successfully",

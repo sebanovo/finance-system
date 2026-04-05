@@ -36,6 +36,8 @@ public class DeactivatePlatformPlanUseCase {
                 plan.description(),
                 plan.maxUsers(),
                 plan.maxRoles(),
+                plan.planType(),
+                plan.trialDays(),
                 false,
                 plan.createdAt(),
                 plan.updatedAt()

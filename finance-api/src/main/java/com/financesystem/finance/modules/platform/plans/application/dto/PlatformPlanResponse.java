@@ -10,6 +10,8 @@ public record PlatformPlanResponse(
         String description,
         int maxUsers,
         int maxRoles,
+        String planType,
+        Integer trialDays,
         boolean active,
         Instant createdAt,
         Instant updatedAt

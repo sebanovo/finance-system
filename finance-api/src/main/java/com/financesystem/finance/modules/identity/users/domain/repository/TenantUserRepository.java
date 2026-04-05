@@ -17,4 +17,6 @@ public interface TenantUserRepository {
     List<TenantUser> findAll();
 
     boolean existsByEmail(String email);
+
+    long countActiveUsers();
 }

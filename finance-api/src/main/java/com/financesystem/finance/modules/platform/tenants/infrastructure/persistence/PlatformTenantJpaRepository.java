@@ -2,6 +2,7 @@ package com.financesystem.finance.modules.platform.tenants.infrastructure.persis
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface PlatformTenantJpaRepository extends JpaRepository<PlatformTenantEntity, UUID> {
@@ -9,4 +10,6 @@ public interface PlatformTenantJpaRepository extends JpaRepository<PlatformTenan
     boolean existsBySlug(String slug);
 
     boolean existsBySchemaName(String schemaName);
+
+    Optional<PlatformTenantEntity> findBySlug(String slug);
 }

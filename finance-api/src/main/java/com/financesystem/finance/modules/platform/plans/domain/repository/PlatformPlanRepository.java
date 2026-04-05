@@ -12,6 +12,8 @@ public interface PlatformPlanRepository {
 
     Optional<PlatformPlan> findById(UUID id);
 
+    Optional<PlatformPlan> findByCode(String code);
+
     List<PlatformPlan> findAll();
 
     boolean existsByCode(String code);

@@ -11,6 +11,7 @@ import com.financesystem.finance.modules.identity.access.domain.model.TenantRole
 import com.financesystem.finance.modules.identity.access.domain.repository.SystemPermissionRepository;
 import com.financesystem.finance.modules.identity.access.domain.repository.TenantRolePermissionRepository;
 import com.financesystem.finance.modules.identity.access.domain.repository.TenantRoleRepository;
+import com.financesystem.finance.modules.platform.subscriptions.application.service.TenantPlanEnforcementService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,19 +27,22 @@ public class CreateTenantRoleUseCase {
     private final SystemPermissionRepository systemPermissionRepository;
     private final TenantRoleMapper tenantRoleMapper;
     private final AuditTrailService auditTrailService;
+    private final TenantPlanEnforcementService tenantPlanEnforcementService;
 
     public CreateTenantRoleUseCase(
             TenantRoleRepository tenantRoleRepository,
             TenantRolePermissionRepository tenantRolePermissionRepository,
             SystemPermissionRepository systemPermissionRepository,
             TenantRoleMapper tenantRoleMapper,
-            AuditTrailService auditTrailService
+            AuditTrailService auditTrailService,
+            TenantPlanEnforcementService tenantPlanEnforcementService
     ) {
         this.tenantRoleRepository = tenantRoleRepository;
         this.tenantRolePermissionRepository = tenantRolePermissionRepository;
         this.systemPermissionRepository = systemPermissionRepository;
         this.tenantRoleMapper = tenantRoleMapper;
         this.auditTrailService = auditTrailService;
+        this.tenantPlanEnforcementService = tenantPlanEnforcementService;
     }
 
     @Transactional
@@ -53,6 +57,10 @@ public class CreateTenantRoleUseCase {
         }
 
         validatePermissions(normalizedPermissionCodes);
+
+        tenantPlanEnforcementService.assertCanCreateRole(
+                tenantRoleRepository.countActiveCustomRoles()
+        );
 
         TenantRole roleToCreate = new TenantRole(
                 null,

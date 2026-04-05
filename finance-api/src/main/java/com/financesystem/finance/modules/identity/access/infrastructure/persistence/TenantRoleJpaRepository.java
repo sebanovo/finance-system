@@ -2,6 +2,7 @@ package com.financesystem.finance.modules.identity.access.infrastructure.persist
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -10,4 +11,6 @@ public interface TenantRoleJpaRepository extends JpaRepository<TenantRoleEntity,
     Optional<TenantRoleEntity> findByName(String name);
 
     boolean existsByName(String name);
+
+    long countByActiveTrueAndNameNotIn(Collection<String> names);
 }

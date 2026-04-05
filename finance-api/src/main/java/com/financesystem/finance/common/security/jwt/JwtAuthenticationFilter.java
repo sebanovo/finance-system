@@ -53,7 +53,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return antPathMatcher.match("/api/auth/login", requestUri)
                 || antPathMatcher.match("/api/auth/refresh", requestUri)
                 || antPathMatcher.match("/api/auth/forgot-password", requestUri)
-                || antPathMatcher.match("/api/auth/reset-password", requestUri);
+                || antPathMatcher.match("/api/auth/reset-password", requestUri)
+                || antPathMatcher.match("/api/platform/auth/login", requestUri)
+                || antPathMatcher.match("/api/platform/auth/refresh", requestUri);
     }
 
     @Override
