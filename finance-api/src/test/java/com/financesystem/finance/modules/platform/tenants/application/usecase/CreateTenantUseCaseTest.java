@@ -17,20 +17,20 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class CreateTenantUseCaseTest {
 
     @Test
-    void shouldCreateTenantAndRunBootstrapSuccessfully() {
+    void shouldCreateTenantAndProvisionSubscriptionSuccessfully() {
         PlatformTenantRepository tenantRepository = mock(PlatformTenantRepository.class);
         TenantSchemaNamingStrategy namingStrategy = mock(TenantSchemaNamingStrategy.class);
         TenantSchemaMigrationService migrationService = mock(TenantSchemaMigrationService.class);
         TenantBootstrapService bootstrapService = mock(TenantBootstrapService.class);
         PlatformTenantMapper mapper = mock(PlatformTenantMapper.class);
-        PlatformSubscriptionProvisioningService subscriptionProvisioningService =
-                mock(PlatformSubscriptionProvisioningService.class);
+        PlatformSubscriptionProvisioningService subscriptionProvisioningService = mock(PlatformSubscriptionProvisioningService.class);
 
         CreateTenantUseCase useCase = new CreateTenantUseCase(
                 tenantRepository,
@@ -41,10 +41,11 @@ class CreateTenantUseCaseTest {
                 subscriptionProvisioningService
         );
 
-        CreateTenantRequest request = new CreateTenantRequest("FinanCruz Ltda", "financruz", "BASIC");
+        CreateTenantRequest request = new CreateTenantRequest("FinanCruz Ltda", "financruz", "DEMO");
 
-        UUID planId = UUID.randomUUID();
         UUID tenantId = UUID.randomUUID();
+        UUID planId = UUID.randomUUID();
+        Instant now = Instant.now();
 
         PlatformTenant createdTenant = new PlatformTenant(
                 tenantId,
@@ -52,10 +53,22 @@ class CreateTenantUseCaseTest {
                 "financruz",
                 "tenant_financruz",
                 PlatformTenantStatus.ACTIVE,
+                null,
+                true,
+                now,
+                now
+        );
+
+        PlatformTenant updatedTenant = new PlatformTenant(
+                tenantId,
+                "FinanCruz Ltda",
+                "financruz",
+                "tenant_financruz",
+                PlatformTenantStatus.ACTIVE,
                 planId,
                 true,
-                Instant.now(),
-                Instant.now()
+                now,
+                now
         );
 
         PlatformTenantResponse expectedResponse = new PlatformTenantResponse(
@@ -66,8 +79,8 @@ class CreateTenantUseCaseTest {
                 "ACTIVE",
                 planId,
                 true,
-                createdTenant.createdAt(),
-                createdTenant.updatedAt()
+                now,
+                now
         );
 
         when(namingStrategy.normalizeSlug("financruz")).thenReturn("financruz");
@@ -75,14 +88,14 @@ class CreateTenantUseCaseTest {
         when(tenantRepository.existsBySlug("financruz")).thenReturn(false);
         when(tenantRepository.existsBySchemaName("tenant_financruz")).thenReturn(false);
         when(tenantRepository.save(any())).thenReturn(createdTenant);
-        when(tenantRepository.findById(tenantId)).thenReturn(Optional.of(createdTenant));
-        when(mapper.toResponse(createdTenant)).thenReturn(expectedResponse);
+        when(tenantRepository.findById(tenantId)).thenReturn(Optional.of(updatedTenant));
+        when(mapper.toResponse(updatedTenant)).thenReturn(expectedResponse);
 
         PlatformTenantResponse actualResponse = useCase.execute(request);
 
         assertEquals(expectedResponse, actualResponse);
         verify(migrationService).migrateSchema("tenant_financruz");
         verify(bootstrapService).initializeTenantData("tenant_financruz", "FinanCruz Ltda");
-        verify(subscriptionProvisioningService).assignCurrentSubscription(tenantId, "BASIC", null, true);
+        verify(subscriptionProvisioningService).assignCurrentSubscription(tenantId, "DEMO", null, true);
     }
 }
