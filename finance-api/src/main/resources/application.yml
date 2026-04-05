@@ -53,49 +53,4 @@ app:
       expiration-minutes: ${PASSWORD_RESET_EXPIRATION_MINUTES:30}
       reset-url-base: ${PASSWORD_RESET_URL_BASE:http://localhost:4200/reset-password}
 
-server:
-  # Application port (defaults to 8080 if BACKEND_PORT is not set)
-  port: ${BACKEND_PORT:8080}
-
-spring:
-  application:
-    # Application name (useful for logs and service identification)
-    name: finance-api
-
-  datasource:
-    # PostgreSQL connection using environment variables (Docker-friendly)
-    # Uses service name instead of localhost inside Docker network
-    url: jdbc:postgresql://${POSTGRES_SERV}:${POSTGRES_PORT}/${POSTGRES_DB}
-    username: ${POSTGRES_USER}
-    password: ${POSTGRES_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-
-  jpa:
-    hibernate:
-      # Do not auto-create or modify schema (handled by Flyway)
-      ddl-auto: none
-    # Enable SQL logging for debugging (disable in production)
-    show-sql: true
-    properties:
-      hibernate:
-        # Explicit PostgreSQL dialect for Hibernate
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-
-  flyway:
-    # Enables Flyway database migrations on application startup
-    enabled: true
-    # Allows Flyway to baseline an existing database
-    baseline-on-migrate: true
-    # Location of migration scripts inside the project
-    locations: classpath:db/migration/shared
-
-springdoc:
-  api-docs:
-    # OpenAPI JSON endpoint
-    path: /v3/api-docs
-  swagger-ui:
-    # Swagger UI endpoint
-    path: /swagger-ui
-    # Keeps authorization tokens between page reloads
-    persist-authorization: true
 

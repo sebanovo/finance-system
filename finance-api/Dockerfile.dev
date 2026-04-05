@@ -8,7 +8,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     git \
     procps \
-
     sed \
     netcat-openbsd \
   && apt-get clean \
