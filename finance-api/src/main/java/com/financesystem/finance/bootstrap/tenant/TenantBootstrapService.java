@@ -33,14 +33,26 @@ public class TenantBootstrapService {
     private void seedDefaultRoles(String schemaName) {
         jdbcTemplate.execute("""
                 INSERT INTO %s.tenant_roles (name, description, active, created_at)
+                VALUES ('OWNER_ADMIN', 'Tenant owner administrator role', true, NOW())
+                ON CONFLICT (name) DO UPDATE SET
+                    active = true,
+                    description = EXCLUDED.description
+                """.formatted(schemaName));
+
+        jdbcTemplate.execute("""
+                INSERT INTO %s.tenant_roles (name, description, active, created_at)
                 VALUES ('ADMIN', 'Default tenant administrator role', true, NOW())
-                ON CONFLICT (name) DO NOTHING
+                ON CONFLICT (name) DO UPDATE SET
+                    active = true,
+                    description = EXCLUDED.description
                 """.formatted(schemaName));
 
         jdbcTemplate.execute("""
                 INSERT INTO %s.tenant_roles (name, description, active, created_at)
                 VALUES ('USER', 'Default tenant user role', true, NOW())
-                ON CONFLICT (name) DO NOTHING
+                ON CONFLICT (name) DO UPDATE SET
+                    active = true,
+                    description = EXCLUDED.description
                 """.formatted(schemaName));
     }
 

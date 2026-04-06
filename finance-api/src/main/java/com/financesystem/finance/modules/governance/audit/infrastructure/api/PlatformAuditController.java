@@ -21,7 +21,7 @@ public class PlatformAuditController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','SUPERADMIN')")
+    @PreAuthorize("@authorizationGuards.isPlatformAdmin()")
     public ApiResponse<List<AuditEventResponse>> listPlatformAuditEvents(
             @RequestParam(defaultValue = "50") int limit
     ) {

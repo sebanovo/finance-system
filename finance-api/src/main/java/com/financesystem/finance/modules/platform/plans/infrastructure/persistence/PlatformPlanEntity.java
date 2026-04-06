@@ -28,6 +28,12 @@ public class PlatformPlanEntity {
     @Column(nullable = false)
     private int maxRoles;
 
+    @Column(nullable = false, length = 20)
+    private String planType;
+
+    @Column
+    private Integer trialDays;
+
     @Column(nullable = false)
     private boolean active;
 
@@ -63,37 +69,65 @@ public class PlatformPlanEntity {
 
     public void setCode(String code) {
         this.code = code;
-    }    public String getName() {
+    }
+
+    public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
-    }    public String getDescription() {
+    }
+
+    public String getDescription() {
         return description;
     }
 
     public void setDescription(String description) {
         this.description = description;
-    }    public int getMaxUsers() {
+    }
+
+    public int getMaxUsers() {
         return maxUsers;
     }
 
     public void setMaxUsers(int maxUsers) {
         this.maxUsers = maxUsers;
-    }    public int getMaxRoles() {
+    }
+
+    public int getMaxRoles() {
         return maxRoles;
     }
 
     public void setMaxRoles(int maxRoles) {
         this.maxRoles = maxRoles;
-    }    public boolean isActive() {
+    }
+
+    public String getPlanType() {
+        return planType;
+    }
+
+    public void setPlanType(String planType) {
+        this.planType = planType;
+    }
+
+    public Integer getTrialDays() {
+        return trialDays;
+    }
+
+    public void setTrialDays(Integer trialDays) {
+        this.trialDays = trialDays;
+    }
+
+    public boolean isActive() {
         return active;
     }
 
     public void setActive(boolean active) {
         this.active = active;
-    }    public Instant getCreatedAt() {
+    }
+
+    public Instant getCreatedAt() {
         return createdAt;
     }
 

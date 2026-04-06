@@ -38,7 +38,7 @@ public class PlatformPlanController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
+    @PreAuthorize("@authorizationGuards.isPlatformAdmin()")
     public ApiResponse<PlatformPlanResponse> createPlan(@Valid @RequestBody CreatePlatformPlanRequest request) {
         return ApiResponse.success(
                 "Platform plan created successfully",
@@ -47,7 +47,7 @@ public class PlatformPlanController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
+    @PreAuthorize("@authorizationGuards.isPlatformAdmin()")
     public ApiResponse<List<PlatformPlanResponse>> listPlans() {
         return ApiResponse.success(
                 "Platform plans retrieved successfully",
@@ -56,7 +56,7 @@ public class PlatformPlanController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
+    @PreAuthorize("@authorizationGuards.isPlatformAdmin()")
     public ApiResponse<PlatformPlanResponse> getPlanById(@PathVariable UUID id) {
         return ApiResponse.success(
                 "Platform plan retrieved successfully",
@@ -65,7 +65,7 @@ public class PlatformPlanController {
     }
 
     @PatchMapping("/{id}/activate")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
+    @PreAuthorize("@authorizationGuards.isPlatformAdmin()")
     public ApiResponse<PlatformPlanResponse> activatePlan(@PathVariable UUID id) {
         return ApiResponse.success(
                 "Platform plan activated successfully",
@@ -74,7 +74,7 @@ public class PlatformPlanController {
     }
 
     @PatchMapping("/{id}/deactivate")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
+    @PreAuthorize("@authorizationGuards.isPlatformAdmin()")
     public ApiResponse<PlatformPlanResponse> deactivatePlan(@PathVariable UUID id) {
         return ApiResponse.success(
                 "Platform plan deactivated successfully",

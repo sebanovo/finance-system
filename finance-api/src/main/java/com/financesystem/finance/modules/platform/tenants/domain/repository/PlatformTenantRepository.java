@@ -12,6 +12,8 @@ public interface PlatformTenantRepository {
 
     Optional<PlatformTenant> findById(UUID id);
 
+    Optional<PlatformTenant> findBySlug(String slug);
+
     List<PlatformTenant> findAll();
 
     boolean existsBySlug(String slug);

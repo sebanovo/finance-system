@@ -9,6 +9,7 @@ import com.financesystem.finance.modules.identity.users.domain.exception.TenantU
 import com.financesystem.finance.modules.identity.users.domain.model.TenantUser;
 import com.financesystem.finance.modules.identity.users.domain.model.TenantUserStatus;
 import com.financesystem.finance.modules.identity.users.domain.repository.TenantUserRepository;
+import com.financesystem.finance.modules.platform.subscriptions.application.service.TenantPlanEnforcementService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,17 +23,20 @@ public class CreateTenantUserUseCase {
     private final TenantUserMapper tenantUserMapper;
     private final PasswordEncoder passwordEncoder;
     private final AuditTrailService auditTrailService;
+    private final TenantPlanEnforcementService tenantPlanEnforcementService;
 
     public CreateTenantUserUseCase(
             TenantUserRepository tenantUserRepository,
             TenantUserMapper tenantUserMapper,
             PasswordEncoder passwordEncoder,
-            AuditTrailService auditTrailService
+            AuditTrailService auditTrailService,
+            TenantPlanEnforcementService tenantPlanEnforcementService
     ) {
         this.tenantUserRepository = tenantUserRepository;
         this.tenantUserMapper = tenantUserMapper;
         this.passwordEncoder = passwordEncoder;
         this.auditTrailService = auditTrailService;
+        this.tenantPlanEnforcementService = tenantPlanEnforcementService;
     }
 
     @Transactional
@@ -44,6 +48,10 @@ public class CreateTenantUserUseCase {
                     "A tenant user with email '" + normalizedEmail + "' already exists"
             );
         }
+
+        tenantPlanEnforcementService.assertCanCreateUser(
+                tenantUserRepository.countActiveUsers()
+        );
 
         TenantUser tenantUserToCreate = new TenantUser(
                 null,

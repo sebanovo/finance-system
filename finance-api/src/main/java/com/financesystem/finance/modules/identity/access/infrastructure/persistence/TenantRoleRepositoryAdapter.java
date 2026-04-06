@@ -1,6 +1,7 @@
 package com.financesystem.finance.modules.identity.access.infrastructure.persistence;
 
 import com.financesystem.finance.modules.identity.access.domain.model.TenantRole;
+import com.financesystem.finance.modules.identity.access.domain.model.TenantRoleSystemNames;
 import com.financesystem.finance.modules.identity.access.domain.repository.TenantRoleRepository;
 import org.springframework.stereotype.Repository;
 
@@ -53,6 +54,11 @@ public class TenantRoleRepositoryAdapter implements TenantRoleRepository {
     @Override
     public boolean existsByName(String name) {
         return jpaRepository.existsByName(name);
+    }
+
+    @Override
+    public long countActiveCustomRoles() {
+        return jpaRepository.countByActiveTrueAndNameNotIn(TenantRoleSystemNames.DEFAULT_SYSTEM_ROLES);
     }
 
     private TenantRoleEntity toEntity(TenantRole tenantRole) {

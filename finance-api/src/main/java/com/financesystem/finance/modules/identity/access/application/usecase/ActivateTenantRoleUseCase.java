@@ -6,8 +6,10 @@ import com.financesystem.finance.modules.identity.access.application.dto.TenantR
 import com.financesystem.finance.modules.identity.access.application.mapper.TenantRoleMapper;
 import com.financesystem.finance.modules.identity.access.domain.exception.TenantRoleNotFoundException;
 import com.financesystem.finance.modules.identity.access.domain.model.TenantRole;
+import com.financesystem.finance.modules.identity.access.domain.model.TenantRoleSystemNames;
 import com.financesystem.finance.modules.identity.access.domain.repository.TenantRolePermissionRepository;
 import com.financesystem.finance.modules.identity.access.domain.repository.TenantRoleRepository;
+import com.financesystem.finance.modules.platform.subscriptions.application.service.TenantPlanEnforcementService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,23 +23,32 @@ public class ActivateTenantRoleUseCase {
     private final TenantRolePermissionRepository tenantRolePermissionRepository;
     private final TenantRoleMapper tenantRoleMapper;
     private final AuditTrailService auditTrailService;
+    private final TenantPlanEnforcementService tenantPlanEnforcementService;
 
     public ActivateTenantRoleUseCase(
             TenantRoleRepository tenantRoleRepository,
             TenantRolePermissionRepository tenantRolePermissionRepository,
             TenantRoleMapper tenantRoleMapper,
-            AuditTrailService auditTrailService
+            AuditTrailService auditTrailService,
+            TenantPlanEnforcementService tenantPlanEnforcementService
     ) {
         this.tenantRoleRepository = tenantRoleRepository;
         this.tenantRolePermissionRepository = tenantRolePermissionRepository;
         this.tenantRoleMapper = tenantRoleMapper;
         this.auditTrailService = auditTrailService;
+        this.tenantPlanEnforcementService = tenantPlanEnforcementService;
     }
 
     @Transactional
     public TenantRoleResponse execute(UUID id) {
         TenantRole existingRole = tenantRoleRepository.findById(id)
                 .orElseThrow(() -> new TenantRoleNotFoundException("Tenant role not found with id: " + id));
+
+        if (!existingRole.active() && !TenantRoleSystemNames.isSystemRole(existingRole.name())) {
+            tenantPlanEnforcementService.assertCanActivateRole(
+                    tenantRoleRepository.countActiveCustomRoles()
+            );
+        }
 
         TenantRole updatedRole = new TenantRole(
                 existingRole.id(),

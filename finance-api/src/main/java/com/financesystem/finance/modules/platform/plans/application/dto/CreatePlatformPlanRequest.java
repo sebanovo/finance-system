@@ -20,6 +20,12 @@ public record CreatePlatformPlanRequest(
         int maxUsers,
 
         @Min(1)
-        int maxRoles
+        int maxRoles,
+
+        @NotBlank
+        @Size(max = 20)
+        String planType,
+
+        Integer trialDays
 ) {
 }

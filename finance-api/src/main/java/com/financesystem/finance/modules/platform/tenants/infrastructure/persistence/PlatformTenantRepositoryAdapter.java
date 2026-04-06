@@ -30,6 +30,11 @@ public class PlatformTenantRepositoryAdapter implements PlatformTenantRepository
     }
 
     @Override
+    public Optional<PlatformTenant> findBySlug(String slug) {
+        return jpaRepository.findBySlug(slug).map(this::toDomain);
+    }
+
+    @Override
     public List<PlatformTenant> findAll() {
         return jpaRepository.findAll()
                 .stream()

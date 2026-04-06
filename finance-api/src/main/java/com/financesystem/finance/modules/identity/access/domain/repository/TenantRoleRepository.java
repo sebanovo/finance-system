@@ -19,4 +19,6 @@ public interface TenantRoleRepository {
     List<TenantRole> findAllByIds(List<UUID> ids);
 
     boolean existsByName(String name);
+
+    long countActiveCustomRoles();
 }

@@ -36,6 +36,8 @@ public class ActivatePlatformPlanUseCase {
                 plan.description(),
                 plan.maxUsers(),
                 plan.maxRoles(),
+                plan.planType(),
+                plan.trialDays(),
                 true,
                 plan.createdAt(),
                 plan.updatedAt()
