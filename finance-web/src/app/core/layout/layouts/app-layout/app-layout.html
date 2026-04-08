@@ -1,0 +1,15 @@
+<div class="min-h-screen bg-slate-50 text-slate-900">
+  <div class="flex min-h-screen">
+    <app-app-sidebar />
+
+    <div class="flex min-h-screen flex-1 flex-col">
+      <app-app-header />
+
+      <main class="flex-1 p-4 sm:p-6">
+        <div class="mx-auto w-full max-w-7xl">
+          <router-outlet />
+        </div>
+      </main>
+    </div>
+  </div>
+</div>
