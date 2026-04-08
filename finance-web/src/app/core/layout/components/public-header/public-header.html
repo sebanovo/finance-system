@@ -1,0 +1,50 @@
+<header
+  class="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur"
+>
+  <div
+    class="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8"
+  >
+    <button
+      type="button"
+      class="flex items-center gap-3"
+      (click)="onLogoClick()"
+    >
+      <div
+        class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-sm font-semibold text-white"
+      >
+        Thor
+      </div>
+      <span class="text-base font-semibold text-slate-900">MyApp</span>
+    </button>
+
+    <nav class="hidden items-center gap-6 md:flex">
+      @for (item of navigationItems; track item.label) {
+        <button
+          type="button"
+          class="text-sm font-medium text-slate-600 transition hover:text-slate-900"
+          (click)="onNavigationItemClick(item)"
+        >
+          {{ item.label }}
+        </button>
+      }
+    </nav>
+
+    <div class="flex items-center gap-3">
+      <button
+        type="button"
+        class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+        (click)="onLoginClick()"
+      >
+        Iniciar sesión
+      </button>
+
+      <button
+        type="button"
+        class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+        (click)="onGetStartedClick()"
+      >
+        Empezar
+      </button>
+    </div>
+  </div>
+</header>
