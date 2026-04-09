@@ -2,13 +2,17 @@
   "bracketSameLine": false,
   "printWidth": 80,
   "semi": true,
-  "singleQuote": true,
-  "useTabs": false,
+  "singleQuote": false,
+  "useTabs": false,  
   "trailingComma": "es5",
   "tabWidth": 2,
   "endOfLine": "lf",
-  "arrowParens": "always",
+  "arrowParens": "avoid",
+  
   "plugins": ["prettier-plugin-tailwindcss"],
+  "jsxSingleQuote": false,
+  "bracketSpacing": true,
+  "objectWrap": "preserve",
   "overrides": [
     {
       "files": "*.html",
@@ -18,3 +22,4 @@
     }
   ]
 }
+
