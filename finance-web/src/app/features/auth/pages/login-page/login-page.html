@@ -7,7 +7,8 @@
       id="email"
       type="email"
       placeholder="tu@email.com"
-      class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm transition outline-none focus:border-slate-400" />
+      class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm transition outline-none focus:border-slate-400"
+    />
   </div>
 
   <div>
@@ -18,12 +19,15 @@
       id="password"
       type="password"
       placeholder="••••••••"
-      class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm transition outline-none focus:border-slate-400" />
+      class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm transition outline-none focus:border-slate-400"
+    />
   </div>
 
   <button
-    type="submit"
-    class="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:opacity-90">
+    type="button"
+    class="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:opacity-90"
+    (click)="onIngresarClick()"
+  >
     Ingresar
   </button>
 

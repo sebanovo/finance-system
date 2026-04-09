@@ -1,9 +1,11 @@
-import { Routes } from '@angular/router';
+import { Routes } from "@angular/router";
 
 export const AUTH_ROUTES: Routes = [
   {
-    path: '',
+    path: "login",
     loadComponent: () =>
-      import('./pages/login-page/login-page').then((m) => m.LoginPage),
+      import("./pages/login-page/login-page").then(m => m.LoginPage),
   },
+  //path: "forgot-password"
+  //path: "register"
 ];
