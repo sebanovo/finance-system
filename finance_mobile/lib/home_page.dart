@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'users_page.dart';
+import 'roles_page.dart'; // Importar la nueva página
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -16,7 +17,6 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Dashboard")),
-
       drawer: Drawer(
         child: ListView(
           children: [
@@ -38,10 +38,22 @@ class HomePage extends StatelessWidget {
               leading: const Icon(Icons.school),
               title: const Text("Usuarios"),
               onTap: () {
-                Navigator.pop(context); // cierra el drawer
+                Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const UsuariosPage()),
+                );
+              },
+            ),
+            // Nuevo item para Roles
+            ListTile(
+              leading: const Icon(Icons.security),
+              title: const Text("Roles"),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RolesPage()),
                 );
               },
             ),
@@ -53,7 +65,6 @@ class HomePage extends StatelessWidget {
           ],
         ),
       ),
-
       body: Column(
         children: [
           const Center(

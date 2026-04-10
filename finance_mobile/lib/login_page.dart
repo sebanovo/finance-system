@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:finance_mobile/signup_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -127,6 +128,16 @@ class _LoginPageState extends State<LoginPage> {
                     ? const CircularProgressIndicator()
                     : const Text('Iniciar sesión'),
               ),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SignupPage()),
+                );
+              },
+              child: const Text('¿No tienes cuenta? Registra tu empresa'),
             ),
           ],
         ),
