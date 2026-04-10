@@ -3,14 +3,14 @@ const eslint = require("@eslint/js");
 const { defineConfig } = require("eslint/config");
 const tseslint = require("typescript-eslint");
 const angular = require("angular-eslint");
-const eslintConfigPrettier = require('eslint-config-prettier');
+const eslintConfigPrettier = require("eslint-config-prettier");
 
 // Las configuraciones con 'off' estan apagadas
 // Las configuraciones con 'on', 'error' o 'warn' estan encendidas
 module.exports = defineConfig([
   {
-    ignores: ['.angular/**', '.nx/**', 'coverage/**', 'dist/**'],
-    files: ['**/*.ts'],
+    ignores: [".angular/**", ".nx/**", "coverage/**", "dist/**"],
+    files: ["**/*.ts"],
     extends: [
       eslint.configs.recommended,
       tseslint.configs.recommended,
@@ -24,7 +24,7 @@ module.exports = defineConfig([
         "error",
         {
           type: "attribute",
-          prefix: "app",
+          prefix: "hlm", //app
           style: "camelCase",
         },
       ],
@@ -37,65 +37,65 @@ module.exports = defineConfig([
         },
       ],
       // configuración personalizada
-       // Angular best practices
-      '@angular-eslint/no-empty-lifecycle-method': 'warn',
-      '@angular-eslint/prefer-on-push-component-change-detection': 'off', // apagado
-      '@angular-eslint/prefer-output-readonly': 'warn',
-      '@angular-eslint/prefer-signals': 'warn',
-      '@angular-eslint/prefer-standalone': 'warn',
+      // Angular best practices
+      "@angular-eslint/no-empty-lifecycle-method": "warn",
+      "@angular-eslint/prefer-on-push-component-change-detection": "off", // apagado
+      "@angular-eslint/prefer-output-readonly": "warn",
+      "@angular-eslint/prefer-signals": "warn",
+      "@angular-eslint/prefer-standalone": "warn",
 
       // TypeScript best practices
-      '@typescript-eslint/array-type': ['warn'],
-      '@typescript-eslint/explicit-function-return-type': 'off', // apagado
-      '@typescript-eslint/consistent-indexed-object-style': 'off', // apagado
-      '@typescript-eslint/consistent-type-assertions': 'warn',
-      '@typescript-eslint/consistent-type-definitions': ['warn', 'type'],
-      '@typescript-eslint/explicit-member-accessibility': [
-        'error',
+      "@typescript-eslint/array-type": ["warn"],
+      "@typescript-eslint/explicit-function-return-type": "off", // apagado
+      "@typescript-eslint/consistent-indexed-object-style": "off", // apagado
+      "@typescript-eslint/consistent-type-assertions": "warn",
+      "@typescript-eslint/consistent-type-definitions": ["warn", "type"],
+      "@typescript-eslint/explicit-member-accessibility": [
+        "error",
         {
-          accessibility: 'no-public',
+          accessibility: "no-public",
         },
       ],
-      '@typescript-eslint/naming-convention': [
-        'warn',
+      "@typescript-eslint/naming-convention": [
+        "warn",
         {
-          selector: 'variable',
-          format: ['camelCase', 'UPPER_CASE', 'PascalCase'],
+          selector: "variable",
+          format: ["camelCase", "UPPER_CASE", "PascalCase"],
         },
       ],
-      '@typescript-eslint/no-empty-function': 'warn',
-      '@typescript-eslint/no-empty-interface': 'error',
-      '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-inferrable-types': 'warn',
-      '@typescript-eslint/no-shadow': 'warn',
-      '@typescript-eslint/no-unused-vars': 'warn',
+      "@typescript-eslint/no-empty-function": "warn",
+      "@typescript-eslint/no-empty-interface": "error",
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-inferrable-types": "warn",
+      "@typescript-eslint/no-shadow": "warn",
+      "@typescript-eslint/no-unused-vars": "warn",
 
       // JavaScript best practices
-      eqeqeq: 'error',
-      complexity: ['error', 20],
-      curly: 'error',
-      'guard-for-in': 'error',
-      'max-classes-per-file': ['error', 1],
-      'max-len': [
-        'warn',
+      eqeqeq: "error",
+      complexity: ["error", 20],
+      curly: "error",
+      "guard-for-in": "error",
+      "max-classes-per-file": ["error", 1],
+      "max-len": [
+        "warn",
         {
           code: 120,
           comments: 160,
         },
       ],
-      'max-lines': ['error', 400], // my favorite rule to keep files small
-      'no-bitwise': 'error',
-      'no-console': 'off', // apagado
-      'no-new-wrappers': 'error',
-      'no-useless-concat': 'error',
-      'no-var': 'error',
-      'no-restricted-syntax': 'off',
-      'no-shadow': 'error',
-      'one-var': ['error', 'never'],
-      'prefer-arrow-callback': 'error',
-      'prefer-const': 'error',
-      'sort-imports': [
-        'error',
+      "max-lines": ["error", 400], // my favorite rule to keep files small
+      "no-bitwise": "error",
+      "no-console": "off", // apagado
+      "no-new-wrappers": "error",
+      "no-useless-concat": "error",
+      "no-var": "error",
+      "no-restricted-syntax": "off",
+      "no-shadow": "error",
+      "one-var": ["error", "never"],
+      "prefer-arrow-callback": "error",
+      "prefer-const": "error",
+      "sort-imports": [
+        "error",
         {
           ignoreCase: true,
           ignoreDeclarationSort: true,
@@ -104,8 +104,8 @@ module.exports = defineConfig([
       ],
 
       // Security
-      'no-eval': 'error',
-      'no-implied-eval': 'error',
+      "no-eval": "error",
+      "no-implied-eval": "error",
     },
   },
   {
@@ -117,27 +117,30 @@ module.exports = defineConfig([
     // Reglas personalizadas para html template de html
     rules: {
       // Angular template best practices
-      '@angular-eslint/template/attributes-order': [
-        'off', // apagado
+      "@angular-eslint/template/attributes-order": [
+        "off", // apagado
         {
           alphabetical: true,
           order: [
-            'STRUCTURAL_DIRECTIVE', // deprecated, use @if and @for instead
-            'TEMPLATE_REFERENCE', // e.g. `<input #inputRef>`
-            'ATTRIBUTE_BINDING', // e.g. `<input required>`, `id="3"`
-            'INPUT_BINDING', // e.g. `[id]="3"`, `[attr.colspan]="colspan"`,
-            'TWO_WAY_BINDING', // e.g. `[(id)]="id"`,
-            'OUTPUT_BINDING', // e.g. `(idChange)="handleChange()"`,
+            "STRUCTURAL_DIRECTIVE", // deprecated, use @if and @for instead
+            "TEMPLATE_REFERENCE", // e.g. `<input #inputRef>`
+            "ATTRIBUTE_BINDING", // e.g. `<input required>`, `id="3"`
+            "INPUT_BINDING", // e.g. `[id]="3"`, `[attr.colspan]="colspan"`,
+            "TWO_WAY_BINDING", // e.g. `[(id)]="id"`,
+            "OUTPUT_BINDING", // e.g. `(idChange)="handleChange()"`,
           ],
         },
       ],
-      '@angular-eslint/template/button-has-type': 'off', // apagado
-      '@angular-eslint/template/cyclomatic-complexity': ['warn', { maxComplexity: 10 }],
-      '@angular-eslint/template/eqeqeq': 'error',
-      '@angular-eslint/template/prefer-control-flow': 'error',
-      '@angular-eslint/template/prefer-ngsrc': 'warn',
-      '@angular-eslint/template/prefer-self-closing-tags': 'warn',
-      '@angular-eslint/template/use-track-by-function': 'warn',
+      "@angular-eslint/template/button-has-type": "off", // apagado
+      "@angular-eslint/template/cyclomatic-complexity": [
+        "warn",
+        { maxComplexity: 10 },
+      ],
+      "@angular-eslint/template/eqeqeq": "error",
+      "@angular-eslint/template/prefer-control-flow": "error",
+      "@angular-eslint/template/prefer-ngsrc": "warn",
+      "@angular-eslint/template/prefer-self-closing-tags": "warn",
+      "@angular-eslint/template/use-track-by-function": "warn",
     },
-  }
+  },
 ]);
