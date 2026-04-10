@@ -23,7 +23,10 @@
       "@shared/ui/avatar": ["./src/app/shared/ui/avatar/src/index.ts"],
       "@shared/ui/dropdown-menu": [
         "./src/app/shared/ui/dropdown-menu/src/index.ts"
-      ]
+      ],
+      "@shared/ui/field": ["./src/app/shared/ui/field/src/index.ts"],
+      "@shared/ui/label": ["./src/app/shared/ui/label/src/index.ts"],
+      "@shared/ui/input": ["./src/app/shared/ui/input/src/index.ts"]
     }
   },
   "angularCompilerOptions": {

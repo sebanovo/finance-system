@@ -1,4 +1,5 @@
 import { Routes } from "@angular/router";
+import { AdminAuthLayout } from "./core/layout/layouts/admin-auth-layout/admin-auth-layout";
 import { AppLayout } from "./core/layout/layouts/app-layout/app-layout";
 import { AuthLayout } from "./core/layout/layouts/auth-layout/auth-layout";
 import { PublicLayout } from "./core/layout/layouts/public-layout/public-layout";
@@ -19,13 +20,27 @@ export const routes: Routes = [
 
   // Authentication
   {
-    path: "",
+    path: "auth",
     component: AuthLayout,
     children: [
+      // public login
       {
-        path: "auth",
+        path: "",
         loadChildren: () =>
           import("./features/auth/auth.routes").then(m => m.AUTH_ROUTES),
+      },
+    ],
+  },
+
+  {
+    path: "",
+    component: AdminAuthLayout,
+    children: [
+      // hidden login
+      {
+        path: "plataform/auth",
+        loadChildren: () =>
+          import("./features/auth/auth.routes").then(m => m.ADMIN_ROUTES),
       },
     ],
   },

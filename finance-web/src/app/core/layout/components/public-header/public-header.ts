@@ -37,6 +37,10 @@ export class PublicHeader {
     await this.router.navigateByUrl("/auth/login");
   }
 
+  async onSignupClick(): Promise<void> {
+    await this.router.navigateByUrl("/auth/signup");
+  }
+
   async onGetStartedClick(): Promise<void> {
     await this.router.navigateByUrl("/pricing");
   }
