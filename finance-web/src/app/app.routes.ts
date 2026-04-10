@@ -1,4 +1,5 @@
 import { Routes } from "@angular/router";
+import { authGuard } from "./core/guards/auth.guard";
 import { AdminAuthLayout } from "./core/layout/layouts/admin-auth-layout/admin-auth-layout";
 import { AppLayout } from "./core/layout/layouts/app-layout/app-layout";
 import { AuthLayout } from "./core/layout/layouts/auth-layout/auth-layout";
@@ -48,6 +49,7 @@ export const routes: Routes = [
   // Private
   {
     path: "app",
+    canActivate: [authGuard],
     component: AppLayout,
     children: [
       {
