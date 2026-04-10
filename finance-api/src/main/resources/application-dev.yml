@@ -35,4 +35,4 @@ logging:
     root: INFO
     org.springframework.web: INFO
     org.hibernate.SQL: INFO
-    com.financesystem.finance: INFO
+    com.financesystem.finance_api: INFO

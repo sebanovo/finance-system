@@ -1,0 +1,62 @@
+package com.financesystem.finance_api.modules.platform.tenants.application.usecase;
+
+import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
+import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.platform.tenants.application.dto.PlatformTenantResponse;
+import com.financesystem.finance_api.modules.platform.tenants.application.mapper.PlatformTenantMapper;
+import com.financesystem.finance_api.modules.platform.tenants.domain.exception.PlatformTenantNotFoundException;
+import com.financesystem.finance_api.modules.platform.tenants.domain.model.PlatformTenant;
+import com.financesystem.finance_api.modules.platform.tenants.domain.model.PlatformTenantStatus;
+import com.financesystem.finance_api.modules.platform.tenants.domain.repository.PlatformTenantRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Map;
+import java.util.UUID;
+
+@Service
+public class DeactivateTenantUseCase {
+
+    private final PlatformTenantRepository platformTenantRepository;
+    private final PlatformTenantMapper platformTenantMapper;
+    private final AuditTrailService auditTrailService;
+
+    public DeactivateTenantUseCase(
+            PlatformTenantRepository platformTenantRepository,
+            PlatformTenantMapper platformTenantMapper,
+            AuditTrailService auditTrailService
+    ) {
+        this.platformTenantRepository = platformTenantRepository;
+        this.platformTenantMapper = platformTenantMapper;
+        this.auditTrailService = auditTrailService;
+    }
+
+    @Transactional
+    public PlatformTenantResponse execute(UUID id) {
+        PlatformTenant tenant = platformTenantRepository.findById(id)
+                .orElseThrow(() -> new PlatformTenantNotFoundException("Tenant not found with id: " + id));
+
+        PlatformTenant updated = new PlatformTenant(
+                tenant.id(),
+                tenant.name(),
+                tenant.slug(),
+                tenant.schemaName(),
+                PlatformTenantStatus.INACTIVE,
+                tenant.planId(),
+                false,
+                tenant.createdAt(),
+                tenant.updatedAt()
+        );
+
+        PlatformTenant saved = platformTenantRepository.save(updated);
+
+        auditTrailService.recordPlatformEvent(
+                AuditEventTypes.TENANT_DEACTIVATED,
+                "TENANT",
+                saved.id().toString(),
+                Map.of("slug", saved.slug())
+        );
+
+        return platformTenantMapper.toResponse(saved);
+    }
+}
