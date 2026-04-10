@@ -1,0 +1,22 @@
+package com.financesystem.finance_api.common.config;
+
+import com.financesystem.finance_api.common.tenancy.interceptor.TenantContextInterceptor;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class WebMvcConfig implements WebMvcConfigurer {
+
+    private final TenantContextInterceptor tenantContextInterceptor;
+
+    public WebMvcConfig(TenantContextInterceptor tenantContextInterceptor) {
+        this.tenantContextInterceptor = tenantContextInterceptor;
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(tenantContextInterceptor)
+                .addPathPatterns("/**");
+    }
+}

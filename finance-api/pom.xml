@@ -159,24 +159,6 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
-
-            <!-- Plugin de Spring Boot (FUSIONADO) -->
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <!-- 1. Forzamos la clase principal para evitar el error de candidatos duplicados -->
-                    <mainClass>com.financesystem.finance.FinanceApiApplication</mainClass>
-                    <!-- 2. Excluimos Lombok del JAR final (solo se necesita en compilación) -->
-                    <excludes>
-                        <exclude>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                        </exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
-
         </plugins>
     </build>
 </project>
