@@ -1,9 +1,10 @@
 import { Routes } from "@angular/router";
-import { authGuard } from "./core/guards/auth.guard";
+
 import { AdminAuthLayout } from "./core/layout/layouts/admin-auth-layout/admin-auth-layout";
 import { AppLayout } from "./core/layout/layouts/app-layout/app-layout";
 import { AuthLayout } from "./core/layout/layouts/auth-layout/auth-layout";
 import { PublicLayout } from "./core/layout/layouts/public-layout/public-layout";
+import { authMatchGuard } from "./core/session/guards/auth-match.guard";
 
 export const routes: Routes = [
   // Public
@@ -49,7 +50,7 @@ export const routes: Routes = [
   // Private
   {
     path: "app",
-    canActivate: [authGuard],
+    canMatch: [authMatchGuard],
     component: AppLayout,
     children: [
       {
@@ -101,3 +102,38 @@ export const routes: Routes = [
     redirectTo: "",
   },
 ];
+
+// 1. canActivateChild
+//    Protect all children
+// {
+//   path: "app",
+//   canActivateChild: [authGuard],
+//   children: [...]
+// }
+
+// 2. canDeactivate
+// {
+//   path: "form",
+//   canDeactivate: [unsavedChangesGuard]
+// }
+//    Do not allow to leave without saving form (data)
+
+// 3. canActivate
+
+// canMatch     → ¿esta ruta aplica?
+// canActivate  → ¿puede entrar?
+// canActivateChild → ¿puede entrar a hijos?
+// canDeactivate → ¿puede salir?
+
+// Busca otra ruta que haga match
+// [
+//   {
+//     path: "dashboard",
+//     canMatch: [isAdmin],
+//     loadComponent: () => AdminDashboard
+//   },
+//   {
+//     path: "dashboard",
+//     loadComponent: () => UserDashboard
+//   }
+// ]

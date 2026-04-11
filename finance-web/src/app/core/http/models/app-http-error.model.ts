@@ -1,28 +1,25 @@
-/**
- * Stable application-level error codes.
- *
- * The UI should rely on these codes instead of backend-specific formats.
- */
 export type AppHttpErrorCode =
   | "BAD_REQUEST"
   | "UNAUTHORIZED"
   | "FORBIDDEN"
   | "NOT_FOUND"
   | "CONFLICT"
-  | "VALIDATION"
-  | "RATE_LIMITED"
-  | "SERVER_ERROR"
-  | "NETWORK_ERROR"
+  | "UNPROCESSABLE_ENTITY"
+  | "NETWORK"
   | "TIMEOUT"
-  | "UNKNOWN_ERROR";
+  | "SERVER"
+  | "UNKNOWN";
 
-/**
- * Normalized HTTP error shape used across the application.
- */
-export type AppHttpError = {
-  status: number;
-  code: AppHttpErrorCode;
+export type AppFieldError = {
+  field: string;
   message: string;
-  details?: unknown;
-  originalError?: unknown;
+};
+
+export type AppHttpError = {
+  code: AppHttpErrorCode;
+  status: number | null;
+  message: string;
+  fieldErrors: AppFieldError[];
+  timestamp: string | null;
+  raw: unknown;
 };

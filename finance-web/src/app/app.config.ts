@@ -1,32 +1,31 @@
-import { provideHttpClient, withInterceptors } from "@angular/common/http";
+import {
+  provideHttpClient,
+  withFetch,
+  withInterceptors,
+} from "@angular/common/http";
 import {
   ApplicationConfig,
-  inject,
-  provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from "@angular/core";
 import { provideRouter } from "@angular/router";
 
-import { authInterceptor } from "./core/http/interceptors/auth.interceptor";
-import { errorInterceptor } from "./core/http/interceptors/error.interceptor";
-import { SessionBootstrap } from "./session/state/session.bootstrap";
-
 import { routes } from "./app.routes";
-
-/**
- * Runs session bootstrap before the application becomes fully available.
- */
-function initializeSession(): Promise<void> {
-  return inject(SessionBootstrap).runSafely();
-}
+import { authRefreshInterceptor } from "./core/http/interceptors/auth-refresh.interceptor";
+import { credentialsInterceptor } from "./core/http/interceptors/credentials.interceptor";
+import { httpErrorInterceptor } from "./core/http/interceptors/http-error.interceptor";
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    // provideHttpClient(),
-    provideBrowserGlobalErrorListeners(),
+    provideBrowserGlobalErrorListeners(), // catch global errors
     provideRouter(routes),
 
-    provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
-    provideAppInitializer(initializeSession),
+    provideHttpClient(
+      withFetch(),
+      withInterceptors([
+        credentialsInterceptor,
+        authRefreshInterceptor,
+        httpErrorInterceptor,
+      ])
+    ),
   ],
 };
