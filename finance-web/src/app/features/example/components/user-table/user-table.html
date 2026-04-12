@@ -1,0 +1,43 @@
+<table class="w-full border-collapse border border-slate-300">
+  <thead class="bg-slate-100">
+    <tr>
+      <th class="border border-slate-300 px-4 py-2 text-left">Name</th>
+      <th class="border border-slate-300 px-4 py-2 text-left">Email</th>
+      <th class="border border-slate-300 px-4 py-2 text-left">Role</th>
+      <th class="border border-slate-300 px-4 py-2 text-left">Status</th>
+      <th class="border border-slate-300 px-4 py-2 text-left">Created At</th>
+      <th class="border border-slate-300 px-4 py-2 text-left">Actions</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    @for (user of users(); track user.id) {
+      <tr>
+        <td class="border border-slate-300 px-4 py-2">
+          {{ getFullName(user) }}
+        </td>
+        <td class="border border-slate-300 px-4 py-2">
+          {{ user.email }}
+        </td>
+        <td class="border border-slate-300 px-4 py-2">
+          {{ user.role.name }}
+        </td>
+        <td class="border border-slate-300 px-4 py-2">
+          {{ user.status }}
+        </td>
+        <td class="border border-slate-300 px-4 py-2">
+          {{ user.createdAt | date: "short" }}
+        </td>
+        <td class="border border-slate-300 px-4 py-2">
+          <button
+            type="button"
+            class="rounded bg-slate-900 px-3 py-1 text-white"
+            (click)="onViewUser(user.id)"
+          >
+            View
+          </button>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>

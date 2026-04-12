@@ -8,6 +8,8 @@
 :root {
   color-scheme: light;
 
+  --font-sans: Inter, system-ui, sans-serif;
+
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -74,5 +76,6 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans);
   }
 }
