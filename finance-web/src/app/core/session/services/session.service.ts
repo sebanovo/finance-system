@@ -18,8 +18,14 @@ export class SessionService {
     this.sessionStore.setLoading();
 
     return this.sessionApi.login(payload).pipe(
+      tap(loginResponse => {
+        // Login logs
+        console.log("Login response: ", loginResponse);
+      }),
       switchMap(() => this.sessionApi.getMe()),
       tap(user => {
+        // getMe() logs
+        console.log("getMe response: ", user);
         this.sessionStore.setAuthenticated(user);
       }),
       catchError((error: unknown) => {
@@ -35,6 +41,7 @@ export class SessionService {
   loadMe(): Observable<AuthUser> {
     return this.sessionApi.getMe().pipe(
       tap(user => {
+        console.log("loadMe", user);
         this.sessionStore.setAuthenticated(user);
       })
     );
@@ -53,9 +60,11 @@ export class SessionService {
     }
 
     this.sessionStore.setBootstrapStarted();
-
+    console.log("bootstraping");
     return this.sessionApi.getMe().pipe(
       tap(user => {
+        // logs
+        console.log("setAuthenticated:", user);
         this.sessionStore.setAuthenticated(user);
       }),
       catchError(() => {
@@ -73,6 +82,7 @@ export class SessionService {
 
     return this.sessionApi.logout().pipe(
       tap(() => {
+        console.log("Logout.");
         this.sessionStore.clearSession();
       })
     );

@@ -33,12 +33,14 @@ export class LoginPage {
       next: () => {
         const returnUrl =
           this.route.snapshot.queryParamMap.get("returnUrl") || "/app";
-
         void this.router.navigateByUrl(returnUrl);
       },
       error: (error: AppHttpError) => {
         this.errorMessage.set(error.message);
         this.isSubmitting.set(false);
+      },
+      complete: () => {
+        console.log("login completado");
       },
     });
   }
