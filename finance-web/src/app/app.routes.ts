@@ -60,6 +60,7 @@ export const routes: Routes = [
         redirectTo: "dashboard",
         pathMatch: "full",
       },
+
       {
         path: "dashboard",
         loadChildren: () =>
@@ -68,17 +69,46 @@ export const routes: Routes = [
           ),
       },
       {
+        path: "tenants",
+        loadChildren: () =>
+          import("./features/tanants/tenants.routes").then(
+            m => m.TENANTS_ROUTES
+          ),
+      },
+      {
+        path: "subscriptions",
+        loadChildren: () =>
+          import("./features/subscriptions/subscriptions.routes").then(
+            m => m.SUBSCRIPTIONS_ROUTES
+          ),
+      },
+      {
         path: "users",
         loadChildren: () =>
           import("./features/users/users.routes").then(m => m.USERS_ROUTES),
       },
       {
-        path: "products",
+        path: "plans",
         loadChildren: () =>
-          import("./features/products/products.routes").then(
-            m => m.PRODUCTS_ROUTES
-          ),
+          import("./features/plans/plans.routes").then(m => m.PLANS_ROUTES),
       },
+      {
+        path: "access",
+        loadChildren: () =>
+          import("./features/access/access.routes").then(m => m.ACCESS_ROUTES),
+      },
+      {
+        path: "audit",
+        loadChildren: () =>
+          import("./features/audit/audit.routes").then(m => m.AUDIT_ROUTES),
+      },
+      // {
+      //   path: "products",
+      //   loadChildren: () =>
+      //     import("./features/products/products.routes").then(
+      //       m => m.PRODUCTS_ROUTES
+      //     ),
+      // },
       {
         path: "reports",
         loadChildren: () =>

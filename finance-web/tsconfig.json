@@ -26,7 +26,8 @@
       ],
       "@shared/ui/field": ["./src/app/shared/ui/field/src/index.ts"],
       "@shared/ui/label": ["./src/app/shared/ui/label/src/index.ts"],
-      "@shared/ui/input": ["./src/app/shared/ui/input/src/index.ts"]
+      "@shared/ui/input": ["./src/app/shared/ui/input/src/index.ts"],
+      "@shared/ui/tooltip": ["./src/app/shared/ui/tooltip/src/index.ts"]
     }
   },
   "angularCompilerOptions": {
