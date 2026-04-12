@@ -1,52 +1,105 @@
 <header
   class="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur"
 >
-  <div class="flex h-16 items-center justify-between px-4 sm:px-6">
-    <div class="flex items-center gap-4">
+  <div class="flex h-16 items-center justify-between gap-4 px-4 sm:px-6">
+    <div class="flex min-w-0 items-center gap-3">
       <button
+        hlmBtn
+        variant="outline"
+        size="sm"
+        class="lg:hidden"
         type="button"
-        class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 text-slate-700 transition hover:bg-slate-50 lg:hidden"
+        (click)="openMobileSidebar()"
         aria-label="Abrir menú"
-        (click)="onOpenMobileMenu()"
       >
-        ☰
+        <ng-icon name="lucidePanelLeft" class="text-base" />
       </button>
 
-      @if (currentPageInfo$ | async; as pageInfo) {
-        <div>
-          <p class="text-sm text-slate-500">{{ pageInfo.subtitle }}</p>
-          <h1 class="text-base font-semibold text-slate-900">
-            {{ pageInfo.title }}
-          </h1>
+      <button
+        hlmBtn
+        variant="outline"
+        size="sm"
+        class="hidden lg:inline-flex"
+        type="button"
+        (click)="toggleDesktopSidebar()"
+        aria-label="Colapsar sidebar"
+      >
+        <ng-icon
+          [name]="
+            layoutState.sidebarCollapsed()
+              ? 'lucidePanelLeft'
+              : 'lucidePanelLeftClose'
+          "
+          class="text-base"
+        />
+      </button>
+
+      <div class="min-w-0">
+        <p class="truncate text-sm font-medium text-slate-500">
+          {{ subtitle() }}
+        </p>
+        <h1 class="truncate text-base font-semibold text-slate-900 sm:text-lg">
+          {{ title() }}
+        </h1>
+      </div>
+    </div>
+
+    <div class="hidden min-w-0 flex-1 justify-center px-4 md:flex">
+      @if (showSearch()) {
+        <div class="relative w-full max-w-md">
+          <ng-icon
+            name="lucideSearch"
+            class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
+          />
+          <input
+            hlmInput
+            type="text"
+            [placeholder]="searchPlaceholder()"
+            class="pl-10"
+          />
         </div>
       }
     </div>
 
-    <div class="flex items-center gap-3">
-      <button
-        type="button"
-        class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-        (click)="onSearchClick()"
-      >
-        Buscar
-      </button>
-
-      <button
-        type="button"
-        class="flex items-center gap-3 rounded-2xl border border-slate-200 px-3 py-2 transition hover:bg-slate-50"
-        (click)="onProfileClick()"
-      >
-        <div
-          class="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white"
+    <div class="flex items-center gap-2 sm:gap-3">
+      @if (showSearch()) {
+        <button
+          hlmBtn
+          variant="outline"
+          size="sm"
+          class="md:hidden"
+          type="button"
+          aria-label="Buscar"
         >
-          W
-        </div>
+          <ng-icon name="lucideSearch" class="text-base" />
+        </button>
+      }
 
-        <div class="hidden text-left sm:block">
-          <p class="text-sm font-medium text-slate-900">Walter</p>
-          <p class="text-xs text-slate-500">Administrador</p>
-        </div>
-      </button>
+      @if (showNotifications()) {
+        <button
+          hlmBtn
+          variant="outline"
+          size="sm"
+          type="button"
+          aria-label="Notificaciones"
+        >
+          <ng-icon name="lucideBell" class="text-base" />
+        </button>
+      }
+
+      @if (showProfile()) {
+        <button
+          hlmBtn
+          variant="outline"
+          size="sm"
+          type="button"
+          class="gap-2"
+          aria-label="Perfil"
+        >
+          <ng-icon name="lucideUser" class="text-base" />
+          <span class="hidden sm:inline">Perfil</span>
+        </button>
+      }
     </div>
   </div>
 </header>

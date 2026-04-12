@@ -1,0 +1,221 @@
+========================================
+GUÍA DE ARQUITECTURA DE FEATURES (ESCALABLE)
+========================================
+
+Cada feature se considera una "mini aplicación independiente dentro del sistema".
+Debe ser autónoma, escalable y desacoplada del backend.
+
+Ejemplo de feature: tenants/
+
+========================================
+📁 pages/
+========================================
+PROPÓSITO:
+- Representar pantallas (entry points de rutas)
+- Capa de composición de UI
+
+REGLAS:
+- No debe contener llamadas HTTP directas
+- No debe contener lógica de negocio compleja
+- Debe consumir estado desde store o servicios
+
+INCLUYE:
+✔ Layout de la página
+✔ Composición de componentes
+✔ Lectura de estado
+✔ Invocación de acciones del store
+
+NO INCLUYE:
+✘ Llamadas a API
+✘ Normalización de datos
+✘ Lógica de negocio
+
+========================================
+📁 components/
+========================================
+PROPÓSITO:
+- Componentes reutilizables dentro de la feature
+
+REGLAS:
+- Deben ser puramente presentacionales
+- No deben manejar estado global
+- No deben realizar llamadas HTTP
+
+INCLUYE:
+✔ Tablas
+✔ Formularios
+✔ Filtros UI
+✔ Modales
+✔ Estados vacíos
+
+NO INCLUYE:
+✘ Acceso a backend
+✘ Lógica de estado
+✘ Routing
+
+========================================
+📁 services/
+========================================
+PROPÓSITO:
+- Capa de comunicación con el backend
+
+REGLAS:
+- Solo debe realizar llamadas HTTP
+- No debe contener lógica de UI
+- No debe manejar estado
+
+INCLUYE:
+✔ CRUD (crear, leer, actualizar, eliminar)
+✔ Comunicación con endpoints
+✔ Manejo básico de requests/responses
+
+NO INCLUYE:
+✘ Filtros
+✘ Transformación de UI
+✘ Cache o estado
+
+========================================
+📁 store/
+========================================
+PROPÓSITO:
+- Núcleo de estado de la feature
+
+REGLAS:
+- Centraliza el estado completo de la feature
+- Orquesta llamadas a servicios
+- Gestiona cache, loading y errores
+
+INCLUYE:
+✔ Estado reactivo (signals / observables)
+✔ Loading y error states
+✔ Cache de datos
+✔ Filtros y paginación
+✔ Selección de elementos
+
+NO INCLUYE:
+✘ UI
+✘ Lógica de presentación
+
+========================================
+📁 models/
+========================================
+PROPÓSITO:
+- Definición de estructuras de datos
+
+REGLAS:
+- Solo tipado
+- Sin lógica de ejecución
+
+INCLUYE:
+✔ Interfaces
+✔ Tipos
+✔ Enums
+
+EJEMPLOS:
+- modelo UI (tenant.model.ts)
+- DTO backend (tenant.dto.ts)
+- query de filtros (tenant.query.ts)
+
+========================================
+📁 adapters/
+========================================
+PROPÓSITO:
+- Transformación de datos entre backend y frontend
+
+REGLAS:
+- Funciones puras
+- Sin dependencias de Angular
+- Sin efectos secundarios
+
+INCLUYE:
+✔ Normalización de datos
+✔ Mapeo de campos backend → UI
+✔ Transformaciones de estructuras
+
+========================================
+📁 utils/
+========================================
+PROPÓSITO:
+- Funciones auxiliares puras
+
+REGLAS:
+- Sin dependencias de Angular
+- Sin estado
+- Sin llamadas HTTP
+
+INCLUYE:
+✔ Ordenamiento
+✔ Filtrado puro
+✔ Formateo de datos
+
+========================================
+📁 resolvers/ (opcional)
+========================================
+PROPÓSITO:
+- Precarga de datos antes de la navegación
+
+REGLAS:
+- Solo para datos críticos iniciales
+- Evitar en aplicaciones altamente dinámicas
+
+INCLUYE:
+✔ Carga inicial de datos
+✔ Validación previa a la entrada de ruta
+
+NO INCLUYE:
+✘ Lógica de UI
+✘ Flujos complejos de negocio
+
+========================================
+📄 tenants.routes.ts
+========================================
+PROPÓSITO:
+- Definición de rutas de la feature
+
+REGLAS:
+- Debe ser simple y declarativo
+- Debe soportar lazy loading
+- No debe contener lógica de negocio
+
+INCLUYE:
+✔ Rutas hijas
+✔ Guards
+✔ Resolvers (si aplica)
+✔ LoadComponent / LoadChildren
+
+========================================
+REGLAS GENERALES
+========================================
+
+✔ Las páginas son capas de presentación
+✔ El store es el núcleo de la lógica de la feature
+✔ Los servicios solo comunican con el backend
+✔ Los componentes son únicamente UI reutilizable
+✔ Los modelos definen estructuras de datos
+✔ Los adapters normalizan información externa
+
+========================================
+FLUJO DE DATOS (MODELO MENTAL)
+========================================
+
+Page → Store → Service → API → Adapter → Store → UI
+
+========================================
+OBJETIVO DE LA ARQUITECTURA
+========================================
+
+✔ Escalabilidad de largo plazo
+✔ Separación clara de responsabilidades
+✔ Mantenibilidad del código
+✔ Reutilización de lógica
+✔ Reducción de acoplamiento
+
+========================================
+RESTRICCIONES IMPORTANTES
+========================================
+
+✘ No realizar llamadas a API desde páginas
+✘ No almacenar estado en componentes UI
+✘ No mezclar lógica de negocio con presentación
+✘ No duplicar lógica entre features
+========================================

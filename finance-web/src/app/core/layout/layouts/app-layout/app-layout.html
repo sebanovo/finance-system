@@ -1,5 +1,85 @@
 <div class="min-h-screen bg-slate-50 text-slate-900">
   <div class="flex min-h-screen">
+    <app-app-sidebar [collapsed]="layoutState.sidebarCollapsed()" />
+
+    <main class="flex min-h-screen min-w-0 flex-1 flex-col overflow-hidden">
+      <app-app-header />
+
+      <section class="flex-1 overflow-x-hidden p-6">
+        <router-outlet />
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- <div class="min-h-screen bg-slate-50 text-slate-900">
+  <div class="flex min-h-screen">
+    <-- Sidebar desktop --
+    <app-app-sidebar [collapsed]="layoutState.sidebarCollapsed()" />
+
+    <main class="flex min-h-screen flex-1 flex-col overflow-hidden">
+      <app-app-header />
+
+      <div class="flex-1 p-6">
+        <router-outlet />
+      </div>
+    </main>
+  </div>
+
+  <- Sidebar móvil (Sheet) --
+  <hlm-sheet side="left">
+    <!- Trigger (botón lo pondremos en navbar luego bien conectado) --
+    <button
+      hlmSheetTrigger
+      class="hidden"
+    ></button>
+
+    <ng-template hlmSheetPortal let-ctx>
+      <hlm-sheet-content side="left" class="w-72 p-0">
+        <div class="h-full">
+          <app-app-sidebar [collapsed]="false" [mobile]="true" />
+        </div>
+      </hlm-sheet-content>
+    </ng-template>
+  </hlm-sheet>
+</div> -->
+
+<!-- <div class="min-h-screen bg-slate-50 text-slate-900">
+  <div class="flex min-h-screen">
+    <app-app-sidebar [collapsed]="layoutState.sidebarCollapsed()" />
+
+    <main class="flex min-h-screen flex-1 flex-col overflow-hidden">
+      <app-app-header />
+
+      <div class="flex-1 p-6">
+        <router-outlet />
+      </div>
+    </main>
+  </div>
+
+  <hlm-sheet
+    [open]="layoutState.mobileSidebarOpen()"
+    (openChange)="layoutState.setMobileSidebarOpen($event)"
+  >
+    <hlm-sheet-content side="left" class="w-72 p-0">
+      <div class="h-full">
+        <app-sidebar [collapsed]="false" />
+      </div>
+    </hlm-sheet-content>
+  </hlm-sheet>
+  <hlm-sheet>
+    <button hlmSheetTrigger>Abrir</button>
+
+    <hlm-sheet-content side="left" class="w-72 p-0">
+      <div class="h-full">
+        <app-app-sidebar [collapsed]="false" />
+      </div>
+    </hlm-sheet-content>
+  </hlm-sheet>
+</div> -->
+
+<!-- <div class="min-h-screen bg-slate-50 text-slate-900">
+  <div class="flex min-h-screen">
     <app-app-sidebar />
 
     <div class="flex min-h-screen flex-1 flex-col">
@@ -12,4 +92,4 @@
       </main>
     </div>
   </div>
-</div>
+</div> -->
