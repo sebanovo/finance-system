@@ -61,7 +61,6 @@ export class SessionApi {
    * Logs out the current user.
    */
   logout(): Observable<void> {
-    console.log("login out!!!");
     return this.http
       .post<LogoutResponse>(
         `${this.baseUrl}/logout`,

@@ -12,7 +12,7 @@ const createErrorResponse = (message: string) => {
 };
 
 export const authHandlers = [
-  http.post("/api/auth/login", async ({ request }) => {
+  http.post("/api/auth/logina", async ({ request }) => {
     const tenantSlugHeader = request.headers.get("X-Tenant-Slug");
 
     if (!tenantSlugHeader) {
@@ -65,7 +65,7 @@ export const authHandlers = [
   }),
 
   // Simulación del endpoint GET /api/me
-  http.get("/api/auth/me", async ({ request }) => {
+  http.get("/api/auth/mea", async ({ request }) => {
     // const cookieHeader = request.headers.get("Cookie"); // Recuperamos la cookie
 
     // if (!cookieHeader) {

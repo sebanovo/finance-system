@@ -5,6 +5,7 @@ import { AppLayout } from "./core/layout/layouts/app-layout/app-layout";
 import { AuthLayout } from "./core/layout/layouts/auth-layout/auth-layout";
 import { PublicLayout } from "./core/layout/layouts/public-layout/public-layout";
 import { authMatchGuard } from "./core/session/guards/auth-match.guard";
+import { publicOnlyGuard } from "./core/session/guards/public-only.guard";
 
 export const routes: Routes = [
   // Public
@@ -24,6 +25,7 @@ export const routes: Routes = [
   {
     path: "auth",
     component: AuthLayout,
+    canActivate: [publicOnlyGuard],
     children: [
       // public login
       {
@@ -55,10 +57,8 @@ export const routes: Routes = [
     children: [
       {
         path: "", //default route
-        loadChildren: () =>
-          import("./features/dashboard/dashboard.routes").then(
-            m => m.DASHBOARD_ROUTES
-          ),
+        redirectTo: "dashboard",
+        pathMatch: "full",
       },
       {
         path: "dashboard",

@@ -12,4 +12,5 @@ export type SessionState = {
   isBootstrapping: boolean;
   isInitialized: boolean;
   bootstrapError: string | null;
+  token: string | null; //temporal
 };

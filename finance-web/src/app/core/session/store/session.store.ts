@@ -9,6 +9,7 @@ const initialState: SessionState = {
   isBootstrapping: false,
   isInitialized: false,
   bootstrapError: null,
+  token: null,
 };
 
 @Injectable({
@@ -22,6 +23,8 @@ export class SessionStore {
   readonly isBootstrapping = computed(() => this.state().isBootstrapping);
   readonly isInitialized = computed(() => this.state().isInitialized);
   readonly bootstrapError = computed(() => this.state().bootstrapError);
+  // temporal
+  readonly token = computed(() => this.state().token);
 
   readonly isAuthenticated = computed(
     () => this.state().status === "authenticated"
@@ -94,16 +97,49 @@ export class SessionStore {
   }
 
   clearSession(): void {
+    // temporal
+    localStorage.removeItem("session");
+
     this.state.set({
       user: null,
       status: "unauthenticated",
       isBootstrapping: false,
       isInitialized: true,
       bootstrapError: null,
+      token: null,
     });
   }
 
   reset(): void {
     this.state.set(initialState);
+  }
+
+  // Token methods <Temporal>
+  setTokens(data: {
+    accessToken: string;
+    refreshToken: string;
+    accessExpiresInMs: number;
+  }): void {
+    const session = {
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
+      expiresAt: Date.now() + data.accessExpiresInMs,
+    };
+
+    localStorage.setItem("session", JSON.stringify(session));
+
+    this.state.update(s => ({
+      ...s,
+      token: data.accessToken,
+    }));
+  }
+
+  getSessionFromStorage(): {
+    accessToken: string;
+    refreshToken: string;
+    expiresAt: number;
+  } | null {
+    const raw = localStorage.getItem("session");
+    return raw ? JSON.parse(raw) : null;
   }
 }
