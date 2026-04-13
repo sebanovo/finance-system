@@ -5,6 +5,7 @@ import 'package:finance_mobile/domain/repositories/role_repository.dart';
 import 'package:finance_mobile/domain/usecases/get_permissions_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_roles_usecase.dart';
 import 'package:finance_mobile/domain/usecases/login_usecase.dart';
+import 'package:finance_mobile/domain/usecases/reset_password_usecase.dart';
 import 'package:finance_mobile/infrastructure/datasources/auth_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/permission_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/role_remote_datasource.dart';
@@ -13,6 +14,7 @@ import 'package:finance_mobile/infrastructure/repositories/permission_repository
 import 'package:finance_mobile/infrastructure/repositories/role_repository_impl.dart';
 import 'package:finance_mobile/presentation/viewmodels/login_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/permissions_viewmodel.dart';
+import 'package:finance_mobile/presentation/viewmodels/reset_password_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/roles_viewmodel.dart';
 import 'package:get_it/get_it.dart';
 
@@ -35,7 +37,7 @@ void initPermissionModule() {
     () => PermissionRepositoryImpl(sl()),
   );
   sl.registerLazySingleton(() => GetPermissionsUsecase(sl()));
-  sl.registerFactory(() => PermissionsViewModel(sl()));
+  sl.registerFactory(() => PermissionsViewModel(getPermissionsUseCase: sl()));
 }
 
 void initRoleModule() {
@@ -56,4 +58,6 @@ void initAuthModule() {
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl()));
   sl.registerLazySingleton(() => LoginUseCase(sl()));
   sl.registerFactory(() => LoginViewModel(loginUseCase: sl()));
+  sl.registerLazySingleton(() => ResetPasswordUseCase(sl()));
+  sl.registerFactory(() => ResetPasswordViewModel(resetPasswordUseCase: sl()));
 }

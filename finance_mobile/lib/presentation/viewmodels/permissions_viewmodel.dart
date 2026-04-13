@@ -9,7 +9,7 @@ class PermissionsViewModel extends ChangeNotifier {
   bool _loading = false;
   String? _errorMessage;
 
-  PermissionsViewModel(this.getPermissionsUseCase);
+  PermissionsViewModel({required this.getPermissionsUseCase});
 
   List<Permission> get permissions => _permissions;
   bool get loading => _loading;

@@ -6,4 +6,10 @@ abstract class AuthRepository {
     String password,
     String tenantSlug,
   );
+
+  Future<void> resetPassword(
+    String tenantSlug,
+    String token,
+    String newPassword,
+  );
 }

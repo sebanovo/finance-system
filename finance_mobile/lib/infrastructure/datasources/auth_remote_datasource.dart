@@ -4,6 +4,11 @@ import '../models/login_response.dart';
 
 abstract class AuthRemoteDataSource {
   Future<LoginResponse> login(String email, String password, String tenantSlug);
+  Future<void> resetPassword(
+    String tenantSlug,
+    String token,
+    String newPassword,
+  );
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -31,6 +36,28 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw Exception(
         'Error ${response.statusCode}: ${response.statusMessage}',
       );
+    }
+  }
+
+  @override
+  Future<void> resetPassword(
+    String tenantSlug,
+    String token,
+    String newPassword,
+  ) async {
+    apiClient.setTenant(tenantSlug);
+    final body = {'newPassword': newPassword, 'token': token};
+    final response = await apiClient.post('/api/auth/reset-password', body);
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = response.data;
+      if (data['success'] != true) {
+        throw Exception(data['message'] ?? 'Error al restablecer');
+      }
+    } else if (response.statusCode == 400 || response.statusCode == 401) {
+      final Map<String, dynamic> error = response.data;
+      throw Exception(error['message'] ?? 'Error al restablecer');
+    } else {
+      throw Exception('Error ${response.statusCode}');
     }
   }
 }

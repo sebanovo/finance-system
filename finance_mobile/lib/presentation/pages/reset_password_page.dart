@@ -1,8 +1,7 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:http/http.dart' as http;
-import 'package:finance_mobile/constants/env.dart';
+import '../../../../core/di/injection_container.dart' as di;
+import '../viewmodels/reset_password_viewmodel.dart';
 
 class ResetPasswordPage extends StatefulWidget {
   final String? initialTenant;
@@ -19,11 +18,14 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   final tokenController = TextEditingController();
   final newPasswordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
-  bool isLoading = false;
+
+  late ResetPasswordViewModel _viewModel;
 
   @override
   void initState() {
     super.initState();
+    _viewModel = di.sl<ResetPasswordViewModel>();
+    _viewModel.addListener(_onViewModelChanged);
     if (widget.initialTenant != null) {
       tenantController.text = widget.initialTenant!;
     }
@@ -32,7 +34,15 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     }
   }
 
-  Future<void> resetPassword() async {
+  void _onViewModelChanged() {
+    if (!mounted) return;
+    if (_viewModel.errorMessage != null) {
+      _showSnackBar(_viewModel.errorMessage!, isError: true);
+      _viewModel.clearError();
+    }
+  }
+
+  Future<void> _resetPassword() async {
     final tenant = tenantController.text.trim();
     final token = tokenController.text.trim();
     final newPassword = newPasswordController.text.trim();
@@ -51,36 +61,12 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       return;
     }
 
-    setState(() => isLoading = true);
-
-    final url = Uri.parse('${Env.baseUrl}/api/auth/reset-password');
-    try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': '*/*',
-          'X-Tenant-Slug': tenant,
-        },
-        body: jsonEncode({'newPassword': newPassword, 'token': token}),
-      );
-
-      final decoded = jsonDecode(response.body);
-      if (response.statusCode == 200 && decoded['success'] == true) {
-        _showSnackBar(
-          'Contraseña restablecida. Inicia sesión.',
-          isError: false,
-        );
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) context.go('/login');
-        });
-      } else {
-        _showSnackBar(decoded['message'] ?? 'Error al restablecer');
-      }
-    } catch (e) {
-      _showSnackBar('Error de conexión: $e');
-    } finally {
-      if (mounted) setState(() => isLoading = false);
+    final success = await _viewModel.resetPassword(tenant, token, newPassword);
+    if (success && mounted) {
+      _showSnackBar('Contraseña restablecida. Inicia sesión.', isError: false);
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) context.go('/login');
+      });
     }
   }
 
@@ -91,6 +77,16 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         backgroundColor: isError ? Colors.red : Colors.green,
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    tenantController.dispose();
+    tokenController.dispose();
+    newPasswordController.dispose();
+    confirmPasswordController.dispose();
+    _viewModel.removeListener(_onViewModelChanged);
+    super.dispose();
   }
 
   @override
@@ -143,8 +139,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: isLoading ? null : resetPassword,
-                child: isLoading
+                onPressed: _viewModel.isLoading ? null : _resetPassword,
+                child: _viewModel.isLoading
                     ? const CircularProgressIndicator()
                     : const Text('Restablecer contraseña'),
               ),

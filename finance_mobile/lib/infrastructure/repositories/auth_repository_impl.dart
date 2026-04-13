@@ -26,4 +26,13 @@ class AuthRepositoryImpl implements AuthRepository {
       throw Exception(response.message);
     }
   }
+
+  @override
+  Future<void> resetPassword(
+    String tenantSlug,
+    String token,
+    String newPassword,
+  ) async {
+    await remoteDataSource.resetPassword(tenantSlug, token, newPassword);
+  }
 }
