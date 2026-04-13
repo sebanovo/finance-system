@@ -2,6 +2,11 @@
 
 A new Flutter project.
 
+Importante ejecutar este comando para el .env: 
+```bash
+cp finance_mobile/.env.sample finance_mobile/.env
+```
+
 └── 📁core
     └── 📁di (service locator, centraliza las dependencias)
         ├── injection_container.dart 

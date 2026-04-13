@@ -2,8 +2,8 @@ import 'package:finance_mobile/forgot_password.dart';
 import 'package:finance_mobile/home_page.dart';
 import 'package:finance_mobile/login_page.dart';
 import 'package:finance_mobile/presentation/pages/permissions_pages.dart';
+import 'package:finance_mobile/presentation/pages/roles_pages.dart';
 import 'package:finance_mobile/reset_password_page.dart';
-import 'package:finance_mobile/roles_page.dart';
 import 'package:finance_mobile/users_page.dart';
 import 'package:go_router/go_router.dart';
 
