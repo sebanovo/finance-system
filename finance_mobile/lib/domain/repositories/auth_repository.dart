@@ -1,5 +1,5 @@
 import '../entities/user.dart';
-import '../entities/tenant_signup.dart'; // opcional
+import '../entities/tenant_signup.dart';
 
 abstract class AuthRepository {
   Future<(User, String, String)> login(
@@ -15,4 +15,6 @@ abstract class AuthRepository {
   );
 
   Future<void> signup(TenantSignup signupData, String password);
+
+  Future<void> forgotPassword(String email, String tenantSlug);
 }

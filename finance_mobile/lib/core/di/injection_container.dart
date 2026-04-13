@@ -2,6 +2,7 @@ import 'package:finance_mobile/core/network/api_client.dart';
 import 'package:finance_mobile/domain/repositories/auth_repository.dart';
 import 'package:finance_mobile/domain/repositories/permission_repository.dart';
 import 'package:finance_mobile/domain/repositories/role_repository.dart';
+import 'package:finance_mobile/domain/usecases/forgot_password_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_permissions_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_roles_usecase.dart';
 import 'package:finance_mobile/domain/usecases/login_usecase.dart';
@@ -13,6 +14,7 @@ import 'package:finance_mobile/infrastructure/datasources/role_remote_datasource
 import 'package:finance_mobile/infrastructure/repositories/auth_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/permission_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/role_repository_impl.dart';
+import 'package:finance_mobile/presentation/viewmodels/forgot_password_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/login_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/permissions_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/reset_password_viewmodel.dart';
@@ -66,4 +68,9 @@ void initAuthModule() {
   // SignUp(Tenant) Features
   sl.registerLazySingleton(() => SignupUseCase(sl()));
   sl.registerFactory(() => SignupViewModel(signupUseCase: sl()));
+  // Forgot Password FEatures
+  sl.registerLazySingleton(() => ForgotPasswordUseCase(sl()));
+  sl.registerFactory(
+    () => ForgotPasswordViewModel(forgotPasswordUseCase: sl()),
+  );
 }

@@ -2,6 +2,7 @@ import '../../../../core/network/api_client.dart';
 import '../models/login_request.dart';
 import '../models/login_response.dart';
 import '../models/signup_request.dart';
+import '../models/forgot_password_request.dart'; // crearemos
 
 abstract class AuthRemoteDataSource {
   Future<LoginResponse> login(String email, String password, String tenantSlug);
@@ -11,6 +12,7 @@ abstract class AuthRemoteDataSource {
     String newPassword,
   );
   Future<void> signup(SignupRequest request);
+  Future<void> forgotPassword(String email, String tenantSlug);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -74,6 +76,26 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     if (response.statusCode != 200 && response.statusCode != 201) {
       final error = response.data as Map<String, dynamic>;
       throw Exception(error['message'] ?? 'Error al registrar');
+    }
+  }
+
+  @override
+  Future<void> forgotPassword(String email, String tenantSlug) async {
+    // Usamos ApiClient pero sin token, solo tenant en header
+    apiClient.setTenant(tenantSlug);
+    final request = ForgotPasswordRequest(email: email);
+    final response = await apiClient.post(
+      '/api/auth/forgot-password',
+      request.toJson(),
+    );
+    if (response.statusCode != 200) {
+      final error = response.data as Map<String, dynamic>;
+      throw Exception(error['message'] ?? 'Error al enviar correo');
+    }
+    // Si es 200, asumimos éxito
+    final data = response.data as Map<String, dynamic>;
+    if (data['success'] != true) {
+      throw Exception(data['message'] ?? 'Error desconocido');
     }
   }
 }

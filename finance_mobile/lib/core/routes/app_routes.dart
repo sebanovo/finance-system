@@ -1,10 +1,10 @@
-import 'package:finance_mobile/forgot_password.dart';
 import 'package:finance_mobile/home_page.dart';
 import 'package:finance_mobile/presentation/pages/permissions_pages.dart';
 import 'package:finance_mobile/presentation/pages/roles_pages.dart';
 import 'package:finance_mobile/presentation/pages/login_page.dart';
 import 'package:finance_mobile/presentation/pages/reset_password_page.dart';
 import 'package:finance_mobile/presentation/pages/signup_page.dart';
+import 'package:finance_mobile/presentation/pages/forgot_password_page.dart';
 import 'package:finance_mobile/users_page.dart';
 import 'package:go_router/go_router.dart';
 
@@ -25,11 +25,10 @@ final appRouter = GoRouter(
       builder: (context, _) => const PermissionsPage(),
     ),
     GoRoute(
-      path: '/reset-password:token',
+      path: '/reset-password',
       builder: (context, state) {
-        // token: ModalRoute.of(context)?.settings.arguments as String?,
-        final token = state.pathParameters['token'];
-        return ResetPasswordPage(token: token);
+        final tenant = state.extra as String?;
+        return ResetPasswordPage(initialTenant: tenant);
       },
     ),
   ],
