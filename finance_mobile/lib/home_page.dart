@@ -4,11 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:finance_mobile/constants/env.dart';
-// import 'permissions_page.dart';
-import 'users_page.dart';
-// import 'roles_page.dart';
 import 'presentation/pages/permissions_pages.dart';
 import 'presentation/pages/roles_pages.dart';
+import 'presentation/pages/users_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -178,7 +176,7 @@ class _HomePageState extends State<HomePage> {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const UsuariosPage()),
+                  MaterialPageRoute(builder: (_) => const UsersPage()),
                 );
               },
             ),

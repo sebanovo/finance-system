@@ -1,12 +1,12 @@
 import 'package:finance_mobile/home_page.dart';
+import 'package:go_router/go_router.dart';
 import 'package:finance_mobile/presentation/pages/permissions_pages.dart';
 import 'package:finance_mobile/presentation/pages/roles_pages.dart';
 import 'package:finance_mobile/presentation/pages/login_page.dart';
 import 'package:finance_mobile/presentation/pages/reset_password_page.dart';
 import 'package:finance_mobile/presentation/pages/signup_page.dart';
 import 'package:finance_mobile/presentation/pages/forgot_password_page.dart';
-import 'package:finance_mobile/users_page.dart';
-import 'package:go_router/go_router.dart';
+import 'package:finance_mobile/presentation/pages/users_page.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/login',
@@ -18,7 +18,7 @@ final appRouter = GoRouter(
       path: '/forgot-password',
       builder: (context, _) => const ForgotPasswordPage(),
     ),
-    GoRoute(path: '/users', builder: (context, _) => const UsuariosPage()),
+    GoRoute(path: '/users', builder: (context, _) => const UsersPage()),
     GoRoute(path: '/roles', builder: (context, _) => const RolesPage()),
     GoRoute(
       path: '/permissions',

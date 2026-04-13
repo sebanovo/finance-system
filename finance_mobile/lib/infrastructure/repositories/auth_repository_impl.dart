@@ -19,9 +19,11 @@ class AuthRepositoryImpl implements AuthRepository {
     final response = await remoteDataSource.login(email, password, tenantSlug);
     if (response.success && response.data != null) {
       final user = User(
+        id: '', // borrar esto luego
         email: email,
-        tenantSlug: tenantSlug,
-        roles: [], // opcional: extraer roles del token si es necesario
+        firstName: '',
+        lastName: '',
+        active: true,
       );
       return (user, response.data!.accessToken, response.data!.refreshToken);
     } else {
