@@ -37,7 +37,11 @@ public class SendPasswordResetNotificationUseCase {
                 Recibimos una solicitud para restablecer tu contraseña.
 
                 Tenant: %s
-                Enlace de recuperación:
+
+                Si usas la aplicación móvil, ingresa este código:
+                Token: %s
+
+                O usa el siguiente enlace de recuperación:
                 %s
 
                 Este enlace vence en:
@@ -46,6 +50,7 @@ public class SendPasswordResetNotificationUseCase {
                 Si no solicitaste este cambio, puedes ignorar este correo.
                 """.formatted(
                 notification.tenantSlug(),
+                notification.resetToken(),
                 resetLink,
                 expiresAt
         );

@@ -66,5 +66,18 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<!-- Permisos para speech_to_text -->
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Necesitamos reconocer tu voz para llenar el reporte técnico automáticamente.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>El micrófono se usará para capturar el diagnóstico del mecánico.</string>
+
+	<!-- Permisos para image_picker -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Necesitamos acceso a la galería para que puedas subir fotos del vehículo.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Necesitamos usar la cámara para tomar fotos de las piezas dañadas.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Se requiere el micrófono si vas a grabar videos del motor.</string>
 </dict>
 </plist>

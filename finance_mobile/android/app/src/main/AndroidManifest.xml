@@ -1,5 +1,27 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- permisos para http -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- permisos para speech_to_text-->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
+
+    <!-- Permisos para image_picker -->
+    <!-- Permisos (Cámara) -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Para Android 10 o inferior (Galería) -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+    <!-- Para Android 13 o superior (Fotos) -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+
     <application
+        android:usesCleartextTraffic="true"
         android:label="finance_mobile"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
