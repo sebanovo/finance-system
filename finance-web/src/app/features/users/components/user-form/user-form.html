@@ -1,0 +1,177 @@
+<section hlmCard>
+  <div hlmCardHeader>
+    <div>
+      <h2 hlmCardTitle>{{ title() }}</h2>
+      <p hlmCardDescription>
+        {{ description() }}
+      </p>
+    </div>
+  </div>
+
+  <div hlmCardContent>
+    <form
+      #formRoot
+      class="space-y-6"
+      [formGroup]="form"
+      (ngSubmit)="onSubmit()"
+    >
+      @if (submitError(); as error) {
+        <hlm-alert
+          variant="destructive"
+          class="border border-red-400"
+          aria-live="assertive"
+        >
+          <!-- HEADER -->
+          <div class="flex items-start gap-3">
+            <ng-icon name="lucideAlertCircle" class="mt-0.5 text-red-600" />
+
+            <div class="flex-1">
+              <h4 hlmAlertTitle class="text-base font-semibold">
+                No se pudo crear el usuario
+              </h4>
+
+              <p
+                hlmAlertDescription
+                class="text-muted-foreground break-word mt-1 text-sm leading-relaxed whitespace-normal"
+              >
+                {{
+                  error.message ||
+                    "Ocurrió un error inesperado al procesar la solicitud."
+                }}
+              </p>
+            </div>
+          </div>
+
+          <!-- EXTRA INFO (secondary) -->
+          <p class="text-muted-foreground mt-3 text-xs">
+            Puedes revisar los datos ingresados o intentar nuevamente.
+          </p>
+
+          <!-- ACTIONS -->
+          <div class="mt-4 flex justify-end gap-2">
+            <button
+              type="button"
+              hlmBtn
+              variant="destructive"
+              class="border border-red-300"
+              [disabled]="submitting()"
+              (click)="onCancel()"
+            >
+              Volver al listado
+            </button>
+          </div>
+        </hlm-alert>
+      }
+
+      @if (form.invalid && (form.touched || form.dirty)) {
+        <hlm-alert aria-live="polite">
+          <ng-icon name="lucideAlertCircle" />
+          <h4 hlmAlertTitle>Revisa el formulario</h4>
+          <p hlmAlertDescription>
+            Hay campos obligatorios o inválidos. Corrígelos antes de continuar.
+          </p>
+        </hlm-alert>
+      }
+
+      <div class="grid gap-6 md:grid-cols-2">
+        <div hlmField>
+          <label hlmLabel for="firstName">Nombre</label>
+          <input
+            id="firstName"
+            hlmInput
+            type="text"
+            formControlName="firstName"
+            placeholder="Ingresa el nombre"
+          />
+          @if (hasFieldError("firstName")) {
+            <p hlmError>{{ getFieldError("firstName") }}</p>
+          }
+        </div>
+
+        <div hlmField>
+          <label hlmLabel for="lastName">Apellido</label>
+          <input
+            id="lastName"
+            hlmInput
+            type="text"
+            formControlName="lastName"
+            placeholder="Ingresa el apellido"
+          />
+          @if (hasFieldError("lastName")) {
+            <p hlmError>{{ getFieldError("lastName") }}</p>
+          }
+        </div>
+      </div>
+
+      <div hlmField>
+        <label hlmLabel for="email">Correo electrónico</label>
+        <input
+          id="email"
+          hlmInput
+          type="email"
+          formControlName="email"
+          placeholder="correo@ejemplo.com"
+        />
+        @if (hasFieldError("email")) {
+          <p hlmError>{{ getFieldError("email") }}</p>
+        }
+      </div>
+
+      @if (showPasswordField()) {
+        <div hlmField>
+          <label hlmLabel for="password">Contraseña</label>
+          <input
+            id="password"
+            hlmInput
+            type="password"
+            formControlName="password"
+            placeholder="Ingresa la contraseña"
+            [attr.aria-invalid]="hasFieldError('password')"
+          />
+          @if (hasFieldError("password")) {
+            <p hlmError>{{ getFieldError("password") }}</p>
+          }
+        </div>
+      } @else if (showPasswordAsReadOnly()) {
+        <div hlmField>
+          <label hlmLabel for="passwordReadonly">Contraseña</label>
+          <input
+            id="passwordReadonly"
+            hlmInput
+            type="text"
+            value="************"
+            disabled
+            aria-readonly="true"
+          />
+          <p class="text-muted-foreground text-sm">
+            La contraseña no puede editarse desde este formulario.
+          </p>
+        </div>
+      }
+
+      <div class="flex items-center justify-end gap-3">
+        <button
+          type="button"
+          hlmBtn
+          variant="outline"
+          [disabled]="submitting()"
+          (click)="onCancel()"
+        >
+          Cancelar
+        </button>
+
+        <button type="submit" hlmBtn [disabled]="submitting()">
+          @if (submitting()) {
+            <ng-icon
+              name="lucideLoaderCircle"
+              class="mr-2 size-4 animate-spin"
+            />
+            Creando usuario...
+          } @else {
+            {{ submitLabel() }}
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</section>

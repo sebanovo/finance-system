@@ -1,0 +1,51 @@
+<section class="mx-auto max-w-3xl space-y-6">
+  <div class="space-y-1">
+    <h1 class="flex items-center gap-2 text-2xl font-semibold tracking-tight">
+      <ng-icon name="lucideUserPen" class="size-5" />
+      Editar usuario
+    </h1>
+    <p class="text-muted-foreground text-sm">
+      Actualiza los datos principales del usuario.
+    </p>
+  </div>
+
+  @if (store.selectedUserLoading()) {
+    <section hlmCard>
+      <div hlmCardContent class="space-y-4 pt-6">
+        <hlm-skeleton class="h-10 w-full rounded-md" />
+        <hlm-skeleton class="h-10 w-full rounded-md" />
+        <hlm-skeleton class="h-10 w-full rounded-md" />
+        <hlm-skeleton class="h-10 w-full rounded-md" />
+      </div>
+    </section>
+  } @else if (store.hasSelectedUserError()) {
+    <hlm-alert variant="destructive">
+      <ng-icon name="lucideAlertCircle" />
+      <h4 hlmAlertTitle>No se pudo cargar el usuario</h4>
+      <p hlmAlertDescription>
+        {{
+          store.selectedUserError()?.message ||
+            "Ocurrió un error inesperado al cargar el usuario."
+        }}
+      </p>
+
+      <div class="mt-4">
+        <button hlmBtn variant="outline" (click)="onCancel()">
+          Volver al listado
+        </button>
+      </div>
+    </hlm-alert>
+  } @else if (initialFormValue(); as initialValue) {
+    <app-user-form
+      [mode]="'edit'"
+      [title]="'Editar usuario'"
+      [description]="'Actualiza los datos principales del usuario.'"
+      [submitLabel]="'Guardar cambios'"
+      [initialValue]="initialValue"
+      [submitting]="store.submitting()"
+      [submitError]="store.updateError()"
+      (formSubmitted)="onUpdateUser($event)"
+      (cancelClicked)="onCancel()"
+    />
+  }
+</section>

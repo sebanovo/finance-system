@@ -27,7 +27,14 @@
       "@shared/ui/field": ["./src/app/shared/ui/field/src/index.ts"],
       "@shared/ui/label": ["./src/app/shared/ui/label/src/index.ts"],
       "@shared/ui/input": ["./src/app/shared/ui/input/src/index.ts"],
-      "@shared/ui/tooltip": ["./src/app/shared/ui/tooltip/src/index.ts"]
+      "@shared/ui/tooltip": ["./src/app/shared/ui/tooltip/src/index.ts"],
+      "@shared/ui/card": ["./src/app/shared/ui/card/src/index.ts"],
+      "@shared/ui/table": ["./src/app/shared/ui/table/src/index.ts"],
+      "@shared/ui/badge": ["./src/app/shared/ui/badge/src/index.ts"],
+      "@shared/ui/alert": ["./src/app/shared/ui/alert/src/index.ts"],
+      "@shared/ui/empty": ["./src/app/shared/ui/empty/src/index.ts"],
+      "@shared/ui/skeleton": ["./src/app/shared/ui/skeleton/src/index.ts"],
+      "@shared/ui/sonner": ["./src/app/shared/ui/sonner/src/index.ts"]
     }
   },
   "angularCompilerOptions": {

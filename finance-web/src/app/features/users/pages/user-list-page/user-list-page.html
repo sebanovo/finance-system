@@ -1,0 +1,82 @@
+<section class="space-y-6">
+  <section hlmCard>
+    <div hlmCardHeader>
+      <div>
+        <h1 hlmCardTitle class="flex items-center gap-2">
+          <ng-icon name="lucideUsers" class="size-5" />
+          Usuarios
+        </h1>
+        <p hlmCardDescription>
+          Gestiona los usuarios registrados en el sistema.
+        </p>
+      </div>
+
+      <div hlmCardAction>
+        <button hlmBtn (click)="onCreateUser()" class="cursor-pointer">
+          <ng-icon name="lucidePlus" class="mr-2 size-4" />
+          Nuevo usuario
+        </button>
+      </div>
+    </div>
+
+    <div hlmCardContent>
+      @if (store.loading()) {
+        <div class="space-y-4">
+          <hlm-skeleton class="h-10 w-full rounded-md" />
+          <hlm-skeleton class="h-10 w-full rounded-md" />
+          <hlm-skeleton class="h-10 w-full rounded-md" />
+          <hlm-skeleton class="h-10 w-full rounded-md" />
+        </div>
+      } @else if (store.hasError()) {
+        <hlm-alert variant="destructive">
+          <ng-icon name="lucideAlertCircle" />
+          <h4 hlmAlertTitle>No se pudieron cargar los usuarios</h4>
+          <p hlmAlertDescription>
+            {{ store.error()?.message || "Ocurrió un error inesperado." }}
+          </p>
+          <div hlmAlertAction>
+            <button hlmBtn variant="outline" size="sm" (click)="onRetry()">
+              Reintentar
+            </button>
+          </div>
+        </hlm-alert>
+      } @else if (store.isEmpty()) {
+        <div hlmEmpty class="border">
+          <div hlmEmptyHeader>
+            <div hlmEmptyMedia variant="icon">
+              <ng-icon name="lucideInbox" class="size-5" />
+            </div>
+
+            <div hlmEmptyTitle>Sin usuarios</div>
+
+            <div hlmEmptyDescription>Aún no existen usuarios para mostrar.</div>
+          </div>
+
+          <div hlmEmptyContent>
+            <button hlmBtn (click)="onCreateUser()">
+              <ng-icon name="lucidePlus" class="mr-2 size-4" />
+              Crear primer usuario
+            </button>
+          </div>
+        </div>
+      } @else {
+        <app-user-table
+          [users]="store.users()"
+          [togglingUserIds]="store.togglingUserIds()"
+          (viewUser)="onViewUser($event)"
+          (editUser)="onEditUser($event)"
+          (activateUser)="onActivateUser($event)"
+          (deactivateUser)="onDeactivateUser($event)"
+        />
+        <app-user-detail-dialog
+          [open]="viewDialogOpen()"
+          [user]="store.selectedUser()"
+          [loading]="store.selectedUserLoading()"
+          [error]="store.selectedUserError()"
+          (openChange)="onViewDialogOpenChange($event)"
+          (editUser)="onEditUser($event)"
+        />
+      }
+    </div>
+  </section>
+</section>

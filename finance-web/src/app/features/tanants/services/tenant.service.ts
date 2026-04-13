@@ -10,4 +10,8 @@ export class TenantService {
   getTenants() {
     return this.http.get<any[]>(this.api);
   }
+
+  getUser() {
+    return this.http.get<any[]>("/api/users");
+  }
 }
