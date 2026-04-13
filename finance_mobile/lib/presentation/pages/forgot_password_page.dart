@@ -1,8 +1,7 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:finance_mobile/constants/env.dart';
-import 'reset_password_page.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/di/injection_container.dart' as di;
+import '../viewmodels/forgot_password_viewmodel.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -14,56 +13,44 @@ class ForgotPasswordPage extends StatefulWidget {
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final emailController = TextEditingController();
   final tenantController = TextEditingController();
-  bool isLoading = false;
 
-  Future<void> sendResetEmail() async {
+  late ForgotPasswordViewModel _viewModel;
+
+  @override
+  void initState() {
+    super.initState();
+    _viewModel = di.sl<ForgotPasswordViewModel>();
+    _viewModel.addListener(_onViewModelChanged);
+  }
+
+  void _onViewModelChanged() {
+    if (!mounted) return;
+    if (_viewModel.errorMessage != null) {
+      _showSnackBar(_viewModel.errorMessage!);
+      _viewModel.clearError();
+    }
+    if (_viewModel.success) {
+      _showSnackBar(
+        'Correo enviado. Revisa tu bandeja de entrada.',
+        isError: false,
+      );
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted) {
+          // Navegar a ResetPasswordPage pasando el tenant como extra
+          context.push('/reset-password', extra: tenantController.text.trim());
+        }
+      });
+    }
+  }
+
+  Future<void> _sendResetEmail() async {
     final email = emailController.text.trim();
     final tenant = tenantController.text.trim();
-
     if (email.isEmpty || tenant.isEmpty) {
       _showSnackBar('Completa todos los campos');
       return;
     }
-
-    setState(() => isLoading = true);
-
-    final url = Uri.parse('${Env.baseUrl}/api/auth/forgot-password');
-    try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': '*/*',
-          'X-Tenant-Slug': tenant,
-        },
-        body: jsonEncode({'email': email}),
-      );
-
-      final decoded = jsonDecode(response.body);
-      if (response.statusCode == 200 && decoded['success'] == true) {
-        _showSnackBar(
-          'Correo enviado. Revisa tu bandeja de entrada.',
-          isError: false,
-        );
-        // En lugar de volver atrás, ir a reset-password con tenant precargado
-        Future.delayed(const Duration(seconds: 1), () {
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ResetPasswordPage(initialTenant: tenant),
-              ),
-            );
-          }
-        });
-      } else {
-        _showSnackBar(decoded['message'] ?? 'Error al enviar el correo');
-      }
-    } catch (e) {
-      _showSnackBar('Error de conexión: $e');
-    } finally {
-      if (mounted) setState(() => isLoading = false);
-    }
+    await _viewModel.sendResetEmail(email, tenant);
   }
 
   void _showSnackBar(String msg, {bool isError = true}) {
@@ -73,6 +60,14 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         backgroundColor: isError ? Colors.red : Colors.green,
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    tenantController.dispose();
+    _viewModel.removeListener(_onViewModelChanged);
+    super.dispose();
   }
 
   @override
@@ -109,8 +104,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: isLoading ? null : sendResetEmail,
-                child: isLoading
+                onPressed: _viewModel.isLoading ? null : _sendResetEmail,
+                child: _viewModel.isLoading
                     ? const CircularProgressIndicator()
                     : const Text('Enviar instrucciones'),
               ),

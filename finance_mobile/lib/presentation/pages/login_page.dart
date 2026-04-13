@@ -1,10 +1,7 @@
-import 'dart:convert';
-import 'package:finance_mobile/signup_page.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:finance_mobile/constants/env.dart';
-import 'forgot_password.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/di/injection_container.dart' as di;
+import '../viewmodels/login_viewmodel.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -18,55 +15,36 @@ class _LoginPageState extends State<LoginPage> {
   final passwordController = TextEditingController();
   final tenantController = TextEditingController();
 
-  bool isLoading = false;
+  late LoginViewModel _viewModel;
 
-  Future<void> login() async {
+  @override
+  void initState() {
+    super.initState();
+    _viewModel = di.sl<LoginViewModel>();
+    _viewModel.addListener(_onViewModelChanged);
+  }
+
+  void _onViewModelChanged() {
+    if (!mounted) return;
+    if (_viewModel.errorMessage != null) {
+      _showSnackBar(_viewModel.errorMessage!);
+      _viewModel.clearError();
+    }
+  }
+
+  Future<void> _login() async {
     final tenant = tenantController.text.trim();
     if (tenant.isEmpty) {
       _showSnackBar('Por favor ingresa el nombre del tenant');
       return;
     }
-
-    setState(() => isLoading = true);
-
-    try {
-      final url = Uri.parse('${Env.baseUrl}/api/auth/login');
-
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': '*/*',
-          'X-Tenant-Slug': tenant,
-        },
-        body: jsonEncode({
-          'email': emailController.text
-              .trim(), // ← cambiado de username a email
-          'password': passwordController.text,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final jsonResponse = jsonDecode(response.body);
-        if (jsonResponse['success'] == true) {
-          final data = jsonResponse['data'];
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('accessToken', data['accessToken']);
-          await prefs.setString('refreshToken', data['refreshToken']);
-          await prefs.setString('tenantSlug', tenant);
-
-          if (!mounted) return;
-          Navigator.pushReplacementNamed(context, '/home');
-        } else {
-          _showSnackBar(jsonResponse['message'] ?? 'Error desconocido');
-        }
-      } else {
-        _showSnackBar('Error de login: ${response.statusCode}');
-      }
-    } catch (e) {
-      _showSnackBar('Error de conexión: $e');
-    } finally {
-      if (mounted) setState(() => isLoading = false);
+    final success = await _viewModel.login(
+      emailController.text.trim(),
+      passwordController.text,
+      tenant,
+    );
+    if (success && mounted) {
+      context.go('/home');
     }
   }
 
@@ -81,6 +59,7 @@ class _LoginPageState extends State<LoginPage> {
     emailController.dispose();
     passwordController.dispose();
     tenantController.dispose();
+    _viewModel.removeListener(_onViewModelChanged);
     super.dispose();
   }
 
@@ -124,29 +103,19 @@ class _LoginPageState extends State<LoginPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: isLoading ? null : login,
-                child: isLoading
+                onPressed: _viewModel.isLoading ? null : _login,
+                child: _viewModel.isLoading
                     ? const CircularProgressIndicator()
                     : const Text('Iniciar sesión'),
               ),
             ),
             TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
-                );
-              },
+              onPressed: () => context.push('/forgot-password'),
               child: const Text('¿Olvidaste tu contraseña?'),
             ),
             const SizedBox(height: 12),
             TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SignupPage()),
-                );
-              },
+              onPressed: () => context.push('/signup'),
               child: const Text('¿No tienes cuenta? Registra tu empresa'),
             ),
           ],

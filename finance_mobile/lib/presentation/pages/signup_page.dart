@@ -1,7 +1,8 @@
-import 'dart:convert';
+// lib/features/auth/presentation/pages/signup_page.dart
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:finance_mobile/constants/env.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/di/injection_container.dart' as di;
+import '../viewmodels/signup_viewmodel.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -18,10 +19,33 @@ class _SignupPageState extends State<SignupPage> {
   final firstNameController = TextEditingController();
   final lastNameController = TextEditingController();
 
-  bool isLoading = false;
+  late SignupViewModel _viewModel;
 
-  Future<void> signup() async {
-    // Validaciones básicas
+  @override
+  void initState() {
+    super.initState();
+    _viewModel = di.sl<SignupViewModel>();
+    _viewModel.addListener(_onViewModelChanged);
+  }
+
+  void _onViewModelChanged() {
+    if (!mounted) return;
+    if (_viewModel.errorMessage != null) {
+      _showSnackBar(_viewModel.errorMessage!);
+      _viewModel.clearError();
+    }
+    if (_viewModel.success) {
+      _showSnackBar(
+        'Registro exitoso. Redirigiendo al login...',
+        isError: false,
+      );
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) context.go('/login');
+      });
+    }
+  }
+
+  Future<void> _signup() async {
     if (companyNameController.text.trim().isEmpty ||
         tenantSlugController.text.trim().isEmpty ||
         adminEmailController.text.trim().isEmpty ||
@@ -32,46 +56,23 @@ class _SignupPageState extends State<SignupPage> {
       return;
     }
 
-    setState(() => isLoading = true);
-
-    try {
-      final url = Uri.parse('${Env.baseUrl}/api/public/signup');
-
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'companyName': companyNameController.text.trim(),
-          'tenantSlug': tenantSlugController.text.trim(),
-          'adminEmail': adminEmailController.text.trim(),
-          'password': passwordController.text,
-          'firstName': firstNameController.text.trim(),
-          'lastName': lastNameController.text.trim(),
-        }),
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final jsonResponse = jsonDecode(response.body);
-        _showSnackBar(jsonResponse['message'] ?? 'Registro exitoso');
-        // Opcional: volver a login después de 2 segundos
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) Navigator.pop(context);
-        });
-      } else {
-        final error = jsonDecode(response.body);
-        _showSnackBar(error['message'] ?? 'Error al registrar');
-      }
-    } catch (e) {
-      _showSnackBar('Error de conexión: $e');
-    } finally {
-      if (mounted) setState(() => isLoading = false);
-    }
+    await _viewModel.signup(
+      companyName: companyNameController.text.trim(),
+      tenantSlug: tenantSlugController.text.trim(),
+      adminEmail: adminEmailController.text.trim(),
+      password: passwordController.text,
+      firstName: firstNameController.text.trim(),
+      lastName: lastNameController.text.trim(),
+    );
   }
 
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+  void _showSnackBar(String message, {bool isError = true}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red : Colors.green,
+      ),
+    );
   }
 
   @override
@@ -82,6 +83,7 @@ class _SignupPageState extends State<SignupPage> {
     passwordController.dispose();
     firstNameController.dispose();
     lastNameController.dispose();
+    _viewModel.removeListener(_onViewModelChanged);
     super.dispose();
   }
 
@@ -146,8 +148,8 @@ class _SignupPageState extends State<SignupPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: isLoading ? null : signup,
-                child: isLoading
+                onPressed: _viewModel.isLoading ? null : _signup,
+                child: _viewModel.isLoading
                     ? const CircularProgressIndicator()
                     : const Text('Registrar empresa'),
               ),

@@ -1,13 +1,13 @@
+import 'package:finance_mobile/core/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:finance_mobile/constants/env.dart';
-import 'package:finance_mobile/home_page.dart';
-import 'login_page.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'forgot_password.dart';
-import 'reset_password_page.dart';
+import 'core/di/injection_container.dart' as di;
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+  await di.init();
   runApp(MyApp());
 }
 
@@ -16,18 +16,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: Env.systemName,
-      initialRoute: '/login',
-      routes: {
-        '/login': (_) => const LoginPage(),
-        '/home': (_) => const HomePage(),
-        '/forgot-password': (context) => const ForgotPasswordPage(),
-        '/reset-password': (context) => ResetPasswordPage(
-          token: ModalRoute.of(context)?.settings.arguments as String?,
-        ),
-      },
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
+        useMaterial3: true,
+      ),
+      routerConfig: appRouter,
     );
   }
 }
