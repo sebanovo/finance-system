@@ -1,12 +1,17 @@
 import 'package:finance_mobile/core/network/api_client.dart';
+import 'package:finance_mobile/domain/repositories/auth_repository.dart';
 import 'package:finance_mobile/domain/repositories/permission_repository.dart';
 import 'package:finance_mobile/domain/repositories/role_repository.dart';
 import 'package:finance_mobile/domain/usecases/get_permissions_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_roles_usecase.dart';
+import 'package:finance_mobile/domain/usecases/login_usecase.dart';
+import 'package:finance_mobile/infrastructure/datasources/auth_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/permission_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/role_remote_datasource.dart';
+import 'package:finance_mobile/infrastructure/repositories/auth_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/permission_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/role_repository_impl.dart';
+import 'package:finance_mobile/presentation/viewmodels/login_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/permissions_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/roles_viewmodel.dart';
 import 'package:get_it/get_it.dart';
@@ -18,6 +23,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => ApiClient());
   initPermissionModule();
   initRoleModule();
+  initAuthModule();
 }
 
 void initPermissionModule() {
@@ -40,4 +46,14 @@ void initRoleModule() {
   sl.registerLazySingleton<RoleRepository>(() => RoleRepositoryImpl(sl()));
   sl.registerLazySingleton(() => GetRolesUsecase(sl()));
   sl.registerFactory(() => RolesViewModel(sl()));
+}
+
+void initAuthModule() {
+  // Auth feature
+  sl.registerLazySingleton<AuthRemoteDataSource>(
+    () => AuthRemoteDataSourceImpl(sl()),
+  );
+  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl()));
+  sl.registerLazySingleton(() => LoginUseCase(sl()));
+  sl.registerFactory(() => LoginViewModel(loginUseCase: sl()));
 }

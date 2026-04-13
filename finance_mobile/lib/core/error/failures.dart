@@ -4,6 +4,7 @@ abstract class Failure {
   Failure(this.message);
 }
 
+// Errores personalizados
 class ServerFailure extends Failure {
   ServerFailure(super.message);
 }
