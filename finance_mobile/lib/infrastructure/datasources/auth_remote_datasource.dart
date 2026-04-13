@@ -13,6 +13,7 @@ abstract class AuthRemoteDataSource {
   );
   Future<void> signup(SignupRequest request);
   Future<void> forgotPassword(String email, String tenantSlug);
+  Future<void> changePassword(String currentPassword, String newPassword);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -93,6 +94,25 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw Exception(error['message'] ?? 'Error al enviar correo');
     }
     // Si es 200, asumimos éxito
+    final data = response.data as Map<String, dynamic>;
+    if (data['success'] != true) {
+      throw Exception(data['message'] ?? 'Error desconocido');
+    }
+  }
+
+  @override
+  Future<void> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    final response = await apiClient.post('/api/auth/change-password', {
+      'currentPassword': currentPassword,
+      'newPassword': newPassword,
+    });
+    if (response.statusCode != 200) {
+      final error = response.data as Map<String, dynamic>;
+      throw Exception(error['message'] ?? 'Error al cambiar contraseña');
+    }
     final data = response.data as Map<String, dynamic>;
     if (data['success'] != true) {
       throw Exception(data['message'] ?? 'Error desconocido');

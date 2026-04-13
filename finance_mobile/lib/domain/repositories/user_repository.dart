@@ -1,5 +1,6 @@
 import '../entities/user.dart';
 import '../entities/role.dart';
+import '../entities/user_info.dart';
 
 abstract class UserRepository {
   Future<List<User>> getUsers();
@@ -12,4 +13,5 @@ abstract class UserRepository {
     String firstName,
     String lastName,
   );
+  Future<UserInfo> getUserInfo();
 }

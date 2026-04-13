@@ -3,6 +3,7 @@ import 'package:finance_mobile/infrastructure/models/create_user_request.dart';
 import '../../../domain/entities/user.dart';
 import '../../../domain/entities/role.dart';
 import '../../../domain/repositories/user_repository.dart';
+import '../../../domain/entities/user_info.dart';
 import '../datasources/user_remote_datasource.dart';
 
 class UserRepositoryImpl implements UserRepository {
@@ -47,5 +48,11 @@ class UserRepositoryImpl implements UserRepository {
       lastName: lastName,
     );
     await remoteDataSource.createUser(request);
+  }
+
+  @override
+  Future<UserInfo> getUserInfo() async {
+    final model = await remoteDataSource.getUserInfo();
+    return model.toEntity();
   }
 }

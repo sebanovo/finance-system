@@ -1,5 +1,5 @@
-import 'package:finance_mobile/home_page.dart';
 import 'package:go_router/go_router.dart';
+import 'package:finance_mobile/presentation/pages/home_page.dart';
 import 'package:finance_mobile/presentation/pages/permissions_pages.dart';
 import 'package:finance_mobile/presentation/pages/roles_pages.dart';
 import 'package:finance_mobile/presentation/pages/login_page.dart';

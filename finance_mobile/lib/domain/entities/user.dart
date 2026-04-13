@@ -1,11 +1,3 @@
-// class User {
-//   final String email;
-//   final String tenantSlug;
-//   final List<String> roles;
-
-//   User({required this.email, required this.tenantSlug, required this.roles});
-// }
-
 class User {
   final String id;
   final String email;
@@ -22,5 +14,5 @@ class User {
   });
 
   String get fullName =>
-      [firstName, lastName].where((e) => e != null && e!.isNotEmpty).join(' ');
+      [firstName, lastName].where((e) => e != null && e.isNotEmpty).join(' ');
 }

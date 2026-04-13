@@ -2,6 +2,7 @@ import '../../../../core/network/api_client.dart';
 import '../models/user_model.dart';
 import '../models/role.dart';
 import '../models/create_user_request.dart';
+import '../models/user_info_model.dart';
 
 abstract class UserRemoteDataSource {
   Future<List<UserModel>> getUsers();
@@ -9,6 +10,7 @@ abstract class UserRemoteDataSource {
   Future<List<RoleModel>> getAvailableRoles();
   Future<void> assignRole(String userId, String roleId);
   Future<void> createUser(CreateUserRequest request);
+  Future<UserInfoModel> getUserInfo();
 }
 
 class UserRemoteDataSourceImpl implements UserRemoteDataSource {
@@ -83,6 +85,21 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
     if (response.statusCode != 200 && response.statusCode != 201) {
       final error = response.data as Map<String, dynamic>;
       throw Exception(error['message'] ?? 'Error al crear usuario');
+    }
+  }
+
+  @override
+  Future<UserInfoModel> getUserInfo() async {
+    final response = await apiClient.get('/api/secure/me');
+    if (response.statusCode == 200) {
+      final data = response.data as Map<String, dynamic>;
+      if (data['success'] == true) {
+        return UserInfoModel.fromJson(data['data']);
+      } else {
+        throw Exception(data['message'] ?? 'Error al obtener información');
+      }
+    } else {
+      throw Exception('Error ${response.statusCode}');
     }
   }
 }
