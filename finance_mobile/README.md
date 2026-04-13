@@ -7,6 +7,8 @@ Importante ejecutar este comando para el .env:
 cp finance_mobile/.env.sample finance_mobile/.env
 ```
 
+```bash
+# Ejemplo sencillo de la arquitectura con permission
 └── 📁core
     └── 📁di (service locator, centraliza las dependencias)
         ├── injection_container.dart 
@@ -16,6 +18,7 @@ cp finance_mobile/.env.sample finance_mobile/.env
         ├── api_client.dart
     └── 📁routes (configuración de las rutas de la aplicación)
         └── app_routes.dart
+
 └── 📁domain
     └── 📁entities (entidades)
         ├── permission.dart
@@ -24,7 +27,26 @@ cp finance_mobile/.env.sample finance_mobile/.env
     └── 📁usecases (casos de uso)
         └── get_permissions_usecase.dart
 
+└── 📁infrastructure
+    └── 📁datasources
+        ├── permission_remote_datasource.dart
+    └── 📁models
+        ├── permission.dart
+    └── 📁repositories
+        ├── permission_repository_impl.dart
 
+└── 📁presentation
+    └── 📁pages
+        ├── permissions_pages.dart
+    └── 📁viewmodels
+        ├── permissions_viewmodel.dart
+    └── 📁widgets
+        └── change_password_dialog.dart
+```
+
+
+```bash
+Clean Code Flow
 domain:
 (entities)Permission 
 |  |
@@ -46,4 +68,4 @@ presentation:
   |
   |->(pages)permissions_page usa core/di
 
-      
+```
