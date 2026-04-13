@@ -1,12 +1,17 @@
-import { CreateUserRequest, UserFormValue } from "../models/user-request.type";
+import { CreateUserRequest } from "../models/user-request.type";
 import { UserDto } from "../models/user.dto";
-import { User } from "../models/user.model";
+import {
+  UpdateUserRequest,
+  User,
+  UserUpsertFormValue,
+} from "../models/user.model";
 
 export function toUser(dto: UserDto): User {
   return {
     id: dto.id,
     email: dto.email,
-    fullName: `${dto.firstName} ${dto.lastName}`,
+    firstName: dto.firstName,
+    lastName: dto.lastName,
     isActive: dto.active,
     status: dto.status,
     createdAt: new Date(dto.createdAt),
@@ -19,11 +24,21 @@ export function toUsers(dtos: UserDto[]): User[] {
 }
 
 export function toCreateUserRequest(
-  formValue: UserFormValue
+  formValue: UserUpsertFormValue
 ): CreateUserRequest {
   return {
     email: formValue.email.trim(),
     password: formValue.password,
+    firstName: formValue.firstName.trim(),
+    lastName: formValue.lastName.trim(),
+  };
+}
+
+export function toUpdateUserRequest(
+  formValue: UserUpsertFormValue
+): UpdateUserRequest {
+  return {
+    email: formValue.email.trim(),
     firstName: formValue.firstName.trim(),
     lastName: formValue.lastName.trim(),
   };

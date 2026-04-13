@@ -13,7 +13,7 @@
       @for (user of users(); track user.id) {
         <tr hlmTr>
           <td hlmTd class="text-foreground font-medium">
-            {{ user.fullName }}
+            {{ user.firstName }} {{ user.lastName }}
           </td>
 
           <td hlmTd>
@@ -38,8 +38,9 @@
               <button
                 hlmBtn
                 variant="outline"
+                class="cursor-pointer"
                 size="sm"
-                (click)="onViewUser(user.id)"
+                (click)="onViewUser(user)"
               >
                 Ver
               </button>
@@ -47,6 +48,7 @@
               <button
                 hlmBtn
                 variant="outline"
+                class="cursor-pointer"
                 size="sm"
                 (click)="onEditUser(user.id)"
               >
@@ -56,15 +58,31 @@
               @if (user.isActive) {
                 <button
                   hlmBtn
-                  variant="destructive"
+                  variant="outline"
                   size="sm"
-                  (click)="onDeactivateUser(user.id)"
+                  class="min-w-25 cursor-pointer"
+                  [disabled]="isUserToggling(user.id)"
+                  (click)="onDeactivateUser(user)"
                 >
-                  Desactivar
+                  @if (isUserToggling(user.id)) {
+                    Procesando...
+                  } @else {
+                    Desactivar
+                  }
                 </button>
               } @else {
-                <button hlmBtn size="sm" (click)="onActivateUser(user.id)">
-                  Activar
+                <button
+                  hlmBtn
+                  size="sm"
+                  class="min-w-25 cursor-pointer"
+                  [disabled]="isUserToggling(user.id)"
+                  (click)="onActivateUser(user)"
+                >
+                  @if (isUserToggling(user.id)) {
+                    Procesando...
+                  } @else {
+                    Activar
+                  }
                 </button>
               }
             </div>
@@ -74,84 +92,3 @@
     </tbody>
   </table>
 </div>
-
-<!-- <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-  <div class="overflow-x-auto">
-    <table class="min-w-full divide-y divide-slate-200 text-sm">
-      <thead class="bg-slate-50">
-        <tr>
-          <th class="px-4 py-3 text-left font-medium text-slate-600">Nombre</th>
-          <th class="px-4 py-3 text-left font-medium text-slate-600">Correo</th>
-          <th class="px-4 py-3 text-left font-medium text-slate-600">Estado</th>
-          <th class="px-4 py-3 text-right font-medium text-slate-600">
-            Acciones
-          </th>
-        </tr>
-      </thead>
-
-      <tbody class="divide-y divide-slate-100">
-        @for (user of users(); track user.id) {
-          <tr class="hover:bg-slate-50">
-            <td class="px-4 py-3 font-medium text-slate-900">
-              {{ user.fullName }}
-            </td>
-
-            <td class="px-4 py-3 text-slate-600">
-              {{ user.email }}
-            </td>
-
-            <td class="px-4 py-3">
-              <span
-                class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium"
-                [class.bg-emerald-100]="user.isActive"
-                [class.text-emerald-700]="user.isActive"
-                [class.bg-slate-100]="!user.isActive"
-                [class.text-slate-600]="!user.isActive"
-              >
-                {{ user.isActive ? "Activo" : "Inactivo" }}
-              </span>
-            </td>
-
-            <td class="px-4 py-3">
-              <div class="flex justify-end gap-2">
-                <button
-                  type="button"
-                  class="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
-                  (click)="onViewUser(user.id)"
-                >
-                  Ver
-                </button>
-
-                <button
-                  type="button"
-                  class="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
-                  (click)="onEditUser(user.id)"
-                >
-                  Editar
-                </button>
-
-                @if (user.isActive) {
-                  <button
-                    type="button"
-                    class="rounded-lg border border-amber-200 px-3 py-1.5 text-sm text-amber-700 hover:bg-amber-50"
-                    (click)="onDeactivateUser(user.id)"
-                  >
-                    Desactivar
-                  </button>
-                } @else {
-                  <button
-                    type="button"
-                    class="rounded-lg border border-emerald-200 px-3 py-1.5 text-sm text-emerald-700 hover:bg-emerald-50"
-                    (click)="onActivateUser(user.id)"
-                  >
-                    Activar
-                  </button>
-                }
-              </div>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  </div>
-</div> -->

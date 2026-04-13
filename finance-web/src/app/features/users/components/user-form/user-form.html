@@ -1,9 +1,9 @@
 <section hlmCard>
   <div hlmCardHeader>
     <div>
-      <h2 hlmCardTitle>Nuevo usuario</h2>
+      <h2 hlmCardTitle>{{ title() }}</h2>
       <p hlmCardDescription>
-        Completa los datos para registrar un nuevo usuario.
+        {{ description() }}
       </p>
     </div>
   </div>
@@ -32,7 +32,7 @@
 
               <p
                 hlmAlertDescription
-                class="text-muted-foreground mt-1 text-sm leading-relaxed break-words whitespace-normal"
+                class="text-muted-foreground break-word mt-1 text-sm leading-relaxed whitespace-normal"
               >
                 {{
                   error.message ||
@@ -117,19 +117,37 @@
         }
       </div>
 
-      <div hlmField>
-        <label hlmLabel for="password">Contraseña</label>
-        <input
-          id="password"
-          hlmInput
-          type="password"
-          formControlName="password"
-          placeholder="Ingresa la contraseña"
-        />
-        @if (hasFieldError("password")) {
-          <p hlmError>{{ getFieldError("password") }}</p>
-        }
-      </div>
+      @if (showPasswordField()) {
+        <div hlmField>
+          <label hlmLabel for="password">Contraseña</label>
+          <input
+            id="password"
+            hlmInput
+            type="password"
+            formControlName="password"
+            placeholder="Ingresa la contraseña"
+            [attr.aria-invalid]="hasFieldError('password')"
+          />
+          @if (hasFieldError("password")) {
+            <p hlmError>{{ getFieldError("password") }}</p>
+          }
+        </div>
+      } @else if (showPasswordAsReadOnly()) {
+        <div hlmField>
+          <label hlmLabel for="passwordReadonly">Contraseña</label>
+          <input
+            id="passwordReadonly"
+            hlmInput
+            type="text"
+            value="************"
+            disabled
+            aria-readonly="true"
+          />
+          <p class="text-muted-foreground text-sm">
+            La contraseña no puede editarse desde este formulario.
+          </p>
+        </div>
+      }
 
       <div class="flex items-center justify-end gap-3">
         <button
@@ -150,7 +168,7 @@
             />
             Creando usuario...
           } @else {
-            Guardar usuario
+            {{ submitLabel() }}
           }
         </button>
       </div>

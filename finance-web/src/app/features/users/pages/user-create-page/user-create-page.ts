@@ -3,7 +3,7 @@ import { Router } from "@angular/router";
 import { HlmButtonImports } from "@shared/ui/button";
 import { toast } from "@spartan-ng/brain/sonner";
 import { UserForm } from "../../components/user-form/user-form";
-import { UserFormValue } from "../../models/user-request.type";
+import { UserUpsertFormValue } from "../../models/user.model";
 import { UsersStore } from "../../store/user.store";
 
 @Component({
@@ -20,7 +20,7 @@ export class UserCreatePage implements OnInit {
     this.store.clearCreateError();
   }
 
-  async onCreateUser(formValue: UserFormValue): Promise<void> {
+  async onCreateUser(formValue: UserUpsertFormValue): Promise<void> {
     this.store.clearCreateError();
 
     const createdUser = await this.store.createUser(formValue);
@@ -37,7 +37,7 @@ export class UserCreatePage implements OnInit {
     }
 
     toast("Usuario creado correctamente", {
-      description: `${createdUser.fullName} fue registrado con éxito.`,
+      description: `${createdUser.firstName} ${createdUser.lastName} fue registrado con éxito.`,
       action: {
         label: "Undo",
         onClick: () => console.log("Undo create user"),

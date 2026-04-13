@@ -18,4 +18,10 @@ export const USERS_ROUTES: Routes = [
         m => m.UserCreatePage
       ),
   },
+
+  {
+    path: ":id/edit",
+    loadComponent: () =>
+      import("./pages/user-edit-page/user-edit-page").then(m => m.UserEditPage),
+  },
 ];

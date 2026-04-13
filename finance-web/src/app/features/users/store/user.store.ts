@@ -2,9 +2,17 @@ import { computed, inject, Injectable, signal } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 
 import { AppHttpError } from "../../../core/http/models/app-http-error.model";
-import { toCreateUserRequest, toUser, toUsers } from "../adapters/user.adapter";
-import { UserFormValue } from "../models/user-request.type";
-import { type User } from "../models/user.model";
+import {
+  toCreateUserRequest,
+  toUpdateUserRequest,
+  toUser,
+  toUsers,
+} from "../adapters/user.adapter";
+import {
+  UpdateUserRequest,
+  type User,
+  UserUpsertFormValue,
+} from "../models/user.model";
 import { UsersApi } from "../services/user.service";
 
 @Injectable({
@@ -19,13 +27,26 @@ export class UsersStore {
   readonly error = signal<AppHttpError | null>(null);
   readonly createError = signal<AppHttpError | null>(null);
   readonly hasLoaded = signal(false);
+  readonly hasError = computed(() => this.error() !== null);
+  readonly hasCreateError = computed(() => this.createError() !== null);
+
+  readonly selectedUser = signal<User | null>(null);
+  readonly selectedUserLoading = signal(false);
+  readonly selectedUserError = signal<AppHttpError | null>(null);
+  readonly updateError = signal<AppHttpError | null>(null);
+  readonly hasSelectedUserError = computed(
+    () => this.selectedUserError() !== null
+  );
+  readonly hasUpdateError = computed(() => this.updateError() !== null);
+
+  // activate and deactivate signal
+  readonly togglingUserIds = signal<string[]>([]);
+  readonly toggleError = signal<AppHttpError | null>(null);
+  readonly hasToggleError = computed(() => this.toggleError() !== null);
 
   readonly isEmpty = computed(
     () => this.hasLoaded() && !this.loading() && this.users().length === 0
   );
-
-  readonly hasError = computed(() => this.error() !== null);
-  readonly hasCreateError = computed(() => this.createError() !== null);
 
   async loadUsers(): Promise<void> {
     this.loading.set(true);
@@ -44,7 +65,7 @@ export class UsersStore {
     }
   }
 
-  async createUser(formValue: UserFormValue): Promise<User | null> {
+  async createUser(formValue: UserUpsertFormValue): Promise<User | null> {
     this.submitting.set(true);
     this.createError.set(null);
 
@@ -66,6 +87,104 @@ export class UsersStore {
     }
   }
 
+  async loadUserById(userId: string): Promise<User | null> {
+    this.selectedUserLoading.set(true);
+    this.selectedUserError.set(null);
+    this.selectedUser.set(null);
+
+    try {
+      const userDto = await firstValueFrom(this.usersApi.getUserById(userId));
+      const user = toUser(userDto);
+
+      this.selectedUser.set(user);
+
+      return user;
+    } catch (error) {
+      this.selectedUserError.set(error as AppHttpError);
+      this.selectedUser.set(null);
+      return null;
+    } finally {
+      this.selectedUserLoading.set(false);
+    }
+  }
+
+  async updateUser(
+    userId: string,
+    formValue: UserUpsertFormValue
+  ): Promise<User | null> {
+    this.submitting.set(true);
+    this.updateError.set(null);
+
+    try {
+      const payload: UpdateUserRequest = toUpdateUserRequest(formValue);
+      const updatedUserDto = await firstValueFrom(
+        this.usersApi.updateUser(userId, payload)
+      );
+      const updatedUser = toUser(updatedUserDto);
+
+      this.selectedUser.set(updatedUser);
+
+      this.users.update(currentUsers =>
+        currentUsers.map(user =>
+          user.id === updatedUser.id ? updatedUser : user
+        )
+      );
+
+      return updatedUser;
+    } catch (error) {
+      this.updateError.set(error as AppHttpError);
+      return null;
+    } finally {
+      this.submitting.set(false);
+    }
+  }
+
+  async toggleUserActiveState(user: User): Promise<User | null> {
+    this.startTogglingUser(user.id);
+    this.toggleError.set(null);
+
+    try {
+      const updatedUserDto = user.isActive
+        ? await firstValueFrom(this.usersApi.deactivateUser(user.id))
+        : await firstValueFrom(this.usersApi.activateUser(user.id));
+
+      const updatedUser = toUser(updatedUserDto);
+
+      this.users.update(currentUsers =>
+        currentUsers.map(currentUser =>
+          currentUser.id === updatedUser.id ? updatedUser : currentUser
+        )
+      );
+
+      if (this.selectedUser()?.id === updatedUser.id) {
+        this.selectedUser.set(updatedUser);
+      }
+
+      return updatedUser;
+    } catch (error) {
+      this.toggleError.set(error as AppHttpError);
+      return null;
+    } finally {
+      this.finishTogglingUser(user.id);
+    }
+  }
+
+  isUserToggling(userId: string): boolean {
+    return this.togglingUserIds().includes(userId);
+  }
+
+  private startTogglingUser(userId: string): void {
+    this.togglingUserIds.update(currentIds =>
+      currentIds.includes(userId) ? currentIds : [...currentIds, userId]
+    );
+  }
+
+  private finishTogglingUser(userId: string): void {
+    this.togglingUserIds.update(currentIds =>
+      currentIds.filter(currentId => currentId !== userId)
+    );
+  }
+
   clearError(): void {
     this.error.set(null);
   }
@@ -76,5 +195,21 @@ export class UsersStore {
 
   reloadUsers(): Promise<void> {
     return this.loadUsers();
+  }
+
+  clearSelectedUserError(): void {
+    this.selectedUserError.set(null);
+  }
+
+  clearUpdateError(): void {
+    this.updateError.set(null);
+  }
+
+  clearSelectedUser(): void {
+    this.selectedUser.set(null);
+  }
+
+  clearToggleError(): void {
+    this.toggleError.set(null);
   }
 }

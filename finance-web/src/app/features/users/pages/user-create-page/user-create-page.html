@@ -7,6 +7,10 @@
   </div>
 
   <app-user-form
+    [mode]="'create'"
+    [title]="'Nuevo usuario'"
+    [description]="'Completa los datos para registrar un nuevo usuario.'"
+    [submitLabel]="'Guardar usuario'"
     [submitting]="store.submitting()"
     [submitError]="store.createError()"
     (formSubmitted)="onCreateUser($event)"

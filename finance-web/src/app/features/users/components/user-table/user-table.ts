@@ -19,24 +19,31 @@ import { User } from "../../models/user.model";
 export class UserTable {
   readonly users = input.required<User[]>();
 
-  readonly viewUser = output<string>();
+  readonly viewUser = output<User>();
+  readonly activateUser = output<User>();
+  readonly deactivateUser = output<User>();
   readonly editUser = output<string>();
-  readonly activateUser = output<string>();
-  readonly deactivateUser = output<string>();
 
-  onViewUser(userId: string): void {
-    this.viewUser.emit(userId);
+  readonly togglingUserIds = input<string[]>([]);
+
+  onViewUser(user: User): void {
+    console.log("click en onViewUser", user);
+    this.viewUser.emit(user);
   }
 
   onEditUser(userId: string): void {
     this.editUser.emit(userId);
   }
 
-  onActivateUser(userId: string): void {
-    this.activateUser.emit(userId);
+  onActivateUser(user: User): void {
+    this.activateUser.emit(user);
   }
 
-  onDeactivateUser(userId: string): void {
-    this.deactivateUser.emit(userId);
+  onDeactivateUser(user: User): void {
+    this.deactivateUser.emit(user);
+  }
+
+  isUserToggling(userId: string): boolean {
+    return this.togglingUserIds().includes(userId);
   }
 }
