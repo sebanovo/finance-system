@@ -31,6 +31,15 @@ export class TenantListPage {
         this.loading.set(false);
       },
     });
+
+    this.service.getUser().subscribe({
+      next: res => {
+        console.log("uses", res);
+      },
+      error: err => {
+        console.log("error users", err);
+      },
+    });
   }
 
   readonly filteredTenants = computed(() => {
