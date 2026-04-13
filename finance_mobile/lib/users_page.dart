@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:finance_mobile/constants/env.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -142,7 +143,7 @@ class _UsuariosPageState extends State<UsuariosPage> {
           loading = false;
         });
         Future.delayed(const Duration(seconds: 2), () {
-          Navigator.pushReplacementNamed(context, '/login');
+          context.go('/login');
         });
       } else {
         setState(() {

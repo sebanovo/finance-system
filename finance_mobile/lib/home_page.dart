@@ -1,10 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:finance_mobile/constants/env.dart';
+// import 'permissions_page.dart';
 import 'users_page.dart';
 import 'roles_page.dart';
+import 'presentation/pages/permissions_pages.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -101,7 +104,7 @@ class _HomePageState extends State<HomePage> {
           loading = false;
         });
         Future.delayed(const Duration(seconds: 2), () {
-          Navigator.pushReplacementNamed(context, '/login');
+          context.go('/login');
         });
       } else {
         setState(() {
@@ -121,7 +124,7 @@ class _HomePageState extends State<HomePage> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
     if (!context.mounted) return;
-    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+    context.go('/login');
   }
 
   @override
@@ -186,6 +189,17 @@ class _HomePageState extends State<HomePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const RolesPage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.vpn_key),
+              title: const Text("Permisos"),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const PermissionsPage()),
                 );
               },
             ),

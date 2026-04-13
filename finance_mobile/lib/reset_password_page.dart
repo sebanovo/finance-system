@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:finance_mobile/constants/env.dart';
 
@@ -71,7 +72,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           isError: false,
         );
         Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) Navigator.pushReplacementNamed(context, '/login');
+          if (mounted) context.go('/login');
         });
       } else {
         _showSnackBar(decoded['message'] ?? 'Error al restablecer');

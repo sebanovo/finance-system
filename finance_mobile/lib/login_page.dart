@@ -1,10 +1,13 @@
 import 'dart:convert';
 import 'package:finance_mobile/signup_page.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:finance_mobile/constants/env.dart';
 import 'forgot_password.dart';
+import 'package:finance_mobile/core/di/injection_container.dart' as di;
+import 'package:finance_mobile/core/network/api_client.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -40,8 +43,7 @@ class _LoginPageState extends State<LoginPage> {
           'X-Tenant-Slug': tenant,
         },
         body: jsonEncode({
-          'email': emailController.text
-              .trim(), // ← cambiado de username a email
+          'email': emailController.text.trim(),
           'password': passwordController.text,
         }),
       );
@@ -55,8 +57,13 @@ class _LoginPageState extends State<LoginPage> {
           await prefs.setString('refreshToken', data['refreshToken']);
           await prefs.setString('tenantSlug', tenant);
 
+          // ✅ Configurar ApiClient con el token y tenant
+          final apiClient = di.sl<ApiClient>();
+          apiClient.setToken(data['accessToken']);
+          apiClient.setTenant(tenant);
+
           if (!mounted) return;
-          Navigator.pushReplacementNamed(context, '/home');
+          context.go('/home');
         } else {
           _showSnackBar(jsonResponse['message'] ?? 'Error desconocido');
         }
