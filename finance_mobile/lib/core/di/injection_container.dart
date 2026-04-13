@@ -6,6 +6,7 @@ import 'package:finance_mobile/domain/usecases/get_permissions_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_roles_usecase.dart';
 import 'package:finance_mobile/domain/usecases/login_usecase.dart';
 import 'package:finance_mobile/domain/usecases/reset_password_usecase.dart';
+import 'package:finance_mobile/domain/usecases/signup_usecase.dart';
 import 'package:finance_mobile/infrastructure/datasources/auth_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/permission_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/role_remote_datasource.dart';
@@ -16,6 +17,7 @@ import 'package:finance_mobile/presentation/viewmodels/login_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/permissions_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/reset_password_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/roles_viewmodel.dart';
+import 'package:finance_mobile/presentation/viewmodels/signup_viewmodel.dart';
 import 'package:get_it/get_it.dart';
 
 // service locator
@@ -51,13 +53,17 @@ void initRoleModule() {
 }
 
 void initAuthModule() {
-  // Auth feature
+  // Auth Feature
   sl.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(sl()),
   );
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl()));
   sl.registerLazySingleton(() => LoginUseCase(sl()));
   sl.registerFactory(() => LoginViewModel(loginUseCase: sl()));
+  // Reset Features
   sl.registerLazySingleton(() => ResetPasswordUseCase(sl()));
   sl.registerFactory(() => ResetPasswordViewModel(resetPasswordUseCase: sl()));
+  // SignUp(Tenant) Features
+  sl.registerLazySingleton(() => SignupUseCase(sl()));
+  sl.registerFactory(() => SignupViewModel(signupUseCase: sl()));
 }

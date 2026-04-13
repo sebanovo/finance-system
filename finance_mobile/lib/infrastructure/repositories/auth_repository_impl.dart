@@ -1,6 +1,8 @@
-// lib/features/auth/data/repositories/auth_repository_impl.dart
+import 'package:finance_mobile/infrastructure/models/signup_request.dart';
+
 import '../../../domain/entities/user.dart';
 import '../../../domain/repositories/auth_repository.dart';
+import '../../../domain/entities/tenant_signup.dart';
 import '../datasources/auth_remote_datasource.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -34,5 +36,18 @@ class AuthRepositoryImpl implements AuthRepository {
     String newPassword,
   ) async {
     await remoteDataSource.resetPassword(tenantSlug, token, newPassword);
+  }
+
+  @override
+  Future<void> signup(TenantSignup signupData, String password) async {
+    final request = SignupRequest(
+      companyName: signupData.companyName,
+      tenantSlug: signupData.tenantSlug,
+      adminEmail: signupData.adminEmail,
+      password: password,
+      firstName: signupData.firstName,
+      lastName: signupData.lastName,
+    );
+    await remoteDataSource.signup(request);
   }
 }

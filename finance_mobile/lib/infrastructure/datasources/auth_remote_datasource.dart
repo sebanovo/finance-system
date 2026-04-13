@@ -1,6 +1,7 @@
 import '../../../../core/network/api_client.dart';
 import '../models/login_request.dart';
 import '../models/login_response.dart';
+import '../models/signup_request.dart';
 
 abstract class AuthRemoteDataSource {
   Future<LoginResponse> login(String email, String password, String tenantSlug);
@@ -9,6 +10,7 @@ abstract class AuthRemoteDataSource {
     String token,
     String newPassword,
   );
+  Future<void> signup(SignupRequest request);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -58,6 +60,20 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw Exception(error['message'] ?? 'Error al restablecer');
     } else {
       throw Exception('Error ${response.statusCode}');
+    }
+  }
+
+  @override
+  Future<void> signup(SignupRequest request) async {
+    // El endpoint es público, no necesita tenant ni token
+    // Pero podemos usar apiClient sin setear tenant (se enviará solo Content-Type)
+    final response = await apiClient.post(
+      '/api/public/signup',
+      request.toJson(),
+    );
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      final error = response.data as Map<String, dynamic>;
+      throw Exception(error['message'] ?? 'Error al registrar');
     }
   }
 }
