@@ -1,25 +1,4 @@
-export type AuthUser = {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-
-  active: boolean;
-  status: string;
-
-  tenantSlug: string;
-
-  roles: string[];
-};
-
-/**
- * Login type
- */
-export type LoginRequest = {
-  email: string;
-  password: string;
-  tenantSlug: string;
-};
+import { AuthMeData } from "./auth-request.type";
 
 export type LoginData = {
   tokenType: string;
@@ -28,10 +7,10 @@ export type LoginData = {
   accessExpiresInMs: number;
 };
 
-export type LoginResponse = {
+export type LoginResponse<T> = {
   success: true;
   message: string;
-  data: LoginData;
+  data: T;
   timestamp: string;
 };
 
@@ -41,7 +20,7 @@ export type LoginResponse = {
 export type AuthMeResponse = {
   success: true;
   message: string;
-  data: AuthUser;
+  data: AuthMeData;
   timestamp: string;
 };
 

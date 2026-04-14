@@ -1,161 +1,94 @@
 import { inject, Injectable } from "@angular/core";
-import { catchError, Observable, of, switchMap, tap, throwError } from "rxjs";
-import { SessionApi } from "../api/session.api";
-import { AuthUser, LoginRequest } from "../model/auth-user.type";
-import { SessionStore } from "../store/session.store";
+import { catchError, map, Observable, of } from "rxjs";
+import { AuthMeData } from "../../../features/auth/models/auth-request.type";
+import { AuthService } from "../../../features/auth/services/auth.service";
+import { AppHttpError } from "../../http/models/app-http-error.model";
+import { SessionBootstrapResult } from "../model/session-result.type";
+import { SessionUser } from "../model/session-user.type";
 
 @Injectable({
   providedIn: "root",
 })
 export class SessionService {
-  private readonly sessionApi = inject(SessionApi);
-  private readonly sessionStore = inject(SessionStore);
+  private readonly authService = inject(AuthService);
 
   /**
-   * Authenticates the user, then loads the current session user.
+   * Bootstraps the user's session by checking for existing authentication tokens and validating them.
+   * @returns An observable that emits the bootstrap result.
    */
-  login(payload: LoginRequest): Observable<AuthUser> {
-    this.sessionStore.setLoading();
-
-    return this.sessionApi.login(payload).pipe(
-      tap(loginResponse => {
-        // Login logs
-        console.log("Login response: ", loginResponse);
-        this.sessionStore.setTokens(loginResponse.data);
-      }),
-      switchMap(() => this.sessionApi.getMe()),
-      tap(user => {
-        // getMe() logs
-        console.log("getMe response: ", user);
-        this.sessionStore.setAuthenticated(user);
-      }),
-      catchError((error: unknown) => {
-        this.sessionStore.setUnauthenticated();
-        return throwError(() => error);
-      })
-    );
-  }
-
-  /**
-   * Loads the currently authenticated user and stores it.
-   */
-  loadMe(): Observable<AuthUser> {
-    return this.sessionApi.getMe().pipe(
-      tap(user => {
-        console.log("loadMe response", user);
-        this.sessionStore.setAuthenticated(user);
-      }),
-      catchError(err => {
-        this.sessionStore.clearSession();
-        return throwError(() => err);
-      })
-    );
-  }
-
-  /**
-   * Rebuilds session state on application startup.
-   */
-  bootstrap(): Observable<AuthUser | null> {
-    this.sessionStore.setBootstrapStarted();
-    console.log("bootstraping");
-    // temporal
-    const session = this.sessionStore.getSessionFromStorage();
-
-    if (!session?.accessToken) {
-      this.sessionStore.clearSession();
-      this.removeTenant();
-      return of(null);
+  bootstrapSession(): Observable<SessionBootstrapResult> {
+    if (!this.authService.hasTokens()) {
+      return of({
+        status: "unauthenticated",
+        errorMessage: null,
+      });
     }
 
-    this.sessionStore.setTokens({
-      accessToken: session.accessToken,
-      refreshToken: session.refreshToken,
-      accessExpiresInMs: session.expiresAt - Date.now(),
-    });
+    return this.authService.getMe().pipe(
+      map(user => ({
+        status: "authenticated" as const,
+        user: this.toSessionUser(user),
+      })),
+      catchError((error: unknown) => {
+        this.authService.logout();
 
-    // if (this.sessionStore.isBootstrapping()) {
-    //   return of(this.sessionStore.user());
-    // }
-    // if (this.sessionStore.isInitialized()) {
-    //   return of(this.sessionStore.user());
-    // }
-    // this.sessionStore.setBootstrapStarted();
-
-    return this.sessionApi.getMe().pipe(
-      tap(user => {
-        // logs
-        console.log("bootstrap getMe response", user);
-        this.sessionStore.setAuthenticated(user);
-        console.log(
-          "usuario cargado getMe",
-          this.sessionStore.isAuthenticated()
-        );
-      }),
-      catchError(() => {
-        console.log("bootstrap clear session");
-        this.sessionStore.clearSession();
-        this.removeTenant();
-        // this.sessionStore.setUnauthenticated();
-        return of(null);
+        return of({
+          status: "unauthenticated" as const,
+          errorMessage: this.toErrorMessage(error),
+        });
       })
     );
   }
 
   /**
-   * Logs out the current user and clears local session state.
+   * Loads the current user's session information.
+   * @returns An observable that emits the session user.
    */
-  logout(): Observable<void> {
-    this.sessionStore.setLoading();
-
-    return this.sessionApi.logout().pipe(
-      tap(() => {
-        console.log("Logout.");
-        this.sessionStore.clearSession();
-        this.removeTenant();
-      }),
-      catchError(() => {
-        this.sessionStore.clearSession();
-        this.removeTenant();
-        return of(void 0);
-      })
-    );
+  loadCurrentUser(): Observable<SessionUser> {
+    return this.authService.getMe().pipe(map(user => this.toSessionUser(user)));
   }
 
-  /**
-   * Terminates the current session.
-   * It tries backend logout, but local cleanup always happens.
-   */
-  terminateSession(): Observable<void> {
-    console.log("terminate session");
-    return this.sessionApi.logout().pipe(
-      tap(() => {
-        this.sessionStore.clearSession();
-        this.removeTenant();
-      }),
-      catchError(() => {
-        this.sessionStore.clearSession();
-        this.removeTenant();
-        return of(void 0);
-      })
-    );
-  }
-
-  /**
-   * Clears only local session state.
-   */
   clearSession(): void {
-    this.sessionStore.clearSession();
+    this.authService.logout();
   }
 
-  setTenant(tenant: string): void {
-    localStorage.setItem("tenant", tenant);
+  hasSession(): boolean {
+    return this.authService.hasTokens();
   }
 
-  getTenant(): string | null {
-    return localStorage.getItem("tenant");
+  /**
+   * Converts an AuthMeData object to a SessionUser object.
+   * @param user The authenticated user's information to convert to a SessionUser object.
+   * @returns A SessionUser object containing the user's session information.
+   */
+  private toSessionUser(user: AuthMeData): SessionUser {
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      active: user.active,
+      status: user.status,
+      tenantSlug: user.tenantSlug,
+      roles: user.roles,
+    };
   }
 
-  removeTenant(): void {
-    localStorage.removeItem("tenant");
+  /**
+   * Converts an error object to a user-friendly error message.
+   * @param error The error object to convert.
+   * @returns A user-friendly error message, or null if no message is available.
+   */
+  private toErrorMessage(error: unknown): string | null {
+    const appError = error as AppHttpError | null;
+
+    if (!appError) {
+      return null;
+    }
+
+    const message =
+      typeof appError.message === "string" ? appError.message.trim() : "";
+
+    return message.length > 0 ? message : null;
   }
 }

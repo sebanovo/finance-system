@@ -1,16 +1,14 @@
-import { AuthUser } from "./auth-user.type";
+import { SessionUser } from "./session-user.type";
 
 export type SessionStatus =
   | "idle"
-  | "loading"
+  | "bootstrapping"
   | "authenticated"
   | "unauthenticated";
 
 export type SessionState = {
-  user: AuthUser | null;
   status: SessionStatus;
-  isBootstrapping: boolean;
-  isInitialized: boolean;
-  bootstrapError: string | null;
-  token: string | null; //temporal
+  initialized: boolean;
+  user: SessionUser | null;
+  errorMessage: string | null;
 };

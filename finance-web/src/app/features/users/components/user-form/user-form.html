@@ -43,9 +43,9 @@
           </div>
 
           <!-- EXTRA INFO (secondary) -->
-          <p class="text-muted-foreground mt-3 text-xs">
+          <!-- <p class="text-muted-foreground mt-3 text-xs">
             Puedes revisar los datos ingresados o intentar nuevamente.
-          </p>
+          </p> -->
 
           <!-- ACTIONS -->
           <div class="mt-4 flex justify-end gap-2">
@@ -160,7 +160,7 @@
           Cancelar
         </button>
 
-        <button type="submit" hlmBtn [disabled]="submitting()">
+        <button type="submit" hlmBtn [disabled]="submitting() || form.invalid">
           @if (submitting()) {
             <ng-icon
               name="lucideLoaderCircle"
