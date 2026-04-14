@@ -1,15 +1,21 @@
 import { HttpInterceptorFn } from "@angular/common/http";
+import { inject } from "@angular/core";
 
+import { AccessTokenService } from "../services/access-token.service";
+import { HeaderTenantService } from "../services/header-tenant.service";
+
+/**
+ * Intercepts HTTP requests and adds authentication tokens to the request headers.
+ * @param req The HTTP request to intercept.
+ * @param next The next interceptor in the chain.
+ * @returns An observable that emits the HTTP response.
+ */
 export const authTokenInterceptor: HttpInterceptorFn = (req, next) => {
-  let session;
-  const rawSession = localStorage.getItem("session");
-  try {
-    session = rawSession ? JSON.parse(rawSession) : null;
-  } catch {
-    session = null;
-  }
+  const tokenService = inject(AccessTokenService);
+  const headerTenantService = inject(HeaderTenantService);
 
-  const tenant = localStorage.getItem("tenant");
+  const session = tokenService.getTokens();
+  const tenant = headerTenantService.getTenant();
 
   const headers: Record<string, string> = {};
 
@@ -17,8 +23,12 @@ export const authTokenInterceptor: HttpInterceptorFn = (req, next) => {
     headers["X-Tenant-Slug"] = tenant;
   }
 
-  if (session?.accessToken) {
-    headers["Authorization"] = `Bearer ${session.accessToken}`;
+  if (session?.accessToken && session?.tokenType) {
+    headers["Authorization"] = `${session.tokenType} ${session.accessToken}`;
+  }
+
+  if (Object.keys(headers).length === 0) {
+    return next(req);
   }
 
   return next(

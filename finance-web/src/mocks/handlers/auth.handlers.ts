@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import { LoginRequest } from "../../app/core/session/model/auth-user.type";
+import { LoginRequest } from "../../app/features/auth/models/auth-request.type";
 import { usersMock } from "../data/users.mock";
 
 const createErrorResponse = (message: string) => {

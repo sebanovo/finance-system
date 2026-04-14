@@ -7,6 +7,11 @@ import {
   AppHttpErrorCode,
 } from "../models/app-http-error.model";
 
+/**
+ * Gets the application-specific HTTP error code based on the HTTP status.
+ * @param status The HTTP status.
+ * @returns The application-specific HTTP error code.
+ */
 function getErrorCode(status: number): AppHttpErrorCode {
   switch (status) {
     case 400:
@@ -26,6 +31,11 @@ function getErrorCode(status: number): AppHttpErrorCode {
   }
 }
 
+/**
+ * Converts API field errors to application-specific field errors.
+ * @param payload The API error response payload.
+ * @returns The converted application-specific field errors.
+ */
 function toFieldErrors(payload: ApiErrorResponse | null): AppFieldError[] {
   if (!payload?.errors?.length) {
     return [];
@@ -37,6 +47,11 @@ function toFieldErrors(payload: ApiErrorResponse | null): AppFieldError[] {
   }));
 }
 
+/**
+ * Determines whether the given value is an API error response.
+ * @param value The value to check.
+ * @returns True if the value is an API error response, false otherwise.
+ */
 function isApiErrorResponse(value: unknown): value is ApiErrorResponse {
   if (!value || typeof value !== "object") {
     return false;
@@ -52,6 +67,11 @@ function isApiErrorResponse(value: unknown): value is ApiErrorResponse {
   );
 }
 
+/**
+ * Converts an HTTP error to an application-specific HTTP error.
+ * @param error The HTTP error to convert.
+ * @returns The converted application-specific HTTP error.
+ */
 export function toAppHttpError(error: unknown): AppHttpError {
   if (!(error instanceof HttpErrorResponse)) {
     return {

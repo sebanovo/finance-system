@@ -1,15 +1,17 @@
 import { HttpErrorResponse, HttpInterceptorFn } from "@angular/common/http";
 import { inject } from "@angular/core";
 import { catchError, switchMap, throwError } from "rxjs";
-
 import { SessionRefreshCoordinatorService } from "../../session/services/session-refresh-coordinator.service";
 import {
-  HAS_RETRIED,
+  HAS_RETRIED_AUTH,
   SKIP_AUTH_REFRESH,
-} from "../context/skip-auth-refresh.token";
+} from "../context/skip-auth-refresh.context";
 
 /**
- * Returns true when the request must bypass the refresh flow.
+ * Determines whether the given URL should bypass the auth refresh flow.
+ * This typically includes authentication-related endpoints to prevent infinite loops.
+ * @param url The URL of the HTTP request.
+ * @returns True if the URL should skip the auth refresh flow, false otherwise.
  */
 function shouldSkipRefresh(url: string | null): boolean {
   if (!url) {
@@ -18,13 +20,20 @@ function shouldSkipRefresh(url: string | null): boolean {
 
   return (
     url.includes("/api/auth/login") ||
+    url.includes("/api/auth/login-with-tenant") ||
     url.includes("/api/auth/logout") ||
     url.includes("/api/auth/refresh")
   );
 }
 
+/**
+ * Intercepts HTTP requests and refreshes authentication tokens when necessary.
+ * @param req The HTTP request to intercept.
+ * @param next The next interceptor in the chain.
+ * @returns An observable that emits the HTTP response.
+ */
 export const authRefreshInterceptor: HttpInterceptorFn = (req, next) => {
-  const refreshCoordinator = inject(SessionRefreshCoordinatorService);
+  const sessionRefreshCoordinator = inject(SessionRefreshCoordinatorService);
 
   if (req.context.get(SKIP_AUTH_REFRESH) || shouldSkipRefresh(req.url)) {
     return next(req);
@@ -40,14 +49,14 @@ export const authRefreshInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => error);
       }
 
-      if (req.context.get(HAS_RETRIED)) {
+      if (req.context.get(HAS_RETRIED_AUTH)) {
         return throwError(() => error);
       }
 
-      return refreshCoordinator.refresh().pipe(
+      return sessionRefreshCoordinator.refresh().pipe(
         switchMap(() => {
           const retryRequest = req.clone({
-            context: req.context.set(HAS_RETRIED, true),
+            context: req.context.set(HAS_RETRIED_AUTH, true),
           });
 
           return next(retryRequest);

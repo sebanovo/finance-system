@@ -4,8 +4,7 @@ import { AdminAuthLayout } from "./core/layout/layouts/admin-auth-layout/admin-a
 import { AppLayout } from "./core/layout/layouts/app-layout/app-layout";
 import { AuthLayout } from "./core/layout/layouts/auth-layout/auth-layout";
 import { PublicLayout } from "./core/layout/layouts/public-layout/public-layout";
-import { authMatchGuard } from "./core/session/guards/auth-match.guard";
-import { publicOnlyGuard } from "./core/session/guards/public-only.guard";
+import { authGuard } from "./core/session/guards/auth.guard";
 
 export const routes: Routes = [
   // Public
@@ -25,7 +24,7 @@ export const routes: Routes = [
   {
     path: "auth",
     component: AuthLayout,
-    canActivate: [publicOnlyGuard],
+    // canActivate: [guestGuard],
     children: [
       // public login
       {
@@ -52,7 +51,7 @@ export const routes: Routes = [
   // Private
   {
     path: "app",
-    canMatch: [authMatchGuard],
+    canActivate: [authGuard],
     component: AppLayout,
     children: [
       {
