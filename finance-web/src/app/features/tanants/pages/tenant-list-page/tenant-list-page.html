@@ -1,51 +1,63 @@
-<div class="p-4">
-  <h1 class="mb-4 text-xl font-bold">Tenants</h1>
+<section class="space-y-6">
+  <section hlmCard>
+    <app-card-header
+      title="Tenants"
+      description="Gestiona los tenants registrados en el sistema"
+      icon="lucideUsers"
+      [showAction]="!store.isEmpty()"
+      actionLabel="Nuevo"
+      actionIcon="lucidePlus"
+      (actionClick)="onCreateTenant()"
+    />
 
-  <!-- SEARCH -->
-  <input
-    type="text"
-    placeholder="Search tenant..."
-    class="mb-4 w-full rounded border p-2"
-    (input)="onSearch($event)"
-  />
-
-  <!-- LOADING SKELETON -->
-  @if (loading()) {
-    <div class="space-y-3">
-      @for (i of [1, 2, 3, 4, 5]; track i) {
-        <div class="h-14 animate-pulse rounded bg-gray-200"></div>
+    <div hlmCardContent>
+      @if (store.loading()) {
+        <div class="space-y-4">
+          <hlm-skeleton class="h-10 w-full rounded-md" />
+          <hlm-skeleton class="h-10 w-full rounded-md" />
+          <hlm-skeleton class="h-10 w-full rounded-md" />
+          <hlm-skeleton class="h-10 w-full rounded-md" />
+        </div>
+      } @else if (store.hasError()) {
+        <app-table-error
+          variant="destructive"
+          icon="lucideAlertCircle"
+          [description]="
+            store.error()?.message || 'Ocurrio un error inesperado'
+          "
+          title="No se pudieron cargar los tenants"
+          [showAction]="true"
+          actionLabel="Reintentar"
+          (actionClick)="onRetry()"
+        />
+      } @else if (store.isEmpty()) {
+        <app-empty-state
+          title="Sin tenants"
+          description="Aún no existen tenants para mostrar."
+          icon="lucideInbox"
+          [showAction]="true"
+          actionLabel="Crear primer tenant"
+          actionIcon="lucidePlus"
+          (actionClick)="onCreateTenant()"
+        />
+      } @else {
+        <app-tenant-table
+          [tenants]="store.tenants()"
+          [togglingTenantIds]="store.togglingTenantIds()"
+          (viewTenant)="onViewTenant($event)"
+          (editTenant)="onEditTenant($event)"
+          (activateTenant)="onActivateTenant($event)"
+          (deactivateTenant)="onDeactivateTenant($event)"
+        />
+        <app-tenant-detail-dialog
+          [open]="viewDialogOpen()"
+          [tenant]="store.selectedTenant()"
+          [loading]="store.selectedTenantLoading()"
+          [error]="store.selectedTenantError()"
+          (openChange)="onViewDialogOpenChange($event)"
+          (editTenant)="onEditTenant($event)"
+        />
       }
     </div>
-  }
-
-  <!-- CONTENT -->
-  @if (!loading()) {
-    <!-- EMPTY STATE -->
-    @if (filteredTenants().length === 0) {
-      <div class="rounded border p-4 text-gray-500">No tenants found</div>
-    }
-
-    <!-- LIST -->
-    @for (tenant of filteredTenants(); track tenant.id) {
-      <div class="mb-2 rounded border p-3 transition hover:bg-gray-50">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="font-semibold">
-              {{ tenant.name }}
-            </h3>
-
-            <p class="text-sm text-gray-600">
-              {{ tenant.email }}
-            </p>
-          </div>
-
-          <span class="text-xs text-gray-400"> ID: {{ tenant.id }} </span>
-        </div>
-
-        <div class="mt-2 text-xs text-gray-500">
-          Company: {{ tenant.company?.name }}
-        </div>
-      </div>
-    }
-  }
-</div>
+  </section>
+</section>

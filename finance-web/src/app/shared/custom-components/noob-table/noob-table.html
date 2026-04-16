@@ -1,0 +1,30 @@
+<ng-template #actionsTemplate let-user>
+  <div class="flex items-center justify-end gap-2">
+    <button
+      type="button"
+      hlmBtn
+      variant="outline"
+      size="icon"
+      class="cursor-pointer"
+    >
+      <ng-icon name="lucideEye" class="text-foreground" />
+    </button>
+
+    <button
+      type="button"
+      hlmBtn
+      variant="outline"
+      size="icon"
+      class="cursor-pointer"
+    >
+      <ng-icon name="lucidePencil" class="text-foreground" />
+    </button>
+
+    <button hlmBtn variant="destructive" size="icon">
+      <ng-icon name="lucideTrash2" class="text-destructive" />
+    </button>
+    <hlm-switch class="cursor-pointer" />
+  </div>
+</ng-template>
+
+<app-table-base [data]="data" [columns]="columns" />

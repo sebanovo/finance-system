@@ -1,10 +1,12 @@
 <div hlmTableContainer>
   <table hlmTable>
-    <thead hlmTHead>
+    <thead hlmTHead class="bg-gray-200">
       <tr hlmTr>
         <th hlmTh>Nombre</th>
         <th hlmTh>Correo</th>
         <th hlmTh>Estado</th>
+        <th hlmTh>Creado</th>
+        <th hlmTh>Modificado</th>
         <th hlmTh class="text-right">Acciones</th>
       </tr>
     </thead>
@@ -33,8 +35,15 @@
             }
           </td>
 
+          <td hlmTd>
+            {{ user.createdAt }}
+          </td>
+          <td hlmTd>
+            {{ user.updatedAt }}
+          </td>
+
           <td hlmTd class="text-right">
-            <div class="flex justify-end gap-2">
+            <div class="flex items-center justify-end gap-2">
               <button
                 hlmBtn
                 variant="outline"
@@ -42,7 +51,7 @@
                 size="sm"
                 (click)="onViewUser(user)"
               >
-                Ver
+                <ng-icon name="lucideEye" class="text-foreground" />
               </button>
 
               <button
@@ -52,39 +61,15 @@
                 size="sm"
                 (click)="onEditUser(user.id)"
               >
-                Editar
+                <ng-icon name="lucidePencil" class="text-foreground" />
               </button>
 
-              @if (user.isActive) {
-                <button
-                  hlmBtn
-                  variant="outline"
-                  size="sm"
-                  class="min-w-25 cursor-pointer"
-                  [disabled]="isUserToggling(user.id)"
-                  (click)="onDeactivateUser(user)"
-                >
-                  @if (isUserToggling(user.id)) {
-                    Procesando...
-                  } @else {
-                    Desactivar
-                  }
-                </button>
-              } @else {
-                <button
-                  hlmBtn
-                  size="sm"
-                  class="min-w-25 cursor-pointer"
-                  [disabled]="isUserToggling(user.id)"
-                  (click)="onActivateUser(user)"
-                >
-                  @if (isUserToggling(user.id)) {
-                    Procesando...
-                  } @else {
-                    Activar
-                  }
-                </button>
-              }
+              <hlm-switch
+                class="cursor-pointer"
+                [checked]="user.isActive"
+                [disabled]="isUserToggling(user.id)"
+                (checkedChange)="onToggleUser(user, $event)"
+              />
             </div>
           </td>
         </tr>
