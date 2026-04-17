@@ -15,6 +15,7 @@ import {
 } from "@ng-icons/lucide";
 import { HlmButtonImports } from "@shared/ui/button";
 import { HlmInputImports } from "@shared/ui/input";
+import { AuthStore } from "../../../../features/auth/store/auth.store";
 import { SessionStore } from "../../../session/store/session.store";
 import { AppLayoutState } from "../../services/app-layout.state";
 
@@ -36,6 +37,7 @@ import { AppLayoutState } from "../../services/app-layout.state";
 })
 export class AppHeader {
   private sessionStore = inject(SessionStore);
+  private authStore = inject(AuthStore);
   private router = inject(Router);
 
   readonly title = input("Dashboard");
@@ -57,7 +59,8 @@ export class AppHeader {
 
   onClickPerfil(): void {
     this.sessionStore.clearSession();
-    void this.router.navigateByUrl("/auth/login");
+    this.authStore.logout();
+    // void this.router.navigateByUrl("/auth/login");
     // this.logoutService.logout();
     // void this.router.navigate([""]);
   }

@@ -1,0 +1,114 @@
+<div>
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <hlm-field-group>
+      <!-- HEADER -->
+      <div class="flex flex-col items-center gap-2 text-center">
+        <a href="#" class="flex flex-col items-center gap-2 font-medium">
+          <div class="flex size-8 items-center justify-center rounded-md">
+            <ng-icon name="lucideGalleryVerticalEnd" class="size-6" />
+          </div>
+        </a>
+        <h1 class="text-xl font-bold">Welcome back Superadmin</h1>
+
+        <hlm-field-description>
+          Don't have an account? <a href="#">Sign up</a>
+        </hlm-field-description>
+      </div>
+
+      @if (errorMessage()) {
+        <div
+          class="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600"
+        >
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <!-- EMAIL -->
+      <hlm-field>
+        <label hlmFieldLabel for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          placeholder="superadmin@finance.local"
+          formControlName="email"
+          hlmInput
+          required
+        />
+        <hlm-field-error validator="required"
+          >Email is required.</hlm-field-error
+        >
+        <hlm-field-error validator="email"
+          >Enter a valid email address.</hlm-field-error
+        >
+      </hlm-field>
+
+      <!-- PASSWORD -->
+      <hlm-field>
+        <div class="flex items-center">
+          <label hlmFieldLabel for="password">Password</label>
+          <a
+            hlmFieldDescription
+            class="ml-auto text-sm underline-offset-4 hover:underline"
+            routerLink="."
+          >
+            Forgot password?
+          </a>
+        </div>
+        <input
+          hlmInput
+          id="password"
+          type="password"
+          placeholder="**********"
+          formControlName="password"
+          required
+        />
+        <hlm-field-error validator="required"
+          >Password is required.</hlm-field-error
+        >
+        <hlm-field-error validator="minlength"
+          >Password must be at least 8 characters long.</hlm-field-error
+        >
+      </hlm-field>
+
+      <!-- asdf -->
+
+      <!-- LOGIN BUTTON -->
+      <hlm-field>
+        <button hlmBtn type="submit" [disabled]="isSubmitting()">
+          @if (isSubmitting()) {
+            Signing in...
+          } @else {
+            Login
+          }
+        </button>
+      </hlm-field>
+
+      <!-- SEPARATOR -->
+      <hlm-field-separator>Or</hlm-field-separator>
+
+      <!-- SOCIAL BUTTONS -->
+      <hlm-field class="grid gap-4 sm:grid-cols-2">
+        <button hlmBtn variant="outline" type="button">
+          <ng-icon name="remixGithubFill" class="text-xl" />
+          Continue with GitHub
+        </button>
+        <button hlmBtn variant="outline" type="button">
+          <ng-icon name="remixGoogleFill" />
+          <!-- Google SVG can be added here -->
+          Continue with Google
+        </button>
+      </hlm-field>
+    </hlm-field-group>
+  </form>
+
+  <!-- FOOTER -->
+  <p class="text-muted-foreground py-4 text-center text-xs">
+    Demo credentials:
+    <span class="font-medium">superadmin@finance.local</span> /
+    <span class="font-medium">SuperAdmin123!</span>
+  </p>
+  <div hlm-field-description class="px-6 text-center">
+    By clicking continue, you agree to our
+    <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+  </div>
+</div>
