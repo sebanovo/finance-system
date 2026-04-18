@@ -1,4 +1,66 @@
 <section class="space-y-6">
+  <div class="space-y-1">
+    <h1 class="flex items-center gap-2 text-2xl font-semibold tracking-tight">
+      <ng-icon name="lucideGauge" class="size-5" />
+      Dashboard
+    </h1>
+    <p class="text-muted-foreground text-sm">
+      Vista general del sistema, sus métricas principales y alertas operativas.
+    </p>
+  </div>
+
+  @if (store.loading() && !store.hasAnyUsefulData()) {
+    <section class="space-y-6">
+      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <hlm-skeleton class="h-32 w-full rounded-3xl" />
+        <hlm-skeleton class="h-32 w-full rounded-3xl" />
+        <hlm-skeleton class="h-32 w-full rounded-3xl" />
+        <hlm-skeleton class="h-32 w-full rounded-3xl" />
+      </div>
+
+      <div class="grid gap-4 xl:grid-cols-3">
+        <hlm-skeleton class="h-80 w-full rounded-3xl xl:col-span-2" />
+        <hlm-skeleton class="h-80 w-full rounded-3xl" />
+      </div>
+
+      <hlm-skeleton class="h-72 w-full rounded-3xl" />
+    </section>
+  } @else if (store.shouldShowGlobalError()) {
+    <hlm-alert variant="destructive">
+      <ng-icon name="lucideAlertCircle" />
+      <h4 hlmAlertTitle>No se pudo cargar el dashboard</h4>
+      <p hlmAlertDescription>
+        No se obtuvo información suficiente para mostrar el panel.
+      </p>
+
+      <div class="mt-4">
+        <button hlmBtn variant="outline" (click)="onRetry()">Reintentar</button>
+      </div>
+    </hlm-alert>
+  } @else {
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      @for (metric of store.metrics(); track metric.label) {
+        <app-dashboard-metric-card [metric]="metric" />
+      }
+    </div>
+
+    <div class="grid gap-4 xl:grid-cols-3">
+      <div class="xl:col-span-2">
+        <app-dashboard-current-subscription-card
+          [section]="store.currentSubscriptionState()"
+        />
+      </div>
+
+      <app-dashboard-alert-panel [alerts]="store.alerts()" />
+    </div>
+
+    <app-dashboard-tenant-overview-card
+      [section]="store.tenantOverviewState()"
+    />
+  }
+</section>
+
+<!-- <section class="space-y-6">
   <div>
     <h2 class="text-2xl font-semibold text-slate-900">Dashboard</h2>
     <p class="mt-1 text-sm text-slate-500">
@@ -53,4 +115,4 @@
       </p>
     </div>
   </div>
-</section>
+</section> -->

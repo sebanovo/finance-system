@@ -125,7 +125,8 @@ export class AuthStore {
 
       await firstValueFrom(this.authService.logout());
 
-      const isAdmin = !!this.adminService.getSuperAdmin();
+      // const isAdmin = !!this.adminService.getSuperAdmin();
+      const isAdmin = this.adminService.getSuperAdmin() !== null;
 
       this.reset();
       this.sessionStore.clearSession();

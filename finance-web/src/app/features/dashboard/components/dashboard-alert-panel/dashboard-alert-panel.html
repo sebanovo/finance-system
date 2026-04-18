@@ -1,0 +1,41 @@
+<section hlmCard>
+  <div hlmCardHeader>
+    <div>
+      <h3 hlmCardTitle>Alertas y seguimiento</h3>
+      <p hlmCardDescription>Situaciones relevantes que conviene revisar.</p>
+    </div>
+  </div>
+
+  <div hlmCardContent class="space-y-3">
+    @if (alerts().length === 0) {
+      <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+        <p class="text-sm font-medium text-emerald-700">
+          Todo luce estable por ahora.
+        </p>
+        <p class="mt-1 text-sm text-emerald-700/80">
+          No se detectaron alertas relevantes en las métricas actuales.
+        </p>
+      </div>
+    } @else {
+      @for (alert of alerts(); track alert.id) {
+        <div
+          class="rounded-2xl border p-4"
+          [class]="alertToneClass(alert.tone)"
+        >
+          <div class="flex items-start gap-3">
+            <ng-icon [name]="iconName(alert.tone)" class="mt-0.5 size-4" />
+
+            <div class="space-y-1">
+              <p class="text-sm font-semibold">
+                {{ alert.title }}
+              </p>
+              <p class="text-sm">
+                {{ alert.description }}
+              </p>
+            </div>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</section>

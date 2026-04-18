@@ -16,6 +16,8 @@ import { toast } from "@spartan-ng/brain/sonner";
 import { CardHeader } from "../../../../shared/custom-components/card-header/card-header";
 import { EmptyState } from "../../../../shared/custom-components/empty-state/empty-state";
 import { TableError } from "../../../../shared/custom-components/table-error/table-error";
+import { SubscriptionManageDrawer } from "../../../subscription-assignment/components/subscription-manage-drawer/subscription-manage-drawer";
+import { AssignSubscriptionTenantContext } from "../../../subscription-assignment/model/subscription-assignment.type";
 import { TenantDetailDialog } from "../../components/tenant-detail-dialog/tenant-detail-dialog";
 import { TenantTable } from "../../components/tenant-table/tenant-table";
 import { Tenant } from "../../models/tenant.type";
@@ -34,6 +36,7 @@ import { TenantsStore } from "../../store/tenant.store";
     CardHeader,
     TableError,
     EmptyState,
+    SubscriptionManageDrawer,
   ],
   providers: [
     provideIcons({
@@ -50,6 +53,10 @@ export class TenantListPage implements OnInit {
   readonly store = inject(TenantsStore);
   private readonly router = inject(Router);
   readonly viewDialogOpen = signal(false);
+
+  readonly assignSubscriptionDrawerOpen = signal(false);
+  readonly selectedTenantForSubscription =
+    signal<AssignSubscriptionTenantContext | null>(null);
 
   ngOnInit(): void {
     console.log("init", this.store.tenants);
@@ -126,5 +133,29 @@ export class TenantListPage implements OnInit {
       this.store.clearSelectedTenantError();
       this.store.clearSelectedTenant();
     }
+  }
+
+  onAssignSubscription(tenant: Tenant): void {
+    this.selectedTenantForSubscription.set({
+      id: tenant.id,
+      name: tenant.name,
+      slug: tenant.slug,
+    });
+
+    this.assignSubscriptionDrawerOpen.set(true);
+  }
+
+  onAssignSubscriptionDrawerOpenChange(isOpen: boolean): void {
+    this.assignSubscriptionDrawerOpen.set(isOpen);
+
+    if (!isOpen) {
+      this.selectedTenantForSubscription.set(null);
+    }
+  }
+
+  onSubscriptionAssigned(): void {
+    toast("Suscripción asignada", {
+      description: "La suscripción fue registrada correctamente.",
+    });
   }
 }

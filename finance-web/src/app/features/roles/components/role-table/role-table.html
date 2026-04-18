@@ -1,0 +1,80 @@
+<div hlmTableContainer>
+  <table hlmTable>
+    <thead hlmTHead class="bg-gray-200">
+      <tr hlmTr>
+        <th hlmTh>Nombre</th>
+        <th hlmTh>Descripción</th>
+        <th hlmTh>Permisos</th>
+        <th hlmTh>Estado</th>
+        <th hlmTh>Creado</th>
+        <th hlmTh class="text-right">Acciones</th>
+      </tr>
+    </thead>
+
+    <tbody hlmTBody>
+      @for (role of roles(); track role.id) {
+        <tr hlmTr>
+          <td hlmTd class="text-foreground font-medium">
+            {{ role.name }}
+          </td>
+
+          <td hlmTd>
+            {{ role.description }}
+          </td>
+
+          <td hlmTd>
+            {{ role.permissionCodes.length }}
+          </td>
+
+          <td hlmTd>
+            @if (role.isActive) {
+              <span
+                hlmBadge
+                class="bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+              >
+                Activo
+              </span>
+            } @else {
+              <span hlmBadge variant="outline"> Inactivo </span>
+            }
+          </td>
+
+          <td hlmTd>
+            {{ role.createdAt }}
+          </td>
+
+          <td hlmTd class="text-right">
+            <div class="flex items-center justify-end gap-2">
+              <button
+                hlmBtn
+                variant="outline"
+                class="cursor-pointer"
+                size="sm"
+                (click)="onViewRole(role)"
+              >
+                <ng-icon name="lucideEye" class="text-foreground" />
+              </button>
+
+              <button
+                hlmBtn
+                variant="outline"
+                class="cursor-pointer"
+                size="sm"
+                (click)="onEditRole(role.id)"
+              >
+                <ng-icon name="lucidePencil" class="text-foreground" />
+              </button>
+
+              <hlm-switch
+                class="cursor-pointer"
+                [checked]="role.isActive"
+                [disabled]="isRoleToggling(role.id)"
+                (checkedChange)="onToggleRole(role, $event)"
+              />
+            </div>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,92 @@
+<button
+  hlmBtn
+  variant="ghost"
+  type="button"
+  class="h-10 w-10 rounded-full p-1"
+  [attr.aria-label]="ariaLabel()"
+  [hlmDropdownMenuTrigger]="menu"
+>
+  @if (!imageError) {
+    <img
+      [src]="resolvedAvatar"
+      [alt]="userName()"
+      class="h-8 w-8 rounded-full object-cover"
+      (error)="imageError = true"
+    />
+  } @else {
+    <div
+      class="bg-muted text-foreground flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold"
+    >
+      {{ initials }}
+    </div>
+  }
+</button>
+
+<ng-template #menu>
+  <hlm-dropdown-menu class="w-64">
+    <div class="flex items-center gap-3 px-3 py-3">
+      @if (!imageError) {
+        <img
+          [src]="resolvedAvatar"
+          [alt]="userName()"
+          class="h-10 w-10 rounded-full object-cover"
+          (error)="imageError = true"
+        />
+      } @else {
+        <div
+          class="bg-muted text-foreground flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold"
+        >
+          {{ initials }}
+        </div>
+      }
+
+      <div class="min-w-0">
+        <p class="text-foreground truncate text-sm font-medium">
+          {{ userName() }}
+        </p>
+
+        @if (userEmail()) {
+          <p class="text-muted-foreground truncate text-xs">
+            {{ userEmail() }}
+          </p>
+        }
+      </div>
+    </div>
+
+    <hlm-dropdown-menu-separator />
+
+    <hlm-dropdown-menu-group>
+      <button
+        hlmDropdownMenuItem
+        type="button"
+        class="gap-2"
+        (click)="onProfileClick()"
+      >
+        <ng-icon name="lucideUser" class="text-base" />
+        <span>Profile</span>
+      </button>
+
+      <button
+        hlmDropdownMenuItem
+        type="button"
+        class="gap-2"
+        (click)="onSettingsClick()"
+      >
+        <ng-icon name="lucideSettings" class="text-base" />
+        <span>Settings</span>
+      </button>
+    </hlm-dropdown-menu-group>
+
+    <hlm-dropdown-menu-separator />
+
+    <button
+      hlmDropdownMenuItem
+      type="button"
+      class="text-destructive focus:text-destructive gap-2"
+      (click)="onLogoutClick()"
+    >
+      <ng-icon name="lucideLogOut" class="text-base" />
+      <span>Log out</span>
+    </button>
+  </hlm-dropdown-menu>
+</ng-template>

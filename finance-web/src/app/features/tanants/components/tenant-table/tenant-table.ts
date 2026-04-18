@@ -5,7 +5,11 @@ import {
   output,
 } from "@angular/core";
 import { NgIcon, provideIcons } from "@ng-icons/core";
-import { lucideEye, lucidePencil } from "@ng-icons/lucide";
+import {
+  lucideBadgeDollarSign,
+  lucideEye,
+  lucidePencil,
+} from "@ng-icons/lucide";
 import { HlmBadgeImports } from "@shared/ui/badge";
 import { HlmButtonImports } from "@shared/ui/button";
 import { HlmSwitchImports } from "@shared/ui/switch";
@@ -21,7 +25,7 @@ import { Tenant } from "../../models/tenant.type";
     NgIcon,
     HlmSwitchImports,
   ],
-  providers: [provideIcons({ lucidePencil, lucideEye })],
+  providers: [provideIcons({ lucidePencil, lucideEye, lucideBadgeDollarSign })],
   templateUrl: "./tenant-table.html",
   styleUrl: "./tenant-table.css",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -35,6 +39,8 @@ export class TenantTable {
   readonly editTenant = output<string>();
 
   readonly togglingTenantIds = input<string[]>([]);
+
+  readonly assignSubscription = output<Tenant>();
 
   onViewTenant(tenant: Tenant): void {
     console.log("click en onViewTenant", tenant);
@@ -55,5 +61,9 @@ export class TenantTable {
     } else {
       this.activateTenant.emit(tenant);
     }
+  }
+
+  onAssignSubscription(tenant: Tenant): void {
+    this.assignSubscription.emit(tenant);
   }
 }

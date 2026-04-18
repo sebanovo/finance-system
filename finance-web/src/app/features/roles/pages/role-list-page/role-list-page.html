@@ -1,0 +1,61 @@
+<section class="space-y-6">
+  <section hlmCard>
+    <app-card-header
+      title="Roles"
+      description="Gestiona los roles del sistema"
+      icon="lucideUsers"
+      [showAction]="!store.isEmpty()"
+      actionLabel="Nuevo"
+      actionIcon="lucidePlus"
+      (actionClick)="onCreateRole()"
+    />
+
+    <div hlmCardContent>
+      @if (store.loading()) {
+        <div class="space-y-4">
+          <hlm-skeleton class="h-10 w-full rounded-md" />
+          <hlm-skeleton class="h-10 w-full rounded-md" />
+          <hlm-skeleton class="h-10 w-full rounded-md" />
+        </div>
+      } @else if (store.hasError()) {
+        <app-table-error
+          variant="destructive"
+          icon="lucideAlertCircle"
+          [description]="store.error()?.message"
+          title="No se pudieron cargar los roles"
+          [showAction]="true"
+          actionLabel="Reintentar"
+          (actionClick)="onRetry()"
+        />
+      } @else if (store.isEmpty()) {
+        <app-empty-state
+          title="Sin roles"
+          description="Aún no existen roles."
+          icon="lucideInbox"
+          [showAction]="true"
+          actionLabel="Crear primer rol"
+          actionIcon="lucidePlus"
+          (actionClick)="onCreateRole()"
+        />
+      } @else {
+        <app-role-table
+          [roles]="store.roles()"
+          [togglingRoleIds]="store.togglingRoleIds()"
+          (viewRole)="onViewRole($event)"
+          (editRole)="onEditRole($event)"
+          (activateRole)="onActivateRole($event)"
+          (deactivateRole)="onDeactivateRole($event)"
+        />
+
+        <app-role-detail-dialog
+          [open]="viewDialogOpen()"
+          [role]="store.selectedRole()"
+          [loading]="store.selectedRoleLoading()"
+          [error]="store.selectedRoleError()"
+          (openChange)="onViewDialogOpenChange($event)"
+          (editRole)="onEditRole($event)"
+        />
+      }
+    </div>
+  </section>
+</section>

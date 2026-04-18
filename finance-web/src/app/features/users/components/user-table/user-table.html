@@ -64,6 +64,16 @@
                 <ng-icon name="lucidePencil" class="text-foreground" />
               </button>
 
+              <button
+                hlmBtn
+                variant="outline"
+                class="cursor-pointer"
+                size="sm"
+                (click)="onManageRoles(user)"
+              >
+                <ng-icon name="lucideShield" class="text-foreground" />
+              </button>
+
               <hlm-switch
                 class="cursor-pointer"
                 [checked]="user.isActive"

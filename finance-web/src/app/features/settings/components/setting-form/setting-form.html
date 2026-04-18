@@ -1,0 +1,159 @@
+<section hlmCard>
+  <div hlmCardHeader>
+    <div>
+      <h2 hlmCardTitle>Configuración general</h2>
+      <p hlmCardDescription>Actualiza la información principal del tenant.</p>
+    </div>
+  </div>
+
+  <div hlmCardContent>
+    <form
+      #formRoot
+      class="space-y-6"
+      [formGroup]="form"
+      (ngSubmit)="onSubmit()"
+    >
+      @if (submitError(); as error) {
+        <hlm-alert
+          variant="destructive"
+          class="border border-red-400"
+          aria-live="assertive"
+        >
+          <div class="flex items-start gap-3">
+            <ng-icon name="lucideAlertCircle" class="mt-0.5 text-red-600" />
+
+            <div class="flex-1">
+              <h4 hlmAlertTitle class="text-base font-semibold">
+                No se pudieron guardar los cambios
+              </h4>
+
+              <p
+                hlmAlertDescription
+                class="text-muted-foreground break-word mt-1 text-sm leading-relaxed whitespace-normal"
+              >
+                {{
+                  error.message ||
+                    "Ocurrió un error inesperado al procesar la solicitud."
+                }}
+              </p>
+            </div>
+          </div>
+        </hlm-alert>
+      }
+
+      @if (form.invalid && (form.touched || form.dirty)) {
+        <hlm-alert aria-live="polite">
+          <ng-icon name="lucideAlertCircle" />
+          <h4 hlmAlertTitle>Revisa el formulario</h4>
+          <p hlmAlertDescription>
+            Hay campos obligatorios o inválidos. Corrígelos antes de continuar.
+          </p>
+        </hlm-alert>
+      }
+
+      <div class="grid gap-6 md:grid-cols-2">
+        <div hlmField>
+          <label hlmLabel for="companyName">Nombre comercial</label>
+          <input
+            id="companyName"
+            hlmInput
+            type="text"
+            formControlName="companyName"
+            placeholder="Ingresa el nombre comercial"
+          />
+          @if (hasFieldError("companyName")) {
+            <p hlmError>{{ getFieldError("companyName") }}</p>
+          }
+        </div>
+
+        <div hlmField>
+          <label hlmLabel for="legalName">Razón social</label>
+          <input
+            id="legalName"
+            hlmInput
+            type="text"
+            formControlName="legalName"
+            placeholder="Ingresa la razón social"
+          />
+          @if (hasFieldError("legalName")) {
+            <p hlmError>{{ getFieldError("legalName") }}</p>
+          }
+        </div>
+      </div>
+
+      <div class="grid gap-6 md:grid-cols-2">
+        <div hlmField>
+          <label hlmLabel for="timezone">Zona horaria</label>
+          <input
+            id="timezone"
+            hlmInput
+            type="text"
+            formControlName="timezone"
+            placeholder="Ej. America/La_Paz"
+          />
+          @if (hasFieldError("timezone")) {
+            <p hlmError>{{ getFieldError("timezone") }}</p>
+          }
+        </div>
+
+        <div hlmField>
+          <label hlmLabel for="currency">Moneda</label>
+          <input
+            id="currency"
+            hlmInput
+            type="text"
+            formControlName="currency"
+            placeholder="Ej. BOB"
+          />
+          @if (hasFieldError("currency")) {
+            <p hlmError>{{ getFieldError("currency") }}</p>
+          }
+        </div>
+      </div>
+
+      <div class="grid gap-6 md:grid-cols-2">
+        <div hlmField>
+          <label hlmLabel for="contactEmail">Correo de contacto</label>
+          <input
+            id="contactEmail"
+            hlmInput
+            type="email"
+            formControlName="contactEmail"
+            placeholder="correo@empresa.com"
+          />
+          @if (hasFieldError("contactEmail")) {
+            <p hlmError>{{ getFieldError("contactEmail") }}</p>
+          }
+        </div>
+
+        <div hlmField>
+          <label hlmLabel for="contactPhone">Teléfono de contacto</label>
+          <input
+            id="contactPhone"
+            hlmInput
+            type="text"
+            formControlName="contactPhone"
+            placeholder="Ingresa el teléfono"
+          />
+          @if (hasFieldError("contactPhone")) {
+            <p hlmError>{{ getFieldError("contactPhone") }}</p>
+          }
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3">
+        <button type="submit" hlmBtn [disabled]="submitting() || form.invalid">
+          @if (submitting()) {
+            <ng-icon
+              name="lucideLoaderCircle"
+              class="mr-2 size-4 animate-spin"
+            />
+            Guardando cambios...
+          } @else {
+            Guardar configuración
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</section>

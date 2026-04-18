@@ -5,7 +5,7 @@ import {
   output,
 } from "@angular/core";
 import { NgIcon, provideIcons } from "@ng-icons/core";
-import { lucideEye, lucidePencil } from "@ng-icons/lucide";
+import { lucideEye, lucidePencil, lucideShield } from "@ng-icons/lucide";
 import { HlmBadgeImports } from "@shared/ui/badge";
 import { HlmButtonImports } from "@shared/ui/button";
 import { HlmSwitchImports } from "@shared/ui/switch";
@@ -21,7 +21,7 @@ import { User } from "../../models/user.model";
     NgIcon,
     HlmSwitchImports,
   ],
-  providers: [provideIcons({ lucidePencil, lucideEye })],
+  providers: [provideIcons({ lucidePencil, lucideEye, lucideShield })],
   templateUrl: "./user-table.html",
   styleUrl: "./user-table.css",
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -35,6 +35,8 @@ export class UserTable {
   readonly editUser = output<string>();
 
   readonly togglingUserIds = input<string[]>([]);
+
+  readonly manageRoles = output<User>();
 
   onViewUser(user: User): void {
     console.log("click en onViewUser", user);
@@ -55,5 +57,9 @@ export class UserTable {
     } else {
       this.activateUser.emit(user);
     }
+  }
+
+  onManageRoles(user: User): void {
+    this.manageRoles.emit(user);
   }
 }

@@ -48,6 +48,7 @@
           (editTenant)="onEditTenant($event)"
           (activateTenant)="onActivateTenant($event)"
           (deactivateTenant)="onDeactivateTenant($event)"
+          (assignSubscription)="onAssignSubscription($event)"
         />
         <app-tenant-detail-dialog
           [open]="viewDialogOpen()"
@@ -56,6 +57,12 @@
           [error]="store.selectedTenantError()"
           (openChange)="onViewDialogOpenChange($event)"
           (editTenant)="onEditTenant($event)"
+        />
+        <app-subscription-manage-drawer
+          [open]="assignSubscriptionDrawerOpen()"
+          [tenant]="selectedTenantForSubscription()"
+          (openChange)="onAssignSubscriptionDrawerOpenChange($event)"
+          (saved)="onSubscriptionAssigned()"
         />
       }
     </div>

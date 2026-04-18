@@ -100,6 +100,18 @@ export const routes: Routes = [
           import("./features/access/access.routes").then(m => m.ACCESS_ROUTES),
       },
       {
+        path: "roles",
+        loadChildren: () =>
+          import("./features/roles/roles.routes").then(m => m.ROLES_ROUTES),
+      },
+      {
+        path: "permissions",
+        loadChildren: () =>
+          import("./features/permissions/permission.routes").then(
+            m => m.PERMISSIONS_ROUTES
+          ),
+      },
+      {
         path: "audit",
         loadChildren: () =>
           import("./features/audit/audit.routes").then(m => m.AUDIT_ROUTES),
@@ -125,13 +137,23 @@ export const routes: Routes = [
             m => m.SETTINGS_ROUTES
           ),
       },
+      {
+        path: "**",
+        loadComponent: () =>
+          import("./features/not-found/pages/private-not-found-page/private-not-found-page").then(
+            m => m.PrivateNotFoundPage
+          ),
+      },
     ],
   },
 
   //unknown routes
   {
     path: "**",
-    redirectTo: "",
+    loadComponent: () =>
+      import("./features/not-found/pages/public-not-found-page/public-not-found-page").then(
+        m => m.PublicNotFoundPage
+      ),
   },
 ];
 

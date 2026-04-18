@@ -38,18 +38,35 @@ export const APP_NAVIGATION: AppNavigationItem[] = [
       name: "users",
     },
   },
-  {
-    label: "Reportes",
-    route: "/app/reports",
-    icon: {
-      type: "remix",
-      name: "ri-bar-chart-box-line",
-    },
-  },
+
+  // {
+  //   label: "Reportes",
+  //   route: "/app/reports",
+  //   icon: {
+  //     type: "remix",
+  //     name: "ri-bar-chart-box-line",
+  //   },
+  // },
 
   {
     type: "section",
     label: "Administración",
+  },
+  {
+    label: "Roles",
+    route: "/app/roles",
+    icon: {
+      type: "lucide",
+      name: "shield",
+    },
+  },
+  {
+    label: "Permisos",
+    route: "/app/permissions",
+    icon: {
+      type: "remix",
+      name: "ri-key-line",
+    },
   },
   {
     label: "Planes",
@@ -59,22 +76,14 @@ export const APP_NAVIGATION: AppNavigationItem[] = [
       name: "ri-price-tag-3-line",
     },
   },
-  {
-    label: "Access",
-    route: "/app/access",
-    icon: {
-      type: "remix",
-      name: "ri-shield-keyhole-line",
-    },
-  },
-  {
-    label: "Auditoría",
-    route: "/app/audit",
-    icon: {
-      type: "remix",
-      name: "ri-file-list-3-line",
-    },
-  },
+  // {
+  //   label: "Auditoría",
+  //   route: "/app/audit",
+  //   icon: {
+  //     type: "remix",
+  //     name: "ri-file-list-3-line",
+  //   },
+  // },
   {
     label: "Settings",
     route: "/app/settings",
@@ -84,26 +93,3 @@ export const APP_NAVIGATION: AppNavigationItem[] = [
     },
   },
 ];
-
-// export const APP_NAVIGATION: AppNavigationItem[] = [
-//   {
-//     label: "Dashboard",
-//     route: "/app/dashboard",
-//   },
-//   {
-//     label: "Usuarios",
-//     route: "/app/users",
-//   },
-//   {
-//     label: "Productos",
-//     route: "/app/products",
-//   },
-//   {
-//     label: "Reportes",
-//     route: "/app/reports",
-//   },
-//   {
-//     label: "Configuración",
-//     route: "/app/settings",
-//   },
-// ];

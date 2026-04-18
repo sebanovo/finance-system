@@ -16,6 +16,8 @@ import { toast } from "@spartan-ng/brain/sonner";
 import { CardHeader } from "../../../../shared/custom-components/card-header/card-header";
 import { EmptyState } from "../../../../shared/custom-components/empty-state/empty-state";
 import { TableError } from "../../../../shared/custom-components/table-error/table-error";
+import { ManageRoleDrawer } from "../../../role-assignment/components/manage-role-drawer/manage-role-drawer";
+import { UserRoleAssignmentUserContext } from "../../../role-assignment/model/role-assignment.type";
 import { UserDetailDialog } from "../../components/user-detail-dialog/user-detail-dialog";
 import { UserTable } from "../../components/user-table/user-table";
 import { User } from "../../models/user.model";
@@ -34,6 +36,7 @@ import { UsersStore } from "../../store/user.store";
     CardHeader,
     TableError,
     EmptyState,
+    ManageRoleDrawer,
   ],
   providers: [
     provideIcons({
@@ -50,6 +53,10 @@ export class UserListPage implements OnInit {
   readonly store = inject(UsersStore);
   private readonly router = inject(Router);
   readonly viewDialogOpen = signal(false);
+
+  readonly manageRolesDrawerOpen = signal(false);
+  readonly selectedUserForRoleAssignment =
+    signal<UserRoleAssignmentUserContext | null>(null);
 
   ngOnInit(): void {
     console.log("init", this.store.users);
@@ -128,6 +135,25 @@ export class UserListPage implements OnInit {
     if (!isOpen) {
       this.store.clearSelectedUserError();
       this.store.clearSelectedUser();
+    }
+  }
+
+  onManageRoles(user: User): void {
+    this.selectedUserForRoleAssignment.set({
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+    });
+
+    this.manageRolesDrawerOpen.set(true);
+  }
+
+  onManageRolesDrawerOpenChange(isOpen: boolean): void {
+    this.manageRolesDrawerOpen.set(isOpen);
+
+    if (!isOpen) {
+      this.selectedUserForRoleAssignment.set(null);
     }
   }
 }

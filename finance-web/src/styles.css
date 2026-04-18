@@ -79,3 +79,18 @@
     font-family: var(--font-sans);
   }
 }
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+}
+
+app-root {
+  display: block;
+  height: 100%;
+}

@@ -48,6 +48,7 @@
           (editUser)="onEditUser($event)"
           (activateUser)="onActivateUser($event)"
           (deactivateUser)="onDeactivateUser($event)"
+          (manageRoles)="onManageRoles($event)"
         />
         <app-user-detail-dialog
           [open]="viewDialogOpen()"
@@ -56,6 +57,12 @@
           [error]="store.selectedUserError()"
           (openChange)="onViewDialogOpenChange($event)"
           (editUser)="onEditUser($event)"
+        />
+
+        <app-manage-role-drawer
+          [open]="manageRolesDrawerOpen()"
+          [user]="selectedUserForRoleAssignment()"
+          (openChange)="onManageRolesDrawerOpenChange($event)"
         />
       }
     </div>

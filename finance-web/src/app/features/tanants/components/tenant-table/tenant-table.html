@@ -75,6 +75,16 @@
                 <ng-icon name="lucidePencil" class="text-foreground" />
               </button>
 
+              <button
+                hlmBtn
+                variant="outline"
+                class="cursor-pointer"
+                size="sm"
+                (click)="onAssignSubscription(tenant)"
+              >
+                <ng-icon name="lucideBadgeDollarSign" class="text-foreground" />
+              </button>
+
               <hlm-switch
                 class="cursor-pointer"
                 [checked]="tenant.isActive"
