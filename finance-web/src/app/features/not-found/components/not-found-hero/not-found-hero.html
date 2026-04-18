@@ -1,0 +1,72 @@
+<!-- <div hlmCard class="border-border/60 bg-card h-full shadow-sm">
+  <div class="flex h-full flex-col">
+    <div hlmCardHeader class="space-y-4">
+      <div
+        class="bg-primary/10 text-primary flex h-14 w-14 items-center justify-center rounded-2xl"
+      >
+        <ng-icon [name]="icon()" size="28" />
+      </div>
+
+      <div class="space-y-2">
+        <p
+          class="text-muted-foreground text-sm font-medium tracking-wide uppercase"
+        >
+          {{ eyebrow() }}
+        </p>
+
+        <h1
+          hlmCardTitle
+          class="text-2xl leading-tight font-semibold md:text-3xl"
+        >
+          {{ title() }}
+        </h1>
+
+        <p hlmCardDescription class="text-base leading-7">
+          {{ description() }}
+        </p>
+      </div>
+    </div>
+
+    <div hlmCardContent class="flex-1">
+      <ng-content select="[hero-content]" />
+    </div>
+
+    <div hlmCardFooter class="flex flex-col gap-3 sm:flex-row">
+      <ng-content select="[hero-actions]" />
+    </div>
+  </div>
+</div> -->
+
+<div hlmCard class="border-border/60 bg-card shadow-sm">
+  <div hlmCardHeader class="space-y-4">
+    <div
+      class="bg-primary/10 text-primary flex h-14 w-14 items-center justify-center rounded-2xl"
+    >
+      <ng-icon [name]="icon()" size="28" />
+    </div>
+
+    <div class="space-y-2">
+      <p
+        class="text-muted-foreground text-sm font-medium tracking-wide uppercase"
+      >
+        {{ eyebrow() }}
+      </p>
+
+      <h1 hlmCardTitle class="text-2xl leading-tight font-semibold md:text-3xl">
+        {{ title() }}
+      </h1>
+
+      <p hlmCardDescription class="text-base leading-7">
+        {{ description() }}
+      </p>
+    </div>
+  </div>
+
+  <div hlmCardContent>
+    <ng-content select="[hero-content]" />
+  </div>
+
+  <div hlmCardFooter class="flex flex-col gap-3 sm:flex-row">
+    <ng-content select="[hero-actions]" />
+  </div>
+</div>

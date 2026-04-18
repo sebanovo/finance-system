@@ -12,26 +12,7 @@
         (click)="openMobileSidebar()"
         aria-label="Abrir menú"
       >
-        <ng-icon name="lucidePanelLeft" class="text-base" />
-      </button>
-
-      <button
-        hlmBtn
-        variant="outline"
-        size="sm"
-        class="hidden lg:inline-flex"
-        type="button"
-        (click)="toggleDesktopSidebar()"
-        aria-label="Colapsar sidebar"
-      >
-        <ng-icon
-          [name]="
-            layoutState.sidebarCollapsed()
-              ? 'lucidePanelLeft'
-              : 'lucidePanelLeftClose'
-          "
-          class="text-base"
-        />
+        <ng-icon name="lucideMenu" class="text-base" />
       </button>
 
       <div class="min-w-0">
@@ -56,6 +37,7 @@
             type="text"
             [placeholder]="searchPlaceholder()"
             class="pl-10"
+            aria-label="Buscar en el sistema"
           />
         </div>
       }
@@ -87,20 +69,14 @@
         </button>
       }
 
-      @if (showProfile()) {
-        <button
-          hlmBtn
-          variant="outline"
-          size="sm"
-          type="button"
-          class="gap-2"
-          aria-label="Perfil"
-          (click)="onClickPerfil()"
-        >
-          <ng-icon name="lucideUser" class="text-base" />
-          <span class="hidden sm:inline">Perfil</span>
-        </button>
-      }
+      <app-user-menu
+        [userName]="userName()"
+        [userEmail]="userEmail()"
+        [avatarUrl]="avatarUrl()"
+        (profileClick)="onClickPerfil()"
+        (settingsClick)="onClickSettings()"
+        (logoutClick)="onClickLogout()"
+      />
     </div>
   </div>
 </header>

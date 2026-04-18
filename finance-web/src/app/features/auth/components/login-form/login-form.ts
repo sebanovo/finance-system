@@ -52,47 +52,90 @@ export class LoginForm {
     tenantSlug: ["", [Validators.minLength(2)]],
   });
 
-  /**
-   * Subscribes to form value changes and emits a formEdited event
-   * whenever the form is modified.
-   */
   constructor() {
     this.form.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
-        this.formEdited.emit();
+        if (this.errorMessage()) {
+          this.formEdited.emit();
+        }
       });
   }
 
-  /**
-   *  Submits the login form. If the form is invalid, it marks all controls as touched to trigger validation messages.
-   * @returns void
-   */
   submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
-    const rawValue = this.form.getRawValue();
+    const { email, password, tenantSlug } = this.form.getRawValue();
+    const normalizedEmail = email.trim();
+    const normalizedTenantSlug = tenantSlug.trim();
 
-    const email = rawValue.email.trim();
-    const password = rawValue.password;
-    const tenantSlug = rawValue.tenantSlug.trim();
-
-    if (tenantSlug) {
+    if (normalizedTenantSlug) {
       this.submitLoginWithTenant.emit({
-        email,
+        email: normalizedEmail,
         password,
-        tenantSlug: tenantSlug,
+        tenantSlug: normalizedTenantSlug,
       });
-
       return;
     }
 
     this.submitLogin.emit({
-      email,
+      email: normalizedEmail,
       password,
     });
   }
+
+  // private readonly fb = inject(FormBuilder);
+  // private readonly destroyRef = inject(DestroyRef);
+
+  // readonly isSubmitting = input(false);
+  // readonly errorMessage = input<string | null>(null);
+
+  // readonly submitLogin = output<LoginRequest>();
+  // readonly submitLoginWithTenant = output<LoginTenantRequest>();
+  // readonly formEdited = output<void>();
+
+  // readonly form = this.fb.nonNullable.group({
+  //   email: ["", [Validators.required, Validators.email]],
+  //   password: ["", [Validators.required, Validators.minLength(8)]],
+  //   tenantSlug: ["", [Validators.minLength(2)]],
+  // });
+
+  // constructor() {
+  //   this.form.valueChanges
+  //     .pipe(takeUntilDestroyed(this.destroyRef))
+  //     .subscribe(() => {
+  //       this.formEdited.emit();
+  //     });
+  // }
+
+  // submit(): void {
+  //   if (this.form.invalid) {
+  //     this.form.markAllAsTouched();
+  //     return;
+  //   }
+
+  //   const rawValue = this.form.getRawValue();
+
+  //   const email = rawValue.email.trim();
+  //   const password = rawValue.password;
+  //   const tenantSlug = rawValue.tenantSlug.trim();
+
+  //   if (tenantSlug) {
+  //     this.submitLoginWithTenant.emit({
+  //       email,
+  //       password,
+  //       tenantSlug: tenantSlug,
+  //     });
+
+  //     return;
+  //   }
+
+  //   this.submitLogin.emit({
+  //     email,
+  //     password,
+  //   });
+  // }
 }

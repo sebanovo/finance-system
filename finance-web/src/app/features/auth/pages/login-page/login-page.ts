@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 
-import { SessionStore } from "../../../../core/session/store/session.store";
 import { LoginForm } from "../../components/login-form/login-form";
 import {
   LoginRequest,
@@ -16,7 +15,6 @@ import { AuthStore } from "../../store/auth.store";
   templateUrl: "./login-page.html",
 })
 export class LoginPage {
-  private readonly sessionStore = inject(SessionStore);
   private readonly authStore = inject(AuthStore);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -41,7 +39,6 @@ export class LoginPage {
       return;
     }
 
-    console.log("Login successful,", this.sessionStore.isAuthenticated());
     await this.navigateToReturnUrl();
   }
 
@@ -55,4 +52,42 @@ export class LoginPage {
 
     await this.router.navigateByUrl(returnUrl);
   }
+
+  // private readonly authStore = inject(AuthStore);
+  // private readonly router = inject(Router);
+  // private readonly route = inject(ActivatedRoute);
+
+  // readonly isSubmitting = this.authStore.loading;
+  // readonly errorMessage = this.authStore.errorMessage;
+
+  // async onSubmit(payload: LoginRequest): Promise<void> {
+  //   const success = await this.authStore.login(payload);
+
+  //   if (!success) {
+  //     return;
+  //   }
+
+  //   await this.navigateToReturnUrl();
+  // }
+
+  // async onSubmitWithTenant(payload: LoginTenantRequest): Promise<void> {
+  //   const success = await this.authStore.loginWithTenant(payload);
+
+  //   if (!success) {
+  //     return;
+  //   }
+
+  //   await this.navigateToReturnUrl();
+  // }
+
+  // onFormEdited(): void {
+  //   this.authStore.clearError();
+  // }
+
+  // private async navigateToReturnUrl(): Promise<void> {
+  //   const returnUrl =
+  //     this.route.snapshot.queryParamMap.get("returnUrl") || "/app";
+
+  //   await this.router.navigateByUrl(returnUrl);
+  // }
 }

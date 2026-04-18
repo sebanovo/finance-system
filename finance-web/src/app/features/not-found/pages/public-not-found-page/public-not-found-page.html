@@ -1,0 +1,80 @@
+<section class="bg-background min-h-screen px-6 py-10 md:px-10">
+  <div
+    class="mx-auto grid min-h-[calc(100vh-5rem)] max-w-7xl gap-8 lg:grid-cols-2"
+  >
+    <app-not-found-hero
+      icon="lucideSearchX"
+      eyebrow="Error 404"
+      title="No pudimos encontrar la página que estás buscando"
+      description="La ruta que intentaste abrir no existe, fue movida o ya no está disponible. Puedes volver al inicio o ingresar a tu cuenta para continuar."
+    >
+      <div
+        hero-content
+        class="grid gap-3 rounded-2xl border border-dashed p-4 text-sm"
+      >
+        <p class="text-muted-foreground">
+          Verifica que la URL esté escrita correctamente.
+        </p>
+        <p class="text-muted-foreground">
+          Si accediste desde un enlace guardado, puede que ya no exista.
+        </p>
+        <p class="text-muted-foreground">
+          Usa una de las acciones disponibles para retomar la navegación.
+        </p>
+      </div>
+
+      <div hero-actions class="contents">
+        <a hlmBtn class="w-full sm:w-auto" routerLink="/">
+          <ng-icon name="lucideHouse" class="mr-2" size="18" />
+          Ir al inicio
+        </a>
+
+        <a
+          hlmBtn
+          variant="outline"
+          class="w-full sm:w-auto"
+          routerLink="/auth/login"
+        >
+          Iniciar sesión
+          <ng-icon name="lucideArrowRight" class="ml-2" size="18" />
+        </a>
+      </div>
+    </app-not-found-hero>
+
+    <div class="hidden lg:block">
+      <!-- <app-not-found-brand-panel
+        eyebrow="Thunder Company"
+        title="Mantén una experiencia clara incluso cuando algo falla"
+        description="Esta pantalla puede usar el logotipo oficial de la empresa, una ilustración institucional o un bloque visual de marca para reforzar identidad y confianza."
+        icon="lucideSearchX"
+        infoTitle="Ruta no disponible"
+        infoDescription="Revisa el acceso o vuelve al flujo principal."
+      /> -->
+
+      <app-not-found-brand-panel
+        eyebrow="Thunder Company"
+        title="Plataforma de gestión empresarial"
+        description="Centraliza la administración de usuarios, suscripciones y procesos en un solo lugar, con seguridad y control total."
+        icon="lucideShieldCheck"
+        infoTitle="Acceso seguro y controlado"
+        infoDescription="Nuestro sistema valida cada acceso para garantizar la integridad de la información y la navegación dentro de rutas válidas."
+        boxTitle="¿Qué puedes hacer ahora?"
+        boxDescription="Puedes regresar al inicio o iniciar sesión para continuar trabajando dentro de la plataforma."
+      >
+        <div brand-extra class="mt-4 flex items-center gap-3">
+          <img
+            src="assets/brand/logo.svg"
+            alt="Thunder Company"
+            class="h-10 w-auto"
+          />
+          <div>
+            <p class="text-sm font-semibold">Thunder Company</p>
+            <p class="text-muted-foreground text-xs">
+              Business Management Platform
+            </p>
+          </div>
+        </div>
+      </app-not-found-brand-panel>
+    </div>
+  </div>
+</section>

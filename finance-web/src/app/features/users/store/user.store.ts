@@ -23,20 +23,22 @@ export class UsersStore {
 
   readonly users = signal<User[]>([]);
   readonly loading = signal(false);
-  readonly submitting = signal(false);
-  readonly error = signal<AppHttpError | null>(null);
-  readonly createError = signal<AppHttpError | null>(null);
   readonly hasLoaded = signal(false);
+  readonly error = signal<AppHttpError | null>(null);
   readonly hasError = computed(() => this.error() !== null);
+
+  readonly submitting = signal(false);
+  readonly createError = signal<AppHttpError | null>(null);
   readonly hasCreateError = computed(() => this.createError() !== null);
 
   readonly selectedUser = signal<User | null>(null);
   readonly selectedUserLoading = signal(false);
   readonly selectedUserError = signal<AppHttpError | null>(null);
-  readonly updateError = signal<AppHttpError | null>(null);
   readonly hasSelectedUserError = computed(
     () => this.selectedUserError() !== null
   );
+
+  readonly updateError = signal<AppHttpError | null>(null);
   readonly hasUpdateError = computed(() => this.updateError() !== null);
 
   // activate and deactivate signal

@@ -7,24 +7,32 @@ import {
 } from "@angular/core";
 import { Router, RouterLink } from "@angular/router";
 import { NgIcon, provideIcons } from "@ng-icons/core";
-import { lucideSettings, lucideUsers } from "@ng-icons/lucide";
+import {
+  lucideSettings,
+  lucideShield,
+  lucideUsers,
+  lucideX,
+} from "@ng-icons/lucide";
 import {
   remixBarChartBoxLine,
   remixBuildingLine,
   remixDashboardLine,
   remixFileList3Line,
+  remixKeyLine,
   remixPriceTag3Line,
   remixShieldKeyholeLine,
   remixVipCrownLine,
 } from "@ng-icons/remixicon";
 import { HlmButtonImports } from "@shared/ui/button";
-import { HlmSeparatorImports } from "@shared/ui/separator";
+import { HlmIcon } from "@shared/ui/icon";
+import { HlmSidebarImports } from "@shared/ui/sidebar";
 import { HlmTooltipImports } from "@shared/ui/tooltip";
 import { APP_NAVIGATION } from "../../constants/app-navigation.constants";
 import {
   AppNavigationItem,
   AppNavigationLinkItem,
 } from "../../models/navigation.type";
+import { AppLayoutState } from "../../services/app-layout.state";
 
 @Component({
   selector: "app-app-sidebar",
@@ -32,14 +40,17 @@ import {
   imports: [
     RouterLink,
     NgIcon,
+    HlmIcon,
     HlmButtonImports,
-    HlmSeparatorImports,
     HlmTooltipImports,
+    HlmSidebarImports,
   ],
   providers: [
     provideIcons({
       lucideSettings,
       lucideUsers,
+      lucideShield,
+      lucideX,
       remixBarChartBoxLine,
       remixBuildingLine,
       remixDashboardLine,
@@ -47,6 +58,7 @@ import {
       remixPriceTag3Line,
       remixShieldKeyholeLine,
       remixVipCrownLine,
+      remixKeyLine,
     }),
   ],
   templateUrl: "./app-sidebar.html",
@@ -58,6 +70,7 @@ export class AppSidebar {
 
   private readonly router = inject(Router);
 
+  protected readonly layoutState = inject(AppLayoutState);
   protected readonly navigation = computed(() => APP_NAVIGATION);
 
   protected isSection(
@@ -83,6 +96,8 @@ export class AppSidebar {
       "ri-building-line": "remixBuildingLine",
       "ri-vip-crown-line": "remixVipCrownLine",
       users: "lucideUsers",
+      shield: "lucideShield",
+      "ri-key-line": "remixKeyLine",
       "ri-bar-chart-box-line": "remixBarChartBoxLine",
       "ri-price-tag-3-line": "remixPriceTag3Line",
       "ri-shield-keyhole-line": "remixShieldKeyholeLine",

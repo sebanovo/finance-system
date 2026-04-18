@@ -1,17 +1,50 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
+import { Observable } from "rxjs";
+import { map } from "rxjs/operators";
+import {
+  CreateTenantRequest,
+  TenantDto,
+  TenantResponse,
+} from "../models/tenant.type";
 
-@Injectable({ providedIn: "root" })
-export class TenantService {
-  private api = "https://jsonplaceholder.typicode.com/users";
+@Injectable({
+  providedIn: "root",
+})
+export class TenantsApi {
+  private readonly http = inject(HttpClient);
 
-  private http = inject(HttpClient);
-
-  getTenants() {
-    return this.http.get<any[]>(this.api);
+  getTenants(): Observable<TenantDto[]> {
+    return this.http
+      .get<TenantResponse<TenantDto[]>>("/api/platform/tenants")
+      .pipe(map(response => response.data));
   }
 
-  getUser() {
-    return this.http.get<any[]>("/api/users");
+  createTenant(payload: CreateTenantRequest): Observable<TenantDto> {
+    return this.http
+      .post<TenantResponse<TenantDto>>("/api/platform/tenants", payload)
+      .pipe(map(response => response.data));
+  }
+
+  getTenantById(tenantId: string): Observable<TenantDto> {
+    return this.http
+      .get<TenantResponse<TenantDto>>(`/api/platform/tenants/${tenantId}`)
+      .pipe(map(response => response.data));
+  }
+
+  activateTenant(tenantId: string): Observable<TenantDto> {
+    return this.http
+      .patch<
+        TenantResponse<TenantDto>
+      >(`/api/platform/tenants/${tenantId}/activate`, {})
+      .pipe(map(response => response.data));
+  }
+
+  deactivateTenant(tenantId: string): Observable<TenantDto> {
+    return this.http
+      .patch<
+        TenantResponse<TenantDto>
+      >(`/api/platform/tenants/${tenantId}/deactivate`, {})
+      .pipe(map(response => response.data));
   }
 }

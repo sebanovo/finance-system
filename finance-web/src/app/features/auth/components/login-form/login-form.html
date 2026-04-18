@@ -73,7 +73,7 @@
     </hlm-field>
 
     <hlm-field>
-      <button hlmBtn type="submit" [disabled]="form.invalid || isSubmitting()">
+      <button hlmBtn type="submit" [disabled]="isSubmitting()">
         @if (isSubmitting()) {
           Signing in...
         } @else {

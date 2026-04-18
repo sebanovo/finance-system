@@ -4,6 +4,8 @@ export const SETTINGS_ROUTES: Routes = [
   {
     path: "",
     loadComponent: () =>
-      import("./pages/settings-page/settings-page").then(m => m.SettingsPage),
+      import("./pages/tenant-setting-page/tenant-setting-page").then(
+        m => m.TenantSettingPage
+      ),
   },
 ];

@@ -1,0 +1,97 @@
+<div hlmTableContainer>
+  <table hlmTable>
+    <thead hlmTHead class="bg-gray-200">
+      <tr hlmTr>
+        <th hlmTh>Tenant</th>
+        <th hlmTh>Plan</th>
+        <th hlmTh>Tipo</th>
+        <th hlmTh>Estado</th>
+        <th hlmTh>Trial</th>
+        <th hlmTh>Actual</th>
+        <th hlmTh>Vence</th>
+        <th hlmTh>Días restantes</th>
+        <th hlmTh class="text-right">Acciones</th>
+      </tr>
+    </thead>
+
+    <tbody hlmTBody>
+      @for (subscription of subscriptions(); track subscription.id) {
+        <tr hlmTr>
+          <td hlmTd class="text-foreground font-medium">
+            <div class="space-y-1">
+              <p class="font-medium">{{ subscription.tenantName }}</p>
+              <p class="text-muted-foreground text-xs">
+                {{ subscription.tenantSlug }}
+              </p>
+            </div>
+          </td>
+
+          <td hlmTd>
+            <div class="space-y-1">
+              <p class="font-medium">{{ subscription.planName }}</p>
+              <p class="text-muted-foreground text-xs">
+                {{ subscription.planCode }}
+              </p>
+            </div>
+          </td>
+
+          <td hlmTd>
+            {{ subscription.planType }}
+          </td>
+
+          <td hlmTd>
+            <span hlmBadge variant="secondary">
+              {{ subscription.status }}
+            </span>
+          </td>
+
+          <td hlmTd>
+            @if (subscription.isTrial) {
+              <span
+                hlmBadge
+                class="bg-amber-100 text-amber-700 hover:bg-amber-100"
+              >
+                Sí
+              </span>
+            } @else {
+              <span hlmBadge variant="outline"> No </span>
+            }
+          </td>
+
+          <td hlmTd>
+            @if (subscription.isCurrentSubscription) {
+              <span
+                hlmBadge
+                class="bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+              >
+                Actual
+              </span>
+            } @else {
+              <span hlmBadge variant="outline"> Histórica </span>
+            }
+          </td>
+
+          <td hlmTd>
+            {{ subscription.expiresAt }}
+          </td>
+
+          <td hlmTd>
+            {{ subscription.remainingDays }}
+          </td>
+
+          <td hlmTd class="text-right">
+            <button
+              hlmBtn
+              variant="outline"
+              class="cursor-pointer"
+              size="sm"
+              (click)="onViewSubscription(subscription)"
+            >
+              <ng-icon name="lucideEye" class="text-foreground" />
+            </button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

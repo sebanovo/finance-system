@@ -1,5 +1,3 @@
-import { AuthMeData } from "./auth-request.type";
-
 export type LoginData = {
   tokenType: string;
   accessToken: string;
@@ -17,10 +15,10 @@ export type LoginResponse<T> = {
 /**
  * AuthMe type
  */
-export type AuthMeResponse = {
+export type AuthMeResponse<T> = {
   success: true;
   message: string;
-  data: AuthMeData;
+  data: T;
   timestamp: string;
 };
 

@@ -1,23 +1,14 @@
 <section class="space-y-6">
   <section hlmCard>
-    <div hlmCardHeader>
-      <div>
-        <h1 hlmCardTitle class="flex items-center gap-2">
-          <ng-icon name="lucideUsers" class="size-5" />
-          Usuarios
-        </h1>
-        <p hlmCardDescription>
-          Gestiona los usuarios registrados en el sistema.
-        </p>
-      </div>
-
-      <div hlmCardAction>
-        <button hlmBtn (click)="onCreateUser()" class="cursor-pointer">
-          <ng-icon name="lucidePlus" class="mr-2 size-4" />
-          Nuevo usuario
-        </button>
-      </div>
-    </div>
+    <app-card-header
+      title="Usuarios"
+      description="Gestiona los usuarios registrados en el sistema"
+      icon="lucideUsers"
+      [showAction]="!store.isEmpty()"
+      actionLabel="Nuevo"
+      actionIcon="lucidePlus"
+      (actionClick)="onCreateUser()"
+    />
 
     <div hlmCardContent>
       @if (store.loading()) {
@@ -28,37 +19,27 @@
           <hlm-skeleton class="h-10 w-full rounded-md" />
         </div>
       } @else if (store.hasError()) {
-        <hlm-alert variant="destructive">
-          <ng-icon name="lucideAlertCircle" />
-          <h4 hlmAlertTitle>No se pudieron cargar los usuarios</h4>
-          <p hlmAlertDescription>
-            {{ store.error()?.message || "Ocurrió un error inesperado." }}
-          </p>
-          <div hlmAlertAction>
-            <button hlmBtn variant="outline" size="sm" (click)="onRetry()">
-              Reintentar
-            </button>
-          </div>
-        </hlm-alert>
+        <app-table-error
+          variant="destructive"
+          icon="lucideAlertCircle"
+          [description]="
+            store.error()?.message || 'Ocurrio un error inesperado'
+          "
+          title="No se pudieron cargar los usuarios"
+          [showAction]="true"
+          actionLabel="Reintentar"
+          (actionClick)="onRetry()"
+        />
       } @else if (store.isEmpty()) {
-        <div hlmEmpty class="border">
-          <div hlmEmptyHeader>
-            <div hlmEmptyMedia variant="icon">
-              <ng-icon name="lucideInbox" class="size-5" />
-            </div>
-
-            <div hlmEmptyTitle>Sin usuarios</div>
-
-            <div hlmEmptyDescription>Aún no existen usuarios para mostrar.</div>
-          </div>
-
-          <div hlmEmptyContent>
-            <button hlmBtn (click)="onCreateUser()">
-              <ng-icon name="lucidePlus" class="mr-2 size-4" />
-              Crear primer usuario
-            </button>
-          </div>
-        </div>
+        <app-empty-state
+          title="Sin usuarios"
+          description="Aun no existen usuarios para mostrar."
+          icon="lucideInbox"
+          [showAction]="true"
+          actionLabel="Crear primer usuario"
+          actionIcon="lucidePlus"
+          (actionClick)="onCreateUser()"
+        />
       } @else {
         <app-user-table
           [users]="store.users()"
@@ -67,6 +48,7 @@
           (editUser)="onEditUser($event)"
           (activateUser)="onActivateUser($event)"
           (deactivateUser)="onDeactivateUser($event)"
+          (manageRoles)="onManageRoles($event)"
         />
         <app-user-detail-dialog
           [open]="viewDialogOpen()"
@@ -75,6 +57,12 @@
           [error]="store.selectedUserError()"
           (openChange)="onViewDialogOpenChange($event)"
           (editUser)="onEditUser($event)"
+        />
+
+        <app-manage-role-drawer
+          [open]="manageRolesDrawerOpen()"
+          [user]="selectedUserForRoleAssignment()"
+          (openChange)="onManageRolesDrawerOpenChange($event)"
         />
       }
     </div>

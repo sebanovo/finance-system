@@ -1,0 +1,238 @@
+<hlm-sheet [state]="open() ? 'open' : 'closed'" (closed)="onClosed()">
+  <hlm-sheet-content
+    *hlmSheetPortal="let ctx"
+    side="right"
+    class="w-full sm:max-w-xl"
+  >
+    <hlm-sheet-header>
+      <h3 hlmSheetTitle class="flex items-center gap-2">
+        <ng-icon name="lucidePackagePlus" class="size-5" />
+        Assign Subscription
+      </h3>
+
+      @if (tenant(); as t) {
+        <div class="space-y-1">
+          <p hlmSheetDescription>Tenant: {{ t.name }}</p>
+          <p class="text-muted-foreground text-sm">slug: {{ t.slug }}</p>
+        </div>
+      }
+    </hlm-sheet-header>
+
+    <div class="mt-6 space-y-4">
+      @if (store.hasError()) {
+        <hlm-alert variant="destructive">
+          <ng-icon name="lucideAlertCircle" />
+          <h4 hlmAlertTitle>No se pudieron cargar los planes</h4>
+          <p hlmAlertDescription>
+            {{
+              store.error()?.message ||
+                "Ocurrió un error inesperado al cargar los planes."
+            }}
+          </p>
+        </hlm-alert>
+      } @else if (store.isLoading()) {
+        <section class="space-y-4">
+          <hlm-skeleton class="h-5 w-32 rounded-md" />
+          <hlm-skeleton class="h-24 w-full rounded-xl" />
+          <hlm-skeleton class="h-24 w-full rounded-xl" />
+          <hlm-skeleton class="h-24 w-full rounded-xl" />
+        </section>
+      } @else if (store.isEmpty()) {
+        <app-empty-state
+          title="Sin planes disponibles"
+          description="Aún no existen planes para asignar a este tenant."
+          icon="lucideBadgeDollarSign"
+          [showAction]="false"
+        />
+      } @else {
+        <form class="space-y-6" [formGroup]="form">
+          @if (store.hasSubmitError()) {
+            <hlm-alert variant="destructive">
+              <ng-icon name="lucideAlertCircle" />
+              <h4 hlmAlertTitle>No se pudo guardar la asignación</h4>
+              <p hlmAlertDescription>
+                {{
+                  store.submitError()?.message ||
+                    "Ocurrió un error inesperado al guardar."
+                }}
+              </p>
+            </hlm-alert>
+          }
+
+          <section class="space-y-3 px-5">
+            <div class="flex items-center justify-between">
+              <h4 class="text-sm font-semibold">Planes disponibles</h4>
+              @if (store.selectedPlan(); as selectedPlan) {
+                <span class="text-muted-foreground text-sm">
+                  Seleccionado: {{ selectedPlan.name }}
+                </span>
+              }
+            </div>
+
+            <div class="space-y-3">
+              @for (plan of store.availablePlans(); track plan.id) {
+                <button
+                  type="button"
+                  class="border-border hover:bg-muted/40 w-full rounded-xl border p-4 text-left transition-colors"
+                  [class.border-primary]="isPlanSelected(plan.code)"
+                  [class.bg-muted]="isPlanSelected(plan.code)"
+                  [disabled]="store.submitting()"
+                  (click)="onSelectPlan(plan.code)"
+                >
+                  <div class="flex items-start justify-between gap-4">
+                    <div class="space-y-2">
+                      <div class="flex items-center gap-2">
+                        <p class="font-medium">{{ plan.name }}</p>
+
+                        @if (store.currentPlanCode() === plan.code) {
+                          <span
+                            class="rounded-full border px-2 py-0.5 text-xs font-medium"
+                          >
+                            Actual
+                          </span>
+                        }
+
+                        @if (isPlanSelected(plan.code)) {
+                          <span
+                            class="inline-flex size-5 items-center justify-center rounded-full border"
+                          >
+                            <ng-icon name="lucideCheck" class="size-3" />
+                          </span>
+                        }
+                      </div>
+
+                      <p class="text-muted-foreground text-sm">
+                        {{ plan.code }} · {{ plan.planType }}
+                      </p>
+
+                      <div
+                        class="text-muted-foreground flex flex-wrap gap-4 text-sm"
+                      >
+                        <span>{{ plan.maxUsers }} usuarios</span>
+                        <span>{{ plan.maxRoles }} roles</span>
+                        <span>{{ plan.trialDays }} días trial</span>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              }
+
+              <!-- @for (plan of store.availablePlans(); track plan.id) {
+                <button
+                  type="button"
+                  class="border-border hover:bg-muted/40 w-full rounded-xl border p-4 text-left transition-colors"
+                  [class.border-primary]="isPlanSelected(plan.code)"
+                  [class.bg-muted]="isPlanSelected(plan.code)"
+                  [disabled]="store.submitting()"
+                  (click)="onSelectPlan(plan.code)"
+                >
+                  <div class="flex items-start justify-between gap-4">
+                    <div class="space-y-2">
+                      <div class="flex items-center gap-2">
+                        <p class="font-medium">{{ plan.name }}</p>
+
+                        @if (isPlanSelected(plan.code)) {
+                          <span
+                            class="inline-flex size-5 items-center justify-center rounded-full border"
+                          >
+                            <ng-icon name="lucideCheck" class="size-3" />
+                          </span>
+                        }
+                      </div>
+
+                      <p class="text-muted-foreground text-sm">
+                        {{ plan.code }} · {{ plan.planType }}
+                      </p>
+
+                      <div
+                        class="text-muted-foreground flex flex-wrap gap-4 text-sm"
+                      >
+                        <span>{{ plan.maxUsers }} usuarios</span>
+                        <span>{{ plan.maxRoles }} roles</span>
+                        <span>{{ plan.trialDays }} días trial</span>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              } -->
+            </div>
+
+            @if (
+              form.controls.planCode.invalid && form.controls.planCode.touched
+            ) {
+              <p class="text-sm text-red-600">Debes seleccionar un plan.</p>
+            }
+          </section>
+
+          <div hlmField class="px-5">
+            <label hlmLabel for="overrideTrialDays">
+              Override trial days
+            </label>
+            <input
+              id="overrideTrialDays"
+              hlmInput
+              type="number"
+              formControlName="overrideTrialDays"
+              placeholder="Ej. 15"
+            />
+            <p class="text-muted-foreground text-sm">
+              Opcional. Si no lo indicas, se usará la configuración del plan.
+            </p>
+          </div>
+        </form>
+      }
+    </div>
+
+    <hlm-sheet-footer class="mt-6">
+      <button
+        hlmBtn
+        type="button"
+        variant="outline"
+        [disabled]="store.submitting()"
+        (click)="onCancel()"
+      >
+        Cancel
+      </button>
+
+      <!-- <button
+        hlmBtn
+        type="button"
+        [disabled]="
+          store.submitting() ||
+          store.isLoading() ||
+          store.hasError() ||
+          store.isEmpty() ||
+          form.invalid
+        "
+        (click)="onSave()"
+      >
+        @if (store.submitting()) {
+          <ng-icon name="lucideLoaderCircle" class="mr-2 size-4 animate-spin" />
+          Saving...
+        } @else {
+          Save
+        }
+      </button> -->
+      <button
+        hlmBtn
+        type="button"
+        [disabled]="
+          store.submitting() ||
+          store.isLoading() ||
+          store.hasError() ||
+          store.isEmpty() ||
+          form.invalid ||
+          !store.isDirty()
+        "
+        (click)="onSave()"
+      >
+        @if (store.submitting()) {
+          <ng-icon name="lucideLoaderCircle" class="mr-2 size-4 animate-spin" />
+          Saving...
+        } @else {
+          Save
+        }
+      </button>
+    </hlm-sheet-footer>
+  </hlm-sheet-content>
+</hlm-sheet>
