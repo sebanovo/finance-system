@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../viewmodels/users_viewmodel.dart';
 
@@ -21,18 +22,26 @@ class _UsersPageState extends State<UsersPage> {
 
   void _onViewModelChanged() {
     if (!mounted) return;
-    if (_viewModel.errorMessage != null) {
-      _showSnackBar(_viewModel.errorMessage!);
-      _viewModel.clearError();
+    if (_viewModel.errorMessage != null &&
+        (_viewModel.errorMessage!.contains('Sesión expirada') ||
+            _viewModel.errorMessage!.contains('401') ||
+            _viewModel.errorMessage!.contains('No hay sesión activa'))) {
+      _showSnackBar(
+        'Tu sesión ha expirado. Por favor inicia sesión nuevamente.',
+      );
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) context.go('/login');
+      });
+    } else {
+      setState(() {});
     }
-    setState(() {});
   }
 
   void _showSnackBar(String message, {bool isError = true}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Colors.red : Colors.green,
+        backgroundColor: isError ? Colors.red.shade700 : Colors.green.shade700,
       ),
     );
   }
@@ -65,6 +74,34 @@ class _UsersPageState extends State<UsersPage> {
     }
   }
 
+  // Validaciones reutilizables
+  String? _validateEmail(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'El correo electrónico es obligatorio';
+    }
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$');
+    if (!emailRegex.hasMatch(value.trim())) {
+      return 'Ingresa un correo válido';
+    }
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'La contraseña es obligatoria';
+    }
+    if (value.length < 8) {
+      return 'Debe tener al menos 8 caracteres';
+    }
+    if (!value.contains(RegExp(r'[0-9]'))) {
+      return 'Debe contener al menos un dígito';
+    }
+    if (!value.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+      return 'Debe contener al menos un carácter especial';
+    }
+    return null;
+  }
+
   void _showCreateUserDialog() {
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
@@ -76,6 +113,7 @@ class _UsersPageState extends State<UsersPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Crear Usuario'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         content: Form(
           key: formKey,
           child: SingleChildScrollView(
@@ -85,16 +123,14 @@ class _UsersPageState extends State<UsersPage> {
                 TextFormField(
                   controller: emailController,
                   decoration: const InputDecoration(labelText: 'Email'),
-                  validator: (value) =>
-                      value!.contains('@') ? null : 'Email inválido',
+                  validator: _validateEmail,
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: passwordController,
                   decoration: const InputDecoration(labelText: 'Contraseña'),
                   obscureText: true,
-                  validator: (value) =>
-                      value!.length >= 6 ? null : 'Mínimo 6 caracteres',
+                  validator: _validatePassword,
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
@@ -127,6 +163,13 @@ class _UsersPageState extends State<UsersPage> {
                 );
               }
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2E7D32),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
             child: const Text('Crear'),
           ),
         ],
@@ -142,6 +185,9 @@ class _UsersPageState extends State<UsersPage> {
         builder: (context, setStateDialog) {
           return AlertDialog(
             title: const Text('Asignar Rol'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
             content: DropdownButtonFormField<String>(
               decoration: const InputDecoration(labelText: 'Selecciona un rol'),
               value: selectedRoleId,
@@ -166,11 +212,18 @@ class _UsersPageState extends State<UsersPage> {
                 onPressed: () async {
                   if (selectedRoleId != null) {
                     Navigator.pop(context);
-                    await _assignRole(userId, selectedRoleId ?? '');
+                    await _assignRole(userId, selectedRoleId!);
                   } else {
                     _showSnackBar('Selecciona un rol');
                   }
                 },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2E7D32),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
                 child: const Text('Guardar'),
               ),
             ],
@@ -184,20 +237,65 @@ class _UsersPageState extends State<UsersPage> {
   Widget build(BuildContext context) {
     if (_viewModel.loadingRolesList) {
       return Scaffold(
-        appBar: AppBar(title: Text('Usuarios del Tenant')),
-        body: Center(child: CircularProgressIndicator()),
+        appBar: AppBar(
+          title: const Text('Usuarios del Tenant'),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          foregroundColor: const Color(0xFF2E7D32),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Usuarios del Tenant')),
+      appBar: AppBar(
+        title: const Text('Usuarios del Tenant'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        foregroundColor: const Color(0xFF2E7D32),
+      ),
       body: _viewModel.loading
           ? const Center(child: CircularProgressIndicator())
           : _viewModel.errorMessage != null
-          ? Center(child: Text(_viewModel.errorMessage!))
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.red.shade300,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    _viewModel.errorMessage!,
+                    style: const TextStyle(fontSize: 16),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () => _viewModel.loadUsers(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2E7D32),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    child: const Text('Reintentar'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () => context.go('/login'),
+                    child: const Text('Ir a inicio de sesión'),
+                  ),
+                ],
+              ),
+            )
           : _viewModel.users.isEmpty
           ? const Center(child: Text('No hay usuarios registrados'))
           : ListView.builder(
+              padding: const EdgeInsets.all(8),
               itemCount: _viewModel.users.length,
               itemBuilder: (context, index) {
                 final user = _viewModel.users[index];
@@ -211,20 +309,28 @@ class _UsersPageState extends State<UsersPage> {
 
                 return Card(
                   margin: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
+                    horizontal: 16,
+                    vertical: 6,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: ListTile(
                     leading: CircleAvatar(
                       backgroundColor: user.active
-                          ? Colors.green[100]
+                          ? const Color(0xFFC8E6C9)
                           : Colors.grey[300],
                       child: Icon(
                         Icons.person,
-                        color: user.active ? Colors.green[700] : Colors.grey,
+                        color: user.active
+                            ? const Color(0xFF2E7D32)
+                            : Colors.grey,
                       ),
                     ),
-                    title: Text(displayName),
+                    title: Text(
+                      displayName,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -238,8 +344,11 @@ class _UsersPageState extends State<UsersPage> {
                         else if (roles.isNotEmpty)
                           Chip(
                             label: Text(roles.first.name),
-                            backgroundColor: Colors.blue[50],
-                            labelStyle: const TextStyle(fontSize: 11),
+                            backgroundColor: const Color(0xFFE8F5E9),
+                            labelStyle: const TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF2E7D32),
+                            ),
                             materialTapTargetSize:
                                 MaterialTapTargetSize.shrinkWrap,
                             padding: EdgeInsets.zero,
@@ -255,21 +364,25 @@ class _UsersPageState extends State<UsersPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.edit, size: 20),
+                          icon: const Icon(
+                            Icons.edit,
+                            size: 20,
+                            color: Color(0xFF4CAF50),
+                          ),
                           onPressed: () =>
                               _showEditRoleDialog(user.id, currentRoleId),
                           tooltip: 'Editar rol',
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
+                            horizontal: 10,
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
                             color: user.active
                                 ? Colors.green[100]
                                 : Colors.red[100],
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
                             user.active ? 'Activo' : 'Inactivo',
@@ -278,6 +391,7 @@ class _UsersPageState extends State<UsersPage> {
                                   ? Colors.green[700]
                                   : Colors.red[700],
                               fontSize: 12,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
@@ -289,6 +403,8 @@ class _UsersPageState extends State<UsersPage> {
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showCreateUserDialog,
+        backgroundColor: const Color(0xFF2E7D32),
+        foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
     );
