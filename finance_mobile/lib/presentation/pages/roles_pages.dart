@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/di/injection_container.dart' as di;
 import '../viewmodels/roles_viewmodel.dart';
 
@@ -21,7 +22,27 @@ class _RolesPageState extends State<RolesPage> {
   }
 
   void _onViewModelChanged() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    // Redirigir al login si el error es de autenticación
+    if (_viewModel.errorMessage != null &&
+        (_viewModel.errorMessage!.contains('Sesión expirada') ||
+            _viewModel.errorMessage!.contains('401') ||
+            _viewModel.errorMessage!.contains('No hay sesión activa'))) {
+      _showSnackBar(
+        'Tu sesión ha expirado. Por favor inicia sesión nuevamente.',
+      );
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) context.go('/login');
+      });
+    } else {
+      setState(() {});
+    }
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red.shade700),
+    );
   }
 
   @override
@@ -33,7 +54,12 @@ class _RolesPageState extends State<RolesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('roles del sistema')),
+      appBar: AppBar(
+        title: const Text('Roles del sistema'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        foregroundColor: const Color(0xFF2E7D32),
+      ),
       body: _buildBody(),
     );
   }
@@ -48,11 +74,29 @@ class _RolesPageState extends State<RolesPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(_viewModel.errorMessage!),
+            Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
             const SizedBox(height: 16),
+            Text(
+              _viewModel.errorMessage!,
+              style: const TextStyle(fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () => _viewModel.loadRoles(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2E7D32),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
               child: const Text('Reintentar'),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => context.go('/login'),
+              child: const Text('Ir a inicio de sesión'),
             ),
           ],
         ),
@@ -67,18 +111,24 @@ class _RolesPageState extends State<RolesPage> {
       padding: const EdgeInsets.all(8),
       children: _viewModel.roles.map((role) {
         return Card(
-          margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+          margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: ListTile(
             leading: CircleAvatar(
               backgroundColor: role.active
-                  ? Colors.blue[100]
+                  ? const Color(0xFFC8E6C9) // verde claro
                   : Colors.grey[300],
               child: Icon(
                 Icons.security,
-                color: role.active ? Colors.blue[700] : Colors.grey,
+                color: role.active ? const Color(0xFF2E7D32) : Colors.grey,
               ),
             ),
-            title: Text(role.name),
+            title: Text(
+              role.name,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -91,20 +141,23 @@ class _RolesPageState extends State<RolesPage> {
               ],
             ),
             trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: role.active ? Colors.green[100] : Colors.red[100],
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 role.active ? 'Activo' : 'Inactivo',
                 style: TextStyle(
                   color: role.active ? Colors.green[700] : Colors.red[700],
                   fontSize: 12,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
-            onTap: () {},
+            onTap: () {
+              // Aquí puedes agregar navegación a detalle/edición si lo deseas
+            },
           ),
         );
       }).toList(),
