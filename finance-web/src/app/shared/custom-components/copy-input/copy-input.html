@@ -1,0 +1,22 @@
+<div hlmInputGroup>
+  <input
+    hlmInputGroupInput
+    [value]="value()"
+    [placeholder]="placeholder()"
+    readOnly
+  />
+
+  <div hlmInputGroupAddon align="inline-end">
+    <button
+      hlmInputGroupButton
+      type="button"
+      [attr.aria-label]="ariaLabel()"
+      [title]="buttonTitle()"
+      class="cursor-pointer"
+      size="icon-xs"
+      (click)="copy()"
+    >
+      <ng-icon [name]="isCopied() ? 'lucideCheck' : 'lucideCopy'" />
+    </button>
+  </div>
+</div>

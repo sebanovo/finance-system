@@ -69,10 +69,20 @@
         </button>
       }
 
+      <app-change-password-dialog
+        [open]="changePasswordDialogOpen()"
+        [isSubmitting]="passwordStore.changeSubmitting()"
+        [errorMessage]="passwordStore.changeError()?.message ?? null"
+        (openChange)="onChangePasswordDialogOpenChange($event)"
+        (submitChangePassword)="onSubmitChangePassword($event)"
+        (formEdited)="passwordStore.clearChangeError()"
+      />
+
       <app-user-menu
         [userName]="userName()"
         [userEmail]="userEmail()"
         [avatarUrl]="avatarUrl()"
+        (changePasswordClick)="onClickChangePassword()"
         (profileClick)="onClickPerfil()"
         (settingsClick)="onClickSettings()"
         (logoutClick)="onClickLogout()"

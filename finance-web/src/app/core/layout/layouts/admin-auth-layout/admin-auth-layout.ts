@@ -1,15 +1,19 @@
 import { Component } from "@angular/core";
-import { RouterOutlet } from "@angular/router";
+import { RouterLink, RouterOutlet } from "@angular/router";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import { remixCurrencyFill } from "@ng-icons/remixicon";
 import { hexToOklchCss } from "../../../../shared/lib/color/hex-to-oklch";
 
 @Component({
   selector: "app-admin-auth-layout",
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, NgIcon, RouterLink],
+  providers: [provideIcons({ remixCurrencyFill })],
   templateUrl: "./admin-auth-layout.html",
   styleUrl: "./admin-auth-layout.css",
 })
 export class AdminAuthLayout {
   selectedColor = "";
+  selectedFont = "";
 
   onColorChange(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -28,6 +32,7 @@ export class AdminAuthLayout {
   onFontChange(event: Event): void {
     const select = event.target as HTMLSelectElement;
     const font = select.value;
+    this.selectedFont = font;
 
     document.documentElement.style.setProperty(
       "--font-sans",

@@ -5,13 +5,16 @@ import { Router } from "@angular/router";
 import { AppHttpError } from "../../../core/http/models/app-http-error.model";
 import { AccessTokenService } from "../../../core/http/services/access-token.service";
 import { AdminAccessTokenService } from "../../../core/http/services/admin-access-token.service";
+import { HeaderTenantService } from "../../../core/http/services/header-tenant.service";
 import { SessionStore } from "../../../core/session/store/session.store";
-import { toAuthMe } from "../adapters/auth.adapter";
+import { toAuthMe, toSignupData } from "../adapters/auth.adapter";
 import {
   AuthMeData,
   LoginRequest,
   LoginTenantRequest,
+  SignupRequest,
 } from "../models/auth-request.type";
+import { SignupData } from "../models/auth-response.type";
 import { AuthService } from "../services/auth.service";
 
 @Injectable({
@@ -22,6 +25,7 @@ export class AuthStore {
   private readonly sessionStore = inject(SessionStore);
   private readonly adminService = inject(AdminAccessTokenService);
   private readonly accessService = inject(AccessTokenService);
+  private readonly headerTenantService = inject(HeaderTenantService);
   private readonly router = inject(Router);
 
   private readonly loadingSignal = signal(false);
@@ -33,6 +37,9 @@ export class AuthStore {
   readonly error = this.errorSignal.asReadonly();
   readonly user = this.userSignal.asReadonly();
   readonly admin = this.adminSignal.asReadonly();
+
+  readonly signupSignal = signal<SignupData | null>(null);
+  readonly signupResult = this.signupSignal.asReadonly();
 
   readonly hasError = computed(() => this.errorSignal() !== null);
   readonly errorMessage = computed(() => this.errorSignal()?.message ?? null);
@@ -114,6 +121,29 @@ export class AuthStore {
     }
   }
 
+  async signup(payload: SignupRequest): Promise<boolean> {
+    this.startRequest();
+
+    try {
+      const data = await firstValueFrom(this.authService.signup(payload));
+
+      // Aquí podrías usar info como loginHint o mostrar mensaje
+      console.log("Signup exitoso:", data);
+      this.signupSignal.set(toSignupData(data));
+
+      return true;
+    } catch (error: unknown) {
+      this.errorSignal.set(error as AppHttpError);
+      return false;
+    } finally {
+      this.loadingSignal.set(false);
+    }
+  }
+
+  clearSignupResult(): void {
+    this.signupSignal.set(null);
+  }
+
   /**
    * Logs out the current user and resets the authentication state.
    */
@@ -132,6 +162,7 @@ export class AuthStore {
       this.sessionStore.clearSession();
       this.adminService.clearSuperAdmin();
       this.accessService.clearTokens();
+      this.headerTenantService.clearTenant();
 
       console.log("logging out, finalizado");
 
@@ -163,6 +194,7 @@ export class AuthStore {
     this.errorSignal.set(null);
     this.userSignal.set(null);
     this.adminSignal.set(null);
+    this.signupSignal.set(null);
   }
 
   /**

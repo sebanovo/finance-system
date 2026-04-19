@@ -9,11 +9,14 @@ import {
   AuthMeData,
   LoginRequest,
   LoginTenantRequest,
+  SignupRequest,
 } from "../models/auth-request.type";
 import {
   AuthMeResponse,
   LoginData,
   LoginResponse,
+  SignupResponse,
+  SignupResponseDataDto,
 } from "../models/auth-response.type";
 
 @Injectable({
@@ -27,6 +30,7 @@ export class AuthService {
 
   private readonly authBasePath = "/api/auth";
   private readonly authAdminBasePath = "/api/platform/auth";
+  private readonly authPublicPath = "/api/public";
 
   /**
    *  Logs in a user with the provided credentials.
@@ -87,6 +91,14 @@ export class AuthService {
           this.adminService.clearSuperAdmin();
         })
       );
+  }
+
+  signup(payload: SignupRequest): Observable<SignupResponseDataDto> {
+    return this.http
+      .post<
+        SignupResponse<SignupResponseDataDto>
+      >(`${this.authPublicPath}/signup`, payload)
+      .pipe(map(response => response.data));
   }
 
   /**
@@ -193,30 +205,6 @@ export class AuthService {
   logout(): Observable<{ status: string }> {
     return this.isAdmin() ? this.logoutAdmin() : this.logoutUser();
   }
-
-  // logoutUser(): Observable<{key_0:  string}> {
-  //   return this.http
-  //     .get<LoginResponse<{key_0:  string}>>(`${this.authBasePath}/logout`)
-  //     .pipe(map(response => response.data));
-
-  //   this.accessTokenService.clearTokens();
-  //   this.adminService.clearSuperAdmin();
-  //   this.tenantService.clearTenant();
-  // }
-
-  // logoutAdmin(): Observable<{key_0:  string}> {
-  //   return this.http
-  //     .get<LoginResponse<{key_0:  string}>>(`${this.authAdminBasePath}/logout`)
-  //     .pipe(map(response => response.data));
-
-  //   this.accessTokenService.clearTokens();
-  //   this.adminService.clearSuperAdmin();
-  //   this.tenantService.clearTenant();
-  // }
-
-  // logout(): Observable<AuthMeData> {
-  //   return this.isAdmin() ? this.logoutAdmin() ? this.logoutUser()
-  // }
 
   /**
    * Returns whether the current session belongs to an admin.
