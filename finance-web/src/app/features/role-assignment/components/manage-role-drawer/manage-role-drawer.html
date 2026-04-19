@@ -1,0 +1,155 @@
+<hlm-sheet [state]="open() ? 'open' : 'closed'" (closed)="onClosed()">
+  <hlm-sheet-content
+    *hlmSheetPortal="let ctx"
+    side="right"
+    class="w-full sm:max-w-md"
+  >
+    <hlm-sheet-header>
+      <h3 hlmSheetTitle class="flex items-center gap-2">
+        <ng-icon name="lucideUserCog" class="size-5" />
+        Manage Roles
+      </h3>
+
+      @if (user(); as u) {
+        <div class="space-y-1">
+          <p hlmSheetDescription>User: {{ u.firstName }} {{ u.lastName }}</p>
+          <p class="text-muted-foreground text-sm">email: {{ u.email }}</p>
+        </div>
+      }
+    </hlm-sheet-header>
+
+    <div class="mt-6 space-y-4 px-5">
+      @if (store.hasError()) {
+        <hlm-alert variant="destructive">
+          <ng-icon name="lucideAlertCircle" />
+          <h4 hlmAlertTitle>No se pudieron cargar los datos</h4>
+          <p hlmAlertDescription>
+            {{
+              store.error()?.message ||
+                "Ocurrió un error inesperado al cargar roles."
+            }}
+          </p>
+        </hlm-alert>
+      } @else if (store.isLoading()) {
+        <section class="space-y-4">
+          <div class="space-y-2">
+            <hlm-skeleton class="h-5 w-24 rounded-md" />
+            <hlm-skeleton class="h-12 w-full rounded-md" />
+            <hlm-skeleton class="h-12 w-full rounded-md" />
+            <hlm-skeleton class="h-12 w-full rounded-md" />
+            <hlm-skeleton class="h-12 w-full rounded-md" />
+          </div>
+        </section>
+      } @else if (store.isEmpty()) {
+        <app-empty-state
+          title="Sin roles disponibles"
+          description="Aún no existen roles para asignar a este usuario."
+          icon="lucideShield"
+          [showAction]="false"
+        />
+      } @else {
+        <section class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h4 class="text-sm font-semibold">Roles</h4>
+            <span class="text-muted-foreground text-sm">
+              {{ store.selectedCount() }} seleccionados
+            </span>
+          </div>
+
+          @if (store.hasSubmitError()) {
+            <hlm-alert variant="destructive">
+              <ng-icon name="lucideAlertCircle" />
+              <h4 hlmAlertTitle>No se pudieron guardar los cambios</h4>
+              <p hlmAlertDescription>
+                {{
+                  store.submitError()?.message ||
+                    "Ocurrió un error inesperado al guardar."
+                }}
+              </p>
+            </hlm-alert>
+          }
+
+          <div class="space-y-3">
+            @for (role of store.availableRoles(); track role.id) {
+              <div
+                class="border-border hover:bg-muted/40 flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors"
+              >
+                <hlm-checkbox
+                  [checked]="store.isRoleSelected(role.id)"
+                  [disabled]="store.submitting()"
+                  (checkedChange)="onToggleRole(role.id, $event)"
+                />
+
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2">
+                    <p class="text-sm font-medium">
+                      {{ role.name }}
+                    </p>
+                  </div>
+
+                  <p class="text-muted-foreground text-sm">
+                    {{ role.description }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- <label
+                class="border-border hover:bg-muted/40 flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors"
+              >
+                <hlm-checkbox
+                  [checked]="store.isRoleSelected(role.id)"
+                  [disabled]="store.submitting()"
+                  (checkedChange)="onToggleRole(role.id, $event)"
+                />
+
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2">
+                    <p class="text-sm font-medium">
+                      {{ role.name }}
+                    </p>
+                  </div>
+
+                  <p class="text-muted-foreground text-sm">
+                    {{ role.description }}
+                  </p>
+                </div>
+              </label> -->
+            }
+          </div>
+        </section>
+      }
+    </div>
+
+    <hlm-sheet-footer class="mt-6">
+      <button
+        hlmBtn
+        type="button"
+        variant="outline"
+        [disabled]="store.submitting()"
+        (click)="onCancel()"
+      >
+        Cancel
+      </button>
+
+      <button
+        hlmBtn
+        type="button"
+        [disabled]="
+          store.submitting() ||
+          store.isLoading() ||
+          store.hasError() ||
+          store.isEmpty() ||
+          !store.isDirty()
+        "
+        (click)="onSave()"
+      >
+        @if (store.submitting()) {
+          <ng-icon name="lucideLoaderCircle" class="mr-2 size-4 animate-spin" />
+          Saving...
+        } @else {
+          Save
+        }
+      </button>
+    </hlm-sheet-footer>
+  </hlm-sheet-content>
+</hlm-sheet>

@@ -1,0 +1,42 @@
+<div hlmTableContainer>
+  <table hlmTable>
+    <thead hlmTHead class="bg-gray-200">
+      <tr hlmTr>
+        @for (col of columns(); track col.label) {
+          <th hlmTh>{{ col.label }}</th>
+        }
+      </tr>
+    </thead>
+
+    <tbody hlmTableBody>
+      @for (row of data(); track row) {
+        <tr hlmTr>
+          @for (col of columns(); track col.label) {
+            <td hlmTd>
+              @if (col.template) {
+                <ng-container
+                  [ngTemplateOutlet]="col.template"
+                  [ngTemplateOutletContext]="{ $implicit: row }"
+                />
+              } @else {
+                @if (col.key === "isActive") {
+                  @if (row[col.key]) {
+                    <span
+                      hlmBadge
+                      class="bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                      >activo
+                    </span>
+                  } @else {
+                    <span hlmBadge variant="outline">inactivo</span>
+                  }
+                } @else {
+                  {{ col.key ? row[col.key] : "" }}
+                }
+              }
+            </td>
+          }
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

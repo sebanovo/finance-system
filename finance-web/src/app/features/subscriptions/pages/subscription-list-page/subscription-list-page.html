@@ -1,4 +1,53 @@
-<section class="space-y-2">
-  <h1 class="text-2xl font-semibold text-slate-900">Suscripciones</h1>
-  <p class="text-sm text-slate-600">Página principal de suscripciones.</p>
+<section class="space-y-6">
+  <section hlmCard>
+    <app-card-header
+      title="Suscripciones"
+      description="Consulta las suscripciones registradas en la plataforma"
+      icon="lucideLayers3"
+      [showAction]="false"
+    />
+
+    <div hlmCardContent>
+      @if (store.loading()) {
+        <div class="space-y-4">
+          <hlm-skeleton class="h-10 w-full rounded-md" />
+          <hlm-skeleton class="h-10 w-full rounded-md" />
+          <hlm-skeleton class="h-10 w-full rounded-md" />
+          <hlm-skeleton class="h-10 w-full rounded-md" />
+        </div>
+      } @else if (store.hasError()) {
+        <app-table-error
+          variant="destructive"
+          icon="lucideAlertCircle"
+          [description]="
+            store.error()?.message || 'Ocurrió un error inesperado'
+          "
+          title="No se pudieron cargar las suscripciones"
+          [showAction]="true"
+          actionLabel="Reintentar"
+          (actionClick)="onRetry()"
+        />
+      } @else if (store.isEmpty()) {
+        <app-empty-state
+          title="Sin suscripciones"
+          description="Aún no existen suscripciones para mostrar."
+          icon="lucideInbox"
+          [showAction]="false"
+        />
+      } @else {
+        <app-subscription-table
+          [subscriptions]="store.subscriptions()"
+          (viewSubscription)="onViewSubscription($event)"
+        />
+
+        <app-subscription-detail-dialog
+          [open]="viewDialogOpen()"
+          [subscription]="store.selectedSubscription()"
+          [loading]="store.selectedSubscriptionLoading()"
+          [error]="store.selectedSubscriptionError()"
+          (openChange)="onViewDialogOpenChange($event)"
+        />
+      }
+    </div>
+  </section>
 </section>

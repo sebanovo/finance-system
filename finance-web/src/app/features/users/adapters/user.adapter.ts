@@ -14,8 +14,8 @@ export function toUser(dto: UserDto): User {
     lastName: dto.lastName,
     isActive: dto.active,
     status: dto.status,
-    createdAt: new Date(dto.createdAt),
-    updatedAt: new Date(dto.updatedAt),
+    createdAt: new Date(dto.createdAt).toDateString(),
+    updatedAt: new Date(dto.updatedAt).toDateString(),
   };
 }
 

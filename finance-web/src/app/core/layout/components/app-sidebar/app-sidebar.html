@@ -10,14 +10,10 @@
   [class.w-72]="mobile() || !collapsed()"
   [class.w-20]="!mobile() && collapsed()"
 >
-  <div
-    class="flex h-16 items-center border-b border-slate-200"
-    [class.justify-between]="!collapsed() || mobile()"
-    [class.px-4]="!collapsed() || mobile()"
-    [class.justify-center]="!mobile() && collapsed()"
-    [class.px-3]="!mobile() && collapsed()"
-  >
-    @if (!collapsed() || mobile()) {
+  @if (mobile()) {
+    <div
+      class="flex h-16 items-center justify-between border-b border-slate-200 px-4"
+    >
       <button
         hlmBtn
         variant="ghost"
@@ -26,18 +22,48 @@
       >
         Mi App
       </button>
-    } @else {
+
       <button
         hlmBtn
         variant="ghost"
-        class="h-10 w-10 rounded-xl p-0 text-sm font-semibold text-slate-900 hover:bg-slate-100"
+        size="icon"
         type="button"
-        aria-label="Marca de la aplicación"
+        aria-label="Cerrar menú"
+        (click)="layoutState.closeMobileSidebar()"
       >
-        M
+        <ng-icon name="lucideX" class="text-lg" />
       </button>
-    }
-  </div>
+    </div>
+  } @else {
+    <div
+      class="flex h-16 items-center border-b border-slate-200"
+      [class.justify-between]="!collapsed()"
+      [class.px-4]="!collapsed()"
+      [class.justify-center]="collapsed()"
+      [class.px-3]="collapsed()"
+    >
+      @if (!collapsed()) {
+        <button
+          hlmBtn
+          variant="ghost"
+          class="h-auto px-0 text-base font-semibold text-slate-900 hover:bg-transparent"
+          type="button"
+        >
+          Mi App
+        </button>
+      } @else {
+        <button
+          hlmBtn
+          variant="ghost"
+          class="h-10 w-10 rounded-xl p-0 text-sm font-semibold text-slate-900 hover:bg-slate-100"
+          type="button"
+          aria-label="Marca de la aplicación"
+        >
+          M
+        </button>
+      }
+    </div>
+  }
 
   <div class="flex-1 overflow-y-auto px-3 py-4">
     @for (item of navigation(); track trackByNavigationItem($index, item)) {

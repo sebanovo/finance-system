@@ -1,0 +1,16 @@
+<section class="mx-auto max-w-3xl space-y-6">
+  <h1 class="text-2xl font-semibold">Editar rol</h1>
+
+  @if (store.selectedRoleLoading()) {
+    <hlm-skeleton class="h-10 w-full" />
+  } @else if (initialFormValue(); as value) {
+    <app-role-form
+      [mode]="'edit'"
+      [initialValue]="value"
+      [submitting]="store.submitting()"
+      [submitError]="store.updateError()"
+      (formSubmitted)="onUpdateRole($event)"
+      (cancelClicked)="onCancel()"
+    />
+  }
+</section>

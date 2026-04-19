@@ -1,0 +1,89 @@
+<section hlmCard>
+  <div hlmCardHeader>
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <h2 hlmCardTitle>Suscripción actual</h2>
+        <p hlmCardDescription>Resumen del plan activo del tenant actual.</p>
+      </div>
+
+      @if (subscription().isCurrentSubscription) {
+        <span
+          hlmBadge
+          class="bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+        >
+          Vigente
+        </span>
+      } @else {
+        <span hlmBadge variant="outline"> No vigente </span>
+      }
+    </div>
+  </div>
+
+  <div hlmCardContent class="space-y-6">
+    <div class="rounded-xl border p-4">
+      <div class="flex items-center gap-2">
+        <ng-icon name="lucideLayers3" class="text-muted-foreground size-4" />
+        <p class="text-sm font-medium">Plan asignado</p>
+      </div>
+
+      <div class="mt-2">
+        <p class="text-lg font-semibold">{{ subscription().planName }}</p>
+        <p class="text-muted-foreground text-sm">
+          {{ subscription().planCode }} · {{ subscription().planType }}
+        </p>
+      </div>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-3">
+      <div class="rounded-xl border p-4">
+        <div class="mb-2 flex items-center gap-2">
+          <ng-icon name="lucideUsers" class="text-muted-foreground size-4" />
+          <p class="text-sm font-medium">Capacidad</p>
+        </div>
+
+        <p class="text-sm font-semibold">
+          {{ subscription().maxUsers }} usuarios
+        </p>
+        <p class="text-muted-foreground text-sm">
+          {{ subscription().maxRoles }} roles
+        </p>
+      </div>
+
+      <div class="rounded-xl border p-4">
+        <div class="mb-2 flex items-center gap-2">
+          <ng-icon
+            name="lucideCalendarClock"
+            class="text-muted-foreground size-4"
+          />
+          <p class="text-sm font-medium">Vigencia</p>
+        </div>
+
+        <p class="text-sm font-semibold">
+          Expira: {{ subscription().expiresAt }}
+        </p>
+        <p class="text-muted-foreground text-sm">
+          {{ subscription().remainingDays }} días restantes
+        </p>
+      </div>
+
+      <div class="rounded-xl border p-4">
+        <div class="mb-2 flex items-center gap-2">
+          <ng-icon
+            name="lucideBadgeCheck"
+            class="text-muted-foreground size-4"
+          />
+          <p class="text-sm font-medium">Estado</p>
+        </div>
+
+        <p class="text-sm font-semibold">{{ subscription().status }}</p>
+        <p class="text-muted-foreground text-sm">
+          {{
+            subscription().isTrial
+              ? "Período de prueba"
+              : "Suscripción estándar"
+          }}
+        </p>
+      </div>
+    </div>
+  </div>
+</section>

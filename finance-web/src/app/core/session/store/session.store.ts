@@ -1,145 +1,152 @@
-import { computed, Injectable, signal } from "@angular/core";
-
-import { AuthUser } from "../model/auth-user.type";
+import { computed, inject, Injectable, signal } from "@angular/core";
+import { firstValueFrom } from "rxjs";
+import { AuthMeData } from "../../../features/auth/models/auth-request.type";
+import { SessionBootstrapResult } from "../model/session-result.type";
 import { SessionState } from "../model/session-state.type";
-
-const initialState: SessionState = {
-  user: null,
-  status: "idle",
-  isBootstrapping: false,
-  isInitialized: false,
-  bootstrapError: null,
-  token: null,
-};
+import { SessionService } from "../services/session.service";
 
 @Injectable({
   providedIn: "root",
 })
 export class SessionStore {
-  private readonly state = signal<SessionState>(initialState);
+  private readonly sessionService = inject(SessionService);
 
-  readonly user = computed(() => this.state().user);
-  readonly status = computed(() => this.state().status);
-  readonly isBootstrapping = computed(() => this.state().isBootstrapping);
-  readonly isInitialized = computed(() => this.state().isInitialized);
-  readonly bootstrapError = computed(() => this.state().bootstrapError);
-  // temporal
-  readonly token = computed(() => this.state().token);
+  private readonly initialState: SessionState = {
+    status: "idle",
+    initialized: false,
+    user: null,
+    errorMessage: null,
+  };
 
-  readonly isAuthenticated = computed(
-    () => this.state().status === "authenticated"
-  );
+  private readonly stateSignal = signal<SessionState>(this.initialState);
 
+  readonly state = this.stateSignal.asReadonly();
+
+  readonly status = computed(() => this.stateSignal().status);
+  readonly initialized = computed(() => this.stateSignal().initialized);
+  readonly user = computed(() => this.stateSignal().user);
+  readonly errorMessage = computed(() => this.stateSignal().errorMessage);
+
+  readonly isIdle = computed(() => this.status() === "idle");
+  readonly isBootstrapping = computed(() => this.status() === "bootstrapping");
+  readonly isAuthenticated = computed(() => this.status() === "authenticated");
   readonly isUnauthenticated = computed(
-    () => this.state().status === "unauthenticated"
+    () => this.status() === "unauthenticated"
   );
+  readonly isReady = computed(() => this.initialized());
 
-  readonly isLoading = computed(
-    () => this.state().status === "loading" || this.state().isBootstrapping
-  );
+  readonly isAdmin = computed(() => {
+    const user = this.user();
+    return (
+      ["SUPERADMIN", "ADMIN"].some(role => user?.roles?.includes(role)) || false
+    );
+  });
 
-  readonly hasSession = computed(() => this.state().user !== null);
+  readonly userFullName = computed(() => {
+    const user = this.user();
 
-  setLoading(): void {
-    this.state.update(currentState => ({
-      ...currentState,
-      status: "loading",
-      bootstrapError: null,
-    }));
+    if (!user) {
+      return null;
+    }
+
+    return `${user.firstName} ${user.lastName}`.trim();
+  });
+
+  readonly roles = computed(() => this.user()?.roles ?? []);
+
+  /**
+   * Bootstraps the session on application startup.
+   */
+  async bootstrap(): Promise<void> {
+    this.startBootstrap();
+
+    try {
+      const result = await firstValueFrom(
+        this.sessionService.bootstrapSession()
+      );
+      this.applyBootstrapResult(result);
+    } catch {
+      this.setUnauthenticated("Unexpected session bootstrap error.");
+    }
   }
 
-  setBootstrapStarted(): void {
-    this.state.update(currentState => ({
-      ...currentState,
-      status: "loading",
-      isBootstrapping: true,
-      bootstrapError: null,
-    }));
+  /**
+   * Reloads the current authenticated user.
+   */
+  async loadUser(): Promise<void> {
+    try {
+      const user = await firstValueFrom(this.sessionService.loadCurrentUser());
+      this.setAuthenticated(user);
+    } catch {
+      this.setUnauthenticated();
+    }
   }
 
-  markInitialized(): void {
-    this.state.update(currentState => ({
-      ...currentState,
-      isInitialized: true,
-      isBootstrapping: false,
-    }));
-  }
-
-  setAuthenticated(user: AuthUser): void {
-    this.state.update(currentState => ({
-      ...currentState,
-      user,
+  /**
+   * Marks the session as authenticated with the provided user.
+   */
+  setAuthenticated(user: AuthMeData): void {
+    this.patchState({
       status: "authenticated",
-      isBootstrapping: false,
-      isInitialized: true,
-      bootstrapError: null,
-    }));
-  }
-
-  setUnauthenticated(): void {
-    this.state.update(currentState => ({
-      ...currentState,
-      user: null,
-      status: "unauthenticated",
-      isBootstrapping: false,
-      isInitialized: true,
-      bootstrapError: null,
-    }));
-  }
-
-  setBootstrapError(message: string | null): void {
-    this.state.update(currentState => ({
-      ...currentState,
-      bootstrapError: message,
-      isBootstrapping: false,
-      isInitialized: true,
-    }));
-  }
-
-  clearSession(): void {
-    // temporal
-    localStorage.removeItem("session");
-
-    this.state.set({
-      user: null,
-      status: "unauthenticated",
-      isBootstrapping: false,
-      isInitialized: true,
-      bootstrapError: null,
-      token: null,
+      initialized: true,
+      user,
+      errorMessage: null,
     });
   }
 
+  /**
+   * Marks the session as unauthenticated.
+   */
+  setUnauthenticated(errorMessage: string | null = null): void {
+    this.patchState({
+      status: "unauthenticated",
+      initialized: true,
+      user: null,
+      errorMessage,
+    });
+  }
+
+  /**
+   * Clears only the local session state.
+   * Remote logout should be handled by the auth flow before calling this.
+   */
+  clearSession(): void {
+    this.patchState({
+      status: "unauthenticated",
+      initialized: true,
+      user: null,
+      errorMessage: null,
+    });
+  }
+
+  /**
+   * Resets the store to its initial state.
+   */
   reset(): void {
-    this.state.set(initialState);
+    this.stateSignal.set(this.initialState);
   }
 
-  // Token methods <Temporal>
-  setTokens(data: {
-    accessToken: string;
-    refreshToken: string;
-    accessExpiresInMs: number;
-  }): void {
-    const session = {
-      accessToken: data.accessToken,
-      refreshToken: data.refreshToken,
-      expiresAt: Date.now() + data.accessExpiresInMs,
-    };
+  private startBootstrap(): void {
+    this.patchState({
+      status: "bootstrapping",
+      initialized: false,
+      errorMessage: null,
+    });
+  }
 
-    localStorage.setItem("session", JSON.stringify(session));
+  private applyBootstrapResult(result: SessionBootstrapResult): void {
+    if (result.status === "authenticated") {
+      this.setAuthenticated(result.user);
+      return;
+    }
 
-    this.state.update(s => ({
-      ...s,
-      token: data.accessToken,
+    this.setUnauthenticated(result.errorMessage);
+  }
+
+  private patchState(patch: Partial<SessionState>): void {
+    this.stateSignal.update(currentState => ({
+      ...currentState,
+      ...patch,
     }));
-  }
-
-  getSessionFromStorage(): {
-    accessToken: string;
-    refreshToken: string;
-    expiresAt: number;
-  } | null {
-    const raw = localStorage.getItem("session");
-    return raw ? JSON.parse(raw) : null;
   }
 }

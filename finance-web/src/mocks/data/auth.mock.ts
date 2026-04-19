@@ -1,6 +1,6 @@
-import { AuthUser } from "../../app/core/session/model/auth-user.type";
+import { AuthMeData } from "../../app/features/auth/models/auth-request.type";
 
-export const usersMock: AuthUser[] = [
+export const usersMock: AuthMeData[] = [
   {
     id: "user1",
     email: "admin@tenant.com",

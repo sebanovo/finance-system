@@ -1,16 +1,12 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  signal,
-} from "@angular/core";
+import { ChangeDetectionStrategy, Component, inject } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 
-import { finalize } from "rxjs";
-import { AppHttpError } from "../../../../core/http/models/app-http-error.model";
-import { LoginRequest } from "../../../../core/session/model/auth-user.type";
-import { SessionService } from "../../../../core/session/services/session.service";
 import { LoginForm } from "../../components/login-form/login-form";
+import {
+  LoginRequest,
+  LoginTenantRequest,
+} from "../../models/auth-request.type";
+import { AuthStore } from "../../store/auth.store";
 
 @Component({
   selector: "app-login-page",
@@ -19,41 +15,79 @@ import { LoginForm } from "../../components/login-form/login-form";
   templateUrl: "./login-page.html",
 })
 export class LoginPage {
-  private readonly sessionService = inject(SessionService);
+  private readonly authStore = inject(AuthStore);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
-  readonly isSubmitting = signal(false);
-  readonly errorMessage = signal<string | null>(null);
+  readonly isSubmitting = this.authStore.loading;
+  readonly errorMessage = this.authStore.errorMessage;
 
-  onSubmit(payload: LoginRequest): void {
-    console.log("login payload", payload);
-    localStorage.setItem("tenant", payload.tenantSlug);
-    this.isSubmitting.set(true);
-    this.errorMessage.set(null);
+  async onSubmit(payload: LoginRequest): Promise<void> {
+    const success = await this.authStore.login(payload);
 
-    this.sessionService
-      .login(payload)
-      .pipe(finalize(() => this.isSubmitting.set(false)))
-      .subscribe({
-        next: () => {
-          console.log("login success, navigating...");
-          const returnUrl =
-            this.route.snapshot.queryParamMap.get("returnUrl") || "/app";
-          // console.log("redirect to: ", returnUrl);
-          void this.router.navigateByUrl(returnUrl);
-        },
-        error: (error: AppHttpError) => {
-          console.log("login form error", error);
-          this.errorMessage.set(error.message);
-          this.isSubmitting.set(false);
-        },
-      });
+    if (!success) {
+      return;
+    }
+
+    await this.navigateToReturnUrl();
+  }
+
+  async onSubmitWithTenant(payload: LoginTenantRequest): Promise<void> {
+    const success = await this.authStore.loginWithTenant(payload);
+
+    if (!success) {
+      return;
+    }
+
+    await this.navigateToReturnUrl();
   }
 
   onFormEdited(): void {
-    if (this.errorMessage()) {
-      this.errorMessage.set(null);
-    }
+    this.authStore.clearError();
   }
+
+  private async navigateToReturnUrl(): Promise<void> {
+    const returnUrl =
+      this.route.snapshot.queryParamMap.get("returnUrl") || "/app";
+
+    await this.router.navigateByUrl(returnUrl);
+  }
+
+  // private readonly authStore = inject(AuthStore);
+  // private readonly router = inject(Router);
+  // private readonly route = inject(ActivatedRoute);
+
+  // readonly isSubmitting = this.authStore.loading;
+  // readonly errorMessage = this.authStore.errorMessage;
+
+  // async onSubmit(payload: LoginRequest): Promise<void> {
+  //   const success = await this.authStore.login(payload);
+
+  //   if (!success) {
+  //     return;
+  //   }
+
+  //   await this.navigateToReturnUrl();
+  // }
+
+  // async onSubmitWithTenant(payload: LoginTenantRequest): Promise<void> {
+  //   const success = await this.authStore.loginWithTenant(payload);
+
+  //   if (!success) {
+  //     return;
+  //   }
+
+  //   await this.navigateToReturnUrl();
+  // }
+
+  // onFormEdited(): void {
+  //   this.authStore.clearError();
+  // }
+
+  // private async navigateToReturnUrl(): Promise<void> {
+  //   const returnUrl =
+  //     this.route.snapshot.queryParamMap.get("returnUrl") || "/app";
+
+  //   await this.router.navigateByUrl(returnUrl);
+  // }
 }

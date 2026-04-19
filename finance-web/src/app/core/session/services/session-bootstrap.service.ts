@@ -1,19 +1,17 @@
 import { inject, Injectable } from "@angular/core";
-import { Observable } from "rxjs";
-
-import { AuthUser } from "../model/auth-user.type";
-import { SessionService } from "./session.service";
+import { SessionStore } from "../store/session.store";
 
 @Injectable({
   providedIn: "root",
 })
 export class SessionBootstrapService {
-  private readonly sessionService = inject(SessionService);
+  private readonly sessionStore = inject(SessionStore);
 
   /**
-   * Bootstraps the current session on application startup.
+   * Runs the session bootstrap process.
+   * @returns A promise that resolves when the bootstrap process is complete.
    */
-  run(): Observable<AuthUser | null> {
-    return this.sessionService.bootstrap();
+  async runBootstrap(): Promise<void> {
+    return this.sessionStore.bootstrap();
   }
 }

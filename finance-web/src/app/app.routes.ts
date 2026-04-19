@@ -4,8 +4,9 @@ import { AdminAuthLayout } from "./core/layout/layouts/admin-auth-layout/admin-a
 import { AppLayout } from "./core/layout/layouts/app-layout/app-layout";
 import { AuthLayout } from "./core/layout/layouts/auth-layout/auth-layout";
 import { PublicLayout } from "./core/layout/layouts/public-layout/public-layout";
-import { authMatchGuard } from "./core/session/guards/auth-match.guard";
-import { publicOnlyGuard } from "./core/session/guards/public-only.guard";
+import { adminGuestGuard } from "./core/session/guards/admin-guest.guard";
+import { authGuard } from "./core/session/guards/auth.guard";
+import { guestGuard } from "./core/session/guards/guest.guard";
 
 export const routes: Routes = [
   // Public
@@ -25,7 +26,7 @@ export const routes: Routes = [
   {
     path: "auth",
     component: AuthLayout,
-    canActivate: [publicOnlyGuard],
+    canActivateChild: [guestGuard],
     children: [
       // public login
       {
@@ -39,10 +40,11 @@ export const routes: Routes = [
   {
     path: "",
     component: AdminAuthLayout,
+    canActivateChild: [adminGuestGuard],
     children: [
       // hidden login
       {
-        path: "plataform/auth",
+        path: "platform/auth",
         loadChildren: () =>
           import("./features/auth/auth.routes").then(m => m.ADMIN_ROUTES),
       },
@@ -52,7 +54,7 @@ export const routes: Routes = [
   // Private
   {
     path: "app",
-    canMatch: [authMatchGuard],
+    canActivate: [authGuard],
     component: AppLayout,
     children: [
       {
@@ -98,6 +100,18 @@ export const routes: Routes = [
           import("./features/access/access.routes").then(m => m.ACCESS_ROUTES),
       },
       {
+        path: "roles",
+        loadChildren: () =>
+          import("./features/roles/roles.routes").then(m => m.ROLES_ROUTES),
+      },
+      {
+        path: "permissions",
+        loadChildren: () =>
+          import("./features/permissions/permission.routes").then(
+            m => m.PERMISSIONS_ROUTES
+          ),
+      },
+      {
         path: "audit",
         loadChildren: () =>
           import("./features/audit/audit.routes").then(m => m.AUDIT_ROUTES),
@@ -123,13 +137,23 @@ export const routes: Routes = [
             m => m.SETTINGS_ROUTES
           ),
       },
+      {
+        path: "**",
+        loadComponent: () =>
+          import("./features/not-found/pages/private-not-found-page/private-not-found-page").then(
+            m => m.PrivateNotFoundPage
+          ),
+      },
     ],
   },
 
   //unknown routes
   {
     path: "**",
-    redirectTo: "",
+    loadComponent: () =>
+      import("./features/not-found/pages/public-not-found-page/public-not-found-page").then(
+        m => m.PublicNotFoundPage
+      ),
   },
 ];
 

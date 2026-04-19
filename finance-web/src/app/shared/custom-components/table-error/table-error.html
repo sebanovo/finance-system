@@ -1,0 +1,26 @@
+<hlm-alert
+  [variant]="variant()"
+  class="border-destructive flex flex-col items-center gap-3 border text-center"
+>
+  @if (icon()) {
+    <ng-icon [name]="icon()" [size]="sizeIcon()" />
+  }
+
+  <h4 hlmAlertTitle>
+    {{ title() }}
+  </h4>
+
+  @if (description()) {
+    <p hlmAlertDescription>
+      {{ description() }}
+    </p>
+  }
+
+  @if (showAction()) {
+    <div class="mt-2">
+      <button hlmBtn variant="outline" size="sm" (click)="actionClick.emit()">
+        {{ actionLabel() }}
+      </button>
+    </div>
+  }
+</hlm-alert>

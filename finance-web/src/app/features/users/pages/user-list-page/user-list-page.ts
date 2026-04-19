@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from "@angular/core";
 import { Router } from "@angular/router";
-import { NgIcon, provideIcons } from "@ng-icons/core";
+import { provideIcons } from "@ng-icons/core";
 import {
   lucideAlertCircle,
   lucideInbox,
@@ -13,6 +13,11 @@ import { HlmCardImports } from "@shared/ui/card";
 import { HlmEmptyImports } from "@shared/ui/empty";
 import { HlmSkeletonImports } from "@shared/ui/skeleton";
 import { toast } from "@spartan-ng/brain/sonner";
+import { CardHeader } from "../../../../shared/custom-components/card-header/card-header";
+import { EmptyState } from "../../../../shared/custom-components/empty-state/empty-state";
+import { TableError } from "../../../../shared/custom-components/table-error/table-error";
+import { ManageRoleDrawer } from "../../../role-assignment/components/manage-role-drawer/manage-role-drawer";
+import { UserRoleAssignmentUserContext } from "../../../role-assignment/model/role-assignment.type";
 import { UserDetailDialog } from "../../components/user-detail-dialog/user-detail-dialog";
 import { UserTable } from "../../components/user-table/user-table";
 import { User } from "../../models/user.model";
@@ -22,13 +27,16 @@ import { UsersStore } from "../../store/user.store";
   selector: "app-user-list-page",
   imports: [
     UserTable,
-    NgIcon,
     HlmAlertImports,
     HlmButtonImports,
     HlmCardImports,
     HlmEmptyImports,
     HlmSkeletonImports,
     UserDetailDialog,
+    CardHeader,
+    TableError,
+    EmptyState,
+    ManageRoleDrawer,
   ],
   providers: [
     provideIcons({
@@ -45,6 +53,10 @@ export class UserListPage implements OnInit {
   readonly store = inject(UsersStore);
   private readonly router = inject(Router);
   readonly viewDialogOpen = signal(false);
+
+  readonly manageRolesDrawerOpen = signal(false);
+  readonly selectedUserForRoleAssignment =
+    signal<UserRoleAssignmentUserContext | null>(null);
 
   ngOnInit(): void {
     console.log("init", this.store.users);
@@ -74,7 +86,10 @@ export class UserListPage implements OnInit {
   private async handleToggleUser(user: User): Promise<void> {
     this.store.clearToggleError();
 
+    // keep state
+
     const updatedUser = await this.store.toggleUserActiveState(user);
+    console.log(this.store.toggleError());
 
     if (!updatedUser) {
       toast("No se pudo actualizar el estado del usuario", {
@@ -120,6 +135,25 @@ export class UserListPage implements OnInit {
     if (!isOpen) {
       this.store.clearSelectedUserError();
       this.store.clearSelectedUser();
+    }
+  }
+
+  onManageRoles(user: User): void {
+    this.selectedUserForRoleAssignment.set({
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+    });
+
+    this.manageRolesDrawerOpen.set(true);
+  }
+
+  onManageRolesDrawerOpenChange(isOpen: boolean): void {
+    this.manageRolesDrawerOpen.set(isOpen);
+
+    if (!isOpen) {
+      this.selectedUserForRoleAssignment.set(null);
     }
   }
 }

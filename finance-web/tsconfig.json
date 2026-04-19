@@ -35,7 +35,14 @@
       "@shared/ui/alert": ["./src/app/shared/ui/alert/src/index.ts"],
       "@shared/ui/empty": ["./src/app/shared/ui/empty/src/index.ts"],
       "@shared/ui/skeleton": ["./src/app/shared/ui/skeleton/src/index.ts"],
-      "@shared/ui/sonner": ["./src/app/shared/ui/sonner/src/index.ts"]
+      "@shared/ui/sonner": ["./src/app/shared/ui/sonner/src/index.ts"],
+      "@shared/ui/toggle": ["./src/app/shared/ui/toggle/src/index.ts"],
+      "@shared/ui/toggle-group": [
+        "./src/app/shared/ui/toggle-group/src/index.ts"
+      ],
+      "@shared/ui/switch": ["./src/app/shared/ui/switch/src/index.ts"],
+      "@shared/ui/checkbox": ["./src/app/shared/ui/checkbox/src/index.ts"],
+      "@shared/ui/sidebar": ["./src/app/shared/ui/sidebar/src/index.ts"]
     }
   },
   "angularCompilerOptions": {

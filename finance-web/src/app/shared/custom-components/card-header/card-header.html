@@ -1,0 +1,25 @@
+<div hlmCardHeader>
+  <div>
+    <h1 hlmCardTitle class="flex items-center gap-2">
+      @if (icon()) {
+        <ng-icon [name]="icon()" class="size-5" />
+      }
+      {{ title() }}
+    </h1>
+
+    @if (description()) {
+      <p hlmCardDescription>
+        {{ description() }}
+      </p>
+    }
+  </div>
+
+  @if (showAction()) {
+    <div hlmCardAction>
+      <button hlmBtn class="cursor-pointer" (click)="actionClick.emit()">
+        <ng-icon name="lucidePlus" class="mr-2 size-4" />
+        {{ actionLabel() }}
+      </button>
+    </div>
+  }
+</div>

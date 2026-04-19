@@ -2,47 +2,40 @@ import { inject, Injectable } from "@angular/core";
 import {
   catchError,
   finalize,
+  firstValueFrom,
   map,
   Observable,
   shareReplay,
-  switchMap,
   throwError,
 } from "rxjs";
-
-import { SessionApi } from "../api/session.api";
-import { SessionService } from "./session.service";
+import { AuthService } from "../../../features/auth/services/auth.service";
 
 @Injectable({
   providedIn: "root",
 })
 export class SessionRefreshCoordinatorService {
-  private readonly sessionApi = inject(SessionApi);
-  private readonly sessionService = inject(SessionService);
+  private readonly authService = inject(AuthService);
 
-  /**
-   * Holds the current refresh request while it is in flight.
-   */
   private refreshRequest$: Observable<void> | null = null;
 
   /**
-   * Executes the refresh flow and reuses the same request if already running.
+   * Refreshes the current authenticated session.
    */
   refresh(): Observable<void> {
     if (this.refreshRequest$) {
       return this.refreshRequest$;
     }
 
-    this.refreshRequest$ = this.sessionApi.refresh().pipe(
+    this.refreshRequest$ = this.authService.refresh().pipe(
       map(() => void 0),
-      shareReplay(1),
       catchError((error: unknown) => {
-        return this.sessionService
-          .terminateSession()
-          .pipe(switchMap(() => throwError(() => error)));
+        void firstValueFrom(this.authService.logout()).catch(() => undefined);
+        return throwError(() => error);
       }),
       finalize(() => {
         this.refreshRequest$ = null;
-      })
+      }),
+      shareReplay(1)
     );
 
     return this.refreshRequest$;

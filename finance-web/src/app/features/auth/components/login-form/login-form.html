@@ -1,4 +1,4 @@
-<form [formGroup]="form" (ngSubmit)="login()">
+<form [formGroup]="form" (ngSubmit)="submit()">
   <hlm-field-group>
     <div class="flex flex-col items-center gap-1 text-center">
       <h1 class="text-2xl font-bold">Login to your account</h1>
@@ -64,16 +64,16 @@
         placeholder="Enter your tenant slug"
         formControlName="tenantSlug"
       />
-      <hlm-field-error validator="required">
-        Tenant slug is required.
-      </hlm-field-error>
+      <p hlmFieldDescription>
+        Optional. If you enter a tenant, tenant login will be used.
+      </p>
       <hlm-field-error validator="minlength">
         Tenant slug must be at least 2 characters long.
       </hlm-field-error>
     </hlm-field>
 
     <hlm-field>
-      <button hlmBtn type="submit" [disabled]="form.invalid || isSubmitting()">
+      <button hlmBtn type="submit" [disabled]="isSubmitting()">
         @if (isSubmitting()) {
           Signing in...
         } @else {

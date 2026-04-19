@@ -1,16 +1,14 @@
-import { AuthUser } from "./auth-user.type";
+import type { AuthMeData } from "../../../features/auth/models/auth-request.type";
 
 export type SessionStatus =
   | "idle"
-  | "loading"
+  | "bootstrapping"
   | "authenticated"
   | "unauthenticated";
 
 export type SessionState = {
-  user: AuthUser | null;
   status: SessionStatus;
-  isBootstrapping: boolean;
-  isInitialized: boolean;
-  bootstrapError: string | null;
-  token: string | null; //temporal
+  initialized: boolean;
+  user: AuthMeData | null;
+  errorMessage: string | null;
 };
