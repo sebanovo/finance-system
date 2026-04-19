@@ -3,10 +3,14 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { RouterLink } from "@angular/router";
 import { NgIcon, provideIcons } from "@ng-icons/core";
+import { lucideCheck, lucideCopy } from "@ng-icons/lucide";
 import { remixGithubFill } from "@ng-icons/remixicon";
 import { HlmButtonImports } from "@shared/ui/button";
 import { HlmFieldImports } from "@shared/ui/field";
 import { HlmInputImports } from "@shared/ui/input";
+import { CopyInput } from "../../../../shared/custom-components/copy-input/copy-input";
+import { EmailInput } from "../../../../shared/custom-components/email-input/email-input";
+import { PasswordInput } from "../../../../shared/custom-components/password-input/password-input";
 import { LoginRequest } from "../../models/auth-request.type";
 
 @Component({
@@ -18,8 +22,11 @@ import { LoginRequest } from "../../models/auth-request.type";
     HlmInputImports,
     HlmButtonImports,
     NgIcon,
+    CopyInput,
+    EmailInput,
+    PasswordInput,
   ],
-  providers: [provideIcons({ remixGithubFill })],
+  providers: [provideIcons({ remixGithubFill, lucideCopy, lucideCheck })],
   templateUrl: "./login-admin-form.html",
   styleUrl: "./login-admin-form.css",
 })

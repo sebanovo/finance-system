@@ -1,4 +1,8 @@
 import { AuthMeData, AuthMeDto } from "../models/auth-request.type";
+import {
+  SignupData,
+  SignupResponseDataDto,
+} from "../models/auth-response.type";
 
 export function toAuthMe(dto: AuthMeDto): AuthMeData {
   return {
@@ -20,5 +24,20 @@ export function toAuthMe(dto: AuthMeDto): AuthMeData {
     updatedAt: dto.updatedAt
       ? new Date(dto.updatedAt).toISOString()
       : undefined,
+  };
+}
+
+export function toSignupData(dto: SignupResponseDataDto): SignupData {
+  return {
+    tenantId: dto.tenantId,
+    tenantSlug: dto.tenantSlug,
+    companyName: dto.companyName,
+    adminEmail: dto.adminEmail,
+    initialRole: dto.initialRole,
+    currentPlanCode: dto.currentPlanCode,
+    subscriptionStatus: dto.subscriptionStatus,
+
+    trialExpiresAt: new Date(dto.trialExpiresAt).toDateString(),
+    loginHint: dto.loginHint,
   };
 }

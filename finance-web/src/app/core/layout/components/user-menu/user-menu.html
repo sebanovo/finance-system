@@ -2,7 +2,7 @@
   hlmBtn
   variant="ghost"
   type="button"
-  class="h-10 w-10 rounded-full p-1"
+  class="h-10 w-10 cursor-pointer rounded-full p-1"
   [attr.aria-label]="ariaLabel()"
   [hlmDropdownMenuTrigger]="menu"
 >
@@ -59,7 +59,7 @@
       <button
         hlmDropdownMenuItem
         type="button"
-        class="gap-2"
+        class="cursor-pointer gap-2"
         (click)="onProfileClick()"
       >
         <ng-icon name="lucideUser" class="text-base" />
@@ -69,7 +69,17 @@
       <button
         hlmDropdownMenuItem
         type="button"
-        class="gap-2"
+        class="cursor-pointer gap-2"
+        (click)="onChangePasswordClick()"
+      >
+        <ng-icon name="lucideKey" class="text-base" />
+        <span>Change password</span>
+      </button>
+
+      <button
+        hlmDropdownMenuItem
+        type="button"
+        class="cursor-pointer gap-2"
         (click)="onSettingsClick()"
       >
         <ng-icon name="lucideSettings" class="text-base" />
@@ -82,7 +92,7 @@
     <button
       hlmDropdownMenuItem
       type="button"
-      class="text-destructive focus:text-destructive gap-2"
+      class="text-destructive focus:text-destructive cursor-pointer gap-2"
       (click)="onLogoutClick()"
     >
       <ng-icon name="lucideLogOut" class="text-base" />

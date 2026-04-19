@@ -48,3 +48,34 @@ export type RefreshResponse = {
   data: RefreshData;
   timestamp: string;
 };
+
+export type SignupResponseDataDto = {
+  tenantId: string; // UUID
+  tenantSlug: string;
+  companyName: string;
+  adminEmail: string;
+  initialRole: string;
+  currentPlanCode: string;
+  subscriptionStatus: string;
+  trialExpiresAt: string; // ISO date string
+  loginHint: string;
+};
+
+export type SignupResponse<T> = {
+  success: boolean;
+  message: string;
+  data: T;
+  timestamp: string; // ISO date string
+};
+
+export type SignupData = {
+  tenantId: string; // UUID
+  tenantSlug: string;
+  companyName: string;
+  adminEmail: string;
+  initialRole: string;
+  currentPlanCode: string;
+  subscriptionStatus: string;
+  trialExpiresAt: string; // ISO date string
+  loginHint: string;
+};

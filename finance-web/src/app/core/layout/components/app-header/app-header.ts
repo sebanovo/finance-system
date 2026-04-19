@@ -4,6 +4,7 @@ import {
   computed,
   inject,
   input,
+  signal,
 } from "@angular/core";
 import { Router } from "@angular/router";
 import { NgIcon, provideIcons } from "@ng-icons/core";
@@ -16,6 +17,9 @@ import {
 import { HlmButtonImports } from "@shared/ui/button";
 import { HlmInputImports } from "@shared/ui/input";
 import { AuthStore } from "../../../../features/auth/store/auth.store";
+import { ChangePasswordDialog } from "../../../../features/password/components/change-password-dialog/change-password-dialog";
+import { ChangePasswordFormValue } from "../../../../features/password/model/password.type";
+import { PasswordStore } from "../../../../features/password/store/password.store";
 import { SessionStore } from "../../../session/store/session.store";
 import { AppLayoutState } from "../../services/app-layout.state";
 import { UserMenu } from "../user-menu/user-menu";
@@ -23,7 +27,13 @@ import { UserMenu } from "../user-menu/user-menu";
 @Component({
   selector: "app-app-header",
   standalone: true,
-  imports: [NgIcon, HlmButtonImports, HlmInputImports, UserMenu],
+  imports: [
+    NgIcon,
+    HlmButtonImports,
+    HlmInputImports,
+    UserMenu,
+    ChangePasswordDialog,
+  ],
   providers: [
     provideIcons({
       lucideBell,
@@ -49,6 +59,9 @@ export class AppHeader {
 
   protected readonly layoutState = inject(AppLayoutState);
   readonly currentUser = this.sessionStore.user;
+
+  readonly passwordStore = inject(PasswordStore);
+  readonly changePasswordDialogOpen = signal(false);
 
   readonly userName = computed(() => {
     const user = this.currentUser();
@@ -85,5 +98,31 @@ export class AppHeader {
   protected onClickLogout(): void {
     this.sessionStore.clearSession();
     this.authStore.logout();
+  }
+
+  onClickChangePassword(): void {
+    this.changePasswordDialogOpen.set(true);
+    this.passwordStore.clearChangeState();
+  }
+
+  onChangePasswordDialogOpenChange(isOpen: boolean): void {
+    this.changePasswordDialogOpen.set(isOpen);
+
+    if (!isOpen) {
+      this.passwordStore.clearChangeState();
+    }
+  }
+
+  async onSubmitChangePassword(
+    payload: ChangePasswordFormValue
+  ): Promise<void> {
+    const success = await this.passwordStore.changePassword(payload);
+
+    if (!success) {
+      return;
+    }
+
+    this.changePasswordDialogOpen.set(false);
+    this.passwordStore.clearChangeState();
   }
 }

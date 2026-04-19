@@ -34,6 +34,27 @@ export const routes: Routes = [
         loadChildren: () =>
           import("./features/auth/auth.routes").then(m => m.AUTH_ROUTES),
       },
+      {
+        path: "",
+        loadChildren: () =>
+          import("./features/password/password.routes").then(
+            m => m.PASSWORD_ROUTES
+          ),
+      },
+    ],
+  },
+
+  {
+    path: "",
+    component: AuthLayout,
+    children: [
+      {
+        path: "",
+        loadChildren: () =>
+          import("./features/password/password.routes").then(
+            m => m.RESET_PASSWORD
+          ),
+      },
     ],
   },
 

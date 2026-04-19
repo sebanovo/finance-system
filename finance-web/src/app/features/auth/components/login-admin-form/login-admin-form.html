@@ -10,9 +10,9 @@
         </a>
         <h1 class="text-xl font-bold">Welcome back Superadmin</h1>
 
-        <hlm-field-description>
+        <!-- <hlm-field-description>
           Don't have an account? <a href="#">Sign up</a>
-        </hlm-field-description>
+        </hlm-field-description> -->
       </div>
 
       @if (errorMessage()) {
@@ -24,57 +24,49 @@
       }
 
       <!-- EMAIL -->
-      <hlm-field>
-        <label hlmFieldLabel for="email">Email</label>
-        <input
-          id="email"
-          type="email"
-          placeholder="superadmin@finance.local"
-          formControlName="email"
-          hlmInput
-          required
-        />
-        <hlm-field-error validator="required"
-          >Email is required.</hlm-field-error
-        >
-        <hlm-field-error validator="email"
-          >Enter a valid email address.</hlm-field-error
-        >
-      </hlm-field>
+      <app-email-input
+        [control]="form.controls.email"
+        inputId="email"
+        label="Correo electrónico"
+        placeholder="superadmin@finance.local"
+        icon="lucideMail"
+      />
 
       <!-- PASSWORD -->
-      <hlm-field>
+      <!-- <div class="space-y-2">
         <div class="flex items-center">
-          <label hlmFieldLabel for="password">Password</label>
+          <span class="text-sm font-medium">Contraseña</span>
+
           <a
-            hlmFieldDescription
-            class="ml-auto text-sm underline-offset-4 hover:underline"
-            routerLink="."
+            class="text-muted-foreground ml-auto text-sm underline-offset-4 hover:underline"
+            routerLink="/auth/forgot-password"
           >
-            Forgot password?
+            ¿Olvidaste tu contraseña?
           </a>
         </div>
-        <input
-          hlmInput
-          id="password"
-          type="password"
-          placeholder="**********"
-          formControlName="password"
-          required
+
+        <app-password-input
+          [control]="form.controls.password"
+          inputId="password"
+          label=""
         />
-        <hlm-field-error validator="required"
-          >Password is required.</hlm-field-error
-        >
-        <hlm-field-error validator="minlength"
-          >Password must be at least 8 characters long.</hlm-field-error
-        >
-      </hlm-field>
+      </div> -->
+
+      <app-password-input
+        [control]="form.controls.password"
+        inputId="password"
+        label="Contraseña"
+      />
 
       <!-- asdf -->
 
       <!-- LOGIN BUTTON -->
       <hlm-field>
-        <button hlmBtn type="submit" [disabled]="isSubmitting()">
+        <button
+          hlmBtn
+          type="submit"
+          [disabled]="form.invalid || isSubmitting()"
+        >
           @if (isSubmitting()) {
             Signing in...
           } @else {
@@ -86,29 +78,34 @@
       <!-- SEPARATOR -->
       <hlm-field-separator>Or</hlm-field-separator>
 
-      <!-- SOCIAL BUTTONS -->
-      <hlm-field class="grid gap-4 sm:grid-cols-2">
+      <app-copy-input
+        value="superadmin@finance.local"
+        placeholder="Enlace"
+        ariaLabel="Copiar Enlace"
+      />
+
+      <app-copy-input
+        value="SuperAdmin123!"
+        placeholder="Enlace"
+        ariaLabel="Copiar Enlace"
+      />
+
+      <!-- <hlm-field class="grid gap-4 sm:grid-cols-2">
         <button hlmBtn variant="outline" type="button">
           <ng-icon name="remixGithubFill" class="text-xl" />
           Continue with GitHub
         </button>
         <button hlmBtn variant="outline" type="button">
           <ng-icon name="remixGoogleFill" />
-          <!-- Google SVG can be added here -->
           Continue with Google
         </button>
-      </hlm-field>
+      </hlm-field> -->
     </hlm-field-group>
   </form>
 
   <!-- FOOTER -->
-  <p class="text-muted-foreground py-4 text-center text-xs">
-    Demo credentials:
-    <span class="font-medium">superadmin@finance.local</span> /
-    <span class="font-medium">SuperAdmin123!</span>
-  </p>
-  <div hlm-field-description class="px-6 text-center">
+  <!-- <div hlm-field-description class="px-6 text-center">
     By clicking continue, you agree to our
     <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
-  </div>
+  </div> -->
 </div>

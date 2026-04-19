@@ -16,6 +16,9 @@ import { remixGithubFill } from "@ng-icons/remixicon";
 import { HlmButtonImports } from "@shared/ui/button";
 import { HlmFieldImports } from "@shared/ui/field";
 import { HlmInputImports } from "@shared/ui/input";
+import { EmailInput } from "../../../../shared/custom-components/email-input/email-input";
+import { PasswordInput } from "../../../../shared/custom-components/password-input/password-input";
+import { TextInput } from "../../../../shared/custom-components/text-input/text-input";
 import {
   LoginRequest,
   LoginTenantRequest,
@@ -30,6 +33,9 @@ import {
     HlmInputImports,
     HlmButtonImports,
     NgIcon,
+    PasswordInput,
+    EmailInput,
+    TextInput,
   ],
   providers: [provideIcons({ remixGithubFill })],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -86,56 +92,4 @@ export class LoginForm {
       password,
     });
   }
-
-  // private readonly fb = inject(FormBuilder);
-  // private readonly destroyRef = inject(DestroyRef);
-
-  // readonly isSubmitting = input(false);
-  // readonly errorMessage = input<string | null>(null);
-
-  // readonly submitLogin = output<LoginRequest>();
-  // readonly submitLoginWithTenant = output<LoginTenantRequest>();
-  // readonly formEdited = output<void>();
-
-  // readonly form = this.fb.nonNullable.group({
-  //   email: ["", [Validators.required, Validators.email]],
-  //   password: ["", [Validators.required, Validators.minLength(8)]],
-  //   tenantSlug: ["", [Validators.minLength(2)]],
-  // });
-
-  // constructor() {
-  //   this.form.valueChanges
-  //     .pipe(takeUntilDestroyed(this.destroyRef))
-  //     .subscribe(() => {
-  //       this.formEdited.emit();
-  //     });
-  // }
-
-  // submit(): void {
-  //   if (this.form.invalid) {
-  //     this.form.markAllAsTouched();
-  //     return;
-  //   }
-
-  //   const rawValue = this.form.getRawValue();
-
-  //   const email = rawValue.email.trim();
-  //   const password = rawValue.password;
-  //   const tenantSlug = rawValue.tenantSlug.trim();
-
-  //   if (tenantSlug) {
-  //     this.submitLoginWithTenant.emit({
-  //       email,
-  //       password,
-  //       tenantSlug: tenantSlug,
-  //     });
-
-  //     return;
-  //   }
-
-  //   this.submitLogin.emit({
-  //     email,
-  //     password,
-  //   });
-  // }
 }

@@ -1,11 +1,23 @@
-<div
+<!-- <div
   class="bg-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10"
 >
+  <-- asdfasdf --
+  <div class="flex justify-center gap-2 md:justify-start">
+    <a routerLink="/" class="flex items-center gap-2 font-medium">
+      <div
+        class="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md"
+      >
+        <ng-icon name="remixCurrencyFill" class="text-base" />
+      </div>
+      Finance
+    </a>
+  </div>
+  -- asdfsadfa --
   <div class="w-full max-w-sm">
     <router-outlet />
   </div>
-  <div class="flex flex-col gap-4 p-4">
-    <div class="flex items-center gap-3">
+  <div class="flex flex-row gap-4 p-4">
+    <div class="flex flex-col items-center gap-3">
       <label for="colorPicker" class="text-sm font-medium">
         Selecciona un color:
       </label>
@@ -17,20 +29,78 @@
         class="h-10 w-16 cursor-pointer"
         [value]="selectedColor"
       />
+      <span class="font-bold">{{ selectedColor }}</span>
     </div>
 
-    <p class="text-sm">
-      Color seleccionado:
-      <span class="font-bold">{{ selectedColor }}</span>
-    </p>
+    <div class="flex flex-col items-center gap-3">
+      <label for="colorPicker" class="text-sm font-medium">
+        Selecciona una fuente:
+      </label>
+      <select class="rounded border p-2" (change)="onFontChange($event)">
+        <option value="Inter">Inter</option>
+        <option value="Roboto">Roboto</option>
+        <option value="Poppins">Poppins</option>
+        <option value="DM Sans">DM Sans</option>
+        <option value="Montserrat">Montserrat</option>
+        <option value="IBM Plex Sans">IBM Plex Sans</option>
+        <option value='"Press Start 2P", cursive'>Pixel (Retro)</option>
+      </select>
+      <span class="font-bold">{{ selectedFont }}</span>
+    </div>
   </div>
-  <select class="rounded border p-2" (change)="onFontChange($event)">
-    <option value="Inter">Inter</option>
-    <option value="Roboto">Roboto</option>
-    <option value="Poppins">Poppins</option>
-    <option value="DM Sans">DM Sans</option>
-    <option value="Montserrat">Montserrat</option>
-    <option value="IBM Plex Sans">IBM Plex Sans</option>
-    <option value='"Press Start 2P", cursive'>Pixel (Retro)</option>
-  </select>
+</div> -->
+
+<div class="bg-background flex min-h-svh flex-col p-6 md:p-10">
+  <!-- HEADER (logo a la izquierda) -->
+  <div class="flex justify-start">
+    <a routerLink="/" class="flex items-center gap-2 font-medium">
+      <div
+        class="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md"
+      >
+        <ng-icon name="remixCurrencyFill" class="text-base" />
+      </div>
+      Finance
+    </a>
+  </div>
+
+  <!-- BODY (centrado) -->
+  <div class="flex flex-1 flex-col items-center justify-center gap-6">
+    <div class="w-full max-w-sm">
+      <router-outlet />
+    </div>
+
+    <div class="flex flex-row gap-4 p-4">
+      <div class="flex flex-col items-center gap-3">
+        <label for="colorChange" class="text-sm font-medium">
+          Selecciona un color:
+        </label>
+
+        <input
+          type="color"
+          (input)="onColorChange($event)"
+          class="h-10 w-16 cursor-pointer"
+          [value]="selectedColor"
+        />
+        <span class="font-bold">{{ selectedColor }}</span>
+      </div>
+
+      <div class="flex flex-col items-center gap-3">
+        <label for="colorPicker" class="text-sm font-medium">
+          Selecciona una fuente:
+        </label>
+
+        <select class="rounded border p-2" (change)="onFontChange($event)">
+          <option value="Inter">Inter</option>
+          <option value="Roboto">Roboto</option>
+          <option value="Poppins">Poppins</option>
+          <option value="DM Sans">DM Sans</option>
+          <option value="Montserrat">Montserrat</option>
+          <option value="IBM Plex Sans">IBM Plex Sans</option>
+          <option value='"Press Start 2P", cursive'>Pixel (Retro)</option>
+        </select>
+
+        <span class="font-bold">{{ selectedFont }}</span>
+      </div>
+    </div>
+  </div>
 </div>

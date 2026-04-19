@@ -38,3 +38,12 @@ export type LoginTenantRequest = {
   password: string;
   tenantSlug: string;
 };
+
+export type SignupRequest = {
+  companyName: string;
+  tenantSlug: string;
+  adminEmail: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+};

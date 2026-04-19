@@ -1,13 +1,20 @@
 import { Component, input, output } from "@angular/core";
 import { NgIcon, provideIcons } from "@ng-icons/core";
-import { lucideLogOut, lucideSettings, lucideUser } from "@ng-icons/lucide";
+import {
+  lucideKey,
+  lucideLogOut,
+  lucideSettings,
+  lucideUser,
+} from "@ng-icons/lucide";
 import { HlmButtonImports } from "@shared/ui/button";
 import { HlmDropdownMenuImports } from "@shared/ui/dropdown-menu";
 
 @Component({
   selector: "app-user-menu",
   imports: [HlmButtonImports, HlmDropdownMenuImports, NgIcon],
-  providers: [provideIcons({ lucideUser, lucideSettings, lucideLogOut })],
+  providers: [
+    provideIcons({ lucideUser, lucideSettings, lucideLogOut, lucideKey }),
+  ],
   templateUrl: "./user-menu.html",
   styleUrl: "./user-menu.css",
 })
@@ -18,6 +25,7 @@ export class UserMenu {
   readonly ariaLabel = input<string>("Open user menu");
 
   readonly profileClick = output<void>();
+  readonly changePasswordClick = output<void>();
   readonly settingsClick = output<void>();
   readonly logoutClick = output<void>();
 
@@ -43,6 +51,11 @@ export class UserMenu {
 
   onProfileClick(): void {
     this.profileClick.emit();
+  }
+
+  onChangePasswordClick(): void {
+    console.log("change password");
+    this.changePasswordClick.emit();
   }
 
   onSettingsClick(): void {
