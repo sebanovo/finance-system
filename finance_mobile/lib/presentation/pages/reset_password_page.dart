@@ -137,7 +137,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.asset("logo.png", width: 100),
+                    Image.asset("assets/logo.png", width: 100),
                     Card(
                       elevation: 4,
                       shape: RoundedRectangleBorder(
