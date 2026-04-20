@@ -5,6 +5,18 @@ A new Flutter project.
 Importante ejecutar este comando para el .env: 
 ```bash
 cp finance_mobile/.env.sample finance_mobile/.env
+
+# genera iconos en carpetas nativas
+flutter pub run flutter_launcher_icons
+
+# compilar para android
+flutter build apk --release
+
+# compilar para web
+flutter build web --releaseo
+
+# compilar si se subira a la App Store
+flutter build appbundle
 ```
 
 ```bash

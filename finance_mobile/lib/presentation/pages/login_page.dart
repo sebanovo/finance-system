@@ -113,7 +113,7 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.asset("logo.png", width: 400),
+                    Image.asset("logo.png", width: 200),
                     Card(
                       elevation: 4,
                       shape: RoundedRectangleBorder(
