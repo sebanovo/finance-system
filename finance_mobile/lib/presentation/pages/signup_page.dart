@@ -190,7 +190,7 @@ class _SignupPageState extends State<SignupPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.asset("logo.png", width: 400),
+                    Image.asset("assets/logo.png", width: 200),
                     Card(
                       elevation: 4,
                       shape: RoundedRectangleBorder(
