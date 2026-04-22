@@ -1,0 +1,58 @@
+:host {
+  display: block;
+}
+
+.media-lab {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.media-lab__header {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.panel {
+  border: 1px solid #d4d4d8;
+  border-radius: 12px;
+  padding: 1rem;
+  display: grid;
+  gap: 0.75rem;
+  background: #fff;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.preview-video,
+.result-video,
+.captured-image {
+  width: 100%;
+  max-width: 720px;
+  border-radius: 12px;
+  background: #111;
+}
+
+.captured-image {
+  display: block;
+  object-fit: cover;
+}
+
+.result {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+}
+
+.alert--error {
+  background: #fee2e2;
+  color: #991b1b;
+}
