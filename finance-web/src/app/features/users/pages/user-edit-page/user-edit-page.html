@@ -2,17 +2,17 @@
   
   <div class="mb-6">
     <button hlmBtn variant="ghost" (click)="onCancel()" 
-            class="inline-flex items-center gap-2 text-sm font-medium text-[#666666] hover:bg-transparent hover:text-[#333333] transition-colors -ml-2 px-2 cursor-pointer">
+            class="inline-flex items-center gap-2 text-sm font-medium text-[#4CAF50] hover:bg-transparent hover:text-[#2E7D32] transition-colors -ml-2 px-2 cursor-pointer">
       <ng-icon name="lucideArrowLeft" class="size-4" />
       Volver al directorio
     </button>
   </div>
 
-  <div class="bg-[#ffffff] border border-[#cccccc] shadow-sm rounded-xl overflow-hidden">
+  <div class="bg-white border border-[#C8E6C9] shadow-sm rounded-xl overflow-hidden">
     
-    <div class="border-b border-[#cccccc]/50 px-8 py-6 bg-[#fafafa]">
-      <h1 class="flex items-center gap-2 text-xl font-bold text-[#333333] tracking-tight">
-        <ng-icon name="lucideUserPen" class="size-5 text-[#666666]" />
+    <div class="border-b border-[#C8E6C9]/50 px-8 py-6 bg-[#F1F8E9]">
+      <h1 class="flex items-center gap-2 text-xl font-bold text-[#2E7D32] tracking-tight">
+        <ng-icon name="lucideUserPen" class="size-5 text-[#4CAF50]" />
         Editar perfil
       </h1>
       <p class="mt-1 text-sm text-[#666666]">
@@ -25,33 +25,33 @@
       @if (store.selectedUserLoading()) {
         <div class="space-y-6">
           <div class="flex flex-col items-center justify-center py-6">
-            <div class="flex size-12 items-center justify-center rounded-full border border-[#cccccc] bg-[#ffffff] shadow-sm animate-pulse">
-              <span class="text-lg font-semibold text-[#666666]">$</span>
+            <div class="flex size-12 items-center justify-center rounded-full border border-[#C8E6C9] bg-white shadow-sm animate-pulse">
+              <span class="text-lg font-semibold text-[#4CAF50]">$</span>
             </div>
-            <span class="mt-3 text-xs font-medium uppercase tracking-widest text-[#999999]">
+            <span class="mt-3 text-xs font-medium uppercase tracking-widest text-[#666666]">
               Recuperando datos...
             </span>
           </div>
           
           <div class="space-y-4">
-            <hlm-skeleton class="h-12 w-full rounded-lg bg-[#cccccc]/30 animate-pulse" />
-            <hlm-skeleton class="h-12 w-full rounded-lg bg-[#cccccc]/20 animate-pulse" />
-            <hlm-skeleton class="h-12 w-full rounded-lg bg-[#cccccc]/10 animate-pulse" />
+            <hlm-skeleton class="h-12 w-full rounded-lg bg-[#C8E6C9]/30 animate-pulse" />
+            <hlm-skeleton class="h-12 w-full rounded-lg bg-[#C8E6C9]/20 animate-pulse" />
+            <hlm-skeleton class="h-12 w-full rounded-lg bg-[#C8E6C9]/10 animate-pulse" />
           </div>
         </div>
       } 
       
       @else if (store.hasSelectedUserError()) {
-        <hlm-alert class="border-l-4 border-l-[#333333] bg-[#f5f5f5] text-[#333333]">
-          <ng-icon name="lucideAlertCircle" class="text-[#333333]" />
+        <hlm-alert class="border-l-4 border-l-[#2E7D32] bg-[#E8F5E9] text-[#2E7D32]">
+          <ng-icon name="lucideAlertCircle" class="text-[#2E7D32]" />
           <h4 hlmAlertTitle class="font-semibold">Inconveniente al cargar</h4>
-          <p hlmAlertDescription class="text-sm text-[#666666]">
+          <p hlmAlertDescription class="text-sm text-[#4CAF50]">
             {{ store.selectedUserError()?.message || "Ocurrió un error inesperado al acceder a los datos del usuario. Verifica tu conexión." }}
           </p>
 
           <div hlmAlertAction class="mt-4">
             <button hlmBtn variant="outline" size="sm" (click)="onCancel()" 
-                    class="border border-[#cccccc] text-[#333333] hover:bg-[#e8e8e8] transition-colors cursor-pointer">
+                    class="border border-[#C8E6C9] text-[#2E7D32] hover:bg-[#E8F5E9] transition-colors cursor-pointer">
               Volver al listado
             </button>
           </div>

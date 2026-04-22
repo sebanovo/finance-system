@@ -14,11 +14,13 @@ import { PlatformLoginRequest } from '../../models/platform-tenant.models';
         <div class="w-full max-w-md">
           
           <header class="mb-10">
-            <div class="h-10 w-10 bg-[#333333] rounded-lg flex items-center justify-center mb-4 shadow-lg" aria-hidden="true">
+            <!-- <div class[ngSrc]="'/logo.png'"3333] rounded-lg flex items-center justify-center mb-4 shadow-lg" aria-hidden="true">
               <svg class="w-6 h-6 text-[#ffffff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
               </svg>
-            </div>
+            </div> -->
+
+            <img [src]="'/logo.png'" [width]="200" alt="A descriptive text of the image">
             <h1 id="login-title" class="text-3xl font-extrabold text-[#333333] tracking-tight">Acceso Superadmin</h1>
             <p class="text-[#666666] mt-2 text-sm">Control centralizado del ecosistema financiero.</p>
           </header>
@@ -26,8 +28,7 @@ import { PlatformLoginRequest } from '../../models/platform-tenant.models';
           <app-admin-login-form 
             [isLoading]="store.isLoading()"
             [errorMessage]="store.error()"
-            (submitForm)="onLogin($event)">
-          </app-admin-login-form>
+            (submitForm)="onLogin($event)" />
 
           <footer class="mt-8 pt-6 border-t border-[#cccccc] text-center">
             <p class="text-xs text-[#999999]">

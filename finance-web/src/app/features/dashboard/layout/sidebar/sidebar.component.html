@@ -1,87 +1,89 @@
 <!-- Sidebar Desktop -->
 <aside
-  class="sidebar-container"
+  class="sidebar-container fixed left-0 top-0 h-full bg-white shadow-lg z-30 transition-all duration-300 ease-in-out overflow-hidden"
   [class.sidebar-open]="isOpen()"
   [class.sidebar-closed]="!isOpen()"
+  [style.width]="isOpen() ? '260px' : '80px'"
   role="navigation"
   aria-label="Menú principal">
 
   <!-- Brand -->
-  <header class="px-6 py-5 border-b border-[#e8e8e8]">
+  <header class="px-4 py-5 border-b border-[#C8E6C9]">
     <div class="flex items-center gap-3">
-      <div class="brand-logo">
-        <i class="bx bx-dollar-circle text-xl text-[#ffffff]"></i>
+      <!-- Logo Image -->
+      <div class="w-10 rounded-xl overflow-hidden flex-shrink-0">
+        <img src="/logo.png" class="w-full h-full object-cover" alt="Finance System Logo">
       </div>
-      <div class="overflow-hidden">
-        <h1 class="text-[15px] font-bold text-[#333333] tracking-tight truncate">
-          Finance<span class="font-light text-[#999999]">System</span>
+      <div class="overflow-hidden transition-all duration-200" [class.opacity-0]="!isOpen()" [class.w-0]="!isOpen()" [class.w-auto]="isOpen()">
+        <h1 class="text-[15px] font-bold text-[#2E7D32] tracking-tight truncate whitespace-nowrap">
+          Finance<span class="font-light text-[#4CAF50]">System</span>
         </h1>
-        <span class="text-[10px] font-medium uppercase tracking-widest text-[#999999]">
+        <span class="text-[10px] font-medium uppercase tracking-widest text-[#4CAF50] whitespace-nowrap">
           Dashboard
         </span>
       </div>
     </div>
-  </header>
+  </header> 
 
   <!-- Navigation -->
-  <nav class="flex-1 px-3 py-5 overflow-y-auto" aria-label="Navegación del tenant">
-    <p class="nav-section-label">Principal</p>
+  <nav class="flex-1 px-3 py-5 overflow-y-auto h-[calc(100vh-140px)]" aria-label="Navegación del tenant">
+    <p class="nav-section-label text-[10px] font-semibold uppercase tracking-wider text-[#4CAF50] px-3 mb-3" [class.hidden]="!isOpen()">Principal</p>
 
     <a routerLink="/app/dashboard/home"
        routerLinkActive="nav-link-active"
        [routerLinkActiveOptions]="{ exact: true }"
        (click)="onNavigate()"
-       class="nav-link group">
-      <span class="nav-icon">
+       class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 cursor-pointer hover:bg-[#F1F8E9] group">
+      <span class="nav-icon w-5 text-[#666666] group-hover:text-[#2E7D32] flex-shrink-0">
         <i class="bx bxs-dashboard text-lg"></i>
       </span>
-      <span class="nav-text">Dashboard</span>
+      <span class="nav-text text-[13px] font-medium text-[#333333] group-hover:text-[#2E7D32] transition-all duration-200 whitespace-nowrap" [class.hidden]="!isOpen()">Dashboard</span>
     </a>
 
     <a routerLink="/app/users"
        routerLinkActive="nav-link-active"
        (click)="onNavigate()"
-       class="nav-link group">
-      <span class="nav-icon">
+       class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 cursor-pointer hover:bg-[#F1F8E9] group">
+      <span class="nav-icon w-5 text-[#666666] group-hover:text-[#2E7D32] flex-shrink-0">
         <i class="bx bxs-user-detail text-lg"></i>
       </span>
-      <span class="nav-text">Usuarios</span>
+      <span class="nav-text text-[13px] font-medium text-[#333333] group-hover:text-[#2E7D32] transition-all duration-200 whitespace-nowrap" [class.hidden]="!isOpen()">Usuarios</span>
     </a>
 
     <a routerLink="/app/access"
        routerLinkActive="nav-link-active"
        (click)="onNavigate()"
-       class="nav-link group">
-      <span class="nav-icon">
+       class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 cursor-pointer hover:bg-[#F1F8E9] group">
+      <span class="nav-icon w-5 text-[#666666] group-hover:text-[#2E7D32] flex-shrink-0">
         <i class="bx bxs-lock-alt text-lg"></i>
       </span>
-      <span class="nav-text">Accesos</span>
+      <span class="nav-text text-[13px] font-medium text-[#333333] group-hover:text-[#2E7D32] transition-all duration-200 whitespace-nowrap" [class.hidden]="!isOpen()">Accesos</span>
     </a>
 
-    <p class="nav-section-label mt-6">Configuración</p>
+    <p class="nav-section-label text-[10px] font-semibold uppercase tracking-wider text-[#4CAF50] px-3 mt-6 mb-3" [class.hidden]="!isOpen()">Configuración</p>
 
     <a routerLink="/app/dashboard/settings"
        routerLinkActive="nav-link-active"
        (click)="onNavigate()"
-       class="nav-link group">
-      <span class="nav-icon">
+       class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 cursor-pointer hover:bg-[#F1F8E9] group">
+      <span class="nav-icon w-5 text-[#666666] group-hover:text-[#2E7D32] flex-shrink-0">
         <i class="bx bxs-cog text-lg"></i>
       </span>
-      <span class="nav-text">Ajustes</span>
+      <span class="nav-text text-[13px] font-medium text-[#333333] group-hover:text-[#2E7D32] transition-all duration-200 whitespace-nowrap" [class.hidden]="!isOpen()">Ajustes</span>
     </a>
   </nav>
 
   <!-- User Section -->
-  <footer class="border-t border-[#e8e8e8] p-4">
-    <div class="flex items-center gap-3 rounded-xl px-3 py-3 bg-[#f7f7f7]">
-      <div class="user-avatar">
-        <span class="text-[11px] font-bold text-[#ffffff]">{{ userInitials() }}</span>
+  <footer class="border-t border-[#C8E6C9] p-4 absolute bottom-0 left-0 right-0 bg-white">
+    <div class="flex items-center gap-3 rounded-xl px-3 py-3 bg-[#F1F8E9]">
+      <div class="user-avatar w-8 h-8 rounded-full bg-[#2E7D32] flex items-center justify-center flex-shrink-0">
+        <span class="text-[11px] font-bold text-white">{{ userInitials() }}</span>
       </div>
-      <div class="flex-1 min-w-0">
-        <p class="text-[13px] font-semibold text-[#333333] truncate leading-tight">
+      <div class="flex-1 min-w-0 transition-all duration-200" [class.opacity-0]="!isOpen()" [class.hidden]="!isOpen()">
+        <p class="text-[13px] font-semibold text-[#2E7D32] truncate leading-tight">
           {{ userName() }}
         </p>
-        <p class="text-[11px] text-[#999999] truncate leading-tight mt-0.5">
+        <p class="text-[11px] text-[#666666] truncate leading-tight mt-0.5">
           {{ userEmail() }}
         </p>
       </div>
@@ -92,7 +94,7 @@
 <!-- Mobile Overlay -->
 @if (isOpen()) {
   <div
-    class="fixed inset-0 bg-[#333333]/40 backdrop-blur-sm z-40 md:hidden sidebar-overlay"
+    class="fixed inset-0 bg-[#2E7D32]/40 backdrop-blur-sm z-20 md:hidden"
     (click)="closeSidebar.emit()"
     role="button"
     aria-label="Cerrar menú">
