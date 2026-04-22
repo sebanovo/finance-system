@@ -1,5 +1,3 @@
-/***Pruebas unitarias para SignupPage */
-
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 
 import { SignupPage } from "./signup-page";

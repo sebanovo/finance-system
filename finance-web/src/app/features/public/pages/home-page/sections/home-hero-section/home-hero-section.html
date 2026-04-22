@@ -1,86 +1,62 @@
-<div class="min-h-screen bg-[#F1F8E9] selection:bg-[#4CAF50] selection:text-white">
-  
-  <section class="relative pt-24 pb-16 sm:pt-32 sm:pb-24 overflow-hidden">
-    
-    <div class="absolute inset-0 -z-10 bg-[radial-gradient(#C8E6C9_1px,transparent_1px)] [background-size:24px_24px] opacity-40"></div>
+<section id="hero" class="scroll-mt-24 bg-white">
+  <div
+    class="mx-auto flex w-full max-w-7xl flex-col gap-10 px-4 py-16 sm:px-6 lg:flex-row lg:items-center lg:px-8 lg:py-24">
+    <div class="flex-1">
+      <span
+        class="inline-flex rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600">
+        Plataforma moderna
+      </span>
 
-    <div class="mx-auto max-w-7xl px-6 lg:px-8 text-center">
-      
-      <div class="mb-8 flex justify-center animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <span class="relative inline-flex items-center gap-2 rounded-full border border-[#C8E6C9] bg-white px-4 py-1.5 text-xs font-semibold text-[#2E7D32] shadow-sm">
-          <span class="flex size-2 rounded-full bg-[#4CAF50] animate-pulse"></span>
-          Arquitectura Multitenant
-        </span>
-      </div>
-
-      <h1 class="mx-auto max-w-4xl text-5xl font-extrabold tracking-tight text-[#2E7D32] sm:text-7xl animate-in fade-in slide-in-from-bottom-5 duration-700 delay-100">
-        Gestión financiera <br class="hidden sm:block" />
-        <span class="text-[#4CAF50] font-light">a nivel corporativo.</span>
+      <h1
+        class="mt-6 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
+        Gestiona tu negocio con una experiencia clara y profesional
       </h1>
 
-      <p class="mx-auto mt-6 max-w-2xl text-lg leading-8 text-[#666666] animate-in fade-in slide-in-from-bottom-6 duration-700 delay-200">
-        Centraliza la administración de finanzas, usuarios y roles en una sola plataforma. Diseñado con una arquitectura robusta para escalar junto a los objetivos de tu empresa.
+      <p class="mt-6 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+        Centraliza usuarios, operaciones, reportes y configuraciones en una sola
+        aplicación web construida para crecer contigo.
       </p>
 
-      <div class="mt-10 flex items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-7 duration-700 delay-300">
-        <a routerLink="/auth/signup" 
-           class="inline-flex items-center justify-center rounded-lg bg-[#2E7D32] px-8 py-3.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#4CAF50] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#4CAF50] focus:ring-offset-2">
-          Comenzar prueba gratis
-          <i class="bx bx-right-arrow-alt ml-2 text-xl"></i>
-        </a>
-        <a routerLink="/auth/login" 
-           class="inline-flex items-center justify-center rounded-lg border border-[#C8E6C9] bg-white px-8 py-3.5 text-sm font-semibold text-[#2E7D32] shadow-sm transition-all hover:bg-[#F1F8E9] focus:outline-none focus:ring-2 focus:ring-[#C8E6C9] focus:ring-offset-2">
-          <i class="bx bx-log-in mr-2 text-lg text-[#4CAF50]"></i>
-          Iniciar sesión
-        </a>
+      <div class="mt-8 flex flex-wrap gap-4">
+        <button
+          type="button"
+          class="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:opacity-90">
+          Comenzar ahora
+        </button>
+
+        <button
+          type="button"
+          class="rounded-2xl border border-slate-300 px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+          Ver más
+        </button>
       </div>
     </div>
 
-    <div class="mx-auto mt-20 max-w-6xl px-6 lg:px-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500">
-      <div class="relative rounded-xl border border-[#C8E6C9] bg-white shadow-2xl overflow-hidden">
-        
-        <div class="flex items-center gap-2 border-b border-[#C8E6C9]/50 bg-[#F1F8E9] px-4 py-3">
-          <div class="flex gap-1.5">
-            <div class="size-3 rounded-full bg-[#C8E6C9]"></div>
-            <div class="size-3 rounded-full bg-[#C8E6C9]"></div>
-            <div class="size-3 rounded-full bg-[#C8E6C9]"></div>
+    <div class="flex-1">
+      <div
+        class="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="rounded-2xl bg-white p-5 shadow-sm">
+            <p class="text-sm text-slate-500">Usuarios activos</p>
+            <p class="mt-2 text-3xl font-semibold text-slate-900">1,248</p>
           </div>
-          <div class="mx-auto w-full max-w-sm rounded-md border border-[#C8E6C9]/50 bg-white py-1 px-3 text-center text-[10px] font-medium tracking-widest text-[#4CAF50]">
-            financesystem.app/dashboard
+
+          <div class="rounded-2xl bg-white p-5 shadow-sm">
+            <p class="text-sm text-slate-500">Tareas completadas</p>
+            <p class="mt-2 text-3xl font-semibold text-slate-900">87%</p>
+          </div>
+
+          <div class="rounded-2xl bg-white p-5 shadow-sm">
+            <p class="text-sm text-slate-500">Equipos conectados</p>
+            <p class="mt-2 text-3xl font-semibold text-slate-900">32</p>
+          </div>
+
+          <div class="rounded-2xl bg-white p-5 shadow-sm">
+            <p class="text-sm text-slate-500">Disponibilidad</p>
+            <p class="mt-2 text-3xl font-semibold text-slate-900">99.9%</p>
           </div>
         </div>
-
-        <div class="bg-[#F1F8E9] aspect-[16/9] w-full flex items-center justify-center relative overflow-hidden">
-            <div class="text-center p-6">
-              <i class="bx bx-image text-5xl text-[#C8E6C9] mb-2"></i>
-              <p class="text-sm font-medium text-[#999999]">Coloca el screenshot de tu dashboard aquí</p>
-            </div>
-        </div>
       </div>
     </div>
-  </section>
-
-  <section class="border-t border-[#C8E6C9]/50 bg-white py-12 animate-in fade-in duration-1000 delay-700">
-    <div class="mx-auto max-w-7xl px-6 lg:px-8 text-center">
-      <p class="text-[11px] font-bold uppercase tracking-widest text-[#4CAF50]">
-        Impulsado por tecnologías de alto rendimiento
-      </p>
-      
-      <div class="mt-8 flex flex-wrap items-center justify-center gap-x-12 gap-y-8 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
-        <div class="flex items-center gap-2">
-          <i class='bx bxl-spring-boot text-3xl text-[#2E7D32]'></i>
-          <span class="text-sm font-semibold text-[#2E7D32]">Spring Boot</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <i class='bx bxl-angular text-3xl text-[#2E7D32]'></i>
-          <span class="text-sm font-semibold text-[#2E7D32]">Angular 18</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <i class='bx bxl-docker text-3xl text-[#2E7D32]'></i>
-          <span class="text-sm font-semibold text-[#2E7D32]">Docker</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-</div>
+  </div>
+</section>

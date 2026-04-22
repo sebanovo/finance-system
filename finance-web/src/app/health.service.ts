@@ -9,10 +9,12 @@ export class HealthService {
   private http = inject(HttpClient);
   private url = 'http://localhost:8080/api/health';
 
+  // Signal para almacenar el estado de salud
   readonly healthStatus = signal<string>('Cargando...');
 
   async checkHealth(): Promise<void> {
     try {
+      // Especificamos que esperamos texto, no JSON
       const response = await lastValueFrom(
         this.http.get(this.url, { responseType: 'text' })
       );

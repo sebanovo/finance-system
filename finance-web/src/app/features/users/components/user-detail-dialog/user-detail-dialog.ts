@@ -28,6 +28,7 @@ import { User } from "../../models/user.model";
     }),
   ],
   templateUrl: "./user-detail-dialog.html",
+  styleUrl: "./user-detail-dialog.css",
 })
 export class UserDetailDialog {
   readonly open = input.required<boolean>();

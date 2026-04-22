@@ -1,0 +1,86 @@
+<section
+  class="bg-background min-h-[calc(100vh-4rem)] px-4 py-6 md:px-6 md:py-8"
+>
+  <div class="mx-auto flex min-h-[calc(100vh-8rem)] max-w-6xl items-center">
+    <div class="grid w-full gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+      <app-not-found-hero
+        icon="lucideTriangleAlert"
+        eyebrow="Sección no encontrada"
+        title="Esta sección del panel no existe o esta restringida"
+        description="La ruta interna que intentaste abrir no forma parte del sistema, fue movida o no está habilitada para esta vista. Puedes volver a la pantalla anterior o continuar desde el dashboard."
+      >
+        <div hero-content class="grid gap-4 md:grid-cols-2">
+          <div class="rounded-2xl border p-4">
+            <p class="font-medium">Qué pudo pasar</p>
+            <p class="text-muted-foreground mt-2 text-sm leading-6">
+              URL mal escrita o enlace interno desactualizado.
+            </p>
+          </div>
+
+          <div class="rounded-2xl border p-4">
+            <p class="font-medium">Qué puedes hacer</p>
+            <p class="text-muted-foreground mt-2 text-sm leading-6">
+              Retomar la navegación desde una sección válida del panel.
+            </p>
+          </div>
+        </div>
+
+        <div hero-actions class="contents">
+          <button
+            hlmBtn
+            type="button"
+            variant="outline"
+            class="w-full sm:w-auto"
+            (click)="goBack()"
+          >
+            <ng-icon name="lucideArrowLeft" class="mr-2" size="18" />
+            Volver atrás
+          </button>
+
+          <a hlmBtn class="w-full sm:w-auto" routerLink="/app/dashboard">
+            <ng-icon name="lucideLayoutDashboard" class="mr-2" size="18" />
+            Ir al dashboard
+          </a>
+        </div>
+      </app-not-found-hero>
+
+      <div class="hidden xl:block">
+        <!-- <app-not-found-brand-panel
+          eyebrow="Área privada"
+          title="Navegación segura dentro del panel administrativo"
+          description="El sistema interceptó una navegación interna que no coincide con ninguna sección registrada."
+          icon="lucidePanelTopOpen"
+          infoTitle="Ruta inválida detectada"
+          infoDescription="La URL no corresponde a una sección disponible dentro del sistema."
+          boxTitle="Sugerencia de marca"
+          boxDescription="Aquí puedes colocar el logo de tu empresa, una imagen institucional o una pequeña composición visual del producto."
+        /> -->
+        <app-not-found-brand-panel
+          eyebrow="Panel administrativo"
+          title="Gestión centralizada y navegación controlada"
+          description="Estás dentro del entorno administrativo de Thunder Company, donde cada módulo, ruta y acción está controlada por permisos y estructura del sistema."
+          icon="lucidePanelTopOpen"
+          infoTitle="Acceso validado por el sistema"
+          infoDescription="El sistema ha bloqueado esta navegación porque la ruta no existe o no está habilitada dentro de tu contexto actual."
+          boxTitle="¿Qué puedes hacer ahora?"
+          boxDescription="Utiliza el menú lateral para acceder a módulos disponibles o vuelve al dashboard para continuar con la gestión."
+        >
+          <div brand-extra class="mt-4 flex items-center gap-3">
+            <img
+              src="assets/brand/logo.svg"
+              alt="Thunder Company"
+              class="h-10 w-auto"
+            />
+
+            <div>
+              <p class="text-sm font-semibold">Thunder Company</p>
+              <p class="text-muted-foreground text-xs">
+                Admin Platform • Secure Access
+              </p>
+            </div>
+          </div>
+        </app-not-found-brand-panel>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,76 +1,51 @@
-<section class="mx-auto max-w-3xl py-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-  
-  <div class="mb-6">
-    <button hlmBtn variant="ghost" (click)="onCancel()" 
-            class="inline-flex items-center gap-2 text-sm font-medium text-[#4CAF50] hover:bg-transparent hover:text-[#2E7D32] transition-colors -ml-2 px-2 cursor-pointer">
-      <ng-icon name="lucideArrowLeft" class="size-4" />
-      Volver al directorio
-    </button>
+<section class="mx-auto max-w-3xl space-y-6">
+  <div class="space-y-1">
+    <h1 class="flex items-center gap-2 text-2xl font-semibold tracking-tight">
+      <ng-icon name="lucideUserPen" class="size-5" />
+      Editar usuario
+    </h1>
+    <p class="text-muted-foreground text-sm">
+      Actualiza los datos principales del usuario.
+    </p>
   </div>
 
-  <div class="bg-white border border-[#C8E6C9] shadow-sm rounded-xl overflow-hidden">
-    
-    <div class="border-b border-[#C8E6C9]/50 px-8 py-6 bg-[#F1F8E9]">
-      <h1 class="flex items-center gap-2 text-xl font-bold text-[#2E7D32] tracking-tight">
-        <ng-icon name="lucideUserPen" class="size-5 text-[#4CAF50]" />
-        Editar perfil
-      </h1>
-      <p class="mt-1 text-sm text-[#666666]">
-        Actualiza las credenciales y configuraciones principales de este usuario.
+  @if (store.selectedUserLoading()) {
+    <section hlmCard>
+      <div hlmCardContent class="space-y-4 pt-6">
+        <hlm-skeleton class="h-10 w-full rounded-md" />
+        <hlm-skeleton class="h-10 w-full rounded-md" />
+        <hlm-skeleton class="h-10 w-full rounded-md" />
+        <hlm-skeleton class="h-10 w-full rounded-md" />
+      </div>
+    </section>
+  } @else if (store.hasSelectedUserError()) {
+    <hlm-alert variant="destructive">
+      <ng-icon name="lucideAlertCircle" />
+      <h4 hlmAlertTitle>No se pudo cargar el usuario</h4>
+      <p hlmAlertDescription>
+        {{
+          store.selectedUserError()?.message ||
+            "Ocurrió un error inesperado al cargar el usuario."
+        }}
       </p>
-    </div>
 
-    <div class="p-8">
-      
-      @if (store.selectedUserLoading()) {
-        <div class="space-y-6">
-          <div class="flex flex-col items-center justify-center py-6">
-            <div class="flex size-12 items-center justify-center rounded-full border border-[#C8E6C9] bg-white shadow-sm animate-pulse">
-              <span class="text-lg font-semibold text-[#4CAF50]">$</span>
-            </div>
-            <span class="mt-3 text-xs font-medium uppercase tracking-widest text-[#666666]">
-              Recuperando datos...
-            </span>
-          </div>
-          
-          <div class="space-y-4">
-            <hlm-skeleton class="h-12 w-full rounded-lg bg-[#C8E6C9]/30 animate-pulse" />
-            <hlm-skeleton class="h-12 w-full rounded-lg bg-[#C8E6C9]/20 animate-pulse" />
-            <hlm-skeleton class="h-12 w-full rounded-lg bg-[#C8E6C9]/10 animate-pulse" />
-          </div>
-        </div>
-      } 
-      
-      @else if (store.hasSelectedUserError()) {
-        <hlm-alert class="border-l-4 border-l-[#2E7D32] bg-[#E8F5E9] text-[#2E7D32]">
-          <ng-icon name="lucideAlertCircle" class="text-[#2E7D32]" />
-          <h4 hlmAlertTitle class="font-semibold">Inconveniente al cargar</h4>
-          <p hlmAlertDescription class="text-sm text-[#4CAF50]">
-            {{ store.selectedUserError()?.message || "Ocurrió un error inesperado al acceder a los datos del usuario. Verifica tu conexión." }}
-          </p>
-
-          <div hlmAlertAction class="mt-4">
-            <button hlmBtn variant="outline" size="sm" (click)="onCancel()" 
-                    class="border border-[#C8E6C9] text-[#2E7D32] hover:bg-[#E8F5E9] transition-colors cursor-pointer">
-              Volver al listado
-            </button>
-          </div>
-        </hlm-alert>
-      } 
-      
-      @else if (initialFormValue(); as initialValue) {
-        <div class="animate-in fade-in duration-500">
-          <app-user-form
-            [mode]="'edit'"
-            [submitLabel]="'Guardar cambios'"
-            [initialValue]="initialValue"
-            [submitting]="store.submitting()"
-            [submitError]="store.updateError()"
-            (formSubmitted)="onUpdateUser($event)"
-            (cancelClicked)="onCancel()"
-          />
-        </div>
-      }
-    </div>
-  </div>
+      <div class="mt-4">
+        <button hlmBtn variant="outline" (click)="onCancel()">
+          Volver al listado
+        </button>
+      </div>
+    </hlm-alert>
+  } @else if (initialFormValue(); as initialValue) {
+    <app-user-form
+      [mode]="'edit'"
+      [title]="'Editar usuario'"
+      [description]="'Actualiza los datos principales del usuario.'"
+      [submitLabel]="'Guardar cambios'"
+      [initialValue]="initialValue"
+      [submitting]="store.submitting()"
+      [submitError]="store.updateError()"
+      (formSubmitted)="onUpdateUser($event)"
+      (cancelClicked)="onCancel()"
+    />
+  }
 </section>
