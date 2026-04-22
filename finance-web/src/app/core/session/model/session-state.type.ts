@@ -1,4 +1,4 @@
-import type { AuthMeData } from "../../../features/auth/models/auth-request.type";
+import { SessionUser } from "./session-user.type";
 
 export type SessionStatus =
   | "idle"
@@ -9,6 +9,6 @@ export type SessionStatus =
 export type SessionState = {
   status: SessionStatus;
   initialized: boolean;
-  user: AuthMeData | null;
+  user: SessionUser | null;
   errorMessage: string | null;
 };

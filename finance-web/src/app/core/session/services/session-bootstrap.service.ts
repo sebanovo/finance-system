@@ -11,7 +11,7 @@ export class SessionBootstrapService {
    * Runs the session bootstrap process.
    * @returns A promise that resolves when the bootstrap process is complete.
    */
-  async runBootstrap(): Promise<void> {
+  runBootstrap(): Promise<void> {
     return this.sessionStore.bootstrap();
   }
 }

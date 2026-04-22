@@ -1,24 +1,14 @@
 import {
-  Component,
-  effect,
-  ElementRef,
-  inject,
-  input,
-  output,
-  viewChild,
+  Component, effect, ElementRef, inject, input, output, viewChild,
 } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
-import { NgIcon, provideIcons } from "@ng-icons/core";
+import { NgIconComponent, provideIcons } from "@ng-icons/core";
 import {
   lucideAlertCircle,
-  lucideLoaderCircle,
-  lucideLock,
-  lucideMail,
-  lucideUser,
+  lucideLoader2,
 } from "@ng-icons/lucide";
 import { HlmAlertImports } from "@shared/ui/alert";
 import { HlmButtonImports } from "@shared/ui/button";
-import { HlmCardImports } from "@shared/ui/card";
 import { HlmFieldImports } from "@shared/ui/field";
 import { HlmInputImports } from "@shared/ui/input";
 import { AppHttpError } from "../../../../core/http/models/app-http-error.model";
@@ -27,26 +17,22 @@ import { UserUpsertFormValue } from "../../models/user.model";
 
 @Component({
   selector: "app-user-form",
+  standalone: true,
   imports: [
     ReactiveFormsModule,
-    NgIcon,
+    NgIconComponent,
     HlmAlertImports,
     HlmButtonImports,
-    HlmCardImports,
     HlmFieldImports,
     HlmInputImports,
   ],
   providers: [
     provideIcons({
       lucideAlertCircle,
-      lucideLoaderCircle,
-      lucideMail,
-      lucideLock,
-      lucideUser,
+      lucideLoader2,
     }),
   ],
   templateUrl: "./user-form.html",
-  styleUrl: "./user-form.css",
 })
 export class UserForm {
   private readonly fb = inject(FormBuilder);
@@ -58,15 +44,15 @@ export class UserForm {
   readonly cancelClicked = output<void>();
 
   readonly mode = input<"create" | "edit">("create");
-  readonly title = input("Nuevo usuario");
-  readonly description = input(
-    "Completa los datos para registrar un nuevo usuario."
-  );
   readonly submitLabel = input("Guardar usuario");
   readonly initialValue = input<UserUpsertFormValue | null>(null);
 
   showPasswordAsReadOnly(): boolean {
     return this.mode() === "edit";
+  }
+
+  showPasswordField(): boolean {
+    return this.mode() === "create";
   }
 
   private readonly host =
@@ -164,14 +150,10 @@ export class UserForm {
       (fieldName === "firstName" || fieldName === "lastName") &&
       control.hasError("minlength")
     ) {
-      return "Debe contener al menos 3 caracters";
+      return "Debe contener al menos 2 caracteres";
     }
 
     return "";
-  }
-
-  showPasswordField(): boolean {
-    return this.mode() === "create";
   }
 
   private focusFirstInvalidField(): void {

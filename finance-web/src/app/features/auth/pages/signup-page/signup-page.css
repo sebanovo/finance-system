@@ -1,0 +1,13 @@
+/* Signup Page Styles */
+
+/* General container styling */
+section {
+    background-color: #ffffff;
+}
+
+/* Smooth transitions */
+input,
+button,
+a {
+    transition: all 0.3s ease;
+}

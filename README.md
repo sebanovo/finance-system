@@ -9,7 +9,13 @@ Frontend `finance-web` en Angular.
 
 ```
 finance-system/
-├── finance-api/              # Backend (Spring boot)
+├── finance_mobil/
+|   ├── assets/               # Imagenes
+|   ├── lib/                  # Codigo fuente
+|   ├── pubspec.yaml          # Librerias y configuración
+│   └── ...
+|
+├── finance-api/               # Backend (Spring boot)
 │   ├── .devcontainer/         # Configuración para entorno de desarrollo
 │   │   ├── Dockerfile
 │   │   └── devcontainer.json
@@ -18,7 +24,7 @@ finance-system/
 │   ├── Dockerfile.dev         # Imagen para desarrollo
 │   └── ...
 │
-├── finance-web/              # Frontend (Angular)
+├── finance-web/               # Frontend (Angular)
 │   ├── .devcontainer/         # Configuración para entorno de desarrollo
 │   ├── src/                   # Código fuente del frontend
 │   ├── Dockerfile.dev         # Imagen para desarrollo
@@ -38,7 +44,7 @@ finance-system/
 | -------- | ----------- | ------ | ------------- |
 | serv-web | Angular     | 4200   | Interfaz web  |
 | serv-api | Spring Boot | 8080   | API REST      |
-| ser-db   | PostgreSQL  | 5432   | Base de datos |
+| serv-db  | PostgreSQL  | 5432   | Base de datos |
 
 ---
 

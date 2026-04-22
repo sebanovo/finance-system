@@ -10,15 +10,9 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { RouterLink } from "@angular/router";
 
-import { NgIcon, provideIcons } from "@ng-icons/core";
-import { remixGithubFill } from "@ng-icons/remixicon";
-
 import { HlmButtonImports } from "@shared/ui/button";
 import { HlmFieldImports } from "@shared/ui/field";
 import { HlmInputImports } from "@shared/ui/input";
-import { EmailInput } from "../../../../shared/custom-components/email-input/email-input";
-import { PasswordInput } from "../../../../shared/custom-components/password-input/password-input";
-import { TextInput } from "../../../../shared/custom-components/text-input/text-input";
 import {
   LoginRequest,
   LoginTenantRequest,
@@ -32,12 +26,7 @@ import {
     HlmFieldImports,
     HlmInputImports,
     HlmButtonImports,
-    NgIcon,
-    PasswordInput,
-    EmailInput,
-    TextInput,
   ],
-  providers: [provideIcons({ remixGithubFill })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: "./login-form.html",
 })
@@ -58,37 +47,46 @@ export class LoginForm {
     tenantSlug: ["", [Validators.minLength(2)]],
   });
 
+  /**
+   * Subscribes to form value changes and emits a formEdited event
+   * whenever the form is modified.
+   */
   constructor() {
     this.form.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
-        if (this.errorMessage()) {
-          this.formEdited.emit();
-        }
+        this.formEdited.emit();
       });
   }
 
+  /**
+   *  Submits the login form. If the form is invalid, it marks all controls as touched to trigger validation messages.
+   * @returns void
+   */
   submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
-    const { email, password, tenantSlug } = this.form.getRawValue();
-    const normalizedEmail = email.trim();
-    const normalizedTenantSlug = tenantSlug.trim();
+    const rawValue = this.form.getRawValue();
 
-    if (normalizedTenantSlug) {
+    const email = rawValue.email.trim();
+    const password = rawValue.password;
+    const tenantSlug = rawValue.tenantSlug.trim();
+
+    if (tenantSlug) {
       this.submitLoginWithTenant.emit({
-        email: normalizedEmail,
+        email,
         password,
-        tenantSlug: normalizedTenantSlug,
+        tenantSlug: tenantSlug,
       });
+
       return;
     }
 
     this.submitLogin.emit({
-      email: normalizedEmail,
+      email,
       password,
     });
   }

@@ -9,7 +9,7 @@ const eslintConfigPrettier = require("eslint-config-prettier");
 // Las configuraciones con 'on', 'error' o 'warn' estan encendidas
 module.exports = defineConfig([
   {
-    ignores: [".angular/**", ".nx/**", "coverage/**", "dist/**"],
+    ignores: [".angular/**", ".nx/**", "coverage/**", "dist/**", "src-walter/**"],
     files: ["**/*.ts"],
     extends: [
       eslint.configs.recommended,

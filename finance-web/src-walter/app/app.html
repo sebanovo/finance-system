@@ -1,0 +1,18 @@
+@if (sessionStore.isBootstrapping() || !sessionStore.initialized()) {
+  <main class="flex min-h-screen items-center justify-center px-6">
+    <div class="flex flex-col items-center gap-3 text-center">
+      <div
+        class="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900"
+      ></div>
+      <div>
+        <h1 class="text-lg font-semibold text-slate-900">Loading session</h1>
+        <p class="text-sm text-slate-500">
+          Please wait while we restore your session.
+        </p>
+      </div>
+    </div>
+  </main>
+} @else {
+  <router-outlet />
+  <hlm-toaster duration="8000" />
+}

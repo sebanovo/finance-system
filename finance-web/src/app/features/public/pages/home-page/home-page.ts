@@ -7,6 +7,5 @@ import { HomeServicesSection } from './sections/home-services-section/home-servi
   selector: 'app-home-page',
   imports: [HomeHeroSection, HomeServicesSection, HomeContactSection],
   templateUrl: './home-page.html',
-  styleUrl: './home-page.css',
 })
-export class HomePage {}
+export class HomePage { }

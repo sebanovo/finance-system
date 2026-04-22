@@ -1,0 +1,10 @@
+<section class="mx-auto flex min-h-screen w-full max-w-md items-center px-6">
+  <app-login-form
+    class="w-full"
+    [isSubmitting]="isSubmitting()"
+    [errorMessage]="errorMessage()"
+    (submitLogin)="onSubmit($event)"
+    (submitLoginWithTenant)="onSubmitWithTenant($event)"
+    (formEdited)="onFormEdited()"
+  />
+</section>

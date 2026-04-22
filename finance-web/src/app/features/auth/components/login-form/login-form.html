@@ -1,77 +1,95 @@
 <form [formGroup]="form" (ngSubmit)="submit()">
   <hlm-field-group>
     <div class="flex flex-col items-center gap-1 text-center">
-      <h1 class="text-2xl font-bold">Inicia sesión en tu cuenta</h1>
-      <p class="text-muted-foreground text-sm text-balance">
+      <h1 class="text-2xl font-bold text-[#2E7D32]">Iniciar Sesión</h1>
+      <p class="text-[#666666] text-sm text-balance">
         Ingresa tus credenciales para acceder a tu cuenta
       </p>
     </div>
 
     @if (errorMessage()) {
-      <div
-        class="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600"
-      >
+      <div class="rounded-md border border-[#C62828] bg-[#FFEBEE] px-3 py-2 text-sm text-[#C62828]">
         {{ errorMessage() }}
       </div>
     }
 
-    <app-email-input
-      [control]="form.controls.email"
-      inputId="email"
-      label="Correo electrónico"
-      placeholder="thunder@ejemplo.com"
-      icon="lucideMail"
-    />
+    <hlm-field>
+      <label hlmFieldLabel for="email" class="text-[#2E7D32]">Correo Electrónico</label>
+      <input
+        hlmInput
+        type="email"
+        id="email"
+        placeholder="m@example.com"
+        formControlName="email"
+        class="border-[#C8E6C9] focus:border-[#4CAF50] focus:ring-[#4CAF50]"
+      />
+      <hlm-field-error validator="required" class="text-[#C62828]">El correo es obligatorio.</hlm-field-error>
+      <hlm-field-error validator="email" class="text-[#C62828]">
+        Ingresa un correo electrónico válido.
+      </hlm-field-error>
+    </hlm-field>
 
-    <div class="space-y-2">
+    <hlm-field>
       <div class="flex items-center">
-        <span class="text-sm font-medium">Contraseña</span>
-
+        <label hlmFieldLabel for="password" class="text-[#2E7D32]">Contraseña</label>
         <a
-          class="text-muted-foreground ml-auto text-sm underline-offset-4 hover:underline"
+          hlmFieldDescription
+          class="ml-auto text-sm text-[#4CAF50] underline-offset-4 hover:text-[#2E7D32] hover:underline"
           routerLink="/auth/forgot-password"
         >
           ¿Olvidaste tu contraseña?
         </a>
       </div>
-
-      <app-password-input
-        [control]="form.controls.password"
-        inputId="password"
-        label=""
+      <input
+        hlmInput
+        type="password"
+        id="password"
+        formControlName="password"
+        class="border-[#C8E6C9] focus:border-[#4CAF50] focus:ring-[#4CAF50]"
       />
-    </div>
-
-    <app-text-input
-      [control]="form.controls.tenantSlug"
-      inputId="empresa"
-      label="Empresa (Alias)"
-      placeholder="Alias"
-      icon="lucideBuilding2"
-      requiredMessage="Alias debe tener al menos 2 caracters"
-      description="Alias de tu empresa"
-    />
+      <hlm-field-error validator="required" class="text-[#C62828]">
+        La contraseña es obligatoria.
+      </hlm-field-error>
+      <hlm-field-error validator="minlength" class="text-[#C62828]">
+        La contraseña debe tener al menos 8 caracteres.
+      </hlm-field-error>
+    </hlm-field>
 
     <hlm-field>
-      <button hlmBtn type="submit" [disabled]="form.invalid || isSubmitting()">
+      <label hlmFieldLabel for="tenantSlug" class="text-[#2E7D32]">Tenant (Opcional)</label>
+      <input
+        hlmInput
+        type="text"
+        id="tenantSlug"
+        placeholder="Ingresa el slug de tu tenant"
+        formControlName="tenantSlug"
+        class="border-[#C8E6C9] focus:border-[#4CAF50] focus:ring-[#4CAF50]"
+      />
+      <p hlmFieldDescription class="text-[#666666]">
+        Opcional. Si ingresas un tenant, se usará el login con tenant.
+      </p>
+      <hlm-field-error validator="minlength" class="text-[#C62828]">
+        El slug del tenant debe tener al menos 2 caracteres.
+      </hlm-field-error>
+    </hlm-field>
+
+    <hlm-field>
+      <button hlmBtn type="submit" [disabled]="isSubmitting()"
+              class="w-full bg-[#2E7D32] hover:bg-[#4CAF50] text-white">
         @if (isSubmitting()) {
           Iniciando sesión...
         } @else {
-          Iniciar sesión
+          Iniciar Sesión
         }
       </button>
     </hlm-field>
 
-    <hlm-field-separator>O</hlm-field-separator>
+    <hlm-field-separator class="text-[#666666]">O continúa con</hlm-field-separator>
 
-    <hlm-field>
-      <!-- <button hlmBtn variant="outline" type="button">
-        <ng-icon name="remixGithubFill" class="text-xl" />
-        Iniciar con GitHub
-      </button> -->
-      <p hlmFieldDescription class="text-center">
+    <hlm-field class="text-center">
+      <p hlmFieldDescription class="text-[#666666]">
         ¿No tienes una cuenta?
-        <a routerLink="/auth/signup">Regístrate</a>
+        <a routerLink="/auth/signup" class="text-[#2E7D32] hover:text-[#4CAF50] hover:underline font-medium">Regístrate</a>
       </p>
     </hlm-field>
   </hlm-field-group>

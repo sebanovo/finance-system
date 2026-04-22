@@ -1,20 +1,14 @@
 import { computed, inject, Injectable, signal } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 
-import { Router } from "@angular/router";
 import { AppHttpError } from "../../../core/http/models/app-http-error.model";
-import { AccessTokenService } from "../../../core/http/services/access-token.service";
-import { AdminAccessTokenService } from "../../../core/http/services/admin-access-token.service";
-import { HeaderTenantService } from "../../../core/http/services/header-tenant.service";
 import { SessionStore } from "../../../core/session/store/session.store";
-import { toAuthMe, toSignupData } from "../adapters/auth.adapter";
 import {
   AuthMeData,
   LoginRequest,
   LoginTenantRequest,
-  SignupRequest,
 } from "../models/auth-request.type";
-import { SignupData } from "../models/auth-response.type";
+import { SignupRequest } from "../models/signup-request.type";
 import { AuthService } from "../services/auth.service";
 
 @Injectable({
@@ -23,49 +17,39 @@ import { AuthService } from "../services/auth.service";
 export class AuthStore {
   private readonly authService = inject(AuthService);
   private readonly sessionStore = inject(SessionStore);
-  private readonly adminService = inject(AdminAccessTokenService);
-  private readonly accessService = inject(AccessTokenService);
-  private readonly headerTenantService = inject(HeaderTenantService);
-  private readonly router = inject(Router);
 
   private readonly loadingSignal = signal(false);
   private readonly errorSignal = signal<AppHttpError | null>(null);
+  private readonly successSignal = signal(false);
   private readonly userSignal = signal<AuthMeData | null>(null);
-  private readonly adminSignal = signal<AuthMeData | null>(null);
 
   readonly loading = this.loadingSignal.asReadonly();
   readonly error = this.errorSignal.asReadonly();
+  readonly success = this.successSignal.asReadonly();
   readonly user = this.userSignal.asReadonly();
-  readonly admin = this.adminSignal.asReadonly();
-
-  readonly signupSignal = signal<SignupData | null>(null);
-  readonly signupResult = this.signupSignal.asReadonly();
 
   readonly hasError = computed(() => this.errorSignal() !== null);
+  readonly isAuthenticated = computed(() => this.userSignal() !== null);
   readonly errorMessage = computed(() => this.errorSignal()?.message ?? null);
-  readonly currentUser = computed(
-    () => this.adminSignal() ?? this.userSignal()
-  );
-  readonly isAuthenticated = computed(() => this.currentUser() !== null);
-  readonly isAdminAuthenticated = computed(() => this.adminSignal() !== null);
 
   /**
-   * Logs in a user with the provided credentials.
-   * @param payload The login credentials for the user.
-   * @returns A promise that resolves to a boolean indicating whether the login was successful.
-   *
-   * NOT USE YET
+   * Registers a new user and creates a tenant.
+   * @param payload The signup credentials (company and admin info).
+   * @returns A promise that resolves to a boolean indicating whether signup was successful.
    */
-  async login(payload: LoginRequest): Promise<boolean> {
+  async signup(payload: SignupRequest): Promise<boolean> {
     this.startRequest();
 
     try {
-      await firstValueFrom(this.authService.login(payload));
+      await firstValueFrom(this.authService.signup(payload));
 
-      const user = await firstValueFrom(this.authService.getMeUser());
+      const user = await firstValueFrom(this.authService.getMe());
       this.userSignal.set(user);
-      this.adminSignal.set(null);
+
+      // Update session store with authenticated user
       this.sessionStore.setAuthenticated(user);
+
+      this.successSignal.set(true);
       return true;
     } catch (error: unknown) {
       this.errorSignal.set(error as AppHttpError);
@@ -75,20 +59,26 @@ export class AuthStore {
     }
   }
 
-  async loginAdmin(payload: LoginRequest): Promise<boolean> {
+  /**
+   * Logs in a user with the provided credentials.
+   * @param payload The login credentials for the user.
+   * @returns A promise that resolves to a boolean indicating whether the login was successful.
+   */
+  async login(payload: LoginRequest): Promise<boolean> {
     this.startRequest();
 
     try {
-      await firstValueFrom(this.authService.loginWithAdmin(payload));
+      await firstValueFrom(this.authService.login(payload));
 
-      const admin = await firstValueFrom(this.authService.getMeAdmin());
+      const user = await firstValueFrom(this.authService.getMe());
+      this.userSignal.set(user);
 
-      this.adminSignal.set(toAuthMe(admin));
-      this.userSignal.set(null);
-      this.sessionStore.setAuthenticated(admin);
+      // Update session store with authenticated user
+      this.sessionStore.setAuthenticated(user);
+
+      this.successSignal.set(true);
       return true;
     } catch (error: unknown) {
-      console.log("mi error", error);
       this.errorSignal.set(error as AppHttpError);
       return false;
     } finally {
@@ -107,11 +97,13 @@ export class AuthStore {
     try {
       await firstValueFrom(this.authService.loginWithTenant(payload));
 
-      const user = await firstValueFrom(this.authService.getMeUser());
+      const user = await firstValueFrom(this.authService.getMe());
+      this.userSignal.set(user);
 
-      this.userSignal.set(toAuthMe(user));
-      this.adminSignal.set(null);
-      this.sessionStore.setAuthenticated(toAuthMe(user));
+      // Update session store with authenticated user
+      this.sessionStore.setAuthenticated(user);
+
+      this.successSignal.set(true);
       return true;
     } catch (error: unknown) {
       this.errorSignal.set(error as AppHttpError);
@@ -119,64 +111,14 @@ export class AuthStore {
     } finally {
       this.loadingSignal.set(false);
     }
-  }
-
-  async signup(payload: SignupRequest): Promise<boolean> {
-    this.startRequest();
-
-    try {
-      const data = await firstValueFrom(this.authService.signup(payload));
-
-      // Aquí podrías usar info como loginHint o mostrar mensaje
-      console.log("Signup exitoso:", data);
-      this.signupSignal.set(toSignupData(data));
-
-      return true;
-    } catch (error: unknown) {
-      this.errorSignal.set(error as AppHttpError);
-      return false;
-    } finally {
-      this.loadingSignal.set(false);
-    }
-  }
-
-  clearSignupResult(): void {
-    this.signupSignal.set(null);
   }
 
   /**
    * Logs out the current user and resets the authentication state.
    */
-  async logout(): Promise<boolean> {
-    this.startRequest();
-
-    try {
-      console.log("logging out");
-
-      await firstValueFrom(this.authService.logout());
-
-      // const isAdmin = !!this.adminService.getSuperAdmin();
-      const isAdmin = this.adminService.getSuperAdmin() !== null;
-
-      this.reset();
-      this.sessionStore.clearSession();
-      this.adminService.clearSuperAdmin();
-      this.accessService.clearTokens();
-      this.headerTenantService.clearTenant();
-
-      console.log("logging out, finalizado");
-
-      await this.router.navigate([
-        isAdmin ? "/platform/auth/login" : "/auth/login",
-      ]);
-
-      return true;
-    } catch (error: unknown) {
-      this.setRequestError(error);
-      return false;
-    } finally {
-      this.loadingSignal.set(false);
-    }
+  logout(): void {
+    this.authService.logout();
+    this.reset();
   }
 
   /**
@@ -192,9 +134,8 @@ export class AuthStore {
   reset(): void {
     this.loadingSignal.set(false);
     this.errorSignal.set(null);
+    this.successSignal.set(false);
     this.userSignal.set(null);
-    this.adminSignal.set(null);
-    this.signupSignal.set(null);
   }
 
   /**
@@ -203,12 +144,6 @@ export class AuthStore {
   private startRequest(): void {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
-  }
-
-  /**
-   * Normalizes and stores a request error.
-   */
-  private setRequestError(error: unknown): void {
-    this.errorSignal.set(error as AppHttpError);
+    this.successSignal.set(false);
   }
 }

@@ -1,8 +1,8 @@
-import '../../presentation/widgets/change_password_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../viewmodels/home_viewmodel.dart';
+import '../../presentation/widgets/change_password_dialog.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -34,7 +34,7 @@ class _HomePageState extends State<HomePage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Colors.red : Colors.green,
+        backgroundColor: isError ? Colors.red.shade700 : Colors.green.shade700,
       ),
     );
   }
@@ -58,25 +58,27 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Dashboard")),
+      appBar: AppBar(
+        title: const Text("Dashboard"),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        foregroundColor: const Color(0xFF2E7D32),
+      ),
       drawer: _buildDrawer(),
       body: RefreshIndicator(
         onRefresh: () => _viewModel.loadData(),
+        color: const Color(0xFF2E7D32),
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Center(
-                child: Text(
-                  "Bienvenido al Dashboard",
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                ),
+              Text(
+                "Bienvenido al Dashboard",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              Center(child: Image.asset("logo.png", width: 100)),
-              const SizedBox(height: 24),
               _buildSubscriptionCard(),
             ],
           ),
@@ -87,78 +89,110 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildDrawer() {
     return Drawer(
-      child: ListView(
-        children: [
-          if (_viewModel.loadingUserInfo)
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
-              child: Center(
-                child: CircularProgressIndicator(color: Colors.white),
-              ),
-            )
-          else if (_viewModel.userInfo != null)
-            UserAccountsDrawerHeader(
-              decoration: const BoxDecoration(color: Colors.blue),
-              accountName: Text(_viewModel.userInfo!.displayName),
-              accountEmail: Text(_viewModel.userInfo!.subject),
-              currentAccountPicture: CircleAvatar(
-                backgroundColor: Colors.white,
-                child: Text(
-                  _viewModel.userInfo!.initial,
-                  style: const TextStyle(fontSize: 24, color: Colors.blue),
+      child: Container(
+        color: Colors.white,
+        child: ListView(
+          children: [
+            if (_viewModel.loadingUserInfo)
+              const DrawerHeader(
+                decoration: BoxDecoration(color: Color(0xFF2E7D32)),
+                child: Center(
+                  child: CircularProgressIndicator(color: Colors.white),
                 ),
-              ),
-              otherAccountsPictures: [
-                Tooltip(
-                  message: 'Roles: ${_viewModel.userInfo!.roles.join(', ')}',
-                  child: const Icon(Icons.verified_user, color: Colors.white),
+              )
+            else if (_viewModel.userInfo != null)
+              UserAccountsDrawerHeader(
+                decoration: const BoxDecoration(color: Color(0xFF2E7D32)),
+                accountName: Text(
+                  _viewModel.userInfo!.displayName,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-              ],
+                accountEmail: Text(_viewModel.userInfo!.subject),
+                currentAccountPicture: CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: Text(
+                    _viewModel.userInfo!.initial,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      color: Color(0xFF2E7D32),
+                    ),
+                  ),
+                ),
+                otherAccountsPictures: [
+                  Tooltip(
+                    message: 'Roles: ${_viewModel.userInfo!.roles.join(', ')}',
+                    child: const Icon(Icons.verified_user, color: Colors.white),
+                  ),
+                ],
+              ),
+            _buildDrawerItem(
+              icon: Icons.dashboard,
+              title: 'Dashboard',
+              onTap: () => Navigator.pop(context),
             ),
-          ListTile(
-            leading: const Icon(Icons.dashboard),
-            title: const Text("Dashboard"),
-            onTap: () => Navigator.pop(context),
-          ),
-          ListTile(
-            leading: const Icon(Icons.people),
-            title: const Text("Usuarios"),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/users');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.security),
-            title: const Text("Roles"),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/roles');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.vpn_key),
-            title: const Text("Permisos"),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/permissions');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.lock_reset),
-            title: const Text("Cambiar contraseña"),
-            onTap: () {
-              Navigator.pop(context);
-              _showChangePasswordDialog();
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text("Cerrar sesión"),
-            onTap: () => _logout(),
-          ),
-        ],
+            _buildDrawerItem(
+              icon: Icons.people,
+              title: 'Usuarios',
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/users');
+              },
+            ),
+            _buildDrawerItem(
+              icon: Icons.security,
+              title: 'Roles',
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/roles');
+              },
+            ),
+            _buildDrawerItem(
+              icon: Icons.vpn_key,
+              title: 'Permisos',
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/permissions');
+              },
+            ),
+            _buildDrawerItem(
+              icon: Icons.lock_reset,
+              title: 'Cambiar contraseña',
+              onTap: () {
+                Navigator.pop(context);
+                _showChangePasswordDialog();
+              },
+            ),
+            _buildDrawerItem(
+              icon: Icons.logout,
+              title: 'Cerrar sesión',
+              onTap: () => _logout(),
+              isDestructive: true,
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildDrawerItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    bool isDestructive = false,
+  }) {
+    return ListTile(
+      leading: Icon(
+        icon,
+        color: isDestructive ? Colors.red.shade700 : const Color(0xFF4CAF50),
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: isDestructive ? Colors.red.shade700 : Colors.black87,
+        ),
+      ),
+      onTap: onTap,
+      hoverColor: Colors.grey.shade50,
     );
   }
 
@@ -184,9 +218,10 @@ class _HomePageState extends State<HomePage> {
     final sub = _viewModel.subscription!;
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      color: Colors.white,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -196,8 +231,9 @@ class _HomePageState extends State<HomePage> {
                 Text(
                   sub.planName,
                   style: const TextStyle(
-                    fontSize: 20,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
+                    color: Color(0xFF2E7D32),
                   ),
                 ),
                 Container(
@@ -228,15 +264,16 @@ class _HomePageState extends State<HomePage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.blue[50],
-                  borderRadius: BorderRadius.circular(8),
+                  color: const Color(0xFFE8F5E9),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.science, color: Colors.blue),
+                    const Icon(Icons.science, color: Color(0xFF2E7D32)),
                     const SizedBox(width: 8),
                     Text(
                       'Período de prueba · ${sub.remainingDays} días restantes',
+                      style: const TextStyle(fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
@@ -256,7 +293,7 @@ class _HomePageState extends State<HomePage> {
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
                   'Suscripción vencida',
-                  style: TextStyle(color: Colors.red[700]),
+                  style: TextStyle(color: Colors.red.shade700),
                 ),
               ),
           ],
@@ -267,19 +304,25 @@ class _HomePageState extends State<HomePage> {
 
   Widget _infoRow(IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: Colors.grey[600]),
-          const SizedBox(width: 12),
+          Icon(icon, size: 20, color: const Color(0xFF4CAF50)),
+          const SizedBox(width: 16),
           SizedBox(
             width: 100,
-            child: Text(label, style: TextStyle(color: Colors.grey[700])),
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Colors.grey,
+              ),
+            ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(fontWeight: FontWeight.w500),
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
         ],

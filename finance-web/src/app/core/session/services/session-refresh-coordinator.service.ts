@@ -2,7 +2,6 @@ import { inject, Injectable } from "@angular/core";
 import {
   catchError,
   finalize,
-  firstValueFrom,
   map,
   Observable,
   shareReplay,
@@ -19,7 +18,8 @@ export class SessionRefreshCoordinatorService {
   private refreshRequest$: Observable<void> | null = null;
 
   /**
-   * Refreshes the current authenticated session.
+   * Refreshes the user's session.
+   * @returns An observable that emits when the session is refreshed.
    */
   refresh(): Observable<void> {
     if (this.refreshRequest$) {
@@ -29,7 +29,7 @@ export class SessionRefreshCoordinatorService {
     this.refreshRequest$ = this.authService.refresh().pipe(
       map(() => void 0),
       catchError((error: unknown) => {
-        void firstValueFrom(this.authService.logout()).catch(() => undefined);
+        this.authService.logout();
         return throwError(() => error);
       }),
       finalize(() => {

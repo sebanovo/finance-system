@@ -1,0 +1,118 @@
+<hlm-dialog [state]="open() ? 'open' : 'closed'" (closed)="onClosed()">
+  <hlm-dialog-content *hlmDialogPortal="let ctx">
+    <hlm-dialog-header>
+      <h3 hlmDialogTitle>Detalle de usuario</h3>
+      <p hlmDialogDescription>
+        Información principal del usuario seleccionado.
+      </p>
+    </hlm-dialog-header>
+
+    @if (loading()) {
+      <div class="space-y-4">
+        <hlm-skeleton class="h-10 w-full rounded-md" />
+        <hlm-skeleton class="h-10 w-full rounded-md" />
+        <hlm-skeleton class="h-10 w-full rounded-md" />
+      </div>
+    } @else if (error()) {
+      <hlm-alert variant="destructive">
+        <h4 hlmAlertTitle>Error</h4>
+        <p hlmAlertDescription>
+          {{ error()?.message || "Error al cargar usuario" }}
+        </p>
+      </hlm-alert>
+    } @else if (user(); as u) {
+      <section class="space-y-4">
+        <div class="flex flex-wrap items-center gap-3">
+          <h4 class="text-foreground text-lg font-semibold">
+            {{ u.firstName }} {{ u.lastName }}
+          </h4>
+
+          @if (u.isActive) {
+            <span
+              hlmBadge
+              class="bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+            >
+              Activo
+            </span>
+          } @else {
+            <span hlmBadge variant="outline"> Inactivo </span>
+          }
+        </div>
+
+        <dl class="bg-background divide-y rounded-xl border">
+          <div
+            class="grid gap-2 px-4 py-3 sm:grid-cols-[180px_minmax(0,1fr)] sm:gap-4"
+          >
+            <dt class="text-muted-foreground text-sm font-medium">ID</dt>
+            <dd class="text-foreground text-sm break-all">
+              {{ u.id }}
+            </dd>
+          </div>
+
+          <div
+            class="grid gap-2 px-4 py-3 sm:grid-cols-[180px_minmax(0,1fr)] sm:gap-4"
+          >
+            <dt class="text-muted-foreground text-sm font-medium">Nombre</dt>
+            <dd class="text-foreground text-sm">
+              {{ u.firstName }} {{ u.lastName }}
+            </dd>
+          </div>
+
+          <div
+            class="grid gap-2 px-4 py-3 sm:grid-cols-[180px_minmax(0,1fr)] sm:gap-4"
+          >
+            <dt class="text-muted-foreground text-sm font-medium">
+              Correo electrónico
+            </dt>
+            <dd class="text-foreground text-sm break-all">
+              {{ u.email }}
+            </dd>
+          </div>
+
+          <div
+            class="grid gap-2 px-4 py-3 sm:grid-cols-[180px_minmax(0,1fr)] sm:gap-4"
+          >
+            <dt class="text-muted-foreground text-sm font-medium">Estado</dt>
+            <dd class="text-foreground text-sm">
+              {{ u.isActive ? "Activo" : "Inactivo" }}
+            </dd>
+          </div>
+
+          <div
+            class="grid gap-2 px-4 py-3 sm:grid-cols-[180px_minmax(0,1fr)] sm:gap-4"
+          >
+            <dt class="text-muted-foreground text-sm font-medium">
+              Fecha de creación
+            </dt>
+            <dd class="text-foreground text-sm">
+              {{ u.createdAt | date: "medium" }}
+            </dd>
+          </div>
+
+          <div
+            class="grid gap-2 px-4 py-3 sm:grid-cols-[180px_minmax(0,1fr)] sm:gap-4"
+          >
+            <dt class="text-muted-foreground text-sm font-medium">
+              Última actualización
+            </dt>
+            <dd class="text-foreground text-sm">
+              {{ u.updatedAt | date: "medium" }}
+            </dd>
+          </div>
+        </dl>
+      </section>
+    }
+
+    <hlm-dialog-footer>
+      @if (user(); as u) {
+        <button hlmBtn variant="outline" (click)="onEditUser(u.id)">
+          Editar
+        </button>
+      }
+
+      <button hlmBtn variant="outline" (click)="onOpenChange(false)">
+        Cerrar
+      </button>
+    </hlm-dialog-footer>
+  </hlm-dialog-content>
+</hlm-dialog>

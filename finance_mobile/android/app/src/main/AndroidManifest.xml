@@ -14,7 +14,8 @@
     <uses-permission android:name="android.permission.CAMERA" />
 
     <!-- Para Android 10 o inferior (Galería) -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <!-- Para Android 13 o superior (Fotos) -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
