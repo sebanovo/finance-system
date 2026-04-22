@@ -6,11 +6,15 @@ import { UserForm } from "../../components/user-form/user-form";
 import { UserUpsertFormValue } from "../../models/user.model";
 import { UsersStore } from "../../store/user.store";
 
+import { NgIconComponent, provideIcons } from '@ng-icons/core'; 
+import { lucideArrowLeft } from '@ng-icons/lucide';
+
 @Component({
   selector: "app-user-create-page",
-  imports: [HlmButtonImports, UserForm],
+  standalone: true,
+  imports: [HlmButtonImports, NgIconComponent, UserForm],
+  viewProviders: [provideIcons({ lucideArrowLeft })],
   templateUrl: "./user-create-page.html",
-  styleUrl: "./user-create-page.css",
 })
 export class UserCreatePage implements OnInit {
   readonly store = inject(UsersStore);

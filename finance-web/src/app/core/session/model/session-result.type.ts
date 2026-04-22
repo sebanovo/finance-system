@@ -1,9 +1,9 @@
-import type { AuthMeData } from "../../../features/auth/models/auth-request.type";
+import { SessionUser } from "./session-user.type";
 
 export type SessionBootstrapResult =
   | {
       status: "authenticated";
-      user: AuthMeData;
+      user: SessionUser;
     }
   | {
       status: "unauthenticated";

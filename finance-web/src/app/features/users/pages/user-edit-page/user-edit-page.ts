@@ -1,10 +1,8 @@
 import { Component, computed, inject, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
-import { NgIcon, provideIcons } from "@ng-icons/core";
+import { NgIcon, provideIcons, NgIconComponent } from "@ng-icons/core";
 import {
-  lucideAlertCircle,
-  lucideLoaderCircle,
-  lucideUserPen,
+  lucideAlertCircle, lucideLoaderCircle, lucideUserPen, lucideArrowLeft
 } from "@ng-icons/lucide";
 import { HlmAlertImports } from "@shared/ui/alert";
 import { HlmButtonImports } from "@shared/ui/button";
@@ -15,10 +13,12 @@ import { UserForm } from "../../components/user-form/user-form";
 import { UserUpsertFormValue } from "../../models/user.model";
 import { UsersStore } from "../../store/user.store";
 
+
 @Component({
   selector: "app-user-edit-page",
   imports: [
     NgIcon,
+    NgIconComponent,
     HlmAlertImports,
     HlmButtonImports,
     HlmCardImports,
@@ -30,10 +30,10 @@ import { UsersStore } from "../../store/user.store";
       lucideAlertCircle,
       lucideLoaderCircle,
       lucideUserPen,
+      lucideArrowLeft
     }),
   ],
   templateUrl: "./user-edit-page.html",
-  styleUrl: "./user-edit-page.css",
 })
 export class UserEditPage implements OnInit {
   readonly store = inject(UsersStore);

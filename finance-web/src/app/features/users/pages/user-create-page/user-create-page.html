@@ -1,19 +1,33 @@
-<section class="mx-auto max-w-3xl space-y-6">
-  <div class="space-y-1">
-    <h1 class="text-2xl font-semibold tracking-tight">Crear usuario</h1>
-    <p class="text-muted-foreground text-sm">
-      Registra un nuevo usuario dentro del sistema.
-    </p>
+<section class="mx-auto max-w-3xl py-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+  
+  <div class="mb-6">
+    <button hlmBtn variant="ghost" (click)="onCancel()" 
+            class="inline-flex items-center gap-2 text-sm font-medium text-[#666666] hover:bg-transparent hover:text-[#333333] transition-colors -ml-2 px-2">
+      <ng-icon name="lucideArrowLeft" class="size-4" />
+      Volver al directorio
+    </button>
   </div>
 
-  <app-user-form
-    [mode]="'create'"
-    [title]="'Nuevo usuario'"
-    [description]="'Completa los datos para registrar un nuevo usuario.'"
-    [submitLabel]="'Guardar usuario'"
-    [submitting]="store.submitting()"
-    [submitError]="store.createError()"
-    (formSubmitted)="onCreateUser($event)"
-    (cancelClicked)="onCancel()"
-  />
+  <div class="bg-[#ffffff] border border-[#cccccc] shadow-sm rounded-xl overflow-hidden">
+    
+    <div class="border-b border-[#cccccc]/50 px-8 py-6 bg-[#fafafa]">
+      <h1 class="text-xl font-bold text-[#333333] tracking-tight">
+        Registrar nuevo usuario
+      </h1>
+      <p class="mt-1 text-sm text-[#666666]">
+        Completa las credenciales y el perfil para habilitar el acceso al sistema.
+      </p>
+    </div>
+
+    <div class="p-8">
+      <app-user-form
+        [mode]="'create'"
+        [submitLabel]="'Confirmar registro'"
+        [submitting]="store.submitting()"
+        [submitError]="store.createError()"
+        (formSubmitted)="onCreateUser($event)"
+        (cancelClicked)="onCancel()"
+      />
+    </div>
+  </div>
 </section>

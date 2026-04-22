@@ -22,7 +22,9 @@ function shouldSkipRefresh(url: string | null): boolean {
     url.includes("/api/auth/login") ||
     url.includes("/api/auth/login-with-tenant") ||
     url.includes("/api/auth/logout") ||
-    url.includes("/api/auth/refresh")
+    url.includes("/api/auth/refresh") ||
+    url.includes("/api/platform/auth/login") ||
+    url.includes("/api/platform/auth/refresh")
   );
 }
 

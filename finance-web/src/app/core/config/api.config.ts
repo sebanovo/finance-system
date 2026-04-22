@@ -12,6 +12,14 @@ export const API_CONFIG = {
     refresh: "/auth/refresh",
     me: "/auth/me",
   },
+  users: {
+    list: "/users",
+    create: "/users",
+    detail: (id: string) => `/users/${id}`,
+    update: (id: string) => `/users/${id}`,
+    activate: (id: string) => `/users/${id}/activate`,
+    deactivate: (id: string) => `/users/${id}/deactivate`,
+  },
 } as const;
 
 /**

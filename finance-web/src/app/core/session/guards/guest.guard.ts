@@ -7,6 +7,10 @@ export const guestGuard: CanActivateFn = (): boolean | UrlTree => {
   const sessionStore = inject(SessionStore);
   const router = inject(Router);
 
+  if (!sessionStore.initialized()) {
+    return false;
+  }
+
   if (sessionStore.isAuthenticated()) {
     console.log("guestGuard: user is authenticated, redirecting to /app");
     return router.createUrlTree(["/app"]);

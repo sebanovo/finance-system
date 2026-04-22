@@ -1,55 +1,94 @@
-<section class="space-y-6">
-  <section hlmCard>
-    <app-card-header
-      title="Usuarios"
-      description="Gestiona los usuarios registrados en el sistema"
-      icon="lucideUsers"
-      [showAction]="!store.isEmpty()"
-      actionLabel="Nuevo"
-      actionIcon="lucidePlus"
-      (actionClick)="onCreateUser()"
-    />
+<section class="space-y-6 max-w-7xl mx-auto">
+  <section hlmCard class="bg-[#ffffff] border border-[#cccccc] shadow-sm rounded-xl overflow-hidden">
+    
+    <div hlmCardHeader class="flex flex-row items-center justify-between px-6 py-5 border-b border-[#cccccc]/50 bg-[#ffffff]">
+      <div class="space-y-1">
+        <h1 hlmCardTitle class="flex items-center gap-2 text-xl font-bold text-[#333333] tracking-tight">
+          <ng-icon name="lucideUsers" class="size-5 text-[#666666]" />
+          Usuarios
+        </h1>
+        <p hlmCardDescription class="text-sm font-medium text-[#999999]">
+          Gestiona los usuarios registrados en el sistema financiero.
+        </p>
+      </div>
 
-    <div hlmCardContent>
+      <div hlmCardAction>
+        <button hlmBtn (click)="onCreateUser()" 
+                class="inline-flex items-center justify-center rounded-lg bg-[#333333] px-4 py-2 text-sm font-medium text-[#ffffff] transition-all hover:bg-[#666666] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#999999] focus:ring-offset-2">
+          <ng-icon name="lucidePlus" class="mr-2 size-4" />
+          Nuevo usuario
+        </button>
+      </div>
+    </div>
+
+    <div hlmCardContent class="p-6">
+      
       @if (store.loading()) {
-        <div class="space-y-4">
-          <hlm-skeleton class="h-10 w-full rounded-md" />
-          <hlm-skeleton class="h-10 w-full rounded-md" />
-          <hlm-skeleton class="h-10 w-full rounded-md" />
-          <hlm-skeleton class="h-10 w-full rounded-md" />
+        <div class="space-y-6">
+          <div class="flex flex-col items-center justify-center py-6">
+            <div class="flex size-12 items-center justify-center rounded-full border border-[#cccccc] bg-[#ffffff] shadow-sm animate-pulse">
+              <span class="text-lg font-semibold text-[#666666]">$</span>
+            </div>
+            <span class="mt-3 text-xs font-medium uppercase tracking-widest text-[#999999]">
+              Cargando registros...
+            </span>
+          </div>
+          
+          <div class="space-y-3">
+            <hlm-skeleton class="h-12 w-full rounded-lg bg-[#cccccc]/30 animate-pulse" />
+            <hlm-skeleton class="h-12 w-full rounded-lg bg-[#cccccc]/20 animate-pulse" />
+            <hlm-skeleton class="h-12 w-full rounded-lg bg-[#cccccc]/10 animate-pulse" />
+          </div>
         </div>
-      } @else if (store.hasError()) {
-        <app-table-error
-          variant="destructive"
-          icon="lucideAlertCircle"
-          [description]="
-            store.error()?.message || 'Ocurrio un error inesperado'
-          "
-          title="No se pudieron cargar los usuarios"
-          [showAction]="true"
-          actionLabel="Reintentar"
-          (actionClick)="onRetry()"
-        />
-      } @else if (store.isEmpty()) {
-        <app-empty-state
-          title="Sin usuarios"
-          description="Aun no existen usuarios para mostrar."
-          icon="lucideInbox"
-          [showAction]="true"
-          actionLabel="Crear primer usuario"
-          actionIcon="lucidePlus"
-          (actionClick)="onCreateUser()"
-        />
-      } @else {
-        <app-user-table
-          [users]="store.users()"
-          [togglingUserIds]="store.togglingUserIds()"
-          (viewUser)="onViewUser($event)"
-          (editUser)="onEditUser($event)"
-          (activateUser)="onActivateUser($event)"
-          (deactivateUser)="onDeactivateUser($event)"
-          (manageRoles)="onManageRoles($event)"
-        />
+      } 
+      
+      @else if (store.hasError()) {
+        <hlm-alert class="border-l-4 border-l-[#333333] bg-[#f5f5f5] text-[#333333]">
+          <ng-icon name="lucideAlertCircle" class="text-[#333333]" />
+          <h4 hlmAlertTitle class="font-semibold">Inconveniente técnico</h4>
+          <p hlmAlertDescription class="text-sm text-[#666666]">
+            {{ store.error()?.message || "No se pudo establecer conexión con el servidor. Por favor, intenta nuevamente." }}
+          </p>
+          <div hlmAlertAction class="mt-3">
+            <button hlmBtn variant="outline" size="sm" (click)="onRetry()" 
+                    class="border border-[#cccccc] text-[#333333] hover:bg-[#e8e8e8] transition-colors">
+              Reintentar conexión
+            </button>
+          </div>
+        </hlm-alert>
+      } 
+      
+      @else if (store.isEmpty()) {
+        <div hlmEmpty class="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#cccccc] bg-[#fafafa] py-16 text-center transition-colors hover:border-[#999999]">
+          <div hlmEmptyMedia class="mb-4 rounded-full bg-[#ffffff] p-4 shadow-sm border border-[#cccccc]">
+            <ng-icon name="lucideInbox" class="size-6 text-[#666666]" />
+          </div>
+          <h3 hlmEmptyTitle class="text-lg font-semibold text-[#333333]">Directorio vacío</h3>
+          <p hlmEmptyDescription class="mt-1 max-w-sm text-sm text-[#999999]">
+            Aún no existen usuarios configurados en esta instancia. Comienza agregando el primer perfil.
+          </p>
+          <div hlmEmptyContent class="mt-6">
+            <button hlmBtn (click)="onCreateUser()" 
+                    class="inline-flex items-center justify-center rounded-lg bg-[#ffffff] border border-[#cccccc] px-4 py-2 text-sm font-medium text-[#333333] transition-colors hover:bg-[#f5f5f5] hover:text-[#333333] shadow-sm">
+              <ng-icon name="lucidePlus" class="mr-2 size-4" />
+              Crear primer usuario
+            </button>
+          </div>
+        </div>
+      } 
+      
+      @else {
+        <div class="animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <app-user-table
+            [users]="store.users()"
+            [togglingUserIds]="store.togglingUserIds()"
+            (viewUser)="onViewUser($event)"
+            (editUser)="onEditUser($event)"
+            (activateUser)="onActivateUser($event)"
+            (deactivateUser)="onDeactivateUser($event)"
+          />
+        </div>
+        
         <app-user-detail-dialog
           [open]="viewDialogOpen()"
           [user]="store.selectedUser()"
@@ -57,12 +96,6 @@
           [error]="store.selectedUserError()"
           (openChange)="onViewDialogOpenChange($event)"
           (editUser)="onEditUser($event)"
-        />
-
-        <app-manage-role-drawer
-          [open]="manageRolesDrawerOpen()"
-          [user]="selectedUserForRoleAssignment()"
-          (openChange)="onManageRolesDrawerOpenChange($event)"
         />
       }
     </div>

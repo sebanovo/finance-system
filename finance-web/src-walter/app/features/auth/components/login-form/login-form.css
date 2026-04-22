@@ -1,0 +1,4 @@
+/* only when there is no div in your component
+:host {
+  display: block;
+} */

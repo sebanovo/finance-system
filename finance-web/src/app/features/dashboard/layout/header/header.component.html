@@ -1,0 +1,99 @@
+<!-- Header -->
+<header class="header-bar" role="banner">
+  <div class="flex items-center gap-3">
+    <!-- Toggle Sidebar (all screens) -->
+    <button
+      (click)="onToggleSidebar()"
+      class="header-btn"
+      type="button"
+      aria-label="Abrir o cerrar menú lateral"
+      title="Toggle menú">
+      <i class="bx text-xl" [class]="sidebarOpen() ? 'bx-menu-alt-left' : 'bx-menu'"></i>
+    </button>
+
+    <!-- Breadcrumb / Page Title -->
+    <div class="hidden sm:flex items-center gap-2 text-sm">
+      <span class="text-[#999999]">Tenant</span>
+      <i class="bx bx-chevron-right text-[#cccccc] text-xs"></i>
+      <span class="font-medium text-[#333333]">Dashboard</span>
+    </div>
+  </div>
+
+  <!-- Right Actions -->
+  <div class="flex items-center gap-2">
+    <!-- Notifications -->
+    <button
+      class="header-btn relative"
+      type="button"
+      aria-label="Notificaciones"
+      title="Notificaciones">
+      <i class="bx bx-bell text-xl"></i>
+      <span class="notification-dot"></span>
+    </button>
+
+    <!-- Divider -->
+    <div class="hidden sm:block w-px h-6 bg-[#e8e8e8] mx-1"></div>
+
+    <!-- Profile Menu -->
+    <div class="relative">
+      <button
+        (click)="toggleProfileMenu()"
+        class="profile-trigger"
+        type="button"
+        aria-haspopup="true"
+        [attr.aria-expanded]="profileMenuOpen()"
+        title="Menú de perfil">
+        <div class="profile-avatar">
+          <span class="text-[11px] font-bold text-[#ffffff]">{{ userInitials }}</span>
+        </div>
+        <div class="hidden sm:block text-left">
+          <p class="text-[13px] font-semibold text-[#333333] leading-tight">{{ userName }}</p>
+          <p class="text-[11px] text-[#999999] leading-tight">Tenant</p>
+        </div>
+        <i class="bx bx-chevron-down text-[#999999] text-lg transition-transform duration-200"
+           [class.rotate-180]="profileMenuOpen()"></i>
+      </button>
+
+      <!-- Dropdown -->
+      @if (profileMenuOpen()) {
+        <div class="dropdown-menu" role="menu" aria-label="Opciones de perfil">
+          <!-- User Info -->
+          <div class="px-4 py-3 border-b border-[#f0f0f0]">
+            <p class="text-[13px] font-semibold text-[#333333]">{{ userName }}</p>
+            <p class="text-[11px] text-[#999999] mt-0.5">{{ userEmail }}</p>
+          </div>
+
+          <!-- Menu Items -->
+          <div class="py-1">
+            <a href="#"
+               (click)="closeProfileMenu(); $event.preventDefault()"
+               class="dropdown-item"
+               role="menuitem">
+              <i class="bx bx-user text-base text-[#999999]"></i>
+              <span>Mi perfil</span>
+            </a>
+            <a href="#"
+               (click)="closeProfileMenu(); $event.preventDefault()"
+               class="dropdown-item"
+               role="menuitem">
+              <i class="bx bx-cog text-base text-[#999999]"></i>
+              <span>Configuración</span>
+            </a>
+          </div>
+
+          <!-- Logout -->
+          <div class="border-t border-[#f0f0f0] py-1">
+            <button
+              (click)="onLogout()"
+              class="dropdown-item dropdown-item-danger w-full"
+              role="menuitem"
+              type="button">
+              <i class="bx bx-log-out text-base"></i>
+              <span>Cerrar sesión</span>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</header>

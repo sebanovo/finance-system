@@ -1,0 +1,100 @@
+<!-- Sidebar Desktop -->
+<aside
+  class="sidebar-container"
+  [class.sidebar-open]="isOpen()"
+  [class.sidebar-closed]="!isOpen()"
+  role="navigation"
+  aria-label="Menú principal">
+
+  <!-- Brand -->
+  <header class="px-6 py-5 border-b border-[#e8e8e8]">
+    <div class="flex items-center gap-3">
+      <div class="brand-logo">
+        <i class="bx bx-dollar-circle text-xl text-[#ffffff]"></i>
+      </div>
+      <div class="overflow-hidden">
+        <h1 class="text-[15px] font-bold text-[#333333] tracking-tight truncate">
+          Finance<span class="font-light text-[#999999]">System</span>
+        </h1>
+        <span class="text-[10px] font-medium uppercase tracking-widest text-[#999999]">
+          Dashboard
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation -->
+  <nav class="flex-1 px-3 py-5 overflow-y-auto" aria-label="Navegación del tenant">
+    <p class="nav-section-label">Principal</p>
+
+    <a routerLink="/app/dashboard/home"
+       routerLinkActive="nav-link-active"
+       [routerLinkActiveOptions]="{ exact: true }"
+       (click)="onNavigate()"
+       class="nav-link group">
+      <span class="nav-icon">
+        <i class="bx bxs-dashboard text-lg"></i>
+      </span>
+      <span class="nav-text">Dashboard</span>
+    </a>
+
+    <a routerLink="/app/users"
+       routerLinkActive="nav-link-active"
+       (click)="onNavigate()"
+       class="nav-link group">
+      <span class="nav-icon">
+        <i class="bx bxs-user-detail text-lg"></i>
+      </span>
+      <span class="nav-text">Usuarios</span>
+    </a>
+
+    <a routerLink="/app/access"
+       routerLinkActive="nav-link-active"
+       (click)="onNavigate()"
+       class="nav-link group">
+      <span class="nav-icon">
+        <i class="bx bxs-lock-alt text-lg"></i>
+      </span>
+      <span class="nav-text">Accesos</span>
+    </a>
+
+    <p class="nav-section-label mt-6">Configuración</p>
+
+    <a routerLink="/app/dashboard/settings"
+       routerLinkActive="nav-link-active"
+       (click)="onNavigate()"
+       class="nav-link group">
+      <span class="nav-icon">
+        <i class="bx bxs-cog text-lg"></i>
+      </span>
+      <span class="nav-text">Ajustes</span>
+    </a>
+  </nav>
+
+  <!-- User Section -->
+  <footer class="border-t border-[#e8e8e8] p-4">
+    <div class="flex items-center gap-3 rounded-xl px-3 py-3 bg-[#f7f7f7]">
+      <div class="user-avatar">
+        <span class="text-[11px] font-bold text-[#ffffff]">{{ userInitials() }}</span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-[13px] font-semibold text-[#333333] truncate leading-tight">
+          {{ userName() }}
+        </p>
+        <p class="text-[11px] text-[#999999] truncate leading-tight mt-0.5">
+          {{ userEmail() }}
+        </p>
+      </div>
+    </div>
+  </footer>
+</aside>
+
+<!-- Mobile Overlay -->
+@if (isOpen()) {
+  <div
+    class="fixed inset-0 bg-[#333333]/40 backdrop-blur-sm z-40 md:hidden sidebar-overlay"
+    (click)="closeSidebar.emit()"
+    role="button"
+    aria-label="Cerrar menú">
+  </div>
+}

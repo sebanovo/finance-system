@@ -1,0 +1,100 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="space-y-6">
+    <!-- Error Message Alert -->
+    <div *ngIf="errorMessage()" class="rounded border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
+        {{ errorMessage() }}
+    </div>
+
+    <!-- Company Name -->
+    <div>
+        <label for="companyName" class="block text-sm font-medium text-foreground">Nombre de la Empresa</label>
+        <input id="companyName" type="text" formControlName="companyName" placeholder="Mi Empresa S.A."
+            class="mt-2 w-full rounded border border-input bg-background px-4 py-2 text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
+            [class.border-destructive]="hasFieldError('companyName')" />
+        <p *ngIf="hasFieldError('companyName')" class="mt-1 text-xs text-destructive">
+            {{ getFieldError("companyName") }}
+        </p>
+    </div>
+
+    <!-- Tenant Slug -->
+    <div>
+        <label for="tenantSlug" class="block text-sm font-medium text-foreground">Slug del Tenant (URL)</label>
+        <input id="tenantSlug" type="text" formControlName="tenantSlug" placeholder="mi-empresa"
+            class="mt-2 w-full rounded border border-input bg-background px-4 py-2 text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
+            [class.border-destructive]="hasFieldError('tenantSlug')" />
+        <p *ngIf="hasFieldError('tenantSlug')" class="mt-1 text-xs text-destructive">
+            {{ getFieldError("tenantSlug") }}
+        </p>
+        <p class="mt-1 text-xs text-muted-foreground">
+            Solo letras, números y guiones. Ejemplo: mi-empresa
+        </p>
+    </div>
+
+    <!-- Admin Email -->
+    <div>
+        <label for="adminEmail" class="block text-sm font-medium text-foreground">Email del Administrador</label>
+        <input id="adminEmail" type="email" formControlName="adminEmail" placeholder="admin@empresa.com"
+            class="mt-2 w-full rounded border border-input bg-background px-4 py-2 text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
+            [class.border-destructive]="hasFieldError('adminEmail')" />
+        <p *ngIf="hasFieldError('adminEmail')" class="mt-1 text-xs text-destructive">
+            {{ getFieldError("adminEmail") }}
+        </p>
+    </div>
+
+    <!-- First Name -->
+    <div>
+        <label for="firstName" class="block text-sm font-medium text-foreground">Nombre</label>
+        <input id="firstName" type="text" formControlName="firstName" placeholder="Juan"
+            class="mt-2 w-full rounded border border-input bg-background px-4 py-2 text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
+            [class.border-destructive]="hasFieldError('firstName')" />
+        <p *ngIf="hasFieldError('firstName')" class="mt-1 text-xs text-destructive">
+            {{ getFieldError("firstName") }}
+        </p>
+    </div>
+
+    <!-- Last Name -->
+    <div>
+        <label for="lastName" class="block text-sm font-medium text-foreground">Apellido</label>
+        <input id="lastName" type="text" formControlName="lastName" placeholder="García"
+            class="mt-2 w-full rounded border border-input bg-background px-4 py-2 text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
+            [class.border-destructive]="hasFieldError('lastName')" />
+        <p *ngIf="hasFieldError('lastName')" class="mt-1 text-xs text-destructive">
+            {{ getFieldError("lastName") }}
+        </p>
+    </div>
+
+    <!-- Password -->
+    <div>
+        <label for="password" class="block text-sm font-medium text-foreground">Contraseña</label>
+        <input id="password" type="password" formControlName="password" placeholder="••••••••"
+            class="mt-2 w-full rounded border border-input bg-background px-4 py-2 text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
+            [class.border-destructive]="hasFieldError('password')" />
+        <p *ngIf="hasFieldError('password')" class="mt-1 text-xs text-destructive">
+            {{ getFieldError("password") }}
+        </p>
+    </div>
+
+    <!-- Confirm Password -->
+    <div>
+        <label for="confirmPassword" class="block text-sm font-medium text-foreground">Confirmar Contraseña</label>
+        <input id="confirmPassword" type="password" formControlName="confirmPassword" placeholder="••••••••"
+            class="mt-2 w-full rounded border border-input bg-background px-4 py-2 text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
+            [class.border-destructive]="hasFieldError('confirmPassword')" />
+        <p *ngIf="hasFieldError('confirmPassword')" class="mt-1 text-xs text-destructive">
+            {{ getFieldError("confirmPassword") }}
+        </p>
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit" [disabled]="isSubmitting()"
+        class="w-full rounded bg-primary px-4 py-2 font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50">
+        {{ isSubmitting() ? "Registrando..." : "Crear Cuenta" }}
+    </button>
+
+    <!-- Login Link -->
+    <p class="text-center text-sm text-muted-foreground">
+        ¿Ya tienes cuenta?
+        <a routerLink="/auth/login" class="font-semibold text-foreground hover:underline">
+            Inicia sesión aquí
+        </a>
+    </p>
+</form>

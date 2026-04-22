@@ -5,8 +5,8 @@ export type User = {
   lastName: string;
   isActive: boolean;
   status: string;
-  createdAt: string; //Date
-  updatedAt: string; //Date
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 export type UpdateUserRequest = {
