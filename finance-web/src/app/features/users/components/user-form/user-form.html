@@ -6,12 +6,12 @@
 >
   
   @if (submitError(); as error) {
-    <hlm-alert class="border-l-4 border-l-[#333333] bg-[#f5f5f5] text-[#333333] shadow-sm" aria-live="assertive">
+    <hlm-alert class="border-l-4 border-l-[#2E7D32] bg-[#E8F5E9] text-[#2E7D32] shadow-sm" aria-live="assertive">
       <div class="flex items-start gap-3">
-        <ng-icon name="lucideAlertCircle" class="mt-0.5 text-[#333333]" />
+        <ng-icon name="lucideAlertCircle" class="mt-0.5 text-[#2E7D32]" />
         <div class="flex-1">
           <h4 hlmAlertTitle class="text-base font-semibold">No se pudo procesar la solicitud</h4>
-          <p hlmAlertDescription class="mt-1 text-sm text-[#666666] leading-relaxed whitespace-normal break-words">
+          <p hlmAlertDescription class="mt-1 text-sm text-[#4CAF50] leading-relaxed whitespace-normal break-words">
             {{ error.message || "Ocurrió un error inesperado al comunicarse con el servidor." }}
           </p>
         </div>
@@ -20,9 +20,9 @@
   }
 
   @if (form.invalid && (form.touched || form.dirty)) {
-    <hlm-alert aria-live="polite" class="border border-[#cccccc] bg-[#fafafa]">
-      <ng-icon name="lucideAlertCircle" class="text-[#666666]" />
-      <h4 hlmAlertTitle class="text-[#333333] font-semibold">Revisa los campos</h4>
+    <hlm-alert aria-live="polite" class="border border-[#C8E6C9] bg-[#F1F8E9]">
+      <ng-icon name="lucideAlertCircle" class="text-[#4CAF50]" />
+      <h4 hlmAlertTitle class="text-[#2E7D32] font-semibold">Revisa los campos</h4>
       <p hlmAlertDescription class="text-sm text-[#666666]">
         Hay información obligatoria o con formato inválido. Corrígela antes de guardar.
       </p>
@@ -31,14 +31,14 @@
 
   <div class="grid gap-6 md:grid-cols-2">
     <div hlmField class="space-y-1.5">
-      <label hlmLabel for="firstName" class="text-xs font-semibold uppercase tracking-wider text-[#666666]">Nombre</label>
+      <label hlmLabel for="firstName" class="text-xs font-semibold uppercase tracking-wider text-[#2E7D32]">Nombre</label>
       <input
         id="firstName"
         hlmInput
         type="text"
         formControlName="firstName"
         placeholder="Ej. Juan"
-        class="border-[#cccccc] focus-visible:ring-[#333333] focus-visible:border-[#333333] text-[#333333]"
+        class="border-[#C8E6C9] focus-visible:ring-[#4CAF50] focus-visible:border-[#4CAF50] text-[#2E7D32]"
       />
       @if (hasFieldError("firstName")) {
         <p hlmError class="text-xs font-medium text-[#666666]">{{ getFieldError("firstName") }}</p>
@@ -46,14 +46,14 @@
     </div>
 
     <div hlmField class="space-y-1.5">
-      <label hlmLabel for="lastName" class="text-xs font-semibold uppercase tracking-wider text-[#666666]">Apellido</label>
+      <label hlmLabel for="lastName" class="text-xs font-semibold uppercase tracking-wider text-[#2E7D32]">Apellido</label>
       <input
         id="lastName"
         hlmInput
         type="text"
         formControlName="lastName"
         placeholder="Ej. Pérez"
-        class="border-[#cccccc] focus-visible:ring-[#333333] focus-visible:border-[#333333] text-[#333333]"
+        class="border-[#C8E6C9] focus-visible:ring-[#4CAF50] focus-visible:border-[#4CAF50] text-[#2E7D32]"
       />
       @if (hasFieldError("lastName")) {
         <p hlmError class="text-xs font-medium text-[#666666]">{{ getFieldError("lastName") }}</p>
@@ -62,14 +62,14 @@
   </div>
 
   <div hlmField class="space-y-1.5">
-    <label hlmLabel for="email" class="text-xs font-semibold uppercase tracking-wider text-[#666666]">Correo electrónico</label>
+    <label hlmLabel for="email" class="text-xs font-semibold uppercase tracking-wider text-[#2E7D32]">Correo electrónico</label>
     <input
       id="email"
       hlmInput
       type="email"
       formControlName="email"
       placeholder="correo@ejemplo.com"
-      class="border-[#cccccc] focus-visible:ring-[#333333] focus-visible:border-[#333333] text-[#333333]"
+      class="border-[#C8E6C9] focus-visible:ring-[#4CAF50] focus-visible:border-[#4CAF50] text-[#2E7D32]"
     />
     @if (hasFieldError("email")) {
       <p hlmError class="text-xs font-medium text-[#666666]">{{ getFieldError("email") }}</p>
@@ -78,7 +78,7 @@
 
   @if (showPasswordField()) {
     <div hlmField class="space-y-1.5">
-      <label hlmLabel for="password" class="text-xs font-semibold uppercase tracking-wider text-[#666666]">Contraseña de acceso</label>
+      <label hlmLabel for="password" class="text-xs font-semibold uppercase tracking-wider text-[#2E7D32]">Contraseña de acceso</label>
       <input
         id="password"
         hlmInput
@@ -86,7 +86,7 @@
         formControlName="password"
         placeholder="••••••••"
         [attr.aria-invalid]="hasFieldError('password')"
-        class="border-[#cccccc] focus-visible:ring-[#333333] focus-visible:border-[#333333] text-[#333333]"
+        class="border-[#C8E6C9] focus-visible:ring-[#4CAF50] focus-visible:border-[#4CAF50] text-[#2E7D32]"
       />
       @if (hasFieldError("password")) {
         <p hlmError class="text-xs font-medium text-[#666666]">{{ getFieldError("password") }}</p>
@@ -94,7 +94,7 @@
     </div>
   } @else if (showPasswordAsReadOnly()) {
     <div hlmField class="space-y-1.5">
-      <label hlmLabel for="passwordReadonly" class="text-xs font-semibold uppercase tracking-wider text-[#666666]">Contraseña</label>
+      <label hlmLabel for="passwordReadonly" class="text-xs font-semibold uppercase tracking-wider text-[#2E7D32]">Contraseña</label>
       <input
         id="passwordReadonly"
         hlmInput
@@ -102,7 +102,7 @@
         value="••••••••"
         disabled
         aria-readonly="true"
-        class="bg-[#f5f5f5] border-[#cccccc] text-[#999999] cursor-not-allowed"
+        class="bg-[#F1F8E9] border-[#C8E6C9] text-[#999999] cursor-not-allowed"
       />
       <p class="text-xs text-[#999999] mt-1">
         Por seguridad, la contraseña no puede editarse desde este panel.
@@ -110,26 +110,26 @@
     </div>
   }
 
-  <div class="flex items-center justify-end gap-3 pt-4 border-t border-[#cccccc]/30 mt-8">
+  <div class="flex items-center justify-end gap-3 pt-4 border-t border-[#C8E6C9]/30 mt-8">
     <button
       type="button"
       hlmBtn
       variant="outline"
       [disabled]="submitting()"
       (click)="onCancel()"
-      class="border-[#cccccc] text-[#666666] hover:bg-[#f5f5f5] hover:text-[#333333] transition-colors cursor-pointer"
+      class="border-[#C8E6C9] text-[#4CAF50] hover:bg-[#E8F5E9] hover:text-[#2E7D32] transition-colors cursor-pointer"
     >
       Cancelar
     </button>
 
     <button type="submit" hlmBtn [disabled]="submitting() || form.invalid"
-            class="bg-[#333333] text-[#ffffff] hover:bg-[#666666] transition-all disabled:opacity-50 disabled:bg-[#999999] cursor-pointer">
+            class="bg-[#2E7D32] text-white hover:bg-[#4CAF50] transition-all disabled:opacity-50 disabled:bg-[#C8E6C9] cursor-pointer">
       @if (submitting()) {
-        <ng-icon name="lucideLoader2" class="mr-2 size-4 animate-spin text-[#ffffff]" />
+        <ng-icon name="lucideLoader2" class="mr-2 size-4 animate-spin text-white" />
         Procesando...
       } @else {
         {{ submitLabel() }}
       }
-    </button>
+      </button>
   </div>
 </form>
