@@ -80,7 +80,7 @@ networks:
     name: finance-system_finance-net
     driver: bridge
 
-#CON NGINX DESACOPLADO DEL FRONTEND (MANUAL)
+# CON NGINX DESACOPLADO DEL FRONTEND (MANUAL)
 # services:
 #   serv-finance-db:
 #     image: postgres:16
