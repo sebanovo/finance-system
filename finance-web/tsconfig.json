@@ -14,8 +14,6 @@
     "target": "ES2022",
     "module": "preserve",
     "paths": {
-      "@app": ["./src/app"],
-      "@app/*": ["./src/app/*"],
       "@shared/ui/button": ["./src/app/shared/ui/button/src/index.ts"],
       "@shared/ui/utils": ["./src/app/shared/ui/utils/src/index.ts"],
       "@shared/ui/select": ["./src/app/shared/ui/select/src/index.ts"],
@@ -37,7 +35,19 @@
       "@shared/ui/alert": ["./src/app/shared/ui/alert/src/index.ts"],
       "@shared/ui/empty": ["./src/app/shared/ui/empty/src/index.ts"],
       "@shared/ui/skeleton": ["./src/app/shared/ui/skeleton/src/index.ts"],
-      "@shared/ui/sonner": ["./src/app/shared/ui/sonner/src/index.ts"]
+      "@shared/ui/sonner": ["./src/app/shared/ui/sonner/src/index.ts"],
+      "@shared/ui/toggle": ["./src/app/shared/ui/toggle/src/index.ts"],
+      "@shared/ui/toggle-group": [
+        "./src/app/shared/ui/toggle-group/src/index.ts"
+      ],
+      "@shared/ui/switch": ["./src/app/shared/ui/switch/src/index.ts"],
+      "@shared/ui/checkbox": ["./src/app/shared/ui/checkbox/src/index.ts"],
+      "@shared/ui/sidebar": ["./src/app/shared/ui/sidebar/src/index.ts"],
+      "@shared/ui/input-group": [
+        "./src/app/shared/ui/input-group/src/index.ts"
+      ],
+      "@shared/ui/textarea": ["./src/app/shared/ui/textarea/src/index.ts"],
+      "@shared/ui/popover": ["./src/app/shared/ui/popover/src/index.ts"]
     }
   },
   "angularCompilerOptions": {
@@ -47,7 +57,6 @@
     "strictTemplates": true
   },
   "files": [],
-  "exclude": ["./src-walter"],
   "references": [
     {
       "path": "./tsconfig.app.json"

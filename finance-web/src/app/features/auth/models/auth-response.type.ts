@@ -1,5 +1,3 @@
-import { AuthMeData } from "./auth-request.type";
-
 export type LoginData = {
   tokenType: string;
   accessToken: string;
@@ -17,10 +15,10 @@ export type LoginResponse<T> = {
 /**
  * AuthMe type
  */
-export type AuthMeResponse = {
+export type AuthMeResponse<T> = {
   success: true;
   message: string;
-  data: AuthMeData;
+  data: T;
   timestamp: string;
 };
 
@@ -49,4 +47,35 @@ export type RefreshResponse = {
   message: string;
   data: RefreshData;
   timestamp: string;
+};
+
+export type SignupResponseDataDto = {
+  tenantId: string; // UUID
+  tenantSlug: string;
+  companyName: string;
+  adminEmail: string;
+  initialRole: string;
+  currentPlanCode: string;
+  subscriptionStatus: string;
+  trialExpiresAt: string; // ISO date string
+  loginHint: string;
+};
+
+export type SignupResponse<T> = {
+  success: boolean;
+  message: string;
+  data: T;
+  timestamp: string; // ISO date string
+};
+
+export type SignupData = {
+  tenantId: string; // UUID
+  tenantSlug: string;
+  companyName: string;
+  adminEmail: string;
+  initialRole: string;
+  currentPlanCode: string;
+  subscriptionStatus: string;
+  trialExpiresAt: string; // ISO date string
+  loginHint: string;
 };
