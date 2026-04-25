@@ -52,6 +52,9 @@ finance-system/
 En la raiz jecutar
 ```bash
 cp .env.sample .env
+
+# modifica el .env.sample BASE_URL en flutter
+cp .env finance_mobile/.env
 ```
 
 ```bash
