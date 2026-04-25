@@ -31,7 +31,7 @@ services:
       - finance-net
 
   serv-finance-api:
-    image: TU_USUARIO/finance-api:1.0.0
+    image: sebastiandevjs/finance-api:1.0.0
     restart: unless-stopped
     depends_on:
       serv-finance-db:
@@ -43,7 +43,7 @@ services:
       - finance-net
 
   serv-finance-web:
-    image: TU_USUARIO/finance-web:1.0.0
+    image: sebastiandevjs/finance-web:1.0.0
     restart: unless-stopped
     depends_on:
       - serv-finance-api
@@ -52,7 +52,7 @@ services:
       - finance-net
 
   serv-finance-flutter-web:
-    image: TU_USUARIO/finance-flutter-web:1.0.0
+    image: sebastiandevjs/finance-flutter-web:1.0.0
     restart: unless-stopped
     networks:
       - finance-net
@@ -65,6 +65,8 @@ services:
       - serv-finance-web
       - serv-finance-api
       - serv-finance-flutter-web
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
       - "80:80"
     networks:
