@@ -4,17 +4,18 @@
 
 ## 🏗 Estructura del proyecto
 
-backend `finance-api` desarrollado con FastAPI <br>
+Frontend `finance_mobile` en flutter <br>
+Backend `finance-api` desarrollado con FastAPI <br>
 Frontend `finance-web` en Angular.
 
 ```
 finance-system/
-├── finance_mobil/
+├── finance_mobile/
 |   ├── assets/               # Imagenes
 |   ├── lib/                  # Codigo fuente
 |   ├── pubspec.yaml          # Librerias y configuración
 │   └── ...
-|
+│
 ├── finance-api/               # Backend (Spring boot)
 │   ├── .devcontainer/         # Configuración para entorno de desarrollo
 │   │   ├── Dockerfile
@@ -90,7 +91,6 @@ docker volume prune
 
    ```bash
    docker compose up --build serv-finance-db
-
    ```
 
 3. **Abrir el Command Palette**
@@ -130,6 +130,12 @@ docker volume prune
 	  src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/angularjs/angularjs-original.svg"
 	  width="60px"
 	  alt="Angular">
+
+  <img 
+    src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/flutter/flutter-original.svg" 
+    width="60px"
+    alt="Flutter"/>   
+
   <img
     src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/postgresql/postgresql-original-wordmark.svg"
     width="60px"
