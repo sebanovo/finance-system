@@ -1,0 +1,33 @@
+# 🏗️ 1. BUILD FLUTTER
+FROM ghcr.io/cirruslabs/flutter:stable AS build
+
+WORKDIR /app
+
+# copiar proyecto
+COPY . .
+
+# habilitar web
+RUN flutter config --enable-web
+
+# instalar dependencias
+RUN flutter pub get
+
+# 🔥 build para servir en /flutter
+RUN flutter build web --release --base-href "/flutter/"
+
+# 🌐 2. SERVIR CON NGINX
+FROM nginx:stable-alpine
+
+# eliminar config default
+RUN rm -rf /etc/nginx/conf.d/default.conf
+
+# copiar config nginx
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# copiar build generado
+COPY --from=build /app/build/web /usr/share/nginx/html
+
+EXPOSE 80
+
+# mantener nginx en foreground
+CMD ["nginx", "-g", "daemon off;"]
