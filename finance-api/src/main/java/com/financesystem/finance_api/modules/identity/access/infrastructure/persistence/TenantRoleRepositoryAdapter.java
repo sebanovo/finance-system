@@ -21,7 +21,7 @@ public class TenantRoleRepositoryAdapter implements TenantRoleRepository {
     @Override
     public TenantRole save(TenantRole tenantRole) {
         TenantRoleEntity entity = toEntity(tenantRole);
-        TenantRoleEntity saved = jpaRepository.save(entity);
+        TenantRoleEntity saved = jpaRepository.saveAndFlush(entity);
         return toDomain(saved);
     }
 
