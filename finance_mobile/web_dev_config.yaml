@@ -4,3 +4,6 @@ server:
   # https: # esto hacer despues
   #   cert-path: "/path/to/cert.pem" # Path <string> to your TLS certificate
   #   cert-key-path: "/path/to/key.pem" # Path <string> to TLS certificate key
+  proxy:
+    - target: "http://localhost:8080/" # Base URL <string> of your backend
+      prefix: "/api/" # Path <string>
