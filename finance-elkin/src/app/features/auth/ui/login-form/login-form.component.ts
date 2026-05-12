@@ -1,0 +1,38 @@
+import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { LoginRequest } from '../../../../entities/auth/model/login-request.model';
+
+@Component({
+  selector: 'app-login-form',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
+  templateUrl: './login-form.component.html'
+})
+export class LoginFormComponent {
+  @Input() status: 'idle' | 'loading' | 'success' | 'error' = 'idle';
+  @Input() error: string | null = null;
+  
+  @Output() loginSubmit = new EventEmitter<LoginRequest>();
+
+  private readonly fb = inject(FormBuilder);
+
+  loginForm: FormGroup = this.fb.group({
+    tenantSlug: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)]],
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(8)]]
+  });
+
+  onSubmit(): void {
+    if (this.loginForm.valid && this.status !== 'loading') {
+      this.loginSubmit.emit(this.loginForm.value);
+    } else {
+      this.loginForm.markAllAsTouched();
+    }
+  }
+
+  isFieldInvalid(fieldName: string): boolean {
+    const field = this.loginForm.get(fieldName);
+    return field ? field.invalid && (field.dirty || field.touched) : false;
+  }
+}
