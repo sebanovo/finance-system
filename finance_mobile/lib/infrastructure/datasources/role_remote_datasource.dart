@@ -1,9 +1,11 @@
 import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../models/role.dart';
+import '../../../domain/usecases/create_role_usecase.dart';
 
 abstract class RoleRemoteDataSource {
   Future<List<RoleModel>> getRoles();
+  Future<RoleModel> createRole(CreateRoleParams params);
 }
 
 class RoleRemoteDataSourceImpl implements RoleRemoteDataSource {
@@ -21,6 +23,30 @@ class RoleRemoteDataSourceImpl implements RoleRemoteDataSource {
         return data.map((json) => RoleModel.fromJson(json)).toList();
       } else {
         throw Exception(decoded['message'] ?? 'Error al obtener roles');
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw Exception('Sesión expirada');
+      }
+      throw Exception('Error de conexión: ${e.message}');
+    } catch (e) {
+      throw Exception('Error inesperado: $e');
+    }
+  }
+
+  @override
+  Future<RoleModel> createRole(CreateRoleParams params) async {
+    try {
+      final response = await apiClient.post('/api/access/roles', {
+        'name': params.name,
+        'description': params.description,
+        'permissionCodes': params.permissionCodes,
+      });
+      final Map<String, dynamic> decoded = response.data;
+      if (decoded['success'] == true) {
+        return RoleModel.fromJson(decoded['data']);
+      } else {
+        throw Exception(decoded['message'] ?? 'Error al crear rol');
       }
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {

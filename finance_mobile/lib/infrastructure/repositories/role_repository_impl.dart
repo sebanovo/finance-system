@@ -1,5 +1,6 @@
 import '../../../domain/entities/role.dart';
 import '../../../domain/repositories/role_repository.dart';
+import '../../../domain/usecases/create_role_usecase.dart';
 import '../datasources/role_remote_datasource.dart';
 
 class RoleRepositoryImpl implements RoleRepository {
@@ -11,5 +12,11 @@ class RoleRepositoryImpl implements RoleRepository {
   Future<List<Role>> getRoles() async {
     final models = await remoteDataSource.getRoles();
     return models.map((model) => model.toEntity()).toList();
+  }
+
+  @override
+  Future<Role> createRole(CreateRoleParams params) async {
+    final model = await remoteDataSource.createRole(params);
+    return model.toEntity();
   }
 }

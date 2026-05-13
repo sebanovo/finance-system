@@ -277,15 +277,16 @@ PENDING_APPROVAL
 
 # Significado de Estados
 
-| Estado | Descripción |
-|---|---|
-| ACTIVE | Cuenta operativa |
-| BLOCKED | Cuenta bloqueada administrativamente |
-| SUSPENDED | Cuenta suspendida temporalmente |
-| FROZEN | Fondos congelados preventivamente |
-| CLOSED | Cuenta cerrada permanentemente |
-| PENDING_VERIFICATION | Requiere validación/KYC |
-| PENDING_APPROVAL | Requiere aprobación manual |
+| ESTADO               | DESCRIPCIÓN                           |
+|----------------------|---------------------------------------|
+| ACTIVE               | Cuenta operativa                      |
+| BLOCKED              | Cuenta bloqueada administrativamente  |
+| SUSPENDED            | Cuenta suspendida temporalmente       |
+| FROZEN               | Fondos congelados preventivamente     |
+| CLOSED               | Cuenta cerrada permanentemente        |
+| PENDING_VERIFICATION | Requiere validación/KYC               |
+| PENDING_APPROVAL     | Requiere aprobación manual            |
+
 
 ---
 

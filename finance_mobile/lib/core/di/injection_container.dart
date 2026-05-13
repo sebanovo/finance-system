@@ -10,6 +10,7 @@ import 'package:finance_mobile/domain/usecases/create_user_usecase.dart';
 import 'package:finance_mobile/domain/usecases/forgot_password_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_available_roles_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_permissions_usecase.dart';
+import 'package:finance_mobile/domain/usecases/create_role_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_roles_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_subscription_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_user_info_usecase.dart';
@@ -71,7 +72,13 @@ void initRoleModule() {
   );
   sl.registerLazySingleton<RoleRepository>(() => RoleRepositoryImpl(sl()));
   sl.registerLazySingleton(() => GetRolesUsecase(sl()));
-  sl.registerFactory(() => RolesViewModel(sl()));
+  sl.registerLazySingleton(() => CreateRoleUseCase(sl()));
+  sl.registerFactory(
+    () => RolesViewModel(
+      getRolesUseCase: sl(),
+      createRoleUseCase: sl(),
+    ),
+  );
 }
 
 void initAuthModule() {
