@@ -25,6 +25,12 @@ public class TenantRoleEntity {
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
+    @PrePersist
+    public void prePersist() {
+        Instant now = Instant.now();
+        this.createdAt = now;
+    }
+
     public UUID getId() {
         return id;
     }

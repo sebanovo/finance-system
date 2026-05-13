@@ -27,6 +27,16 @@ public final class AuditEventTypes {
     public static final String PASSWORD_RESET_REQUESTED = "PASSWORD_RESET_REQUESTED";
     public static final String PASSWORD_RESET_COMPLETED = "PASSWORD_RESET_COMPLETED";
 
+    //NEW EVENTS
+    public static final String ACCOUNT_CREATED = "ACCOUNT_CREATED";
+    public static final String ACCOUNT_UPDATED = "ACCOUNT_UPDATED";
+    public static final String ACCOUNT_ACTIVATED = "ACCOUNT_ACTIVATED";
+    public static final String ACCOUNT_BLOCKED = "ACCOUNT_BLOCKED";
+    public static final String ACCOUNT_FROZEN = "ACCOUNT_FROZEN";
+    public static final String ACCOUNT_CLOSED = "ACCOUNT_CLOSED";
+    public static final String ACCOUNT_ALIAS_UPDATED = "ACCOUNT_ALIAS_UPDATED";
+    public static final String ACCOUNT_APPROVAL_REQUESTED = "ACCOUNT_APPROVAL_REQUESTED";
+
     private AuditEventTypes() {
     }
 }
