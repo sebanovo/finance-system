@@ -79,8 +79,9 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
 
   // Validaciones
   String? _validateTenant(String? value) {
-    if (value == null || value.trim().isEmpty)
+    if (value == null || value.trim().isEmpty) {
       return 'El slug del tenant es obligatorio';
+    }
     return null;
   }
 
@@ -90,20 +91,17 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   }
 
   String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty)
+    if (value == null || value.isEmpty) {
       return 'La nueva contraseña es obligatoria';
-    if (value.length < 8) return 'Debe tener al menos 8 caracteres';
-    if (!value.contains(RegExp(r'[0-9]')))
-      return 'Debe contener al menos un dígito';
-    if (!value.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
-      return 'Debe contener al menos un carácter especial';
     }
+    if (value.length < 8) return 'Debe tener al menos 8 caracteres';
     return null;
   }
 
   String? _validateConfirmPassword(String? value) {
-    if (value != newPasswordController.text)
+    if (value != newPasswordController.text) {
       return 'Las contraseñas no coinciden';
+    }
     return null;
   }
 

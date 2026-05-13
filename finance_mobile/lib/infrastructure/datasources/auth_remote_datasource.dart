@@ -2,7 +2,7 @@ import '../../../../core/network/api_client.dart';
 import '../models/login_request.dart';
 import '../models/login_response.dart';
 import '../models/signup_request.dart';
-import '../models/forgot_password_request.dart'; // crearemos
+import '../models/forgot_password_request.dart';
 
 abstract class AuthRemoteDataSource {
   Future<LoginResponse> login(String email, String password, String tenantSlug);

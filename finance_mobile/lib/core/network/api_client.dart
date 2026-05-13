@@ -15,6 +15,7 @@ class ApiClient {
             "Content-Type": "application/json",
             "Accept": "application/json",
           },
+          validateStatus: (status) => status != null && status < 500,
         ),
       ) {
     // Interceptor para agregar headers dinámicos

@@ -190,7 +190,7 @@ class _UsersPageState extends State<UsersPage> {
             ),
             content: DropdownButtonFormField<String>(
               decoration: const InputDecoration(labelText: 'Selecciona un rol'),
-              value: selectedRoleId,
+              initialValue: selectedRoleId,
               items: _viewModel.availableRoles.map((role) {
                 return DropdownMenuItem<String>(
                   value: role.id,
