@@ -12,6 +12,10 @@ import 'package:finance_mobile/domain/usecases/get_available_roles_usecase.dart'
 import 'package:finance_mobile/domain/usecases/get_permissions_usecase.dart';
 import 'package:finance_mobile/domain/usecases/create_role_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_roles_usecase.dart';
+import 'package:finance_mobile/domain/usecases/activate_role_usecase.dart';
+import 'package:finance_mobile/domain/usecases/deactivate_role_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_role_usecase.dart';
+import 'package:finance_mobile/domain/usecases/update_role_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_subscription_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_user_info_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_user_roles_usecase.dart';
@@ -73,10 +77,17 @@ void initRoleModule() {
   sl.registerLazySingleton<RoleRepository>(() => RoleRepositoryImpl(sl()));
   sl.registerLazySingleton(() => GetRolesUsecase(sl()));
   sl.registerLazySingleton(() => CreateRoleUseCase(sl()));
+  sl.registerLazySingleton(() => ActivateRoleUseCase(sl()));
+  sl.registerLazySingleton(() => DeactivateRoleUseCase(sl()));
+  sl.registerLazySingleton(() => GetRoleUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateRoleUseCase(sl()));
   sl.registerFactory(
     () => RolesViewModel(
       getRolesUseCase: sl(),
       createRoleUseCase: sl(),
+      activateRoleUseCase: sl(),
+      deactivateRoleUseCase: sl(),
+      updateRoleUseCase: sl(),
     ),
   );
 }

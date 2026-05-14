@@ -1,21 +1,31 @@
 import 'package:flutter/material.dart';
 import '../../../../domain/usecases/get_roles_usecase.dart';
 import '../../../../domain/usecases/create_role_usecase.dart';
+import '../../../../domain/usecases/activate_role_usecase.dart';
+import '../../../../domain/usecases/deactivate_role_usecase.dart';
+import '../../../../domain/usecases/update_role_usecase.dart';
 import '../../../../domain/entities/role.dart';
 
 class RolesViewModel extends ChangeNotifier {
   final GetRolesUsecase getRolesUseCase;
   final CreateRoleUseCase createRoleUseCase;
+  final ActivateRoleUseCase activateRoleUseCase;
+  final DeactivateRoleUseCase deactivateRoleUseCase;
+  final UpdateRoleUseCase updateRoleUseCase;
 
   List<Role> _roles = [];
   bool _loading = false;
   bool _creating = false;
   String? _errorMessage;
   bool _roleCreated = false;
+  bool _toggling = false;
 
   RolesViewModel({
     required this.getRolesUseCase,
     required this.createRoleUseCase,
+    required this.activateRoleUseCase,
+    required this.deactivateRoleUseCase,
+    required this.updateRoleUseCase,
   });
 
   List<Role> get roles => _roles;
@@ -23,6 +33,7 @@ class RolesViewModel extends ChangeNotifier {
   bool get creating => _creating;
   String? get errorMessage => _errorMessage;
   bool get roleCreated => _roleCreated;
+  bool get toggling => _toggling;
 
   void clearRoleCreated() {
     _roleCreated = false;
@@ -53,6 +64,54 @@ class RolesViewModel extends ChangeNotifier {
     try {
       await createRoleUseCase(params);
       _roleCreated = true;
+      await loadRoles();
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+    } finally {
+      _creating = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> activateRole(String id) async {
+    _loading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await activateRoleUseCase(id);
+      await loadRoles(); // reload
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deactivateRole(String id) async {
+    _loading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await deactivateRoleUseCase(id);
+      await loadRoles(); // reload
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> updateRole(UpdateRoleParams params) async {
+    _creating = true; // use same loader flag or add another
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await updateRoleUseCase(params);
       await loadRoles();
     } catch (e) {
       _errorMessage = e.toString();

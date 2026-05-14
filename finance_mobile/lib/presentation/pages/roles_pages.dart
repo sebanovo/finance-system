@@ -4,6 +4,8 @@ import '../../core/di/injection_container.dart' as di;
 import '../viewmodels/roles_viewmodel.dart';
 import '../viewmodels/permissions_viewmodel.dart';
 import '../../domain/usecases/create_role_usecase.dart';
+import '../../domain/usecases/update_role_usecase.dart';
+import '../../domain/entities/role.dart';
 
 class RolesPage extends StatefulWidget {
   const RolesPage({super.key});
@@ -66,7 +68,6 @@ class _RolesPageState extends State<RolesPage> {
   }
 
   void _openCreateRoleDialog() {
-    // Esperar a que los permisos estén cargados
     if (_permissionsViewModel.permissions.isEmpty) {
       _showSnackBar('Cargando permisos, intenta nuevamente...');
       return;
@@ -78,12 +79,51 @@ class _RolesPageState extends State<RolesPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => _CreateRoleSheet(
+      builder: (context) => _RoleFormSheet(
         permissionsViewModel: _permissionsViewModel,
-        onSubmit: (params) async {
-          await _viewModel.createRole(params);
+        onSubmit: (name, desc, perms) async {
+          await _viewModel.createRole(
+            CreateRoleParams(
+              name: name,
+              description: desc,
+              permissionCodes: perms,
+            ),
+          );
           if (mounted && _viewModel.errorMessage == null) {
             Navigator.of(context).pop();
+          }
+        },
+      ),
+    );
+  }
+
+  void _openEditRoleDialog(Role role) {
+    if (_permissionsViewModel.permissions.isEmpty) {
+      _showSnackBar('Cargando permisos, intenta nuevamente...');
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => _RoleFormSheet(
+        permissionsViewModel: _permissionsViewModel,
+        roleToEdit: role,
+        onSubmit: (name, desc, perms) async {
+          await _viewModel.updateRole(
+            UpdateRoleParams(
+              id: role.id,
+              name: name,
+              description: desc,
+              permissionCodes: perms,
+            ),
+          );
+          if (mounted && _viewModel.errorMessage == null) {
+            Navigator.of(context).pop();
+            _showSnackBar('Rol actualizado exitosamente', isError: false);
           }
         },
       ),
@@ -163,74 +203,227 @@ class _RolesPageState extends State<RolesPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: role.active
-                      ? const Color(0xFFC8E6C9)
-                      : Colors.grey[300],
-                  child: Icon(
-                    Icons.security,
-                    color: role.active ? const Color(0xFF2E7D32) : Colors.grey,
-                  ),
-                ),
-                title: Text(
-                  role.name,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(role.description),
-                    const SizedBox(height: 4),
-                    // ✅ Mostrar permisos como chips (hasta 3)
-                    Wrap(
-                      spacing: 4,
-                      runSpacing: 2,
-                      children: role.permissionCodes.take(3).map((code) {
-                        return Chip(
-                          label: Text(code),
-                          labelStyle: const TextStyle(fontSize: 10),
-                          backgroundColor: const Color(0xFFE8F5E9),
-                          padding: EdgeInsets.zero,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                        );
-                      }).toList(),
+              // ✅ ExpansionTile para hacer el rol desplegable
+              child: Theme(
+                data: Theme.of(
+                  context,
+                ).copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
+                  leading: CircleAvatar(
+                    backgroundColor: role.active
+                        ? const Color(0xFFC8E6C9)
+                        : Colors.grey[300],
+                    child: Icon(
+                      Icons.security,
+                      color: role.active
+                          ? const Color(0xFF2E7D32)
+                          : Colors.grey,
                     ),
-                    if (role.permissionCodes.length > 3)
-                      Text(
-                        '... y ${role.permissionCodes.length - 3} más',
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey,
+                  ),
+                  title: Text(
+                    role.name,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(
+                    role.description,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: role.active
+                              ? Colors.green[100]
+                              : Colors.red[100],
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          role.active ? 'Activo' : 'Inactivo',
+                          style: TextStyle(
+                            color: role.active
+                                ? Colors.green[700]
+                                : Colors.red[700],
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                  ],
-                ),
-                trailing: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
+                      const SizedBox(width: 8),
+                      PopupMenuButton<String>(
+                        onSelected: (value) {
+                          if (value == 'edit') {
+                            _openEditRoleDialog(role);
+                          } else if (value == 'activate') {
+                            _viewModel.activateRole(role.id);
+                          } else if (value == 'deactivate') {
+                            _viewModel.deactivateRole(role.id);
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit, size: 18),
+                                SizedBox(width: 8),
+                                Text('Editar'),
+                              ],
+                            ),
+                          ),
+                          if (!role.active)
+                            const PopupMenuItem(
+                              value: 'activate',
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.check_circle,
+                                    size: 18,
+                                    color: Colors.green,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text('Activar'),
+                                ],
+                              ),
+                            ),
+                          if (role.active)
+                            const PopupMenuItem(
+                              value: 'deactivate',
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.block,
+                                    size: 18,
+                                    color: Colors.red,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text('Desactivar'),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
                   ),
-                  decoration: BoxDecoration(
-                    color: role.active ? Colors.green[100] : Colors.red[100],
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    role.active ? 'Activo' : 'Inactivo',
-                    style: TextStyle(
-                      color: role.active ? Colors.green[700] : Colors.red[700],
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+                  children: [
+                    // ✅ Contenido expandido del rol
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Divider(),
+                          const SizedBox(height: 8),
+                          // Descripción completa
+                          if (role.description.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Descripción',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    role.description,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          // Permisos
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Permisos asociados',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 6,
+                                children: role.permissionCodes.map((code) {
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE8F5E9),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: const Color(0xFFC8E6C9),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      code,
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        color: Color(0xFF2E7D32),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                              if (role.permissionCodes.isEmpty)
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    'No tiene permisos asignados',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          // Información adicional
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.schedule,
+                                size: 12,
+                                color: Colors.grey.shade500,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Creado: ${_formatDate(role.createdAt)}',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey.shade500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             );
           }).toList(),
         ),
-        // ✅ Overlay de carga mientras se crea el rol
-        if (_viewModel.creating)
+        // Overlay de carga
+        if (_viewModel.creating || _viewModel.toggling)
           Container(
             color: Colors.black26,
             child: const Center(child: CircularProgressIndicator()),
@@ -238,30 +431,52 @@ class _RolesPageState extends State<RolesPage> {
       ],
     );
   }
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return 'Fecha no disponible';
+    return '${date.day}/${date.month}/${date.year}';
+  }
 }
 
 // ─────────────────────────────────────────────
-// Create Role bottom sheet
+// Role Form bottom sheet (Create/Edit)
 // ─────────────────────────────────────────────
-class _CreateRoleSheet extends StatefulWidget {
+class _RoleFormSheet extends StatefulWidget {
   final PermissionsViewModel permissionsViewModel;
-  final Future<void> Function(CreateRoleParams) onSubmit;
+  final Role? roleToEdit;
+  final Future<void> Function(
+    String name,
+    String description,
+    List<String> permissions,
+  )
+  onSubmit;
 
-  const _CreateRoleSheet({
+  const _RoleFormSheet({
     required this.permissionsViewModel,
+    this.roleToEdit,
     required this.onSubmit,
   });
 
   @override
-  State<_CreateRoleSheet> createState() => _CreateRoleSheetState();
+  State<_RoleFormSheet> createState() => _RoleFormSheetState();
 }
 
-class _CreateRoleSheetState extends State<_CreateRoleSheet> {
+class _RoleFormSheetState extends State<_RoleFormSheet> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descController = TextEditingController();
   final Set<String> _selectedCodes = {};
   bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.roleToEdit != null) {
+      _nameController.text = widget.roleToEdit!.name;
+      _descController.text = widget.roleToEdit!.description;
+      _selectedCodes.addAll(widget.roleToEdit!.permissionCodes);
+    }
+  }
 
   @override
   void dispose() {
@@ -275,11 +490,9 @@ class _CreateRoleSheetState extends State<_CreateRoleSheet> {
 
     setState(() => _submitting = true);
     await widget.onSubmit(
-      CreateRoleParams(
-        name: _nameController.text.trim(),
-        description: _descController.text.trim(),
-        permissionCodes: _selectedCodes.toList(),
-      ),
+      _nameController.text.trim(),
+      _descController.text.trim(),
+      _selectedCodes.toList(),
     );
     setState(() => _submitting = false);
   }
@@ -307,7 +520,7 @@ class _CreateRoleSheetState extends State<_CreateRoleSheet> {
         child: Form(
           key: _formKey,
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: MainAxisSize.max,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Handle bar
@@ -322,9 +535,9 @@ class _CreateRoleSheetState extends State<_CreateRoleSheet> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Crear nuevo rol',
-                style: TextStyle(
+              Text(
+                widget.roleToEdit != null ? 'Editar rol' : 'Crear nuevo rol',
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF2E7D32),
@@ -383,7 +596,7 @@ class _CreateRoleSheetState extends State<_CreateRoleSheet> {
               const SizedBox(height: 8),
 
               // Permissions list
-              Flexible(
+              Expanded(
                 child: loadingPerms
                     ? const Center(child: CircularProgressIndicator())
                     : permissions.isEmpty
@@ -472,7 +685,13 @@ class _CreateRoleSheetState extends State<_CreateRoleSheet> {
                           ),
                         )
                       : const Icon(Icons.save_outlined),
-                  label: Text(_submitting ? 'Creando...' : 'Crear Rol'),
+                  label: Text(
+                    _submitting
+                        ? 'Guardando...'
+                        : (widget.roleToEdit != null
+                              ? 'Actualizar Rol'
+                              : 'Crear Rol'),
+                  ),
                 ),
               ),
             ],
