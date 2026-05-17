@@ -39,7 +39,7 @@ public class PlatformBootstrapService {
         logger.info("Seeding base platform plans...");
 
         List<PlanSeed> plans = List.of(
-                new PlanSeed("DEMO", "Demo", "Demo trial plan", 2, 2, "DEMO", 10),
+                new PlanSeed("DEMO", "Demo", "Demo trial plan", 5, 3, "DEMO", 10),
                 new PlanSeed("BASIC", "Basic", "Basic subscription plan", 10, 5, "PAID", null),
                 new PlanSeed("PRO", "Professional", "Professional subscription plan", 25, 10, "PAID", null),
                 new PlanSeed("ENTERPRISE", "Enterprise", "Enterprise subscription plan", 9999, 999, "PAID", null)

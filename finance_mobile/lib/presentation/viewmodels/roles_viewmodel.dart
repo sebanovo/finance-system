@@ -18,7 +18,7 @@ class RolesViewModel extends ChangeNotifier {
   bool _creating = false;
   String? _errorMessage;
   bool _roleCreated = false;
-  bool _toggling = false;
+  final bool _toggling = false;
 
   RolesViewModel({
     required this.getRolesUseCase,
