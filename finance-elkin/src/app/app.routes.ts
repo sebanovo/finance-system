@@ -10,8 +10,10 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./pages/dashboard-page/dashboard-page.component').then(m => m.DashboardPageComponent),
     children: [
-      { path: '', loadComponent: () => import('./pages/summary-page/summary-page.component').then(m => m.SummaryPageComponent)},
-      { path: 'users', loadComponent: () => import('./pages/users-page/users-page.component').then(m => m.UsersPageComponent)}
+      { path: 'summary', loadComponent: () => import('./pages/summary-page/summary-page.component').then(m => m.SummaryPageComponent)},
+      { path: 'users', loadComponent: () => import('./pages/users-page/users-page.component').then(m => m.UsersPageComponent)},
+      { path: 'roles', loadComponent: () => import('./pages/roles-page/roles-page.component').then(m => m.RolesPageComponent)},
+      { path: '', redirectTo: 'summary', pathMatch: 'full' }
     ]
   },
 

@@ -40,11 +40,21 @@ import { AuthFacade } from '../../shared/lib/auth/auth.facade';
             Configuración
           </a>
 
+          <!-- Categoría Accesos -->
+          <div class="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-6 mb-2">Accesos</div>
+          
           <a routerLink="/dashboard/users" 
              routerLinkActive="bg-sidebar-primary text-sidebar-primary-foreground"
              class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors mt-1">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             Usuarios
+          </a>
+          
+          <a routerLink="/dashboard/roles" 
+             routerLinkActive="bg-sidebar-primary text-sidebar-primary-foreground"
+             class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors mt-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+            Roles y Permisos
           </a>
         </nav>
 

@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TenantUserResponse } from '../../../../entities/user';
 
@@ -9,6 +9,10 @@ import { TenantUserResponse } from '../../../../entities/user';
   templateUrl: './user-table.component.html'
 })
 export class UserTableComponent {
-  // Componente puramente presentacional
   @Input() users: TenantUserResponse[] = [];
+  @Output() manageRoles = new EventEmitter<TenantUserResponse>();
+
+  onManageRoles(user: TenantUserResponse): void {
+    this.manageRoles.emit(user);
+  }
 }
