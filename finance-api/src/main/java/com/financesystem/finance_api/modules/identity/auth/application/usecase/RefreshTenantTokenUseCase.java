@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class RefreshTenantTokenUseCase {
@@ -62,23 +63,29 @@ public class RefreshTenantTokenUseCase {
             throw new AuthenticationFailedException("Refresh token tenant does not match current tenant");
         }
 
-        TenantUser tenantUser = tenantUserRepository.findByEmail(subject)
+        UUID userId = parseSubjectAsUserId(subject);
+
+        TenantUser tenantUser = tenantUserRepository.findById(userId)
                 .orElseThrow(() -> new AuthenticationFailedException("User not found for refresh token"));
 
         if (!tenantUser.active()) {
             throw new AuthenticationFailedException("User is inactive");
         }
 
-        List<String> roles = tenantUserRoleRepository.findRoleNamesByUserId(tenantUser.id());
+        List<String> roles = tenantUserRoleRepository.findRoleNamesByUserId(tenantUser.id()).stream()
+                .filter(this::isAuthorizableRole)
+                .toList();
+        List<String> permissions = tenantUserRoleRepository.findPermissionCodesByUserId(tenantUser.id());
 
         String newAccessToken = jwtTokenService.generateAccessToken(
-                tenantUser.email(),
+                tenantUser.id().toString(),
                 tenantContext.tenantSlug(),
-                roles
+                roles,
+                permissions
         );
 
         String newRefreshToken = jwtTokenService.generateRefreshToken(
-                tenantUser.email(),
+                tenantUser.id().toString(),
                 tenantContext.tenantSlug()
         );
 
@@ -95,5 +102,22 @@ public class RefreshTenantTokenUseCase {
                 newRefreshToken,
                 jwtProperties.getAccessExpirationMs()
         );
+    }
+
+    private boolean isAuthorizableRole(String roleName) {
+        if (roleName == null) {
+            return false;
+        }
+
+        return "ADMIN".equalsIgnoreCase(roleName.trim())
+                || "OWNER_ADMIN".equalsIgnoreCase(roleName.trim());
+    }
+
+    private UUID parseSubjectAsUserId(String subject) {
+        try {
+            return UUID.fromString(subject.trim());
+        } catch (IllegalArgumentException exception) {
+            throw new AuthenticationFailedException("Invalid refresh token subject");
+        }
     }
 }

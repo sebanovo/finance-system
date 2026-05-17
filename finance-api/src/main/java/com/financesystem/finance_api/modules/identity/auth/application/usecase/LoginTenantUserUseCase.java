@@ -59,16 +59,21 @@ public class LoginTenantUserUseCase {
             throw new AuthenticationFailedException("Invalid credentials");
         }
 
-        List<String> roles = tenantUserRoleRepository.findRoleNamesByUserId(tenantUser.id());
+        List<String> roles = tenantUserRoleRepository.findRoleNamesByUserId(tenantUser.id()).stream()
+                .filter(this::isAuthorizableRole)
+                .toList();
+        List<String> permissions = tenantUserRoleRepository.findPermissionCodesByUserId(tenantUser.id());
+        String subject = tenantUser.id().toString();
 
         String accessToken = jwtTokenService.generateAccessToken(
-                tenantUser.email(),
+                subject,
                 tenantContext.tenantSlug(),
-                roles
+                roles,
+                permissions
         );
 
         String refreshToken = jwtTokenService.generateRefreshToken(
-                tenantUser.email(),
+                subject,
                 tenantContext.tenantSlug()
         );
 
@@ -88,5 +93,14 @@ public class LoginTenantUserUseCase {
                 refreshToken,
                 jwtProperties.getAccessExpirationMs()
         );
+    }
+
+    private boolean isAuthorizableRole(String roleName) {
+        if (roleName == null) {
+            return false;
+        }
+
+        return "ADMIN".equalsIgnoreCase(roleName.trim())
+                || "OWNER_ADMIN".equalsIgnoreCase(roleName.trim());
     }
 }

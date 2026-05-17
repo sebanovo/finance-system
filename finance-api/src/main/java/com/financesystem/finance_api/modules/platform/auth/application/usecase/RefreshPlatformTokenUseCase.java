@@ -14,6 +14,7 @@ import com.financesystem.finance_api.modules.platform.superadmin.domain.reposito
 import io.jsonwebtoken.Claims;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -60,7 +61,8 @@ public class RefreshPlatformTokenUseCase {
         String accessToken = jwtTokenService.generateAccessToken(
                 superadmin.email(),
                 PlatformAuthConstants.PLATFORM_TENANT_SLUG,
-                PlatformAuthConstants.PLATFORM_ROLES
+                PlatformAuthConstants.PLATFORM_ROLES,
+                List.of()
         );
 
         String refreshToken = jwtTokenService.generateRefreshToken(

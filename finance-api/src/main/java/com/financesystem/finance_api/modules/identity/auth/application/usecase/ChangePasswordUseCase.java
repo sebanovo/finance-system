@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class ChangePasswordUseCase {
@@ -37,7 +38,7 @@ public class ChangePasswordUseCase {
     public void execute(ChangePasswordRequest request) {
         String currentSubject = securityContextFacade.getCurrentSubject();
 
-        TenantUser tenantUser = tenantUserRepository.findByEmail(currentSubject)
+        TenantUser tenantUser = tenantUserRepository.findById(parseSubjectAsUserId(currentSubject))
                 .orElseThrow(() -> new BusinessException("Authenticated user was not found"));
 
         if (!passwordEncoder.matches(request.currentPassword(), tenantUser.passwordHash())) {
@@ -68,5 +69,13 @@ public class ChangePasswordUseCase {
                 tenantUser.id().toString(),
                 Map.of("email", tenantUser.email())
         );
+    }
+
+    private UUID parseSubjectAsUserId(String subject) {
+        try {
+            return UUID.fromString(subject.trim());
+        } catch (IllegalArgumentException exception) {
+            throw new BusinessException("Authenticated subject is not a valid user id");
+        }
     }
 }

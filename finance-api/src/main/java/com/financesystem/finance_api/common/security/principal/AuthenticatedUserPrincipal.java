@@ -5,6 +5,7 @@ import java.util.List;
 public record AuthenticatedUserPrincipal(
         String subject,
         String tenantSlug,
-        List<String> roles
+        List<String> roles,
+        List<String> permissions
 ) {
 }

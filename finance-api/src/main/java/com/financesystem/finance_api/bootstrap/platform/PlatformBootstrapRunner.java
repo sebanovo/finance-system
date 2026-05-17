@@ -33,6 +33,11 @@ public class PlatformBootstrapRunner implements ApplicationRunner {
 
         platformBootstrapService.seedBasePlans();
         platformBootstrapService.seedBaseSystemPermissions();
+        platformBootstrapService.seedBaseAccountPermissions();
+        platformBootstrapService.seedBaseTransactionPermissions();
+        platformBootstrapService.seedBaseLimitPermissions();
+        platformBootstrapService.seedBaseAccountingPermissions();
+        platformBootstrapService.seedBaseFxPermissions();
         platformBootstrapService.seedInitialPlatformSuperadmin();
         tenantSchemaMigrationService.migrateRegisteredTenantSchemas();
         platformSubscriptionLifecycleService.refreshExpiredSubscriptions();
