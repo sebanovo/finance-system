@@ -2,6 +2,7 @@ package com.financesystem.finance_api.modules.identity.auth.application.usecase;
 
 import com.financesystem.finance_api.common.security.JwtProperties;
 import com.financesystem.finance_api.common.security.jwt.JwtTokenService;
+import com.financesystem.finance_api.common.security.principal.AuthenticatedUserPrincipal;
 import com.financesystem.finance_api.common.tenancy.context.TenantContext;
 import com.financesystem.finance_api.common.tenancy.context.TenantContextHolder;
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
@@ -79,6 +80,10 @@ class LoginTenantUserUseCaseTest {
         assertNotNull(response.accessToken());
         assertNotNull(response.refreshToken());
         assertEquals("Bearer", response.tokenType());
+        AuthenticatedUserPrincipal principal = jwtTokenService.parseAccessToken(response.accessToken());
+        assertEquals(tenantUser.id().toString(), principal.subject());
+        assertEquals("financruz", principal.tenantSlug());
+        assertTrue(principal.roles().contains("ADMIN"));
         verify(auditTrailService).recordTenantEvent(anyString(), eq("USER"), eq(tenantUser.id().toString()), any());
     }
 
