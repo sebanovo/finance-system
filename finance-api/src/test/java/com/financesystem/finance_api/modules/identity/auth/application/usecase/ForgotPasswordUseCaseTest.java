@@ -3,13 +3,16 @@ package com.financesystem.finance_api.modules.identity.auth.application.usecase;
 import com.financesystem.finance_api.common.tenancy.context.TenantContext;
 import com.financesystem.finance_api.common.tenancy.context.TenantContextHolder;
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
+import com.financesystem.finance_api.modules.governance.notifications.application.dto.NotificationPublishRequest;
 import com.financesystem.finance_api.modules.governance.notifications.application.config.PasswordResetNotificationProperties;
 import com.financesystem.finance_api.modules.governance.notifications.application.usecase.SendPasswordResetNotificationUseCase;
+import com.financesystem.finance_api.modules.governance.notifications.domain.port.NotificationPublisherPort;
 import com.financesystem.finance_api.modules.identity.auth.application.dto.ForgotPasswordRequest;
 import com.financesystem.finance_api.modules.identity.auth.domain.repository.PasswordResetTokenRepository;
 import com.financesystem.finance_api.modules.identity.users.domain.model.TenantUser;
 import com.financesystem.finance_api.modules.identity.users.domain.model.TenantUserStatus;
 import com.financesystem.finance_api.modules.identity.users.domain.repository.TenantUserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -34,6 +37,8 @@ class ForgotPasswordUseCaseTest {
         PasswordResetTokenRepository passwordResetTokenRepository = mock(PasswordResetTokenRepository.class);
         SendPasswordResetNotificationUseCase sendPasswordResetNotificationUseCase = mock(SendPasswordResetNotificationUseCase.class);
         AuditTrailService auditTrailService = mock(AuditTrailService.class);
+        NotificationPublisherPort notificationPublisherPort = mock(NotificationPublisherPort.class);
+        ObjectMapper objectMapper = new ObjectMapper();
 
         PasswordResetNotificationProperties properties = new PasswordResetNotificationProperties();
         properties.setExpirationMinutes(30);
@@ -44,7 +49,9 @@ class ForgotPasswordUseCaseTest {
                 passwordResetTokenRepository,
                 properties,
                 sendPasswordResetNotificationUseCase,
-                auditTrailService
+                auditTrailService,
+                notificationPublisherPort,
+                objectMapper
         );
 
         TenantContextHolder.set(new TenantContext("financruz", "tenant_financruz", false));
@@ -68,6 +75,7 @@ class ForgotPasswordUseCaseTest {
         verify(passwordResetTokenRepository).invalidateAllByEmail(eq("admin@financruz.com"), any());
         verify(passwordResetTokenRepository).save(any());
         verify(sendPasswordResetNotificationUseCase).execute(any());
+        verify(notificationPublisherPort).publish(any(NotificationPublishRequest.class));
         verify(auditTrailService).recordTenantEvent(anyString(), eq("USER"), eq(tenantUser.id().toString()), any());
     }
 }
