@@ -107,7 +107,7 @@ class _HomePageState extends State<HomePage> {
                   _viewModel.userInfo!.displayName,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                accountEmail: Text(_viewModel.userInfo!.subject),
+                accountEmail: Text(_viewModel.userInfo!.email),
                 currentAccountPicture: CircleAvatar(
                   backgroundColor: Colors.white,
                   child: Text(

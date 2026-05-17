@@ -88,16 +88,34 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
     }
   }
 
+  // @override
+  // Future<UserInfoModel> getUserInfo() async {
+  //   final response = await apiClient.get('/api/secure/me');
+  //   if (response.statusCode == 200) {
+  //     final data = response.data as Map<String, dynamic>;
+  //     if (data['success'] == true) {
+  //       return UserInfoModel.fromJson(data['data']);
+  //     } else {
+  //       throw Exception(data['message'] ?? 'Error al obtener información');
+  //     }
+  //   } else {
+  //     throw Exception('Error ${response.statusCode}');
+  //   }
+  // }
   @override
   Future<UserInfoModel> getUserInfo() async {
-    final response = await apiClient.get('/api/secure/me');
+    // ✅ Cambiar endpoint de /api/secure/me a /api/auth/me
+    final response = await apiClient.get('/api/auth/me');
+
     if (response.statusCode == 200) {
       final data = response.data as Map<String, dynamic>;
       if (data['success'] == true) {
-        return UserInfoModel.fromJson(data['data']);
+        return UserInfoModel.fromJson(data);
       } else {
         throw Exception(data['message'] ?? 'Error al obtener información');
       }
+    } else if (response.statusCode == 401) {
+      throw Exception('Sesión expirada');
     } else {
       throw Exception('Error ${response.statusCode}');
     }
