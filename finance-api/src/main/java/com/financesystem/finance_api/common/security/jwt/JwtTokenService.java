@@ -13,11 +13,17 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @Service
 public class JwtTokenService {
+
+    private static final Pattern ROLE_NAME_PATTERN = Pattern.compile("^[A-Z][A-Z0-9_]*$");
+    private static final Pattern PERMISSION_CODE_PATTERN = Pattern.compile("^[a-z][a-z0-9-]*(?:[.][a-z0-9-]+)*$");
+    private static final String ROLE_PREFIX = "ROLE_";
 
     private final JwtProperties jwtProperties;
     private final SecretKey secretKey;
@@ -28,14 +34,24 @@ public class JwtTokenService {
     }
 
     public String generateAccessToken(String subject, String tenantSlug, List<String> roles) {
+        return generateAccessToken(subject, tenantSlug, roles, List.of());
+    }
+
+    public String generateAccessToken(
+            String subject,
+            String tenantSlug,
+            List<String> roles,
+            List<String> permissions
+    ) {
         Instant now = Instant.now();
         Instant expiration = now.plusMillis(jwtProperties.getAccessExpirationMs());
 
         return Jwts.builder()
-                .setSubject(subject)
+                .setSubject(requireText(subject, "subject"))
                 .addClaims(Map.of(
-                        JwtClaimNames.TENANT, tenantSlug,
-                        JwtClaimNames.ROLES, roles,
+                        JwtClaimNames.TENANT, requireText(tenantSlug, "tenantSlug"),
+                        JwtClaimNames.ROLES, normalizeRoleNames(roles),
+                        JwtClaimNames.PERMISSIONS, normalizePermissionCodes(permissions),
                         JwtClaimNames.TOKEN_TYPE, JwtClaimNames.ACCESS
                 ))
                 .setIssuedAt(Date.from(now))
@@ -49,9 +65,9 @@ public class JwtTokenService {
         Instant expiration = now.plusMillis(jwtProperties.getRefreshExpirationMs());
 
         return Jwts.builder()
-                .setSubject(subject)
+                .setSubject(requireText(subject, "subject"))
                 .addClaims(Map.of(
-                        JwtClaimNames.TENANT, tenantSlug,
+                        JwtClaimNames.TENANT, requireText(tenantSlug, "tenantSlug"),
                         JwtClaimNames.TOKEN_TYPE, JwtClaimNames.REFRESH
                 ))
                 .setIssuedAt(Date.from(now))
@@ -71,8 +87,8 @@ public class JwtTokenService {
         String subject = claims.getSubject();
         String tenantSlug = claims.get(JwtClaimNames.TENANT, String.class);
 
-        @SuppressWarnings("unchecked")
-        List<String> roles = claims.get(JwtClaimNames.ROLES, List.class);
+        List<String> roles = normalizeRoleNames(readStringListClaim(claims, JwtClaimNames.ROLES));
+        List<String> permissions = normalizePermissionCodes(readStringListClaim(claims, JwtClaimNames.PERMISSIONS));
 
         if (!StringUtils.hasText(subject)) {
             throw new JwtException("Token subject is missing");
@@ -85,7 +101,8 @@ public class JwtTokenService {
         return new AuthenticatedUserPrincipal(
                 subject,
                 tenantSlug,
-                roles == null ? List.of() : roles
+                roles,
+                permissions
         );
     }
 
@@ -106,5 +123,91 @@ public class JwtTokenService {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    private String requireText(String value, String fieldName) {
+        if (!StringUtils.hasText(value)) {
+            throw new JwtException("Token " + fieldName + " is missing");
+        }
+
+        return value.trim();
+    }
+
+    private List<String> readStringListClaim(Claims claims, String claimName) {
+        Object claimValue = claims.get(claimName);
+        if (claimValue == null) {
+            return List.of();
+        }
+
+        if (!(claimValue instanceof List<?> rawList)) {
+            throw new JwtException("Token claim '" + claimName + "' must be an array");
+        }
+
+        List<String> values = rawList.stream()
+                .map(item -> {
+                    if (!(item instanceof String stringValue)) {
+                        throw new JwtException("Token claim '" + claimName + "' must contain only strings");
+                    }
+                    return stringValue;
+                })
+                .toList();
+
+        return values;
+    }
+
+    private List<String> normalizeRoleNames(List<String> roleNames) {
+        if (roleNames == null || roleNames.isEmpty()) {
+            return List.of();
+        }
+
+        LinkedHashSet<String> normalizedRoles = new LinkedHashSet<>();
+        for (String roleName : roleNames) {
+            String normalizedRole = normalizeRoleName(roleName);
+            if (!ROLE_NAME_PATTERN.matcher(normalizedRole).matches()) {
+                throw new JwtException("Invalid role name in token: " + roleName);
+            }
+            normalizedRoles.add(normalizedRole);
+        }
+
+        return List.copyOf(normalizedRoles);
+    }
+
+    private String normalizeRoleName(String roleName) {
+        if (!StringUtils.hasText(roleName)) {
+            throw new JwtException("Token roles contain blank values");
+        }
+
+        String normalizedRole = roleName.trim();
+        if (normalizedRole.startsWith(ROLE_PREFIX)) {
+            normalizedRole = normalizedRole.substring(ROLE_PREFIX.length());
+        }
+
+        if (!StringUtils.hasText(normalizedRole)) {
+            throw new JwtException("Token roles contain blank values");
+        }
+
+        return normalizedRole;
+    }
+
+    private List<String> normalizePermissionCodes(List<String> permissionCodes) {
+        if (permissionCodes == null || permissionCodes.isEmpty()) {
+            return List.of();
+        }
+
+        LinkedHashSet<String> normalizedPermissions = new LinkedHashSet<>();
+        for (String permissionCode : permissionCodes) {
+            if (!StringUtils.hasText(permissionCode)) {
+                throw new JwtException("Token permissions contain blank values");
+            }
+
+            String normalizedPermission = permissionCode.trim();
+            if (!PERMISSION_CODE_PATTERN.matcher(normalizedPermission).matches()) {
+                throw new JwtException("Invalid permission code in token: " + permissionCode);
+            }
+
+            normalizedPermissions.add(normalizedPermission);
+        }
+
+        return List.copyOf(normalizedPermissions);
     }
 }

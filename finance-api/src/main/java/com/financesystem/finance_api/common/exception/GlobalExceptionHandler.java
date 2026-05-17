@@ -6,9 +6,14 @@ import com.financesystem.finance_api.modules.identity.auth.domain.exception.Auth
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -23,25 +28,39 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleResourceNotFound(ResourceNotFoundException exception) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiErrorResponse.of(exception.getMessage(), List.of()));
+                .body(ApiErrorResponse.of(exception.getMessage(), List.of(exception.getMessage())));
     }
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiErrorResponse> handleBusinessException(BusinessException exception) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiErrorResponse.of(exception.getMessage(), List.of()));
+                .body(ApiErrorResponse.of(exception.getMessage(), List.of(exception.getMessage())));
     }
 
     @ExceptionHandler(AuthenticationFailedException.class)
     public ResponseEntity<ApiErrorResponse> handleAuthenticationFailed(AuthenticationFailedException exception) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiErrorResponse.of(exception.getMessage(), List.of()));
+                .body(ApiErrorResponse.of(exception.getMessage(), List.of(exception.getMessage())));
     }
 
     @ExceptionHandler(TenantResolutionException.class)
     public ResponseEntity<ApiErrorResponse> handleTenantResolutionException(TenantResolutionException exception) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiErrorResponse.of(exception.getMessage(), List.of()));
+                .body(ApiErrorResponse.of(exception.getMessage(), List.of(exception.getMessage())));
+    }
+
+    @ExceptionHandler({AccessDeniedException.class, AuthorizationDeniedException.class})
+    public ResponseEntity<ApiErrorResponse> handleAccessDenied(RuntimeException exception) {
+        String reason = exception.getMessage();
+        if (reason == null || reason.isBlank()) {
+            reason = "You do not have the required role or permission to access this resource";
+        }
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiErrorResponse.of(
+                        "You do not have the required role or permission to access this resource",
+                        List.of(reason)
+                ));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -72,11 +91,71 @@ public class GlobalExceptionHandler {
                 .body(ApiErrorResponse.of("Constraint validation failed", errors));
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> handleUnreadableMessage(HttpMessageNotReadableException exception) {
+        String reason = exception.getMostSpecificCause() != null && exception.getMostSpecificCause().getMessage() != null
+                ? exception.getMostSpecificCause().getMessage()
+                : "Request body is malformed or contains invalid field values";
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiErrorResponse.of("Invalid request body", List.of(reason)));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiErrorResponse> handleArgumentTypeMismatch(MethodArgumentTypeMismatchException exception) {
+        String field = exception.getName() != null ? exception.getName() : "parameter";
+        String expected = exception.getRequiredType() != null ? exception.getRequiredType().getSimpleName() : "expected type";
+        String value = exception.getValue() != null ? String.valueOf(exception.getValue()) : "null";
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiErrorResponse.of(
+                        "Invalid request parameter",
+                        List.of(field + " value '" + value + "' is not a valid " + expected)
+                ));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException exception) {
+        String reason = extractDataIntegrityReason(exception);
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiErrorResponse.of("Database constraint violation", List.of(reason)));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleGenericException(Exception exception) {
         logger.error("Unexpected internal error", exception);
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiErrorResponse.of("Unexpected internal error", List.of()));
+                .body(ApiErrorResponse.of("Unexpected internal error", List.of(
+                        exception.getMessage() != null && !exception.getMessage().isBlank()
+                                ? exception.getMessage()
+                                : "An unexpected internal error occurred"
+                )));
+    }
+
+    private String extractDataIntegrityReason(DataIntegrityViolationException exception) {
+        Throwable current = exception;
+        while (current != null) {
+            String message = current.getMessage();
+            if (message != null && !message.isBlank()) {
+                String normalized = message.trim();
+                if (normalized.contains("duplicate key value")) {
+                    return "Duplicate value violates a unique constraint";
+                }
+                if (normalized.contains("violates foreign key constraint")) {
+                    return "Referenced entity does not exist";
+                }
+                if (normalized.contains("violates not-null constraint")) {
+                    return "A required field was missing";
+                }
+                if (normalized.contains("violates check constraint")) {
+                    return "A field value violates a business constraint";
+                }
+                return normalized;
+            }
+            current = current.getCause();
+        }
+
+        return "Database constraint violation";
     }
 }

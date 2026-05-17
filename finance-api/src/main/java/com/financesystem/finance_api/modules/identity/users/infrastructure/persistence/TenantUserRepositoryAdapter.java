@@ -20,7 +20,7 @@ public class TenantUserRepositoryAdapter implements TenantUserRepository {
     @Override
     public TenantUser save(TenantUser tenantUser) {
         TenantUserEntity entity = toEntity(tenantUser);
-        TenantUserEntity saved = jpaRepository.save(entity);
+        TenantUserEntity saved = jpaRepository.saveAndFlush(entity);
         return toDomain(saved);
     }
 

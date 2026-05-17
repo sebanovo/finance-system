@@ -20,6 +20,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 @Component
@@ -79,11 +80,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 throw new BadCredentialsException("Token tenant does not match request tenant header");
             }
 
-            List<SimpleGrantedAuthority> authorities = principal.roles()
-                    .stream()
-                    .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role.toUpperCase())
-                    .map(SimpleGrantedAuthority::new)
-                    .toList();
+            List<SimpleGrantedAuthority> authorities = buildAuthorities(principal);
 
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(principal, null, authorities);
@@ -99,5 +96,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     new BadCredentialsException(ex.getMessage(), ex)
             );
         }
+    }
+
+    private List<SimpleGrantedAuthority> buildAuthorities(AuthenticatedUserPrincipal principal) {
+        LinkedHashSet<String> authorityValues = new LinkedHashSet<>();
+
+        for (String role : principal.roles()) {
+            if (!StringUtils.hasText(role)) {
+                throw new JwtException("Token roles contain blank values");
+            }
+
+            String normalizedRole = role.trim();
+            if (!normalizedRole.startsWith("ROLE_")) {
+                normalizedRole = "ROLE_" + normalizedRole.toUpperCase();
+            }
+
+            authorityValues.add(normalizedRole);
+        }
+
+        for (String permission : principal.permissions()) {
+            if (!StringUtils.hasText(permission)) {
+                throw new JwtException("Token permissions contain blank values");
+            }
+
+            authorityValues.add(permission.trim());
+        }
+
+        return authorityValues.stream()
+                .map(SimpleGrantedAuthority::new)
+                .toList();
     }
 }

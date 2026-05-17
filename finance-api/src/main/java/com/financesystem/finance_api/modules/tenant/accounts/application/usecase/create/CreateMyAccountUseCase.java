@@ -2,6 +2,7 @@ package com.financesystem.finance_api.modules.tenant.accounts.application.usecas
 
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.common.exception.BusinessException;
 import com.financesystem.finance_api.modules.tenant.accounts.application.dto.AccountOwnerResponse;
 import com.financesystem.finance_api.modules.tenant.accounts.application.dto.CreateMyAccountRequest;
 import com.financesystem.finance_api.modules.tenant.accounts.application.mapper.AccountMapper;
@@ -11,6 +12,7 @@ import com.financesystem.finance_api.modules.tenant.accounts.domain.exception.Ac
 import com.financesystem.finance_api.modules.tenant.accounts.domain.model.Account;
 import com.financesystem.finance_api.modules.tenant.accounts.domain.model.AccountOwnerView;
 import com.financesystem.finance_api.modules.tenant.accounts.domain.model.AccountStatus;
+import com.financesystem.finance_api.modules.tenant.accounts.domain.model.AccountType;
 import com.financesystem.finance_api.modules.tenant.accounts.domain.repository.AccountRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +48,8 @@ public class CreateMyAccountUseCase {
 
     @Transactional
     public AccountOwnerResponse execute(CreateMyAccountRequest request) {
+        validateTransactionalAccountType(request.accountType());
+
         UUID currentUserId = currentTenantAccountUserService.getCurrentUserId();
 
         long currentAccounts = accountRepository.countActiveOrPendingByUserId(currentUserId);
@@ -121,5 +125,14 @@ public class CreateMyAccountUseCase {
 
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private void validateTransactionalAccountType(AccountType accountType) {
+        if (accountType == null || !accountType.isTransactional()) {
+            throw new BusinessException(
+                    "Account type " + (accountType != null ? accountType.name() : "null")
+                            + " is not available for the current bank core. Use WALLET, SAVINGS, CHECKING or PREPAID_CARD."
+            );
+        }
     }
 }

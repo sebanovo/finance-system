@@ -9,6 +9,7 @@ import com.financesystem.finance_api.modules.identity.users.domain.repository.Te
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class GetCurrentAuthenticatedTenantUserUseCase {
@@ -35,7 +36,7 @@ public class GetCurrentAuthenticatedTenantUserUseCase {
             throw new AuthenticationFailedException("Authenticated subject is not available");
         }
 
-        TenantUser tenantUser = tenantUserRepository.findByEmail(currentSubject)
+        TenantUser tenantUser = tenantUserRepository.findById(parseSubjectAsUserId(currentSubject))
                 .orElseThrow(() -> new AuthenticationFailedException("Authenticated user not found"));
 
         List<String> roles = tenantUserRoleRepository.findRoleNamesByUserId(tenantUser.id());
@@ -50,5 +51,13 @@ public class GetCurrentAuthenticatedTenantUserUseCase {
                 currentTenantSlug,
                 roles
         );
+    }
+
+    private UUID parseSubjectAsUserId(String subject) {
+        try {
+            return UUID.fromString(subject.trim());
+        } catch (IllegalArgumentException exception) {
+            throw new AuthenticationFailedException("Authenticated subject is not a valid user id");
+        }
     }
 }
