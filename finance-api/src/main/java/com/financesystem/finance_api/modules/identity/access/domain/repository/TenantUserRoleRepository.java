@@ -9,5 +9,7 @@ public interface TenantUserRoleRepository {
 
     List<String> findRoleNamesByUserId(UUID userId);
 
+    List<String> findPermissionCodesByUserId(UUID userId);
+
     void replaceUserRoles(UUID userId, List<UUID> roleIds);
 }

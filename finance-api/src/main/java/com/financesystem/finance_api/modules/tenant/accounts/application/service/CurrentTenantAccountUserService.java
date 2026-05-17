@@ -29,11 +29,19 @@ public class CurrentTenantAccountUserService {
             throw new TenantUserNotFoundException("Authenticated tenant user not found");
         }
 
-        TenantUser tenantUser = tenantUserRepository.findByEmail(subject.trim().toLowerCase())
+        TenantUser tenantUser = tenantUserRepository.findById(parseSubjectAsUserId(subject))
                 .orElseThrow(() -> new TenantUserNotFoundException(
                         "Tenant user not found with subject: " + subject
                 ));
 
         return tenantUser.id();
+    }
+
+    private UUID parseSubjectAsUserId(String subject) {
+        try {
+            return UUID.fromString(subject.trim());
+        } catch (IllegalArgumentException exception) {
+            throw new TenantUserNotFoundException("Authenticated tenant user not found");
+        }
     }
 }

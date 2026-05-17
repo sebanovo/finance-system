@@ -6,14 +6,20 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.sql.DataSource;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 public class PlatformBootstrapService {
 
     private static final Logger logger = LoggerFactory.getLogger(PlatformBootstrapService.class);
+    private static final Pattern PERMISSION_CODE_PATTERN = Pattern.compile("^[a-z][a-z0-9-]*(?:[.][a-z0-9-]+)*$");
+    private static final Pattern MODULE_PATTERN = Pattern.compile("^[a-z][a-z0-9-]*$");
 
     private final JdbcTemplate jdbcTemplate;
     private final PasswordEncoder passwordEncoder;
@@ -90,25 +96,124 @@ public class PlatformBootstrapService {
                 new PermissionSeed("audit.read", "audit", "Read tenant audit events")
         );
 
-        for (PermissionSeed permission : permissions) {
-            jdbcTemplate.update(
-                    """
-                    INSERT INTO public.system_permissions (
-                        code, module, description, active, created_at
-                    )
-                    VALUES (?, ?, ?, true, NOW())
-                    ON CONFLICT (code) DO UPDATE SET
-                        module = EXCLUDED.module,
-                        description = EXCLUDED.description,
-                        active = true
-                    """,
-                    permission.code(),
-                    permission.module(),
-                    permission.description()
-            );
-        }
+        seedPermissions(permissions);
 
         logger.info("Base system permissions seeded successfully.");
+    }
+
+    public void seedBaseAccountPermissions() {
+        logger.info("Seeding base accounts permissions...");
+
+        List<PermissionSeed> permissions = List.of(
+                // OWNER_ADMIN PERMISSIONS
+                new PermissionSeed("accounts.create", "accounts", "Create tenant accounts"),
+                new PermissionSeed("accounts.list", "accounts", "List tenant accounts"),
+                new PermissionSeed("accounts.view", "accounts", "View tenant account details"),
+                new PermissionSeed("accounts.balance.read", "accounts", "Read tenant account balances"),
+                new PermissionSeed("accounts.update", "accounts", "Update tenant accounts"),
+                new PermissionSeed("accounts.approve", "accounts", "Approve tenant accounts"),
+                new PermissionSeed("accounts.activate", "accounts", "Activate tenant accounts"),
+                new PermissionSeed("accounts.block", "accounts", "Block tenant accounts"),
+                new PermissionSeed("accounts.freeze", "accounts", "Freeze tenant accounts"),
+                new PermissionSeed("accounts.close", "accounts", "Close tenant accounts"),
+
+                // Client permissions
+                new PermissionSeed("accounts.me.create", "accounts", "Create own accounts"),
+                new PermissionSeed("accounts.me.list", "accounts", "List own accounts"),
+                new PermissionSeed("accounts.me.view", "accounts", "View own account details"),
+                new PermissionSeed("accounts.me.balance.read", "accounts", "Read own account balances"),
+                new PermissionSeed("accounts.me.update.alias", "accounts", "Update own account aliases")
+        );
+
+        seedPermissions(permissions);
+
+        logger.info("Base accounts permissions seeded successfully.");
+    }
+
+    public void seedBaseTransactionPermissions() {
+        logger.info("Seeding base transactions permissions...");
+
+        List<PermissionSeed> permissions = List.of(
+                new PermissionSeed("transactions.read", "transactions", "Read tenant transactions"),
+                new PermissionSeed("transactions.detail", "transactions", "Read tenant transaction details"),
+                new PermissionSeed("transactions.create.transfer", "transactions", "Create transfer transactions"),
+                new PermissionSeed("transactions.create.deposit", "transactions", "Create deposit transactions"),
+                new PermissionSeed("transactions.create.withdrawal", "transactions", "Create withdrawal transactions"),
+                new PermissionSeed("transactions.create.payment", "transactions", "Create payment transactions"),
+                new PermissionSeed("transactions.reverse", "transactions", "Reverse transactions"),
+                new PermissionSeed("transactions.refund", "transactions", "Refund transactions"),
+                new PermissionSeed("transactions.fee", "transactions", "Create fee transactions"),
+                new PermissionSeed("transactions.hold", "transactions", "Hold account funds"),
+                new PermissionSeed("transactions.release", "transactions", "Release held funds"),
+                new PermissionSeed("transactions.adjust", "transactions", "Adjust transactions"),
+                new PermissionSeed("transactions.admin.read", "transactions", "Read admin transaction views"),
+                new PermissionSeed("transactions.admin.export", "transactions", "Export transaction data"),
+                new PermissionSeed("transactions.qr.create", "transactions", "Create QR transaction intents"),
+                new PermissionSeed("transactions.qr.confirm", "transactions", "Confirm QR transaction intents"),
+                new PermissionSeed("me.transactions.read", "transactions", "Read own transactions"),
+                new PermissionSeed("me.transactions.transfer", "transactions", "Create own transfer transactions"),
+                new PermissionSeed("me.transactions.deposit", "transactions", "Create own deposit transactions"),
+                new PermissionSeed("me.transactions.withdrawal", "transactions", "Create own withdrawal transactions"),
+                new PermissionSeed("me.transactions.payment", "transactions", "Create own payment transactions"),
+                new PermissionSeed("me.transactions.hold", "transactions", "Hold own account funds"),
+                new PermissionSeed("me.transactions.release", "transactions", "Release own held funds"),
+                new PermissionSeed("me.transactions.qr.confirm", "transactions", "Confirm own QR transaction intents")
+        );
+
+        seedPermissions(permissions);
+
+        logger.info("Base transactions permissions seeded successfully.");
+    }
+
+    public void seedBaseLimitPermissions() {
+        logger.info("Seeding base limits permissions...");
+
+        List<PermissionSeed> permissions = List.of(
+                new PermissionSeed("limits.read", "limits", "Read limit rules"),
+                new PermissionSeed("limits.create", "limits", "Create limit rules"),
+                new PermissionSeed("limits.update", "limits", "Update limit rules"),
+                new PermissionSeed("limits.delete", "limits", "Delete limit rules"),
+                new PermissionSeed("limits.evaluate", "limits", "Evaluate limit rules")
+        );
+
+        seedPermissions(permissions);
+
+        logger.info("Base limits permissions seeded successfully.");
+    }
+
+    public void seedBaseAccountingPermissions() {
+        logger.info("Seeding base accounting permissions...");
+
+        List<PermissionSeed> permissions = List.of(
+                new PermissionSeed("accounting.journal.read", "accounting", "Read journal entries"),
+                new PermissionSeed("accounting.journal.detail", "accounting", "Read journal entry details"),
+                new PermissionSeed("accounting.periods.read", "accounting", "Read accounting periods"),
+                new PermissionSeed("accounting.periods.create", "accounting", "Create accounting periods"),
+                new PermissionSeed("accounting.periods.close", "accounting", "Close accounting periods")
+        );
+
+        seedPermissions(permissions);
+
+        logger.info("Base accounting permissions seeded successfully.");
+    }
+
+    public void seedBaseFxPermissions() {
+        logger.info("Seeding base fx permissions...");
+
+        List<PermissionSeed> permissions = List.of(
+                new PermissionSeed("fx.rates.read", "fx", "Read exchange rates"),
+                new PermissionSeed("fx.rates.create", "fx", "Create exchange rates"),
+                new PermissionSeed("fx.rates.update", "fx", "Update exchange rates"),
+                new PermissionSeed("fx.rates.delete", "fx", "Delete exchange rates"),
+                new PermissionSeed("fx.fees.read", "fx", "Read operation fees"),
+                new PermissionSeed("fx.fees.create", "fx", "Create operation fees"),
+                new PermissionSeed("fx.fees.update", "fx", "Update operation fees"),
+                new PermissionSeed("fx.fees.delete", "fx", "Delete operation fees")
+        );
+
+        seedPermissions(permissions);
+
+        logger.info("Base fx permissions seeded successfully.");
     }
 
     public void seedInitialPlatformSuperadmin() {
@@ -155,5 +260,68 @@ public class PlatformBootstrapService {
             String module,
             String description
     ) {
+    }
+
+    private void seedPermissions(List<PermissionSeed> permissions) {
+        validatePermissionSeeds(permissions);
+
+        for (PermissionSeed permission : permissions) {
+            jdbcTemplate.update(
+                    """
+                    INSERT INTO public.system_permissions (
+                        code, module, description, active, created_at
+                    )
+                    VALUES (?, ?, ?, true, NOW())
+                    ON CONFLICT (code) DO UPDATE SET
+                        module = EXCLUDED.module,
+                        description = EXCLUDED.description,
+                        active = true
+                    """,
+                    permission.code(),
+                    permission.module(),
+                    permission.description()
+            );
+        }
+    }
+
+    private void validatePermissionSeeds(List<PermissionSeed> permissions) {
+        if (permissions == null || permissions.isEmpty()) {
+            throw new IllegalArgumentException("Permission seed list must not be empty");
+        }
+
+        Set<String> uniqueCodes = permissions.stream()
+                .map(PermissionSeed::code)
+                .map(this::normalizeRequiredText)
+                .collect(Collectors.toSet());
+
+        if (uniqueCodes.size() != permissions.size()) {
+            throw new IllegalArgumentException("Permission seed codes must be unique");
+        }
+
+        for (PermissionSeed permission : permissions) {
+            String code = normalizeRequiredText(permission.code());
+            String module = normalizeRequiredText(permission.module());
+            String description = normalizeRequiredText(permission.description());
+
+            if (!PERMISSION_CODE_PATTERN.matcher(code).matches()) {
+                throw new IllegalArgumentException("Invalid permission code seed: " + code);
+            }
+
+            if (!MODULE_PATTERN.matcher(module).matches()) {
+                throw new IllegalArgumentException("Invalid permission module seed: " + module);
+            }
+
+            if (description.isBlank()) {
+                throw new IllegalArgumentException("Permission seed description must not be blank");
+            }
+        }
+    }
+
+    private String normalizeRequiredText(String value) {
+        if (!StringUtils.hasText(value)) {
+            throw new IllegalArgumentException("Permission seed values must not be blank");
+        }
+
+        return value.trim();
     }
 }

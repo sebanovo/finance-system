@@ -4,40 +4,59 @@ import com.financesystem.finance_api.common.exception.BusinessException;
 import com.financesystem.finance_api.common.security.context.SecurityContextFacade;
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.governance.notifications.application.dto.NotificationPublishRequest;
+import com.financesystem.finance_api.modules.governance.notifications.domain.model.NotificationCategory;
+import com.financesystem.finance_api.modules.governance.notifications.domain.model.NotificationPriority;
+import com.financesystem.finance_api.modules.governance.notifications.domain.model.NotificationType;
+import com.financesystem.finance_api.modules.governance.notifications.domain.port.NotificationPublisherPort;
 import com.financesystem.finance_api.modules.identity.auth.application.dto.ChangePasswordRequest;
 import com.financesystem.finance_api.modules.identity.users.domain.model.TenantUser;
 import com.financesystem.finance_api.modules.identity.users.domain.repository.TenantUserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class ChangePasswordUseCase {
+
+    private static final Logger log = LoggerFactory.getLogger(ChangePasswordUseCase.class);
 
     private final SecurityContextFacade securityContextFacade;
     private final TenantUserRepository tenantUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditTrailService auditTrailService;
+    private final NotificationPublisherPort notificationPublisherPort;
+    private final ObjectMapper objectMapper;
 
     public ChangePasswordUseCase(
             SecurityContextFacade securityContextFacade,
             TenantUserRepository tenantUserRepository,
             PasswordEncoder passwordEncoder,
-            AuditTrailService auditTrailService
+            AuditTrailService auditTrailService,
+            NotificationPublisherPort notificationPublisherPort,
+            ObjectMapper objectMapper
     ) {
         this.securityContextFacade = securityContextFacade;
         this.tenantUserRepository = tenantUserRepository;
         this.passwordEncoder = passwordEncoder;
         this.auditTrailService = auditTrailService;
+        this.notificationPublisherPort = notificationPublisherPort;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
     public void execute(ChangePasswordRequest request) {
         String currentSubject = securityContextFacade.getCurrentSubject();
 
-        TenantUser tenantUser = tenantUserRepository.findByEmail(currentSubject)
+        TenantUser tenantUser = tenantUserRepository.findById(parseSubjectAsUserId(currentSubject))
                 .orElseThrow(() -> new BusinessException("Authenticated user was not found"));
 
         if (!passwordEncoder.matches(request.currentPassword(), tenantUser.passwordHash())) {
@@ -62,11 +81,45 @@ public class ChangePasswordUseCase {
 
         tenantUserRepository.save(updatedUser);
 
+        ObjectNode data = objectMapper.createObjectNode()
+                .put("email", tenantUser.email())
+                .put("status", "CHANGED")
+                .put("changedAt", Instant.now().toString());
+
+        publishNotificationSafely(new NotificationPublishRequest(
+                tenantUser.id(),
+                NotificationType.PASSWORD_CHANGED,
+                NotificationCategory.SECURITY,
+                NotificationPriority.HIGH,
+                "Password changed",
+                "Your password was changed successfully.",
+                data,
+                null,
+                "/security/password",
+                Instant.now().plusSeconds(3600)
+        ));
+
         auditTrailService.recordTenantEvent(
                 AuditEventTypes.PASSWORD_CHANGED,
                 "USER",
                 tenantUser.id().toString(),
                 Map.of("email", tenantUser.email())
         );
+    }
+
+    private UUID parseSubjectAsUserId(String subject) {
+        try {
+            return UUID.fromString(subject.trim());
+        } catch (IllegalArgumentException exception) {
+            throw new BusinessException("Authenticated subject is not a valid user id");
+        }
+    }
+
+    private void publishNotificationSafely(NotificationPublishRequest request) {
+        try {
+            notificationPublisherPort.publish(request);
+        } catch (Exception exception) {
+            log.warn("Unable to publish password change notification: {}", exception.getMessage());
+        }
     }
 }

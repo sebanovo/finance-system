@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/accounts/me")
+@RequestMapping("/api/me/accounts")
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("isAuthenticated()")
 public class MyAccountController {
@@ -40,6 +40,7 @@ public class MyAccountController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('accounts.me.create')")
     public ApiResponse<AccountOwnerResponse> createMyAccount(
             @Valid @RequestBody CreateMyAccountRequest request
     ) {
@@ -50,6 +51,7 @@ public class MyAccountController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('accounts.me.list')")
     public ApiResponse<List<AccountOwnerResponse>> listMyAccounts() {
         return ApiResponse.success(
                 "Accounts retrieved successfully",
@@ -58,6 +60,7 @@ public class MyAccountController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('accounts.me.view')")
     public ApiResponse<AccountOwnerResponse> getMyAccountById(
             @PathVariable UUID id
     ) {
@@ -68,6 +71,7 @@ public class MyAccountController {
     }
 
     @GetMapping("/{id}/balance")
+    @PreAuthorize("hasAuthority('accounts.me.balance.read')")
     public ApiResponse<AccountBalanceResponse> getMyAccountBalance(
             @PathVariable UUID id
     ) {
@@ -78,6 +82,7 @@ public class MyAccountController {
     }
 
     @PatchMapping("/{id}/alias")
+    @PreAuthorize("hasAuthority('accounts.me.update.alias')")
     public ApiResponse<AccountOwnerResponse> updateMyAccountAlias(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateAccountAliasRequest request
