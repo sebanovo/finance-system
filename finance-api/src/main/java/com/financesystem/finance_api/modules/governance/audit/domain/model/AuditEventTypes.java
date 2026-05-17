@@ -37,6 +37,10 @@ public final class AuditEventTypes {
     public static final String ACCOUNT_ALIAS_UPDATED = "ACCOUNT_ALIAS_UPDATED";
     public static final String ACCOUNT_APPROVAL_REQUESTED = "ACCOUNT_APPROVAL_REQUESTED";
 
+    public static final String TRANSACTION_CREATED = "TRANSACTION_CREATED";
+    public static final String TRANSACTION_COMPLETED = "TRANSACTION_COMPLETED";
+    public static final String TRANSACTION_FAILED = "TRANSACTION_FAILED";
+
     private AuditEventTypes() {
     }
 }

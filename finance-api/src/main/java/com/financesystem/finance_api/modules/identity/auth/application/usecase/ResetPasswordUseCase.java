@@ -1,6 +1,11 @@
 package com.financesystem.finance_api.modules.identity.auth.application.usecase;
 
 import com.financesystem.finance_api.common.exception.BusinessException;
+import com.financesystem.finance_api.modules.governance.notifications.application.dto.NotificationPublishRequest;
+import com.financesystem.finance_api.modules.governance.notifications.domain.model.NotificationCategory;
+import com.financesystem.finance_api.modules.governance.notifications.domain.model.NotificationPriority;
+import com.financesystem.finance_api.modules.governance.notifications.domain.model.NotificationType;
+import com.financesystem.finance_api.modules.governance.notifications.domain.port.NotificationPublisherPort;
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
 import com.financesystem.finance_api.modules.identity.auth.application.dto.ResetPasswordRequest;
@@ -12,28 +17,40 @@ import com.financesystem.finance_api.modules.identity.users.domain.repository.Te
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.time.Instant;
 import java.util.Map;
 
 @Service
 public class ResetPasswordUseCase {
 
+    private static final Logger log = LoggerFactory.getLogger(ResetPasswordUseCase.class);
+
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final TenantUserRepository tenantUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditTrailService auditTrailService;
+    private final NotificationPublisherPort notificationPublisherPort;
+    private final ObjectMapper objectMapper;
 
     public ResetPasswordUseCase(
             PasswordResetTokenRepository passwordResetTokenRepository,
             TenantUserRepository tenantUserRepository,
             PasswordEncoder passwordEncoder,
-            AuditTrailService auditTrailService
+            AuditTrailService auditTrailService,
+            NotificationPublisherPort notificationPublisherPort,
+            ObjectMapper objectMapper
     ) {
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.tenantUserRepository = tenantUserRepository;
         this.passwordEncoder = passwordEncoder;
         this.auditTrailService = auditTrailService;
+        this.notificationPublisherPort = notificationPublisherPort;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
@@ -74,11 +91,37 @@ public class ResetPasswordUseCase {
         passwordResetTokenRepository.markUsed(passwordResetToken.token(), now);
         passwordResetTokenRepository.invalidateAllByEmail(passwordResetToken.email(), now);
 
+        ObjectNode data = objectMapper.createObjectNode()
+                .put("email", tenantUser.email())
+                .put("status", "COMPLETED")
+                .put("completedAt", now.toString());
+
+        publishNotificationSafely(new NotificationPublishRequest(
+                tenantUser.id(),
+                NotificationType.PASSWORD_RESET_COMPLETED,
+                NotificationCategory.SECURITY,
+                NotificationPriority.HIGH,
+                "Password reset completed",
+                "Your password was reset successfully.",
+                data,
+                null,
+                "/security/password-reset",
+                now.plusSeconds(3600)
+        ));
+
         auditTrailService.recordTenantEvent(
                 AuditEventTypes.PASSWORD_RESET_COMPLETED,
                 "USER",
                 tenantUser.id().toString(),
                 Map.of("email", tenantUser.email())
         );
+    }
+
+    private void publishNotificationSafely(NotificationPublishRequest request) {
+        try {
+            notificationPublisherPort.publish(request);
+        } catch (Exception exception) {
+            log.warn("Unable to publish password reset completion notification: {}", exception.getMessage());
+        }
     }
 }

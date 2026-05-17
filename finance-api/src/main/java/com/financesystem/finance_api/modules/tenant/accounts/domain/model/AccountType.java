@@ -6,5 +6,12 @@ public enum AccountType {
     CHECKING,
     CREDIT_CARD,
     PREPAID_CARD,
-    LOAN
+    LOAN;
+
+    public boolean isTransactional() {
+        return switch (this) {
+            case WALLET, SAVINGS, CHECKING, PREPAID_CARD -> true;
+            case CREDIT_CARD, LOAN -> false;
+        };
+    }
 }
