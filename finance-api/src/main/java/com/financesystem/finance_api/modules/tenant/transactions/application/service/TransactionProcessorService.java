@@ -5,6 +5,11 @@ import com.financesystem.finance_api.common.exception.ResourceNotFoundException;
 import com.financesystem.finance_api.common.security.context.SecurityContextFacade;
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.governance.notifications.application.dto.NotificationPublishRequest;
+import com.financesystem.finance_api.modules.governance.notifications.domain.model.NotificationCategory;
+import com.financesystem.finance_api.modules.governance.notifications.domain.model.NotificationPriority;
+import com.financesystem.finance_api.modules.governance.notifications.domain.model.NotificationType;
+import com.financesystem.finance_api.modules.governance.notifications.domain.port.NotificationPublisherPort;
 import com.financesystem.finance_api.modules.tenant.accounts.domain.model.Account;
 import com.financesystem.finance_api.modules.tenant.accounts.domain.model.AccountStatus;
 import com.financesystem.finance_api.modules.tenant.accounts.domain.model.AccountType;
@@ -41,6 +46,9 @@ import com.financesystem.finance_api.modules.tenant.transactions.domain.reposito
 import com.financesystem.finance_api.modules.tenant.transactions.domain.repository.QrTransactionIntentRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,6 +65,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class TransactionProcessorService {
+
+    private static final Logger log = LoggerFactory.getLogger(TransactionProcessorService.class);
 
     private static final EnumSet<AccountType> TRANSACTIONAL_ACCOUNT_TYPES = EnumSet.of(
             AccountType.WALLET,
@@ -84,6 +94,7 @@ public class TransactionProcessorService {
     private final AccountingPostingPort accountingPostingPort;
     private final TransactionMapper transactionMapper;
     private final AuditTrailService auditTrailService;
+    private final NotificationPublisherPort notificationPublisherPort;
     private final SecurityContextFacade securityContextFacade;
     private final ObjectMapper objectMapper;
 
@@ -97,6 +108,7 @@ public class TransactionProcessorService {
             AccountingPostingPort accountingPostingPort,
             TransactionMapper transactionMapper,
             AuditTrailService auditTrailService,
+            NotificationPublisherPort notificationPublisherPort,
             SecurityContextFacade securityContextFacade,
             ObjectMapper objectMapper
     ) {
@@ -109,6 +121,7 @@ public class TransactionProcessorService {
         this.accountingPostingPort = accountingPostingPort;
         this.transactionMapper = transactionMapper;
         this.auditTrailService = auditTrailService;
+        this.notificationPublisherPort = notificationPublisherPort;
         this.securityContextFacade = securityContextFacade;
         this.objectMapper = objectMapper;
     }
@@ -366,6 +379,8 @@ public class TransactionProcessorService {
                 )
         );
 
+        publishTransactionNotifications(persistedCompleted, movements);
+
         return transactionMapper.toResponse(persistedCompleted, movements);
     }
 
@@ -552,6 +567,8 @@ public class TransactionProcessorService {
                         "movement", "CREDIT"
                 )
         );
+
+        publishTransactionNotifications(persistedCompleted, movements);
 
         return transactionMapper.toResponse(persistedCompleted, movements);
     }
@@ -746,6 +763,8 @@ public class TransactionProcessorService {
                 )
         );
 
+        publishTransactionNotifications(persistedCompleted, movements);
+
         return transactionMapper.toResponse(persistedCompleted, movements);
     }
 
@@ -918,6 +937,8 @@ public class TransactionProcessorService {
                 )
         );
 
+        publishTransactionNotifications(persistedCompleted, movements);
+
         return transactionMapper.toResponse(persistedCompleted, movements);
     }
 
@@ -1071,6 +1092,8 @@ public class TransactionProcessorService {
                         "movement", "HOLD"
                 )
         );
+
+        publishTransactionNotifications(persistedCompleted, movements);
 
         return transactionMapper.toResponse(persistedCompleted, movements);
     }
@@ -1226,6 +1249,8 @@ public class TransactionProcessorService {
                 )
         );
 
+        publishTransactionNotifications(persistedCompleted, movements);
+
         return transactionMapper.toResponse(persistedCompleted, movements);
     }
 
@@ -1366,6 +1391,8 @@ public class TransactionProcessorService {
                         "movement", "DEBIT"
                 )
         );
+
+        publishTransactionNotifications(persistedCompleted, movements);
 
         return transactionMapper.toResponse(persistedCompleted, movements);
     }
@@ -1513,6 +1540,8 @@ public class TransactionProcessorService {
                         "movement", movementType.name()
                 )
         );
+
+        publishTransactionNotifications(persistedCompleted, movements);
 
         return transactionMapper.toResponse(persistedCompleted, movements);
     }
@@ -1703,6 +1732,8 @@ public class TransactionProcessorService {
                 )
         );
 
+        publishTransactionNotifications(persistedCompleted, reversalMovements);
+
         return transactionMapper.toResponse(persistedCompleted, reversalMovements);
     }
 
@@ -1816,6 +1847,8 @@ public class TransactionProcessorService {
                         "refundAmount", requestedAmount.toPlainString()
                 )
         );
+
+        publishTransactionNotifications(persistedCompleted, movements);
 
         return transactionMapper.toResponse(persistedCompleted, movements);
     }
@@ -2024,6 +2057,8 @@ public class TransactionProcessorService {
                         "targetAccount", targetAccount.accountNumber()
                 )
         );
+
+        publishTransactionNotifications(persistedCompleted, movements);
 
         return transactionMapper.toResponse(persistedCompleted, movements);
     }
@@ -2576,6 +2611,198 @@ public class TransactionProcessorService {
                 transaction.createdAt(),
                 transaction.updatedAt()
         );
+    }
+
+    private void publishTransactionNotifications(Transaction transaction, List<TransactionMovement> movements) {
+        if (transaction == null || transaction.id() == null || movements == null || movements.isEmpty()) {
+            return;
+        }
+
+        try {
+            Map<UUID, List<TransactionMovement>> movementsByUser = movements.stream()
+                    .map(movement -> Map.entry(movement, getAccountOrThrow(movement.accountId(), "Account")))
+                    .filter(entry -> entry.getValue() != null && entry.getValue().userId() != null)
+                    .collect(Collectors.groupingBy(
+                            entry -> entry.getValue().userId(),
+                            Collectors.mapping(Map.Entry::getKey, Collectors.toList())
+                    ));
+
+            for (Map.Entry<UUID, List<TransactionMovement>> entry : movementsByUser.entrySet()) {
+                NotificationPublishRequest request = buildTransactionNotificationRequest(
+                        transaction,
+                        entry.getKey(),
+                        entry.getValue()
+                );
+                if (request != null) {
+                    notificationPublisherPort.publish(request);
+                }
+            }
+        } catch (Exception exception) {
+            log.warn("Unable to publish notifications for transaction {}: {}", transaction.id(), exception.getMessage());
+        }
+    }
+
+    private NotificationPublishRequest buildTransactionNotificationRequest(
+            Transaction transaction,
+            UUID userId,
+            List<TransactionMovement> userMovements
+    ) {
+        if (transaction == null || userId == null || userMovements == null || userMovements.isEmpty()) {
+            return null;
+        }
+
+        List<Account> accounts = userMovements.stream()
+                .map(movement -> getAccountOrThrow(movement.accountId(), "Account"))
+                .toList();
+
+        List<String> accountNumbers = accounts.stream()
+                .map(Account::accountNumber)
+                .distinct()
+                .toList();
+
+        NotificationType type = resolveNotificationType(transaction, userMovements);
+        String title = resolveNotificationTitle(transaction, userMovements, accountNumbers);
+        String body = resolveNotificationBody(transaction, userMovements, accountNumbers);
+
+        ObjectNode data = objectMapper.createObjectNode();
+        data.put("transactionId", transaction.id().toString());
+        data.put("transactionType", transaction.type().name());
+        data.put("status", transaction.status().name());
+        data.put("channel", transaction.channel().name());
+        data.put("amount", safeMoney(transaction.amount()).toPlainString());
+        data.put("currency", transaction.currency());
+        if (transaction.sourceAccountId() != null) {
+            data.put("sourceAccountId", transaction.sourceAccountId().toString());
+        }
+        if (transaction.targetAccountId() != null) {
+            data.put("targetAccountId", transaction.targetAccountId().toString());
+        }
+        data.putPOJO("accountNumbers", accountNumbers);
+        data.putPOJO("movementTypes", userMovements.stream()
+                .map(movement -> movement.movementType().name())
+                .distinct()
+                .toList());
+        if (transaction.externalReference() != null) {
+            data.put("externalReference", transaction.externalReference());
+        }
+        if (transaction.processedAt() != null) {
+            data.put("processedAt", transaction.processedAt().toString());
+        }
+
+        return new NotificationPublishRequest(
+                userId,
+                type,
+                NotificationCategory.TRANSACTIONS,
+                resolveNotificationPriority(transaction.type()),
+                title,
+                body,
+                data,
+                null,
+                buildTransactionActionUrl(transaction),
+                null
+        );
+    }
+
+    private NotificationType resolveNotificationType(Transaction transaction, List<TransactionMovement> movements) {
+        TransactionType transactionType = transaction == null ? null : transaction.type();
+        TransactionChannel transactionChannel = transaction == null ? null : transaction.channel();
+        boolean hasDebit = movements.stream().anyMatch(movement -> movement.movementType() == TransactionMovementType.DEBIT);
+        boolean hasCredit = movements.stream().anyMatch(movement -> movement.movementType() == TransactionMovementType.CREDIT);
+
+        if (transactionType == null) {
+            return NotificationType.SYSTEM_NOTICE;
+        }
+
+        return switch (transactionType) {
+            case TRANSFER -> hasDebit && hasCredit ? NotificationType.TRANSFER_RECEIVED : NotificationType.TRANSFER_SENT;
+            case DEPOSIT -> NotificationType.DEPOSIT_CONFIRMED;
+            case WITHDRAWAL -> NotificationType.WITHDRAWAL_CONFIRMED;
+            case PAYMENT -> transactionChannel == TransactionChannel.QR
+                    ? NotificationType.QR_CONFIRMED
+                    : NotificationType.PAYMENT_SUCCESS;
+            case REVERSAL -> NotificationType.REVERSAL_COMPLETED;
+            case REFUND -> NotificationType.REFUND_COMPLETED;
+            case HOLD, RELEASE, FEE, ADJUSTMENT, SETTLEMENT -> NotificationType.SYSTEM_NOTICE;
+        };
+    }
+
+    private NotificationPriority resolveNotificationPriority(TransactionType transactionType) {
+        if (transactionType == null) {
+            return NotificationPriority.NORMAL;
+        }
+
+        return switch (transactionType) {
+            case PAYMENT, TRANSFER, REFUND, REVERSAL -> NotificationPriority.HIGH;
+            case DEPOSIT, WITHDRAWAL -> NotificationPriority.NORMAL;
+            case HOLD, RELEASE, FEE, ADJUSTMENT, SETTLEMENT -> NotificationPriority.LOW;
+        };
+    }
+
+    private String resolveNotificationTitle(Transaction transaction, List<TransactionMovement> movements, List<String> accountNumbers) {
+        TransactionType transactionType = transaction == null ? null : transaction.type();
+        TransactionChannel transactionChannel = transaction == null ? null : transaction.channel();
+        boolean hasDebit = movements.stream().anyMatch(movement -> movement.movementType() == TransactionMovementType.DEBIT);
+        boolean hasCredit = movements.stream().anyMatch(movement -> movement.movementType() == TransactionMovementType.CREDIT);
+
+        if (transactionType == null) {
+            return "Transaction update";
+        }
+
+        return switch (transactionType) {
+            case TRANSFER -> hasDebit && hasCredit ? "Transfer completed" : (hasCredit ? "Transfer received" : "Transfer sent");
+            case DEPOSIT -> "Deposit confirmed";
+            case WITHDRAWAL -> "Withdrawal confirmed";
+            case PAYMENT -> transactionChannel == TransactionChannel.QR
+                    ? "QR payment confirmed"
+                    : (hasCredit ? "Payment received" : "Payment sent");
+            case REVERSAL -> "Transaction reversed";
+            case REFUND -> "Refund completed";
+            case HOLD -> "Hold placed";
+            case RELEASE -> "Hold released";
+            case FEE -> "Fee charged";
+            case ADJUSTMENT -> "Account adjusted";
+            case SETTLEMENT -> "Settlement recorded";
+        };
+    }
+
+    private String resolveNotificationBody(Transaction transaction, List<TransactionMovement> userMovements, List<String> accountNumbers) {
+        String accountText = accountNumbers.isEmpty()
+                ? "your account"
+                : String.join(", ", accountNumbers);
+
+        String amountText = safeMoney(transaction.amount()).toPlainString() + " " + transaction.currency();
+        boolean hasDebit = userMovements.stream().anyMatch(movement -> movement.movementType() == TransactionMovementType.DEBIT);
+        boolean hasCredit = userMovements.stream().anyMatch(movement -> movement.movementType() == TransactionMovementType.CREDIT);
+
+        if (transaction.type() == TransactionType.TRANSFER && hasDebit && hasCredit) {
+            return "Transfer between your accounts completed for " + amountText + ".";
+        }
+
+        return switch (transaction.type()) {
+            case TRANSFER -> hasCredit
+                    ? "You received " + amountText + " in " + accountText + "."
+                    : "You sent " + amountText + " from " + accountText + ".";
+            case DEPOSIT -> "You received " + amountText + " in " + accountText + ".";
+            case WITHDRAWAL -> "You withdrew " + amountText + " from " + accountText + ".";
+            case PAYMENT -> hasCredit
+                    ? "You received a payment of " + amountText + " in " + accountText + "."
+                    : "You paid " + amountText + " from " + accountText + ".";
+            case REVERSAL -> "A transaction of " + amountText + " was reversed for " + accountText + ".";
+            case REFUND -> "A refund of " + amountText + " was completed for " + accountText + ".";
+            case HOLD -> "A hold of " + amountText + " was placed on " + accountText + ".";
+            case RELEASE -> "A hold of " + amountText + " was released on " + accountText + ".";
+            case FEE -> "A fee of " + amountText + " was charged to " + accountText + ".";
+            case ADJUSTMENT -> "An adjustment of " + amountText + " was applied to " + accountText + ".";
+            case SETTLEMENT -> "A settlement of " + amountText + " was recorded for " + accountText + ".";
+        };
+    }
+
+    private String buildTransactionActionUrl(Transaction transaction) {
+        if (transaction == null || transaction.id() == null) {
+            return null;
+        }
+
+        return "/api/me/transactions/" + transaction.id();
     }
 
     private UUID resolveRequestedByUserId() {

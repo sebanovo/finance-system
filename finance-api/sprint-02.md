@@ -24,8 +24,9 @@ Si vas a implementar frontend o integraciones, este es el orden útil de lectura
 4. `Limits` para entender bloqueos y revisiones.
 5. `Accounting` para entender el registro formal.
 6. `Governance` para entender auditoría y trazabilidad.
-7. `Reporting` para entender analítica futura.
-8. `Cross-Tenant` para entender la siguiente fase de producto.
+7. `Notifications` para entender el inbox, push y alertas operativas.
+8. `Reporting` para entender analítica futura.
+9. `Cross-Tenant` para entender la siguiente fase de producto.
 
 La idea es que `Accounts` y `Transactions` permitan operar el banco base desde el inicio, mientras el resto de módulos crece encima de ese núcleo.
 
@@ -44,6 +45,7 @@ tenant/
 ├── limits
 ├── accounting
 ├── governance
+├── notifications
 └── reporting
 ```
 
@@ -66,6 +68,7 @@ Hoy la plataforma soporta:
 - Limites configurables por tenant
 - Contabilidad formal por asiento y periodos
 - Auditoria y trazabilidad
+- Notificaciones in-app y push derivadas del core
 
 ## Base operativa de banco
 
@@ -572,7 +575,6 @@ cards          -> tarjetas
 loans          -> prestamos
 investments    -> inversiones
 statements     -> extractos
-notifications  -> mensajeria operacional
 cross-tenant   -> transferencias entre tenants
 settlements    -> compensacion futura entre tenants
 ```
@@ -2906,15 +2908,363 @@ TRANSACTION_COMPLETED
 GET    /api/audit-events
 GET    /api/audit-events/{id}
 GET    /api/system-events
-
-GET    /api/notifications
-PATCH  /api/notifications/{id}/read
-PATCH  /api/notifications/read-all
 ```
 
 ---
 
-# 7. Reporting
+# 7. Notifications
+
+Modulo encargado del inbox operativo, dispositivos push, preferencias y plantillas.
+
+## Resumen rapido
+
+| Concepto | Uso |
+|---|---|
+| `Notification` | Notificacion real persistida en base de datos |
+| `NotificationDelivery` | Intento de entrega por canal |
+| `NotificationDevice` | Dispositivo registrado del usuario |
+| `NotificationPreference` | Preferencias por categoria |
+| `NotificationTemplate` | Plantilla reusable para mensajes |
+
+La regla principal de este modulo es simple:
+
+- la notificacion real se guarda primero en base de datos
+- el push es un derivado de esa notificacion
+- si el push falla, la notificacion in-app sigue existiendo
+- si no hay Firebase o no hay dispositivo, la notificacion igual queda disponible para frontend
+
+## Objetivo funcional
+
+Este modulo permite que el frontend muestre:
+
+- campanita o inbox
+- contador de no leidas
+- detalle de una notificacion
+- marcar como leida
+- marcar como abierta
+- archivar
+- administrar dispositivos registrados
+- administrar preferencias por categoria
+
+Tambien permite a soporte o administracion revisar:
+
+- templates
+- deliveries
+- estado de una entrega push
+
+## Relacion con el core
+
+`transactions`, `accounts` y `auth` publican eventos de negocio y `notifications` los transforma en mensajes utiles para el usuario.
+
+Ejemplos:
+
+- una transaccion completada genera una notificacion de transaccion
+- una cuenta aprobada, bloqueada o cerrada genera una notificacion de cuenta
+- un cambio de contrasena o restablecimiento genera una notificacion de seguridad
+
+## Principios de diseno
+
+- `Notification` es la verdad del sistema
+- `NotificationDelivery` es la evidencia de intento de entrega
+- `NotificationDevice` representa un dispositivo registrado del usuario
+- `NotificationPreference` define que canales desea recibir por categoria
+- `NotificationTemplate` permite estandarizar mensajes por tipo y canal
+
+## Tipos y estados
+
+### `NotificationType`
+
+Catalogo rigido de eventos que puede mostrar el inbox.
+
+Incluye, entre otros:
+
+- `TRANSFER_RECEIVED`
+- `TRANSFER_SENT`
+- `PAYMENT_SUCCESS`
+- `PAYMENT_FAILED`
+- `DEPOSIT_CONFIRMED`
+- `WITHDRAWAL_CONFIRMED`
+- `REFUND_COMPLETED`
+- `REVERSAL_COMPLETED`
+- `QR_CONFIRMED`
+- `ACCOUNT_BLOCKED`
+- `ACCOUNT_APPROVED`
+- `ACCOUNT_ACTIVATED`
+- `ACCOUNT_FROZEN`
+- `ACCOUNT_CLOSED`
+- `LOGIN_ALERT`
+- `SECURITY_ALERT`
+- `SYSTEM_NOTICE`
+- `LIMIT_REVIEW_REQUIRED`
+- `LIMIT_EXCEEDED`
+- `FX_RATE_UPDATED`
+- `FEE_UPDATED`
+- `PASSWORD_RESET_REQUESTED`
+- `PASSWORD_RESET_COMPLETED`
+- `PASSWORD_CHANGED`
+
+### `NotificationCategory`
+
+Agrupa la notificacion por dominio funcional:
+
+- `TRANSACTIONS`
+- `PAYMENTS`
+- `ACCOUNTS`
+- `SECURITY`
+- `SYSTEM`
+- `FX`
+- `LIMITS`
+- `ADMIN`
+
+### `NotificationPriority`
+
+Define la urgencia visual y operativa:
+
+- `LOW`
+- `NORMAL`
+- `HIGH`
+- `CRITICAL`
+
+### `NotificationStatus`
+
+Estado logico para el inbox:
+
+- `UNREAD`
+- `READ`
+- `ARCHIVED`
+- `EXPIRED`
+
+### `NotificationChannel`
+
+Canal de salida o visualizacion:
+
+- `PUSH`
+- `IN_APP`
+- `EMAIL`
+- `SMS`
+
+### `NotificationDeviceStatus`
+
+Estado del dispositivo registrado:
+
+- `ACTIVE`
+- `INACTIVE`
+- `EXPIRED`
+- `REVOKED`
+
+### `NotificationPlatform`
+
+Plataforma del dispositivo:
+
+- `ANDROID`
+- `IOS`
+- `WEB`
+- `DESKTOP`
+- `UNKNOWN`
+
+### `NotificationDeliveryStatus`
+
+Estado del intento de entrega:
+
+- `PENDING`
+- `SENT`
+- `FAILED`
+- `SKIPPED`
+- `EXPIRED`
+
+## Endpoints de usuario
+
+### Resumen de rutas
+
+| Metodo | Ruta | Uso |
+|---|---|---|
+| `POST` | `/api/me/notification-devices` | Registrar o actualizar dispositivo |
+| `GET` | `/api/me/notification-devices` | Listar dispositivos |
+| `PATCH` | `/api/me/notification-devices/{id}/deactivate` | Desactivar dispositivo |
+| `DELETE` | `/api/me/notification-devices/{id}` | Revocar dispositivo |
+| `GET` | `/api/me/notifications` | Listar notificaciones |
+| `GET` | `/api/me/notifications/unread-count` | Contar no leidas |
+| `GET` | `/api/me/notifications/{id}` | Ver detalle |
+| `PATCH` | `/api/me/notifications/{id}/read` | Marcar leida |
+| `PATCH` | `/api/me/notifications/{id}/open` | Marcar abierta |
+| `PATCH` | `/api/me/notifications/read-all` | Marcar todas leidas |
+| `PATCH` | `/api/me/notifications/{id}/archive` | Archivar |
+| `GET` | `/api/me/notification-preferences` | Listar preferencias |
+| `PUT` | `/api/me/notification-preferences` | Actualizar preferencias |
+
+### `POST /api/me/notification-devices`
+
+Registra o actualiza un dispositivo del usuario autenticado.
+
+Campos:
+
+- `deviceId`
+- `fcmToken`
+- `platform`
+- `deviceName`
+- `appVersion`
+- `osVersion`
+
+El `userId` no se envía en el body: el backend lo resuelve desde el token del usuario autenticado.
+
+### `GET /api/me/notification-devices`
+
+Lista dispositivos registrados del usuario.
+
+### `PATCH /api/me/notification-devices/{id}/deactivate`
+
+Desactiva un dispositivo sin borrarlo fisicamente.
+
+### `DELETE /api/me/notification-devices/{id}`
+
+Revoca un dispositivo.
+
+### `GET /api/me/notifications`
+
+Lista notificaciones del usuario autenticado.
+
+Parámetro:
+
+- `limit`
+
+### `GET /api/me/notifications/unread-count`
+
+Devuelve el contador de notificaciones no leidas.
+
+### `GET /api/me/notifications/{id}`
+
+Devuelve el detalle completo de una notificacion.
+
+### `PATCH /api/me/notifications/{id}/read`
+
+Marca una notificacion como leida.
+
+### `PATCH /api/me/notifications/{id}/open`
+
+Marca una notificacion como abierta.
+
+### `PATCH /api/me/notifications/read-all`
+
+Marca como leidas todas las notificaciones pendientes del usuario.
+
+### `PATCH /api/me/notifications/{id}/archive`
+
+Archiva una notificacion.
+
+### `GET /api/me/notification-preferences`
+
+Lista preferencias del usuario por categoria.
+
+### `PUT /api/me/notification-preferences`
+
+Actualiza preferencias del usuario por categoria.
+
+Campos:
+
+- `category`
+- `pushEnabled`
+- `inAppEnabled`
+- `emailEnabled`
+- `smsEnabled`
+
+El `userId` no se envía en el body: el backend lo resuelve desde el token del usuario autenticado.
+
+## Endpoints administrativos
+
+### Resumen de rutas
+
+| Metodo | Ruta | Uso |
+|---|---|---|
+| `GET` | `/api/notifications/templates` | Listar templates |
+| `GET` | `/api/notifications/templates/{id}` | Ver template |
+| `GET` | `/api/notifications/{notificationId}/deliveries` | Ver deliveries de una notificacion |
+
+### `GET /api/notifications/templates`
+
+Lista templates activos o historicos del tenant.
+
+### `GET /api/notifications/templates/{id}`
+
+Devuelve un template especifico.
+
+### `GET /api/notifications/{notificationId}/deliveries`
+
+Lista los intentos de entrega de una notificacion.
+
+## Despliegue de Push
+
+La capa de push es opcional y no debe bloquear el funcionamiento del inbox ni de las operaciones bancarias.
+
+### Variables de entorno
+
+La configuracion nueva vive en `/.env.notification` y debe copiarse al archivo de entorno real que use el backend:
+
+- `NOTIFICATIONS_PUSH_ENABLED`
+- `NOTIFICATIONS_PROVIDER`
+- `FIREBASE_CREDENTIALS_PATH`
+- `FIREBASE_PROJECT_ID`
+
+### Contrato de uso
+
+- `NOTIFICATIONS_PUSH_ENABLED=false` mantiene el inbox funcionando sin intentar push real.
+- `NOTIFICATIONS_PROVIDER=FIREBASE` activa el provider Firebase.
+- `NOTIFICATIONS_PROVIDER=NOOP` deja el provider inactivo aunque el modulo siga operativo.
+- `FIREBASE_CREDENTIALS_PATH` debe apuntar al JSON real de service account cuando Firebase ya este listo.
+- el JSON real no debe guardarse en el repositorio.
+- si Firebase falla al inicializar o al enviar, la notificacion real sigue guardada y el fallo queda solo en `deliveries`.
+
+### Escenarios recomendados
+
+- desarrollo local sin credenciales: `NOTIFICATIONS_PUSH_ENABLED=false`
+- desarrollo con credenciales reales: `NOTIFICATIONS_PUSH_ENABLED=true`
+- produccion: `NOTIFICATIONS_PUSH_ENABLED=true` y `FIREBASE_CREDENTIALS_PATH` apuntando al secret montado por Docker o por el orquestador
+
+## Contrato de uso
+
+- el frontend no genera la notificacion real
+- el frontend solo consume el inbox y, si aplica, genera la representacion visual del QR o deeplink que venga en `actionUrl`
+- el push solo es una forma de aviso, no la fuente de verdad
+- si el usuario no tiene dispositivos activos, la notificacion sigue existiendo en `IN_APP`
+
+## Casos de uso frecuentes
+
+- alerta de deposito confirmado
+- alerta de transferencia recibida
+- alerta de cuenta aprobada
+- alerta de cuenta bloqueada
+- alerta de cambio de contrasena
+- alerta de restablecimiento de contrasena
+- alerta de limite excedido
+- alerta de tipo de cambio actualizado
+
+## Errores utiles
+
+| Caso | Respuesta esperada |
+|---|---|
+| notificacion no encontrada | `404` |
+| no pertenece al usuario autenticado | `404` o `403` segun la politica |
+| dispositivo no encontrado | `404` |
+| device token invalido | `400` |
+| preference category invalida | `400` |
+| push deshabilitado | la notificacion sigue existiendo y se registra `SKIPPED` |
+
+## Relacion con frontend
+
+El frontend debe tratar este modulo como un inbox real:
+
+- mostrar unread count
+- mostrar badges por categoria
+- permitir marcar como leida
+- permitir archivar
+- mostrar detalle completo
+- registrar dispositivos en login o primer acceso
+- mostrar preferencias por categoria
+
+La notificacion real siempre es la fuente de verdad.
+
+---
+
+# 8. Reporting
 
 Modulo de consultas, dashboards y exportacion.
 
@@ -2972,7 +3322,7 @@ CUSTOM
 
 ---
 
-# Propuesta de Cross-Tenant
+# 9. Propuesta de Cross-Tenant (implementacion propuesta)
 
 La transferencia entre tenants distintos no debe vivir dentro de `transactions`.
 
@@ -3059,7 +3409,6 @@ cards          -> tarjetas
 beneficiaries  -> destinatarios frecuentes
 loans          -> prestamos
 statements     -> extractos
-notifications  -> mensajeria operacional
 cross-tenant   -> transferencias entre tenants
 settlements    -> compensacion futura
 ```
@@ -3074,7 +3423,6 @@ Estos modulos no son obligatorios para operar el banco base, pero si para llevar
 - `beneficiaries` para destinatarios frecuentes
 - `loans` para creditos
 - `statements` para extractos
-- `notifications` para comunicacion operativa
 - `cross-tenant` para transferencias entre bancos tenant
 - `settlements` para compensacion futura
 
@@ -3086,15 +3434,15 @@ Estos modulos no son obligatorios para operar el banco base, pero si para llevar
 4. `limits`
 5. `accounting`
 6. `governance`
-7. `reporting`
-8. `cross-tenant`
-9. `kyc` / `aml`
-10. `risk`
-11. `cards`
-12. `beneficiaries`
-13. `loans`
-14. `statements`
-15. `notifications`
+7. `notifications`
+8. `reporting`
+9. `cross-tenant`
+10. `kyc` / `aml`
+11. `risk`
+12. `cards`
+13. `beneficiaries`
+14. `loans`
+15. `statements`
 
 ---
 
@@ -3108,6 +3456,7 @@ Orden recomendado:
 4. `limits`
 5. `accounting`
 6. `governance`
-7. `reporting`
-8. `cross-tenant`
-9. `kyc`, `aml`, `risk`, `cards`, `beneficiaries`, `loans`
+7. `notifications`
+8. `reporting`
+9. `cross-tenant`
+10. `kyc`, `aml`, `risk`, `cards`, `beneficiaries`, `loans`

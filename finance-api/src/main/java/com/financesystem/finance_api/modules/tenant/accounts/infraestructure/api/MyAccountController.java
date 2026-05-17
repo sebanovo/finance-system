@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/accounts/me")
+@RequestMapping("/api/me/accounts")
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("isAuthenticated()")
 public class MyAccountController {

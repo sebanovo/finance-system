@@ -4,7 +4,12 @@ import com.financesystem.finance_api.common.tenancy.context.TenantContext;
 import com.financesystem.finance_api.common.tenancy.context.TenantContextHolder;
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.governance.notifications.application.dto.NotificationPublishRequest;
 import com.financesystem.finance_api.modules.governance.notifications.application.config.PasswordResetNotificationProperties;
+import com.financesystem.finance_api.modules.governance.notifications.domain.model.NotificationCategory;
+import com.financesystem.finance_api.modules.governance.notifications.domain.model.NotificationPriority;
+import com.financesystem.finance_api.modules.governance.notifications.domain.model.NotificationType;
+import com.financesystem.finance_api.modules.governance.notifications.domain.port.NotificationPublisherPort;
 import com.financesystem.finance_api.modules.governance.notifications.application.usecase.SendPasswordResetNotificationUseCase;
 import com.financesystem.finance_api.modules.governance.notifications.domain.model.PasswordResetNotification;
 import com.financesystem.finance_api.modules.identity.auth.application.dto.ForgotPasswordRequest;
@@ -14,7 +19,11 @@ import com.financesystem.finance_api.modules.identity.users.domain.model.TenantU
 import com.financesystem.finance_api.modules.identity.users.domain.repository.TenantUserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -24,11 +33,15 @@ import java.util.Map;
 @Service
 public class ForgotPasswordUseCase {
 
+    private static final Logger log = LoggerFactory.getLogger(ForgotPasswordUseCase.class);
+
     private final TenantUserRepository tenantUserRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordResetNotificationProperties properties;
     private final SendPasswordResetNotificationUseCase sendPasswordResetNotificationUseCase;
     private final AuditTrailService auditTrailService;
+    private final NotificationPublisherPort notificationPublisherPort;
+    private final ObjectMapper objectMapper;
     private final SecureRandom secureRandom = new SecureRandom();
 
     public ForgotPasswordUseCase(
@@ -36,13 +49,17 @@ public class ForgotPasswordUseCase {
             PasswordResetTokenRepository passwordResetTokenRepository,
             PasswordResetNotificationProperties properties,
             SendPasswordResetNotificationUseCase sendPasswordResetNotificationUseCase,
-            AuditTrailService auditTrailService
+            AuditTrailService auditTrailService,
+            NotificationPublisherPort notificationPublisherPort,
+            ObjectMapper objectMapper
     ) {
         this.tenantUserRepository = tenantUserRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.properties = properties;
         this.sendPasswordResetNotificationUseCase = sendPasswordResetNotificationUseCase;
         this.auditTrailService = auditTrailService;
+        this.notificationPublisherPort = notificationPublisherPort;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
@@ -84,6 +101,25 @@ public class ForgotPasswordUseCase {
                 )
         );
 
+        ObjectNode data = objectMapper.createObjectNode()
+                .put("tenantSlug", tenantContext.tenantSlug())
+                .put("email", normalizedEmail)
+                .put("expiresAt", expiresAt.toString())
+                .put("status", "REQUESTED");
+
+        publishNotificationSafely(new NotificationPublishRequest(
+                tenantUser.id(),
+                NotificationType.PASSWORD_RESET_REQUESTED,
+                NotificationCategory.SECURITY,
+                NotificationPriority.HIGH,
+                "Password reset requested",
+                "A password reset request was created for your account.",
+                data,
+                null,
+                "/security/password-reset",
+                expiresAt
+        ));
+
         auditTrailService.recordTenantEvent(
                 AuditEventTypes.PASSWORD_RESET_REQUESTED,
                 "USER",
@@ -96,5 +132,13 @@ public class ForgotPasswordUseCase {
         byte[] bytes = new byte[32];
         secureRandom.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    private void publishNotificationSafely(NotificationPublishRequest request) {
+        try {
+            notificationPublisherPort.publish(request);
+        } catch (Exception exception) {
+            log.warn("Unable to publish password reset notification: {}", exception.getMessage());
+        }
     }
 }
