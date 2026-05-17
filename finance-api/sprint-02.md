@@ -153,400 +153,6 @@ La API devuelve un sobre de error consistente para que frontend pueda mostrar me
 
 ---
 
-# Request Bodies
-
-Esta sección lista los nombres de los atributos que acepta cada endpoint que recibe body.
-Sirve para frontend, integraciones y pruebas manuales.
-Esta lista cubre el core tenant documentado aquí; los bodies de auth y plataforma se documentan en sus módulos respectivos.
-Cuando un campo sea enum o tipo rígido, el detalle exacto vive en la sección del módulo correspondiente.
-
-## Accounts
-
-### `POST /api/accounts`
-
-Campos:
-
-- `userId`
-- `accountName`
-- `customAlias`
-- `accountType`
-- `currency`
-- `primary`
-
-### `POST /api/me/accounts`
-
-Campos:
-
-- `accountName`
-- `customAlias`
-- `accountType`
-- `currency`
-
-### `PUT /api/accounts/{id}`
-
-Campos:
-
-- `accountName`
-- `customAlias`
-- `primary`
-
-### `PATCH /api/me/accounts/{id}/alias`
-
-Campos:
-
-- `customAlias`
-
-### `PATCH /api/accounts/{id}/approve`
-
-Sin body.
-
-### `PATCH /api/accounts/{id}/activate`
-
-Sin body.
-
-### `PATCH /api/accounts/{id}/block`
-
-Sin body obligatorio.
-
-Parámetro opcional:
-
-- `reason`
-
-### `PATCH /api/accounts/{id}/freeze`
-
-Sin body obligatorio.
-
-Parámetro opcional:
-
-- `reason`
-
-### `PATCH /api/accounts/{id}/close`
-
-Sin body obligatorio.
-
-Parámetro opcional:
-
-- `reason`
-
-## Errores útiles de Accounts
-
-| Caso | Respuesta esperada |
-|---|---|
-| cuenta no encontrada | `404` con mensaje claro |
-| cuenta ya aprobada | `400` o `409` con motivo explícito |
-| cuenta ya cerrada | `400` con motivo útil |
-| cuenta no apta para la acción | `400` indicando el tipo de cuenta y la operación solicitada |
-| usuario no pertenece al tenant | `403` o `404` según la política del endpoint |
-| estado inválido para activar, bloquear o cerrar | `400` con el estado real que bloquea la acción |
-
-## Transactions
-
-### `POST /api/transactions/transfers`
-
-Campos:
-
-- `sourceAccountId`
-- `targetAccountId`
-- `amount`
-- `currency`
-- `description`
-- `idempotencyKey`
-
-### `POST /api/transactions/deposits`
-
-Campos:
-
-- `targetAccountId`
-- `amount`
-- `currency`
-- `method`
-- `externalReference`
-- `description`
-- `idempotencyKey`
-
-### `POST /api/transactions/withdrawals`
-
-Campos:
-
-- `sourceAccountId`
-- `amount`
-- `currency`
-- `method`
-- `description`
-- `idempotencyKey`
-
-### `POST /api/transactions/payments`
-
-Campos:
-
-- `sourceAccountId`
-- `amount`
-- `currency`
-- `method`
-- `externalReference`
-- `description`
-- `idempotencyKey`
-
-### `POST /api/transactions/holds`
-
-Campos:
-
-- `accountId`
-- `amount`
-- `currency`
-- `description`
-- `idempotencyKey`
-
-### `POST /api/transactions/releases`
-
-Campos:
-
-- `accountId`
-- `amount`
-- `currency`
-- `description`
-- `idempotencyKey`
-
-### `POST /api/transactions/fees`
-
-Campos:
-
-- `accountId`
-- `amount`
-- `currency`
-- `externalReference`
-- `description`
-- `idempotencyKey`
-
-### `POST /api/transactions/adjustments`
-
-Campos:
-
-- `accountId`
-- `amount`
-- `currency`
-- `direction`
-- `reason`
-- `externalReference`
-- `idempotencyKey`
-
-### `POST /api/transactions/qr/intents`
-
-Campos:
-
-- `targetAccountId`
-- `amount`
-- `currency`
-- `externalReference`
-- `description`
-- `idempotencyKey`
-
-### `POST /api/transactions/{id}/reversal`
-
-Campos:
-
-- `reason`
-- `idempotencyKey`
-
-### `POST /api/transactions/{id}/refunds`
-
-Campos:
-
-- `amount`
-- `reason`
-- `idempotencyKey`
-
-### `POST /api/me/transactions/qr/{id}/confirm`
-
-Campos:
-
-- `sourceAccountId`
-- `idempotencyKey`
-
-### `POST /api/me/transactions/deposits`
-
-Campos:
-
-- `targetAccountId`
-- `amount`
-- `currency`
-- `method`
-- `externalReference`
-- `description`
-- `idempotencyKey`
-
-### `POST /api/me/transactions/transfers`
-
-Campos:
-
-- `sourceAccountId`
-- `targetAccountId`
-- `amount`
-- `currency`
-- `description`
-- `idempotencyKey`
-
-### `POST /api/me/transactions/withdrawals`
-
-Campos:
-
-- `sourceAccountId`
-- `amount`
-- `currency`
-- `method`
-- `description`
-- `idempotencyKey`
-
-### `POST /api/me/transactions/payments`
-
-Campos:
-
-- `sourceAccountId`
-- `amount`
-- `currency`
-- `method`
-- `externalReference`
-- `description`
-- `idempotencyKey`
-
-### `POST /api/me/transactions/holds`
-
-Campos:
-
-- `accountId`
-- `amount`
-- `currency`
-- `description`
-- `idempotencyKey`
-
-### `POST /api/me/transactions/releases`
-
-Campos:
-
-- `accountId`
-- `amount`
-- `currency`
-- `description`
-- `idempotencyKey`
-
-## FX
-
-### `POST /api/fx/rates`
-
-Campos:
-
-- `sourceCurrency`
-- `targetCurrency`
-- `rate`
-- `active`
-- `description`
-
-### `PUT /api/fx/rates/{id}`
-
-Campos:
-
-- `sourceCurrency`
-- `targetCurrency`
-- `rate`
-- `active`
-- `description`
-
-### `POST /api/fx/fees`
-
-Campos:
-
-- `operationCode`
-- `feeType`
-- `feeValue`
-- `calculationMode`
-- `active`
-- `description`
-
-### `PUT /api/fx/fees/{id}`
-
-Campos:
-
-- `operationCode`
-- `feeType`
-- `feeValue`
-- `calculationMode`
-- `active`
-- `description`
-
-## Limits
-
-### `POST /api/limits/rules`
-
-Campos:
-
-- `code`
-- `name`
-- `description`
-- `limitType`
-- `scopeType`
-- `period`
-- `transactionType`
-- `accountType`
-- `currency`
-- `minAmount`
-- `maxAmount`
-- `maxCount`
-- `active`
-- `requireReviewExceed`
-
-### `PATCH /api/limits/rules/{id}`
-
-Campos:
-
-- `code`
-- `name`
-- `description`
-- `limitType`
-- `scopeType`
-- `period`
-- `transactionType`
-- `accountType`
-- `currency`
-- `minAmount`
-- `maxAmount`
-- `maxCount`
-- `active`
-- `requireReviewExceed`
-
-### `POST /api/limits/evaluate`
-
-Campos:
-
-- `actorUserId`
-- `sourceAccountId`
-- `targetAccountId`
-- `sourceAccountType`
-- `targetAccountType`
-- `sourceAvailableBalance`
-- `targetAvailableBalance`
-- `transactionType`
-- `currency`
-- `amount`
-
-## Accounting
-
-### `POST /api/accounting/periods`
-
-Campos:
-
-- `periodCode`
-- `periodType`
-- `startDate`
-- `endDate`
-- `description`
-
-### `PATCH /api/accounting/periods/{id}/close`
-
-Campos:
-
-- `reason`
-
----
 
 # Arquitectura objetivo
 
@@ -1150,7 +756,7 @@ Estas cuentas no desaparecen del sistema. Solo quedan fuera del core de transacc
 |---|---|---|---|
 | `targetAccountId` | `UUID` | Cuenta que recibirá el dinero | Debe existir y pertenecer al tenant activo. |
 | `amount` | `BigDecimal` | Monto del deposito | Debe ser mayor que `0`. |
-| `currency` | `CurrencyCode` | Moneda enviada por el canal de entrada | Enum rígido. Ej: `BOB`, `USD`, `EUR`, `USDT`. |
+| `currency` | `CurrencyCode` | Moneda enviada por el canal de entrada | Enum rígido: `BOB`, `USD`, `EUR`, `USDT`. |
 | `method` | `TransactionChannel` | Canal operativo de captura | Opcional. Si no se envía, el backend usa `CASHBOX`. |
 | `externalReference` | `String` | Referencia de negocio o comprobante externo | Útil para caja, POS o referencias internas. |
 | `description` | `String` | Descripción legible para auditoría y frontend | Recomendado para UX y trazabilidad. |
@@ -1251,7 +857,7 @@ Valores válidos de `method`:
 | `accountId` | `UUID` | Cuenta ajustada | Debe existir y estar activa. |
 | `amount` | `BigDecimal` | Monto del ajuste | Debe ser mayor que `0`. |
 | `currency` | `CurrencyCode` | Moneda de la cuenta | Debe coincidir con la cuenta. |
-| `direction` | `AdjustmentDirection` | Sentido del ajuste | Enum rígido. `CREDIT` aumenta, `DEBIT` disminuye. |
+| `direction` | `AdjustmentDirection` | Sentido del ajuste | Enum rígido: `CREDIT` aumenta, `DEBIT` disminuye. |
 | `reason` | `String` | Razón obligatoria del ajuste | Debe ser clara y auditable. |
 | `externalReference` | `String` | Referencia externa o interna | Opcional. |
 | `idempotencyKey` | `String` | Clave única por intento | Reutilízala solo para el mismo ajuste. |
@@ -1908,8 +1514,8 @@ Sirve para:
 
 | Campo | Tipo | Uso | Notas |
 |---|---|---|---|
-| `sourceCurrency` | `CurrencyCode` | Moneda origen del par | Enum rígido. |
-| `targetCurrency` | `CurrencyCode` | Moneda destino del par | Enum rígido. |
+| `sourceCurrency` | `CurrencyCode` | Moneda origen del par | Enum rígido: `BOB`, `USD`, `EUR`, `USDT`. |
+| `targetCurrency` | `CurrencyCode` | Moneda destino del par | Enum rígido: `BOB`, `USD`, `EUR`, `USDT`. |
 | `rate` | `BigDecimal` | Tasa de cambio | Debe ser positiva y mayor que cero. |
 | `active` | `boolean` | Activa o desactiva la tasa | Permite dejar una tasa sin uso sin borrarla. |
 | `description` | `String` | Descripción opcional | Útil para identificar el origen de la tasa. |
@@ -1918,8 +1524,8 @@ Sirve para:
 
 | Campo | Tipo | Uso | Notas |
 |---|---|---|---|
-| `sourceCurrency` | `CurrencyCode` | Moneda origen del par | Enum rígido. |
-| `targetCurrency` | `CurrencyCode` | Moneda destino del par | Enum rígido. |
+| `sourceCurrency` | `CurrencyCode` | Moneda origen del par | Enum rígido: `BOB`, `USD`, `EUR`, `USDT`. |
+| `targetCurrency` | `CurrencyCode` | Moneda destino del par | Enum rígido: `BOB`, `USD`, `EUR`, `USDT`. |
 | `rate` | `BigDecimal` | Tasa actualizada | Debe ser positiva y mayor que cero. |
 | `active` | `boolean` | Estado activo/inactivo | Activa o desactiva la tasa. |
 | `description` | `String` | Descripción opcional | Ayuda a documentar la tasa. |
@@ -1939,10 +1545,10 @@ Sirve para:
 
 | Campo | Tipo | Uso | Notas |
 |---|---|---|---|
-| `operationCode` | `FxOperationCode` | Operación a la que aplica el fee | Enum rígido del core FX. |
-| `feeType` | `FeeType` | Tipo de comisión | Enum rígido. |
+| `operationCode` | `FxOperationCode` | Operación a la que aplica el fee | Enum rígido del core FX: `TRANSFER`, `CONVERSION`, `DEPOSIT`, `WITHDRAWAL`, `PAYMENT`. |
+| `feeType` | `FeeType` | Tipo de comisión | Enum rígido: `NONE`, `FIXED`, `PERCENTAGE`. |
 | `feeValue` | `BigDecimal` | Valor de la comisión | Puede ser cero cuando `feeType = NONE`. |
-| `calculationMode` | `FeeCalculationMode` | Si se cobra aparte o dentro de la tasa | Enum rígido. |
+| `calculationMode` | `FeeCalculationMode` | Si se cobra aparte o dentro de la tasa | Enum rígido: `SEPARATE`, `INCLUDED`. |
 | `active` | `boolean` | Estado activo/inactivo | Habilita o deshabilita el fee. |
 | `description` | `String` | Descripción opcional | Texto libre de soporte/administración. |
 
@@ -2300,12 +1906,12 @@ Sirve para proteger al tenant de:
 | `code` | `String` | Código único de la regla | Debe ser único dentro del tenant. |
 | `name` | `String` | Nombre legible de la regla | Texto para frontend y administración. |
 | `description` | `String` | Descripción de negocio | Opcional. |
-| `limitType` | `LimitRuleType` | Tipo de límite | Enum rígido. |
-| `scopeType` | `LimitScopeType` | Alcance de la regla | Enum rígido. |
-| `period` | `LimitPeriod` | Periodo de evaluación | Enum rígido. |
-| `transactionType` | `TransactionType` | Tipo de transacción afectada | Enum rígido. Solo permitido si `scopeType = TRANSACTION_TYPE`. |
-| `accountType` | `AccountType` | Tipo de cuenta afectada | Enum rígido. Solo permitido si `scopeType = ACCOUNT_TYPE`. |
-| `currency` | `CurrencyCode` | Moneda de aplicación | Enum rígido. Opcional para reglas globales. |
+| `limitType` | `LimitRuleType` | Tipo de límite | Enum rígido: `PER_TRANSACTION_AMOUNT`, `DAILY_AMOUNT`, `MONTHLY_AMOUNT`, `DAILY_COUNT`, `MONTHLY_COUNT`, `MIN_AMOUNT`, `MAX_BALANCE`. |
+| `scopeType` | `LimitScopeType` | Alcance de la regla | Enum rígido: `TENANT`, `ACCOUNT_TYPE`, `TRANSACTION_TYPE`, `USER`, `ACCOUNT`. |
+| `period` | `LimitPeriod` | Periodo de evaluación | Enum rígido: `TRANSACTION`, `DAILY`, `MONTHLY`. |
+| `transactionType` | `TransactionType` | Tipo de transacción afectada | Enum rígido: `TRANSFER`, `DEPOSIT`, `WITHDRAWAL`, `PAYMENT`, `REVERSAL`, `REFUND`, `FEE`, `ADJUSTMENT`, `HOLD`, `RELEASE`, `SETTLEMENT`. Solo permitido si `scopeType = TRANSACTION_TYPE`. |
+| `accountType` | `AccountType` | Tipo de cuenta afectada | Enum rígido: `WALLET`, `SAVINGS`, `CHECKING`, `CREDIT_CARD`, `PREPAID_CARD`, `LOAN`. Solo permitido si `scopeType = ACCOUNT_TYPE`. |
+| `currency` | `CurrencyCode` | Moneda de aplicación | Enum rígido: `BOB`, `USD`, `EUR`, `USDT`. Opcional para reglas globales. |
 | `minAmount` | `BigDecimal` | Monto mínimo permitido | Según el tipo de límite. |
 | `maxAmount` | `BigDecimal` | Monto máximo permitido | Según el tipo de límite. |
 | `maxCount` | `Long` | Límite de cantidad | Requerido en límites de conteo. |
@@ -2324,12 +1930,12 @@ La API sigue validando consistencia entre `limitType`, `scopeType`, `period`, `t
 | `actorUserId` | `UUID` | Usuario que ejecuta la operación | Se usa para reglas por usuario. |
 | `sourceAccountId` | `UUID` | Cuenta origen | Puede ser nulo según la operación. |
 | `targetAccountId` | `UUID` | Cuenta destino | Puede ser nulo según la operación. |
-| `sourceAccountType` | `AccountType` | Tipo de cuenta origen | Enum rígido. |
-| `targetAccountType` | `AccountType` | Tipo de cuenta destino | Enum rígido. |
+| `sourceAccountType` | `AccountType` | Tipo de cuenta origen | Enum rígido: `WALLET`, `SAVINGS`, `CHECKING`, `CREDIT_CARD`, `PREPAID_CARD`, `LOAN`. |
+| `targetAccountType` | `AccountType` | Tipo de cuenta destino | Enum rígido: `WALLET`, `SAVINGS`, `CHECKING`, `CREDIT_CARD`, `PREPAID_CARD`, `LOAN`. |
 | `sourceAvailableBalance` | `BigDecimal` | Saldo disponible origen | Ayuda a límites por saldo máximo. |
 | `targetAvailableBalance` | `BigDecimal` | Saldo disponible destino | Útil para topes de balance. |
-| `transactionType` | `TransactionType` | Tipo de operación a evaluar | Enum rígido. |
-| `currency` | `CurrencyCode` | Moneda de la operación | Enum rígido. |
+| `transactionType` | `TransactionType` | Tipo de operación a evaluar | Enum rígido: `TRANSFER`, `DEPOSIT`, `WITHDRAWAL`, `PAYMENT`, `REVERSAL`, `REFUND`, `FEE`, `ADJUSTMENT`, `HOLD`, `RELEASE`, `SETTLEMENT`. |
+| `currency` | `CurrencyCode` | Moneda de la operación | Enum rígido: `BOB`, `USD`, `EUR`, `USDT`. |
 | `amount` | `BigDecimal` | Monto a evaluar | Valor que se comparará contra la regla. |
 
 ### Ejemplos JSON de frontend
