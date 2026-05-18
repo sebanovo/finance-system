@@ -116,7 +116,7 @@ public class MyTransactionController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('me.transactions.read')")
+    @PreAuthorize("hasAuthority('me.transactions.detail')")
     public ApiResponse<TransactionResponse> getTransactionById(@PathVariable UUID id) {
         return ApiResponse.success("Transaction retrieved successfully", getMyTransactionByIdUseCase.execute(id));
     }

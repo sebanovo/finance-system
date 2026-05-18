@@ -18,7 +18,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/accounting")
 @SecurityRequirement(name = "bearerAuth")
-@PreAuthorize("hasRole('OWNER_ADMIN')")
+// @PreAuthorize("hasRole('OWNER_ADMIN')")
 public class AccountingController {
 
     private final ListAccountingPeriodsUseCase listAccountingPeriodsUseCase;
@@ -42,16 +42,19 @@ public class AccountingController {
     }
 
     @GetMapping("/periods")
+    @PreAuthorize("hasAuthority('accounting.periods.read')")
     public ApiResponse<List<AccountingPeriodResponse>> listPeriods() {
         return ApiResponse.success("Accounting periods retrieved successfully", listAccountingPeriodsUseCase.execute());
     }
 
     @PostMapping("/periods")
+    @PreAuthorize("hasAuthority('accounting.periods.create')")
     public ApiResponse<AccountingPeriodResponse> createPeriod(@Valid @RequestBody CreateAccountingPeriodRequest request) {
         return ApiResponse.success("Accounting period created successfully", createAccountingPeriodUseCase.execute(request));
     }
 
     @PatchMapping("/periods/{id}/close")
+    @PreAuthorize("hasAuthority('accounting.periods.close')")
     public ApiResponse<AccountingPeriodResponse> closePeriod(
             @PathVariable UUID id,
             @Valid @RequestBody CloseAccountingPeriodRequest request
@@ -60,11 +63,13 @@ public class AccountingController {
     }
 
     @GetMapping("/journal-entries")
+    @PreAuthorize("hasAuthority('accounting.journal.read')")
     public ApiResponse<List<JournalEntryResponse>> listJournalEntries() {
         return ApiResponse.success("Journal entries retrieved successfully", listJournalEntriesUseCase.execute());
     }
 
     @GetMapping("/journal-entries/{id}")
+    @PreAuthorize("hasAuthority('accounting.journal.detail')")
     public ApiResponse<JournalEntryResponse> getJournalEntryById(@PathVariable UUID id) {
         return ApiResponse.success("Journal entry retrieved successfully", getJournalEntryByIdUseCase.execute(id));
     }

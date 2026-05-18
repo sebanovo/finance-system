@@ -58,7 +58,7 @@ public class AccountController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('OWNER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAuthority('accounts.create')")
     public ApiResponse<AccountOwnerResponse> createAccount(
             @Valid @RequestBody CreateAccountRequest request
     ) {
@@ -69,7 +69,7 @@ public class AccountController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('OWNER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAuthority('accounts.list')")
     public ApiResponse<List<AccountOwnerResponse>> listAccounts() {
         return ApiResponse.success(
                 "Accounts retrieved successfully",
@@ -78,7 +78,7 @@ public class AccountController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('OWNER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAuthority('accounts.view')")
     public ApiResponse<AccountOwnerResponse> getAccountById(
             @PathVariable UUID id
     ) {
@@ -89,7 +89,7 @@ public class AccountController {
     }
 
     @GetMapping("/{id}/balance")
-    @PreAuthorize("hasAnyRole('OWNER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAuthority('accounts.balance.read')")
     public ApiResponse<AccountBalanceResponse> getAccountBalance(
             @PathVariable UUID id
     ) {
@@ -100,7 +100,7 @@ public class AccountController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('OWNER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAuthority('accounts.update')")
     public ApiResponse<AccountOwnerResponse> updateAccount(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateAccountRequest request
@@ -112,7 +112,7 @@ public class AccountController {
     }
 
     @PatchMapping("/{id}/approve")
-    @PreAuthorize("hasAnyRole('OWNER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAuthority('accounts.approve')")
     public ApiResponse<AccountOwnerResponse> approveAccount(
             @PathVariable UUID id
     ) {
@@ -123,7 +123,7 @@ public class AccountController {
     }
 
     @PatchMapping("/{id}/activate")
-    @PreAuthorize("hasAnyRole('OWNER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAuthority('accounts.activate')")
     public ApiResponse<AccountOwnerResponse> activateAccount(
             @PathVariable UUID id
     ) {
@@ -134,7 +134,7 @@ public class AccountController {
     }
 
     @PatchMapping("/{id}/block")
-    @PreAuthorize("hasAnyRole('OWNER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAuthority('accounts.block')")
     public ApiResponse<AccountOwnerResponse> blockAccount(
             @PathVariable UUID id,
             @RequestParam(required = false) String reason
@@ -146,7 +146,7 @@ public class AccountController {
     }
 
     @PatchMapping("/{id}/freeze")
-    @PreAuthorize("hasAnyRole('OWNER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAuthority('accounts.freeze')")
     public ApiResponse<AccountOwnerResponse> freezeAccount(
             @PathVariable UUID id,
             @RequestParam(required = false) String reason
@@ -158,7 +158,7 @@ public class AccountController {
     }
 
     @PatchMapping("/{id}/close")
-    @PreAuthorize("hasAnyRole('OWNER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAuthority('accounts.close')")
     public ApiResponse<AccountOwnerResponse> closeAccount(
             @PathVariable UUID id,
             @RequestParam(required = false) String reason
