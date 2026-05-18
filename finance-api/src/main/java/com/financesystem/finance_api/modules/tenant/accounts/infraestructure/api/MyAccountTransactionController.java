@@ -16,7 +16,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/me/accounts/{accountId}/transactions")
 @SecurityRequirement(name = "bearerAuth")
-@PreAuthorize("hasAuthority('me.transactions.read')")
+@PreAuthorize("isAuthenticated()")
 public class MyAccountTransactionController {
 
     private final ListMyAccountTransactionsUseCase listMyAccountTransactionsUseCase;
@@ -26,6 +26,7 @@ public class MyAccountTransactionController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('me.accounts.transactions.read')")
     public ApiResponse<List<TransactionResponse>> listMyAccountTransactions(@PathVariable UUID accountId) {
         return ApiResponse.success(
                 "Account transactions retrieved successfully",

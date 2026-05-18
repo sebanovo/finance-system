@@ -21,7 +21,7 @@ public class TenantAuditController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('OWNER_ADMIN')")
+    @PreAuthorize("hasAuthority('audit.events.read')")
     public ApiResponse<List<AuditEventResponse>> listTenantAuditEvents(
             @RequestParam(defaultValue = "50") int limit
     ) {

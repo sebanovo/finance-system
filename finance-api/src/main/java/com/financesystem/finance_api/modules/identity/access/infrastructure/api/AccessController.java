@@ -51,7 +51,7 @@ public class AccessController {
     // @GetMapping("/permissions")
     // @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/permissions")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER_ADMIN')")
+    @PreAuthorize("hasAuthority('access.permissions.read')")
     public ApiResponse<List<SystemPermissionResponse>> listPermissions() {
         return ApiResponse.success(
                 "System permissions retrieved successfully",
@@ -62,7 +62,7 @@ public class AccessController {
     // @GetMapping("/roles")
     // @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/roles")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER_ADMIN')")
+    @PreAuthorize("hasAuthority('access.roles.read')")
     public ApiResponse<List<TenantRoleResponse>> listRoles() {
         return ApiResponse.success(
                 "Tenant roles retrieved successfully",
@@ -73,7 +73,7 @@ public class AccessController {
     // @PostMapping("/roles")
     // @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/roles")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER_ADMIN')")
+    @PreAuthorize("hasAuthority('access.roles.create')")
     public ApiResponse<TenantRoleResponse> createRole(@Valid @RequestBody CreateTenantRoleRequest request) {
         return ApiResponse.success(
                 "Tenant role created successfully",
@@ -84,7 +84,7 @@ public class AccessController {
     // @GetMapping("/roles/{id}")
     // @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/roles/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER_ADMIN')")
+    @PreAuthorize("hasAuthority('access.roles.detail')")
     public ApiResponse<TenantRoleResponse> getRoleById(@PathVariable UUID id) {
         return ApiResponse.success(
                 "Tenant role retrieved successfully",
@@ -95,7 +95,7 @@ public class AccessController {
     // @PutMapping("/roles/{id}")
     // @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/roles/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER_ADMIN')")
+    @PreAuthorize("hasAuthority('access.roles.update')")
     public ApiResponse<TenantRoleResponse> updateRole(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateTenantRoleRequest request
@@ -109,7 +109,7 @@ public class AccessController {
     // @PatchMapping("/roles/{id}/activate")
     // @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/roles/{id}/activate")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER_ADMIN')")
+    @PreAuthorize("hasAuthority('access.roles.activate')")
     public ApiResponse<TenantRoleResponse> activateRole(@PathVariable UUID id) {
         return ApiResponse.success(
                 "Tenant role activated successfully",
@@ -120,7 +120,7 @@ public class AccessController {
     // @PatchMapping("/roles/{id}/deactivate")
     // @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/roles/{id}/deactivate")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER_ADMIN')")
+    @PreAuthorize("hasAuthority('access.roles.deactivate')")
     public ApiResponse<TenantRoleResponse> deactivateRole(@PathVariable UUID id) {
         return ApiResponse.success(
                 "Tenant role deactivated successfully",
@@ -131,7 +131,7 @@ public class AccessController {
     // @GetMapping("/users/{userId}/roles")
     // @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/users/{userId}/roles")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER_ADMIN')")
+    @PreAuthorize("hasAuthority('access.users.roles.read')")
     public ApiResponse<UserRolesResponse> getUserRoles(@PathVariable UUID userId) {
         return ApiResponse.success(
                 "User roles retrieved successfully",
@@ -142,7 +142,7 @@ public class AccessController {
     // @PutMapping("/users/{userId}/roles")
     // @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/users/{userId}/roles")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER_ADMIN')")
+    @PreAuthorize("hasAuthority('access.users.roles.assign')")
     public ApiResponse<UserRolesResponse> assignUserRoles(
             @PathVariable UUID userId,
             @RequestBody AssignUserRolesRequest request

@@ -14,7 +14,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/fx")
 @SecurityRequirement(name = "bearerAuth")
-@PreAuthorize("hasRole('OWNER_ADMIN')")
+// @PreAuthorize("hasRole('OWNER_ADMIN')")
 public class FxAdministrationController {
 
     private final FxAdministrationService fxAdministrationService;
@@ -33,7 +33,7 @@ public class FxAdministrationController {
     }
 
     @GetMapping("/rates/{id}")
-    @PreAuthorize("hasAuthority('fx.rates.read')")
+    @PreAuthorize("hasAuthority('fx.rates.detail')")
     public ApiResponse<FxExchangeRateResponse> getRate(@PathVariable UUID id) {
         return ApiResponse.success(
                 "FX rate retrieved successfully",
@@ -79,7 +79,7 @@ public class FxAdministrationController {
     }
 
     @GetMapping("/fees/{id}")
-    @PreAuthorize("hasAuthority('fx.fees.read')")
+    @PreAuthorize("hasAuthority('fx.fees.detail')")
     public ApiResponse<OperationFeeResponse> getFee(@PathVariable UUID id) {
         return ApiResponse.success(
                 "FX fee retrieved successfully",

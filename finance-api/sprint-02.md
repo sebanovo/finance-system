@@ -96,11 +96,126 @@ Esto es suficiente para que el frontend trabaje con una base real de banca opera
 La creacion de un tenant nuevo deja configurado el sistema base sin trabajo manual:
 
 - Roles tenant: `OWNER_ADMIN`, `ADMIN`, `USER`
-- Permisos base de cuentas, transacciones, limits, accounting y fx
-- Permisos `me.*` para usuarios cliente
+- `OWNER_ADMIN` recibe el conjunto mas amplio de permisos del tenant
+- `ADMIN` recibe un subconjunto operativo, mas limitado que `OWNER_ADMIN`
+- `USER` recibe solo permisos self-service
 - Tasas de cambio por defecto entre `BOB`, `USD`, `EUR` y `USDT`
 - Comisiones por operacion en `0` por defecto
 - Configuracion basica del tenant
+
+## Autorizacion y permisos
+
+La aplicacion usa `hasAuthority(...)` en los endpoints tenant para que el frontend y el backend compartan una semantica estricta de permisos.
+
+### Convencion de nombres
+
+| Prefijo | Uso |
+|---|---|
+| `me.<recurso>.<accion>` | Acciones self-service del usuario autenticado |
+| `<recurso>.<accion>` | Acciones administrativas del tenant |
+| `access.<recurso>.<accion>` | Gestion de acceso, roles y asignacion de permisos |
+| `audit.events.read` | Consulta de trazabilidad y auditoria |
+| `notifications.<recurso>.<accion>` | Inbox, templates y deliveries de notificaciones |
+
+### Separacion de roles
+
+| Rol | Alcance |
+|---|---|
+| `OWNER_ADMIN` | Superconjunto del tenant. Puede administrar usuarios, cuentas, transacciones, limits, accounting, FX, auditoria, accesos y notificaciones administrativas. |
+| `ADMIN` | Rol operativo restringido. Puede trabajar con cuentas, usuarios, transacciones, limits de lectura/evaluacion, accounting de lectura, auditoria, FX de lectura y notificaciones de lectura, pero no supera al `OWNER_ADMIN`. |
+| `USER` | Solo self-service. Puede operar sobre sus propias cuentas y sus propias transacciones. |
+
+### Permisos self-service principales
+
+| Permiso | Uso |
+|---|---|
+| `me.accounts.create` | Crear cuentas propias |
+| `me.accounts.list` | Listar cuentas propias |
+| `me.accounts.view` | Ver detalle de cuentas propias |
+| `me.accounts.balance.read` | Leer saldo propio |
+| `me.accounts.update.alias` | Cambiar alias de una cuenta propia |
+| `me.accounts.transactions.read` | Ver transacciones de cuentas propias |
+| `me.transactions.read` | Listar transacciones propias |
+| `me.transactions.detail` | Ver detalle de transaccion propia |
+| `me.transactions.transfer` | Transferir desde una cuenta propia |
+| `me.transactions.deposit` | Registrar deposito sobre una cuenta propia |
+| `me.transactions.withdrawal` | Registrar retiro sobre una cuenta propia |
+| `me.transactions.payment` | Registrar pago propio |
+| `me.transactions.hold` | Retener saldo propio |
+| `me.transactions.release` | Liberar saldo retenido propio |
+| `me.transactions.qr.confirm` | Confirmar un QR propio como pagador |
+
+### Permisos administrativos principales
+
+| Permiso | Uso |
+|---|---|
+| `accounts.create` | Crear cuentas de tenant |
+| `accounts.list` | Listar cuentas del tenant |
+| `accounts.view` | Ver detalle de cuentas del tenant |
+| `accounts.balance.read` | Consultar saldo de cuentas del tenant |
+| `accounts.update` | Editar cuentas del tenant |
+| `accounts.approve` | Aprobar cuentas |
+| `accounts.activate` | Activar cuentas |
+| `accounts.block` | Bloquear cuentas |
+| `accounts.freeze` | Congelar cuentas |
+| `accounts.close` | Cerrar cuentas |
+| `transactions.create.deposit` | Crear depositos administrativos |
+| `transactions.create.withdrawal` | Crear retiros administrativos |
+| `transactions.create.transfer` | Crear transferencias del tenant |
+| `transactions.create.payment` | Crear pagos del tenant |
+| `transactions.qr.create` | Crear intents QR |
+| `transactions.reverse` | Revertir transacciones |
+| `transactions.refund` | Reembolsar transacciones |
+| `transactions.admin.read` | Listar transacciones administrativas |
+| `transactions.detail` | Ver detalle de transaccion administrativa |
+| `limits.read` | Listar limites |
+| `limits.detail` | Ver detalle de limite |
+| `limits.create` | Crear limites |
+| `limits.update` | Actualizar limites |
+| `limits.delete` | Eliminar limites |
+| `limits.evaluate` | Evaluar una operacion contra limites |
+| `accounting.periods.read` | Listar periodos contables |
+| `accounting.periods.create` | Crear periodos contables |
+| `accounting.periods.close` | Cerrar periodos contables |
+| `accounting.journal.read` | Listar asientos |
+| `accounting.journal.detail` | Ver detalle de asiento |
+| `fx.rates.read` | Listar tasas |
+| `fx.rates.detail` | Ver detalle de tasa |
+| `fx.rates.create` | Crear tasas |
+| `fx.rates.update` | Actualizar tasas |
+| `fx.rates.delete` | Eliminar tasas |
+| `fx.fees.read` | Listar comisiones |
+| `fx.fees.detail` | Ver detalle de comision |
+| `fx.fees.create` | Crear comisiones |
+| `fx.fees.update` | Actualizar comisiones |
+| `fx.fees.delete` | Eliminar comisiones |
+| `users.list` | Listar usuarios del tenant |
+| `users.create` | Crear usuarios del tenant |
+| `users.detail` | Ver detalle de usuarios |
+| `users.update` | Actualizar usuarios |
+| `users.activate` | Activar usuarios |
+| `users.deactivate` | Desactivar usuarios |
+| `access.permissions.read` | Leer catalogo de permisos |
+| `access.roles.read` | Listar roles |
+| `access.roles.detail` | Ver detalle de rol |
+| `access.roles.create` | Crear rol |
+| `access.roles.update` | Actualizar rol |
+| `access.roles.activate` | Activar rol |
+| `access.roles.deactivate` | Desactivar rol |
+| `access.users.roles.read` | Ver roles asignados a un usuario |
+| `access.users.roles.assign` | Asignar roles a un usuario |
+| `audit.events.read` | Leer eventos de auditoria |
+| `notifications.templates.read` | Listar templates de notificacion |
+| `notifications.templates.detail` | Ver detalle de template |
+| `notifications.deliveries.read` | Ver deliveries de notificaciones |
+
+## Regla de frontend
+
+- si el frontend trabaja con el usuario autenticado, usar permisos `me.*`
+- si trabaja con administracion del tenant, usar permisos sin el prefijo `me`
+- no mezclar `accounts.me.*` con `me.accounts.*`
+- no asumir que `ADMIN` equivale a `OWNER_ADMIN`
+- si un endpoint cambia de alcance, cambiar tambien el permiso que lo protege
 
 ## Resultado esperado en un tenant nuevo
 

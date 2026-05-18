@@ -16,16 +16,183 @@ import java.util.HashSet;
 public class TenantBootstrapService {
 
     private static final Logger logger = LoggerFactory.getLogger(TenantBootstrapService.class);
-    private static final List<String> DEFAULT_USER_PERMISSION_CODES = List.of(
-            "accounts.me.create",
-            "accounts.me.list",
-            "accounts.me.view",
-            "accounts.me.balance.read",
-            "accounts.me.update.alias",
+    private static final List<String> DEFAULT_OWNER_ADMIN_PERMISSION_CODES = List.of(
+            "me.accounts.create",
+            "me.accounts.list",
+            "me.accounts.view",
+            "me.accounts.balance.read",
+            "me.accounts.update.alias",
+            "me.accounts.transactions.read",
             "me.transactions.read",
+            "me.transactions.detail",
             "me.transactions.transfer",
             "me.transactions.deposit",
-            "me.transactions.withdrawal"
+            "me.transactions.withdrawal",
+            "me.transactions.payment",
+            "me.transactions.hold",
+            "me.transactions.release",
+            "me.transactions.qr.confirm",
+
+            "accounts.create",
+            "accounts.list",
+            "accounts.view",
+            "accounts.balance.read",
+            "accounts.update",
+            "accounts.approve",
+            "accounts.activate",
+            "accounts.block",
+            "accounts.freeze",
+            "accounts.close",
+            "accounts.transactions.read",
+
+            "access.permissions.read",
+            "access.roles.read",
+            "access.roles.create",
+            "access.roles.detail",
+            "access.roles.update",
+            "access.roles.activate",
+            "access.roles.deactivate",
+            "access.users.roles.read",
+            "access.users.roles.assign",
+
+            "users.list",
+            "users.create",
+            "users.detail",
+            "users.update",
+            "users.activate",
+            "users.deactivate",
+
+            "transactions.read",
+            "transactions.detail",
+            "transactions.create.transfer",
+            "transactions.create.deposit",
+            "transactions.create.withdrawal",
+            "transactions.create.payment",
+            "transactions.reverse",
+            "transactions.refund",
+            "transactions.fee",
+            "transactions.hold",
+            "transactions.release",
+            "transactions.adjust",
+            "transactions.admin.read",
+            "transactions.admin.export",
+            "transactions.qr.create",
+            "transactions.qr.confirm",
+
+            "limits.read",
+            "limits.detail",
+            "limits.create",
+            "limits.update",
+            "limits.delete",
+            "limits.evaluate",
+
+            "accounting.journal.read",
+            "accounting.journal.detail",
+            "accounting.periods.read",
+            "accounting.periods.create",
+            "accounting.periods.close",
+
+            "audit.events.read",
+            "notifications.templates.read",
+            "notifications.templates.detail",
+            "notifications.deliveries.read",
+
+            "fx.rates.read",
+            "fx.rates.detail",
+            "fx.rates.create",
+            "fx.rates.update",
+            "fx.rates.delete",
+            "fx.fees.read",
+            "fx.fees.detail",
+            "fx.fees.create",
+            "fx.fees.update",
+            "fx.fees.delete"
+    );
+    private static final List<String> DEFAULT_ADMIN_PERMISSION_CODES = List.of(
+            "me.accounts.create",
+            "me.accounts.list",
+            "me.accounts.view",
+            "me.accounts.balance.read",
+            "me.accounts.update.alias",
+            "me.accounts.transactions.read",
+            "me.transactions.read",
+            "me.transactions.detail",
+            "me.transactions.transfer",
+            "me.transactions.deposit",
+            "me.transactions.withdrawal",
+            "me.transactions.payment",
+            "me.transactions.hold",
+            "me.transactions.release",
+            "me.transactions.qr.confirm",
+
+            "accounts.list",
+            "accounts.view",
+            "accounts.balance.read",
+            "accounts.approve",
+            "accounts.activate",
+            "accounts.block",
+            "accounts.freeze",
+            "accounts.close",
+            "accounts.transactions.read",
+
+            "users.list",
+            "users.create",
+            "users.detail",
+            "users.update",
+            "users.activate",
+            "users.deactivate",
+
+            "transactions.read",
+            "transactions.detail",
+            "transactions.create.transfer",
+            "transactions.create.deposit",
+            "transactions.create.withdrawal",
+            "transactions.create.payment",
+            "transactions.reverse",
+            "transactions.refund",
+            "transactions.fee",
+            "transactions.hold",
+            "transactions.release",
+            "transactions.adjust",
+            "transactions.admin.read",
+            "transactions.admin.export",
+            "transactions.qr.create",
+            "transactions.qr.confirm",
+
+            "limits.read",
+            "limits.detail",
+            "limits.evaluate",
+
+            "accounting.journal.read",
+            "accounting.journal.detail",
+            "accounting.periods.read",
+
+            "audit.events.read",
+            "notifications.templates.read",
+            "notifications.templates.detail",
+            "notifications.deliveries.read",
+
+            "fx.rates.read",
+            "fx.rates.detail",
+            "fx.fees.read",
+            "fx.fees.detail"
+    );
+    private static final List<String> DEFAULT_CLIENT_PERMISSION_CODES = List.of(
+            "me.accounts.create",
+            "me.accounts.list",
+            "me.accounts.view",
+            "me.accounts.balance.read",
+            "me.accounts.update.alias",
+            "me.accounts.transactions.read",
+            "me.transactions.read",
+            "me.transactions.detail",
+            "me.transactions.transfer",
+            "me.transactions.deposit",
+            "me.transactions.withdrawal",
+            "me.transactions.payment",
+            "me.transactions.hold",
+            "me.transactions.release",
+            "me.transactions.qr.confirm"
     );
     private static final List<FxRateSeed> DEFAULT_FX_RATES = List.of(
             new FxRateSeed("BOB", "BOB", new java.math.BigDecimal("1.00000000"), "Base currency to itself"),
@@ -65,7 +232,9 @@ public class TenantBootstrapService {
         logger.info("Initializing tenant bootstrap data for schema '{}'.", schemaName);
 
         seedDefaultRoles(schemaName);
-        seedDefaultUserPermissions(schemaName);
+        seedDefaultRolePermissions(schemaName, "OWNER_ADMIN", DEFAULT_OWNER_ADMIN_PERMISSION_CODES);
+        seedDefaultRolePermissions(schemaName, "ADMIN", DEFAULT_ADMIN_PERMISSION_CODES);
+        seedDefaultRolePermissions(schemaName, "USER", DEFAULT_CLIENT_PERMISSION_CODES);
         seedDefaultSettings(schemaName, tenantName);
         seedDefaultFxConfiguration(schemaName);
 
@@ -98,8 +267,8 @@ public class TenantBootstrapService {
                 """.formatted(schemaName));
     }
 
-    private void seedDefaultUserPermissions(String schemaName) {
-        for (String permissionCode : DEFAULT_USER_PERMISSION_CODES) {
+    private void seedDefaultRolePermissions(String schemaName, String roleName, List<String> permissionCodes) {
+        for (String permissionCode : permissionCodes) {
             Integer permissionCount = jdbcTemplate.queryForObject(
                     """
                     SELECT COUNT(*)
@@ -123,11 +292,12 @@ public class TenantBootstrapService {
                     FROM %s.tenant_roles r
                     JOIN public.system_permissions sp
                         ON sp.code = ? AND sp.active = true
-                    WHERE r.name = 'USER'
+                    WHERE r.name = ?
                     ON CONFLICT (role_id, permission_code) DO NOTHING
                     """.formatted(schemaName, schemaName),
                     permissionCode,
-                    permissionCode
+                    permissionCode,
+                    roleName
             );
         }
     }

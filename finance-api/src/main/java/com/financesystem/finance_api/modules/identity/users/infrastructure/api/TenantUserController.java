@@ -44,7 +44,7 @@ public class TenantUserController {
     // @PostMapping
     // @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER_ADMIN')")
+    @PreAuthorize("hasAuthority('users.create')")
     public ApiResponse<TenantUserResponse> createUser(@Valid @RequestBody CreateTenantUserRequest request) {
         return ApiResponse.success(
                 "Tenant user created successfully",
@@ -55,7 +55,7 @@ public class TenantUserController {
     // @GetMapping
     // @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER_ADMIN')")
+    @PreAuthorize("hasAuthority('users.list')")
     public ApiResponse<List<TenantUserResponse>> listUsers() {
         return ApiResponse.success(
                 "Tenant users retrieved successfully",
@@ -66,7 +66,7 @@ public class TenantUserController {
     // @GetMapping("/{id}")
     // @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER_ADMIN')")
+    @PreAuthorize("hasAuthority('users.detail')")
     public ApiResponse<TenantUserResponse> getUserById(@PathVariable UUID id) {
         return ApiResponse.success(
                 "Tenant user retrieved successfully",
@@ -77,7 +77,7 @@ public class TenantUserController {
     // @PutMapping("/{id}")
     // @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER_ADMIN')")
+    @PreAuthorize("hasAuthority('users.update')")
     public ApiResponse<TenantUserResponse> updateUser(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateTenantUserRequest request
@@ -91,7 +91,7 @@ public class TenantUserController {
     // @PatchMapping("/{id}/activate")
     // @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/activate")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER_ADMIN')")
+    @PreAuthorize("hasAuthority('users.activate')")
     public ApiResponse<TenantUserResponse> activateUser(@PathVariable UUID id) {
         return ApiResponse.success(
                 "Tenant user activated successfully",
@@ -102,7 +102,7 @@ public class TenantUserController {
     // @PatchMapping("/{id}/deactivate")
     // @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/deactivate")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER_ADMIN')")
+    @PreAuthorize("hasAuthority('users.deactivate')")
     public ApiResponse<TenantUserResponse> deactivateUser(@PathVariable UUID id) {
         return ApiResponse.success(
                 "Tenant user deactivated successfully",
