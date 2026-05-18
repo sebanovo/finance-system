@@ -72,17 +72,20 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   // Validaciones
   String? _validateTenant(String? value) {
-    if (value == null || value.trim().isEmpty)
+    if (value == null || value.trim().isEmpty) {
       return 'El slug del tenant es obligatorio';
+    }
     return null;
   }
 
   String? _validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty)
+    if (value == null || value.trim().isEmpty) {
       return 'El correo electrónico es obligatorio';
+    }
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!emailRegex.hasMatch(value.trim()))
+    if (!emailRegex.hasMatch(value.trim())) {
       return 'Correo electrónico inválido';
+    }
     return null;
   }
 

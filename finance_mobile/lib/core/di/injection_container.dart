@@ -1,4 +1,5 @@
 import 'package:finance_mobile/core/network/api_client.dart';
+import 'package:finance_mobile/domain/repositories/account_repository.dart';
 import 'package:finance_mobile/domain/repositories/auth_repository.dart';
 import 'package:finance_mobile/domain/repositories/permission_repository.dart';
 import 'package:finance_mobile/domain/repositories/role_repository.dart';
@@ -6,11 +7,18 @@ import 'package:finance_mobile/domain/repositories/subscription_repository.dart'
 import 'package:finance_mobile/domain/repositories/user_repository.dart';
 import 'package:finance_mobile/domain/usecases/assign_role_usecase.dart';
 import 'package:finance_mobile/domain/usecases/change_password_usecase.dart';
+import 'package:finance_mobile/domain/usecases/create_account_usecase.dart';
 import 'package:finance_mobile/domain/usecases/create_user_usecase.dart';
 import 'package:finance_mobile/domain/usecases/forgot_password_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_accounts_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_available_roles_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_permissions_usecase.dart';
+import 'package:finance_mobile/domain/usecases/create_role_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_roles_usecase.dart';
+import 'package:finance_mobile/domain/usecases/activate_role_usecase.dart';
+import 'package:finance_mobile/domain/usecases/deactivate_role_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_role_usecase.dart';
+import 'package:finance_mobile/domain/usecases/update_role_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_subscription_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_user_info_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_user_roles_usecase.dart';
@@ -19,16 +27,19 @@ import 'package:finance_mobile/domain/usecases/login_usecase.dart';
 import 'package:finance_mobile/domain/usecases/logout_usecase.dart';
 import 'package:finance_mobile/domain/usecases/reset_password_usecase.dart';
 import 'package:finance_mobile/domain/usecases/signup_usecase.dart';
+import 'package:finance_mobile/infrastructure/datasources/account_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/auth_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/permission_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/role_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/subscription_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/user_remote_datasource.dart';
+import 'package:finance_mobile/infrastructure/repositories/account_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/auth_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/permission_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/role_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/subscription_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/user_repository_impl.dart';
+import 'package:finance_mobile/presentation/viewmodels/accounts_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/forgot_password_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/home_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/login_viewmodel.dart';
@@ -50,6 +61,7 @@ Future<void> init() async {
   initUserModule();
   initSubscriptionModule();
   initHomeModule();
+  initAccountsModule();
 }
 
 void initPermissionModule() {
@@ -71,7 +83,20 @@ void initRoleModule() {
   );
   sl.registerLazySingleton<RoleRepository>(() => RoleRepositoryImpl(sl()));
   sl.registerLazySingleton(() => GetRolesUsecase(sl()));
-  sl.registerFactory(() => RolesViewModel(sl()));
+  sl.registerLazySingleton(() => CreateRoleUseCase(sl()));
+  sl.registerLazySingleton(() => ActivateRoleUseCase(sl()));
+  sl.registerLazySingleton(() => DeactivateRoleUseCase(sl()));
+  sl.registerLazySingleton(() => GetRoleUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateRoleUseCase(sl()));
+  sl.registerFactory(
+    () => RolesViewModel(
+      getRolesUseCase: sl(),
+      createRoleUseCase: sl(),
+      activateRoleUseCase: sl(),
+      deactivateRoleUseCase: sl(),
+      updateRoleUseCase: sl(),
+    ),
+  );
 }
 
 void initAuthModule() {
@@ -140,5 +165,21 @@ void initHomeModule() {
       changePasswordUseCase: sl(),
       logoutUseCase: sl(),
     ),
+  );
+}
+
+void initAccountsModule() {
+  // Accounts feature
+  sl.registerLazySingleton<AccountRemoteDataSource>(
+    () => AccountRemoteDataSourceImpl(sl()),
+  );
+  sl.registerLazySingleton<AccountRepository>(
+    () => AccountRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton(() => GetAccountsUseCase(sl()));
+  sl.registerLazySingleton(() => CreateAccountUseCase(sl()));
+  sl.registerFactory(
+    () =>
+        AccountsViewModel(getAccountsUseCase: sl(), createAccountUseCase: sl()),
   );
 }

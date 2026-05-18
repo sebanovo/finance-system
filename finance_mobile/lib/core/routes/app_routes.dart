@@ -1,3 +1,4 @@
+import 'package:finance_mobile/presentation/pages/accounts_page.dart';
 import 'package:go_router/go_router.dart';
 import 'package:finance_mobile/presentation/pages/home_page.dart';
 import 'package:finance_mobile/presentation/pages/permissions_pages.dart';
@@ -31,5 +32,6 @@ final appRouter = GoRouter(
         return ResetPasswordPage(initialTenant: tenant);
       },
     ),
+    GoRoute(path: '/accounts', builder: (context, _) => const AccountsPage()),
   ],
 );

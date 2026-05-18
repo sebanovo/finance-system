@@ -93,12 +93,6 @@ class _UsersPageState extends State<UsersPage> {
     if (value.length < 8) {
       return 'Debe tener al menos 8 caracteres';
     }
-    if (!value.contains(RegExp(r'[0-9]'))) {
-      return 'Debe contener al menos un dígito';
-    }
-    if (!value.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
-      return 'Debe contener al menos un carácter especial';
-    }
     return null;
   }
 
@@ -190,7 +184,7 @@ class _UsersPageState extends State<UsersPage> {
             ),
             content: DropdownButtonFormField<String>(
               decoration: const InputDecoration(labelText: 'Selecciona un rol'),
-              value: selectedRoleId,
+              initialValue: selectedRoleId,
               items: _viewModel.availableRoles.map((role) {
                 return DropdownMenuItem<String>(
                   value: role.id,
