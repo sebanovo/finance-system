@@ -55,14 +55,25 @@ class _TransactionsPageState extends State<TransactionsPage> {
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
-              if (value == 'deposit') {
-                context.push('/transactions/deposit');
-              } else if (value == 'transfer') {
-                context.push('/transactions/transfer');
-              } else if (value == 'withdrawal') {
-                context.push('/transactions/withdrawal');
-              } else if (value == 'payment') {
-                context.push('/transactions/payment');
+              switch (value) {
+                case 'deposit':
+                  context.push('/transactions/deposit');
+                  break;
+                case 'transfer':
+                  context.push('/transactions/transfer');
+                  break;
+                case 'withdrawal':
+                  context.push('/transactions/withdrawal');
+                  break;
+                case 'payment':
+                  context.push('/transactions/payment');
+                  break;
+                case 'hold':
+                  context.push('/transactions/hold');
+                  break; // ✅ nuevo
+                case 'release':
+                  context.push('/transactions/release');
+                  break; // ✅ nuevo
               }
             },
             itemBuilder: (context) => [
@@ -103,6 +114,27 @@ class _TransactionsPageState extends State<TransactionsPage> {
                     Icon(Icons.payment, color: Color(0xFF2E7D32)),
                     SizedBox(width: 8),
                     Text('Pagar'),
+                  ],
+                ),
+              ),
+              // ... opciones existentes
+              const PopupMenuItem(
+                value: 'hold',
+                child: Row(
+                  children: [
+                    Icon(Icons.block, color: Color(0xFF2E7D32)),
+                    SizedBox(width: 8),
+                    Text('Bloquear fondos'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'release',
+                child: Row(
+                  children: [
+                    Icon(Icons.check_circle, color: Color(0xFF2E7D32)),
+                    SizedBox(width: 8),
+                    Text('Liberar fondos'),
                   ],
                 ),
               ),

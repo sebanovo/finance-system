@@ -1,7 +1,9 @@
 import 'package:finance_mobile/presentation/pages/account_detail_page.dart';
 import 'package:finance_mobile/presentation/pages/accounts_page.dart';
 import 'package:finance_mobile/presentation/pages/create_deposit_page.dart';
+import 'package:finance_mobile/presentation/pages/create_hold_page.dart';
 import 'package:finance_mobile/presentation/pages/create_payment_page.dart';
+import 'package:finance_mobile/presentation/pages/create_release_page.dart';
 import 'package:finance_mobile/presentation/pages/create_transfer_page.dart';
 import 'package:finance_mobile/presentation/pages/create_withdrawal_page.dart';
 import 'package:finance_mobile/presentation/pages/transaction_detail_page.dart';
@@ -66,6 +68,14 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/transactions/payment',
       builder: (context, _) => const CreatePaymentPage(),
+    ),
+    GoRoute(
+      path: '/transactions/hold',
+      builder: (context, _) => const CreateHoldPage(),
+    ),
+    GoRoute(
+      path: '/transactions/release',
+      builder: (context, _) => const CreateReleasePage(),
     ),
     GoRoute(
       path: '/transactions/:id',
