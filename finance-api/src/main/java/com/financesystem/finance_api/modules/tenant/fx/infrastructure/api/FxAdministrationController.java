@@ -24,7 +24,6 @@ public class FxAdministrationController {
     }
 
     @GetMapping("/rates")
-    @PreAuthorize("hasAuthority('fx.rates.read')")
     public ApiResponse<List<FxExchangeRateResponse>> listRates() {
         return ApiResponse.success(
                 "FX rates retrieved successfully",
@@ -33,7 +32,6 @@ public class FxAdministrationController {
     }
 
     @GetMapping("/rates/{id}")
-    @PreAuthorize("hasAuthority('fx.rates.read')")
     public ApiResponse<FxExchangeRateResponse> getRate(@PathVariable UUID id) {
         return ApiResponse.success(
                 "FX rate retrieved successfully",
@@ -42,7 +40,6 @@ public class FxAdministrationController {
     }
 
     @PostMapping("/rates")
-    @PreAuthorize("hasAuthority('fx.rates.create')")
     public ApiResponse<FxExchangeRateResponse> createRate(@Valid @RequestBody CreateFxExchangeRateRequest request) {
         return ApiResponse.success(
                 "FX rate created successfully",
@@ -51,7 +48,6 @@ public class FxAdministrationController {
     }
 
     @PutMapping("/rates/{id}")
-    @PreAuthorize("hasAuthority('fx.rates.update')")
     public ApiResponse<FxExchangeRateResponse> updateRate(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateFxExchangeRateRequest request
@@ -63,14 +59,12 @@ public class FxAdministrationController {
     }
 
     @DeleteMapping("/rates/{id}")
-    @PreAuthorize("hasAuthority('fx.rates.delete')")
     public ApiResponse<Void> deleteRate(@PathVariable UUID id) {
         fxAdministrationService.deleteRate(id);
         return ApiResponse.success("FX rate deleted successfully", null);
     }
 
     @GetMapping("/fees")
-    @PreAuthorize("hasAuthority('fx.fees.read')")
     public ApiResponse<List<OperationFeeResponse>> listFees() {
         return ApiResponse.success(
                 "FX fees retrieved successfully",
@@ -79,7 +73,6 @@ public class FxAdministrationController {
     }
 
     @GetMapping("/fees/{id}")
-    @PreAuthorize("hasAuthority('fx.fees.read')")
     public ApiResponse<OperationFeeResponse> getFee(@PathVariable UUID id) {
         return ApiResponse.success(
                 "FX fee retrieved successfully",
@@ -88,7 +81,6 @@ public class FxAdministrationController {
     }
 
     @PostMapping("/fees")
-    @PreAuthorize("hasAuthority('fx.fees.create')")
     public ApiResponse<OperationFeeResponse> createFee(@Valid @RequestBody CreateOperationFeeRequest request) {
         return ApiResponse.success(
                 "FX fee created successfully",
@@ -97,7 +89,6 @@ public class FxAdministrationController {
     }
 
     @PutMapping("/fees/{id}")
-    @PreAuthorize("hasAuthority('fx.fees.update')")
     public ApiResponse<OperationFeeResponse> updateFee(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateOperationFeeRequest request
@@ -109,7 +100,6 @@ public class FxAdministrationController {
     }
 
     @DeleteMapping("/fees/{id}")
-    @PreAuthorize("hasAuthority('fx.fees.delete')")
     public ApiResponse<Void> deleteFee(@PathVariable UUID id) {
         fxAdministrationService.deleteFee(id);
         return ApiResponse.success("FX fee deleted successfully", null);

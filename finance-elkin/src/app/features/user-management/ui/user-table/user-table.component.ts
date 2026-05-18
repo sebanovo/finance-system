@@ -11,8 +11,18 @@ import { TenantUserResponse } from '../../../../entities/user';
 export class UserTableComponent {
   @Input() users: TenantUserResponse[] = [];
   @Output() manageRoles = new EventEmitter<TenantUserResponse>();
+  @Output() editUser = new EventEmitter<TenantUserResponse>();
+  @Output() toggleStatus = new EventEmitter<TenantUserResponse>();
 
   onManageRoles(user: TenantUserResponse): void {
     this.manageRoles.emit(user);
+  }
+
+  onEditUser(user: TenantUserResponse): void {
+    this.editUser.emit(user);
+  }
+
+  onToggleStatus(user: TenantUserResponse): void {
+    this.toggleStatus.emit(user);
   }
 }

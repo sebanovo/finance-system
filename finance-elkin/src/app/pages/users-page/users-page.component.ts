@@ -1,13 +1,13 @@
 import { Component, inject, OnInit, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { UserListUseCase, UserTableComponent, UserCreateUseCase, UserCreateFormComponent } from '../../features/user-management';
-import { CreateTenantUserRequest, TenantUserResponse } from '../../entities/user';
+import { UserListUseCase, UserTableComponent, UserCreateUseCase, UserCreateFormComponent, UserUpdateUseCase, UserStatusUseCase, UserEditFormComponent } from '../../features/user-management';
+import { CreateTenantUserRequest, TenantUserResponse, UpdateTenantUserRequest } from '../../entities/user';
 import { UserRoleAssignmentComponent, UserRoleUseCase } from '../../features/user-role-management';
 
 @Component({
   selector: 'app-users-page',
   standalone: true,
-  imports: [CommonModule, UserTableComponent, UserCreateFormComponent, UserRoleAssignmentComponent],
+  imports: [CommonModule, UserTableComponent, UserCreateFormComponent, UserEditFormComponent, UserRoleAssignmentComponent],
   template: `
     <div class="space-y-6 relative">
       <div class="flex items-center justify-between">
@@ -57,7 +57,9 @@ import { UserRoleAssignmentComponent, UserRoleUseCase } from '../../features/use
           }
           <app-user-table 
             [users]="userListUseCase.data()"
-            (manageRoles)="openRoleModal($event)">
+            (manageRoles)="openRoleModal($event)"
+            (editUser)="openEditModal($event)"
+            (toggleStatus)="handleToggleStatus($event)">
           </app-user-table>
         </div>
       }
@@ -97,6 +99,39 @@ import { UserRoleAssignmentComponent, UserRoleUseCase } from '../../features/use
               [status]="userCreateUseCase.status()"
               (formSubmit)="handleCreateUser($event)"
               (cancel)="closeCreateModal()"
+            />
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Modal de Edición -->
+    @if (isEditModalOpen() && selectedUserToEdit()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-background/80 backdrop-blur-sm animate-in fade-in" (click)="closeEditModal()"></div>
+        
+        <!-- Modal Panel -->
+        <div class="relative bg-card w-full max-w-lg mx-4 rounded-xl shadow-lg border border-border flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+          <!-- Header -->
+          <div class="flex items-center justify-between px-6 py-4 border-b border-border">
+            <h3 class="text-lg font-semibold text-foreground">Editar Usuario</h3>
+            <button (click)="closeEditModal()" class="text-muted-foreground hover:text-foreground transition-colors p-1" [disabled]="userUpdateUseCase.status() === 'loading'">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+            </button>
+          </div>
+          <!-- Body -->
+          <div class="p-6 overflow-y-auto">
+            @if (userUpdateUseCase.error()) {
+              <div class="mb-4 p-3 bg-destructive/10 text-destructive border border-destructive/20 rounded-md text-sm">
+                {{ userUpdateUseCase.error() }}
+              </div>
+            }
+            <app-user-edit-form
+              [status]="userUpdateUseCase.status()"
+              [user]="selectedUserToEdit()!"
+              (formSubmit)="handleUpdateUser($event)"
+              (cancel)="closeEditModal()"
             />
           </div>
         </div>
@@ -143,11 +178,15 @@ import { UserRoleAssignmentComponent, UserRoleUseCase } from '../../features/use
 export class UsersPageComponent implements OnInit {
   public readonly userListUseCase = inject(UserListUseCase);
   public readonly userCreateUseCase = inject(UserCreateUseCase);
+  public readonly userUpdateUseCase = inject(UserUpdateUseCase);
+  public readonly userStatusUseCase = inject(UserStatusUseCase);
   public readonly userRoleUseCase = inject(UserRoleUseCase);
 
   public readonly isCreateModalOpen = signal(false);
+  public readonly isEditModalOpen = signal(false);
   public readonly isRoleModalOpen = signal(false);
   public readonly selectedUser = signal<TenantUserResponse | null>(null);
+  public readonly selectedUserToEdit = signal<TenantUserResponse | null>(null);
   
   public readonly showSuccessToast = signal(false);
   public readonly toastMessage = signal('');
@@ -160,6 +199,16 @@ export class UsersPageComponent implements OnInit {
         this.userCreateUseCase.resetState();
         this.userListUseCase.reloadUsers();
         this.triggerToast('Usuario creado correctamente');
+      }
+    }, { allowSignalWrites: true });
+
+    // Éxito al editar usuario
+    effect(() => {
+      if (this.userUpdateUseCase.status() === 'success') {
+        this.closeEditModal();
+        this.userUpdateUseCase.resetState();
+        this.userListUseCase.reloadUsers();
+        this.triggerToast('Usuario actualizado correctamente');
       }
     }, { allowSignalWrites: true });
 
@@ -193,6 +242,40 @@ export class UsersPageComponent implements OnInit {
 
   handleCreateUser(request: CreateTenantUserRequest): void {
     this.userCreateUseCase.createUser(request);
+  }
+
+  // --- Editar Usuario ---
+  openEditModal(user: TenantUserResponse): void {
+    this.userUpdateUseCase.resetState();
+    this.selectedUserToEdit.set(user);
+    this.isEditModalOpen.set(true);
+  }
+
+  closeEditModal(): void {
+    if (this.userUpdateUseCase.status() === 'loading') return;
+    this.isEditModalOpen.set(false);
+    setTimeout(() => this.selectedUserToEdit.set(null), 300);
+  }
+
+  handleUpdateUser(request: UpdateTenantUserRequest): void {
+    const user = this.selectedUserToEdit();
+    if (user) {
+      this.userUpdateUseCase.updateUser(user.id.toString(), request);
+    }
+  }
+
+  // --- Estado de Usuario (Activar/Desactivar) ---
+  async handleToggleStatus(user: TenantUserResponse): Promise<void> {
+    const action = user.active ? 'desactivar' : 'activar';
+    if (confirm(`¿Estás seguro que deseas ${action} a este usuario?`)) {
+      const success = await this.userStatusUseCase.toggleStatus(user.id.toString(), user.active);
+      if (success) {
+        this.triggerToast(`Usuario ${user.active ? 'desactivado' : 'activado'} correctamente`);
+        this.userListUseCase.reloadUsers();
+      } else {
+        alert(this.userStatusUseCase.error());
+      }
+    }
   }
 
   // --- Roles Modal ---

@@ -17,7 +17,23 @@ export class UserService {
     return this.http.get<ApiResponse<TenantUserResponse[]>>(this.API_URL);
   }
 
+  getUserById(id: string): Observable<ApiResponse<TenantUserResponse>> {
+    return this.http.get<ApiResponse<TenantUserResponse>>(`${this.API_URL}/${id}`);
+  }
+
   createUser(request: CreateTenantUserRequest): Observable<ApiResponse<TenantUserResponse>> {
     return this.http.post<ApiResponse<TenantUserResponse>>(this.API_URL, request);
+  }
+
+  updateUser(id: string, request: any): Observable<ApiResponse<TenantUserResponse>> {
+    return this.http.put<ApiResponse<TenantUserResponse>>(`${this.API_URL}/${id}`, request);
+  }
+
+  activateUser(id: string): Observable<ApiResponse<TenantUserResponse>> {
+    return this.http.patch<ApiResponse<TenantUserResponse>>(`${this.API_URL}/${id}/activate`, {});
+  }
+
+  deactivateUser(id: string): Observable<ApiResponse<TenantUserResponse>> {
+    return this.http.patch<ApiResponse<TenantUserResponse>>(`${this.API_URL}/${id}/deactivate`, {});
   }
 }
