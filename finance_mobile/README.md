@@ -81,3 +81,17 @@ presentation:
   |->(pages)permissions_page usa core/di
 
 ```
+
+
+dentro de lib:
+domain/entities
+domain/repositories
+domain/usecases
+
+infrastructure/datasources
+infrastructure/models
+infrastructure/repositories
+
+presentation/pages
+presentation/viewmodels
+presentation/widgets

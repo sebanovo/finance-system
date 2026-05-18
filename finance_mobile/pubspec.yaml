@@ -21,9 +21,10 @@ dependencies:
   dio: ^5.9.2 #(Para peticiones HTTP/HTTPS)
   get_it: ^9.2.1 #(Para injection de dependencias)
   package_info_plus: ^10.1.0 #(Para mostrar la version en el pie de la app)
-  firebase_core: ^4.7.0 #(Para notificaciones push)
-  firebase_messaging: ^16.2.0 #(Para notificaciones push)
-  flutter_local_notifications: ^21.0.0 #(Para notificaciones push)
+  firebase_core: ^4.7.0 #(Para notificaciones lo necesita firebaes_messaging)
+  firebase_messaging: ^16.2.0 #(Para notificaciones push online + servidor)
+  flutter_local_notifications: ^21.0.0 #(Para notificacione push offline)
+  equatable: ^2.0.8
 
 
 dev_dependencies:

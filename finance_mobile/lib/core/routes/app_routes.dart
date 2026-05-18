@@ -1,4 +1,13 @@
+import 'package:finance_mobile/presentation/pages/account_detail_page.dart';
 import 'package:finance_mobile/presentation/pages/accounts_page.dart';
+import 'package:finance_mobile/presentation/pages/create_deposit_page.dart';
+import 'package:finance_mobile/presentation/pages/create_hold_page.dart';
+import 'package:finance_mobile/presentation/pages/create_payment_page.dart';
+import 'package:finance_mobile/presentation/pages/create_release_page.dart';
+import 'package:finance_mobile/presentation/pages/create_transfer_page.dart';
+import 'package:finance_mobile/presentation/pages/create_withdrawal_page.dart';
+import 'package:finance_mobile/presentation/pages/transaction_detail_page.dart';
+import 'package:finance_mobile/presentation/pages/transactions_page.dart';
 import 'package:go_router/go_router.dart';
 import 'package:finance_mobile/presentation/pages/home_page.dart';
 import 'package:finance_mobile/presentation/pages/permissions_pages.dart';
@@ -33,5 +42,47 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(path: '/accounts', builder: (context, _) => const AccountsPage()),
+    GoRoute(
+      path: '/accounts/:id',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        return AccountDetailPage(accountId: id);
+      },
+    ),
+    GoRoute(
+      path: '/transactions',
+      builder: (context, _) => const TransactionsPage(),
+    ),
+    GoRoute(
+      path: '/transactions/deposit',
+      builder: (context, _) => const CreateDepositPage(),
+    ),
+    GoRoute(
+      path: '/transactions/transfer',
+      builder: (context, _) => const CreateTransferPage(),
+    ),
+    GoRoute(
+      path: '/transactions/withdrawal',
+      builder: (context, _) => const CreateWithdrawalPage(),
+    ),
+    GoRoute(
+      path: '/transactions/payment',
+      builder: (context, _) => const CreatePaymentPage(),
+    ),
+    GoRoute(
+      path: '/transactions/hold',
+      builder: (context, _) => const CreateHoldPage(),
+    ),
+    GoRoute(
+      path: '/transactions/release',
+      builder: (context, _) => const CreateReleasePage(),
+    ),
+    GoRoute(
+      path: '/transactions/:id',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        return TransactionDetailPage(transactionId: id);
+      },
+    ),
   ],
 );

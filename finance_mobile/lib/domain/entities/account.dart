@@ -59,6 +59,10 @@ class Account {
     return '${_formatCurrency(totalBalance)} $currency';
   }
 
+  String get formattedHeldBalance {
+    return '${_formatCurrency(heldBalance)} $currency';
+  }
+
   String _formatCurrency(double value) {
     return value.toStringAsFixed(2);
   }

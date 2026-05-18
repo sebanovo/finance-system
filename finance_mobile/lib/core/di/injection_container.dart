@@ -4,12 +4,22 @@ import 'package:finance_mobile/domain/repositories/auth_repository.dart';
 import 'package:finance_mobile/domain/repositories/permission_repository.dart';
 import 'package:finance_mobile/domain/repositories/role_repository.dart';
 import 'package:finance_mobile/domain/repositories/subscription_repository.dart';
+import 'package:finance_mobile/domain/repositories/transaction_repository.dart';
 import 'package:finance_mobile/domain/repositories/user_repository.dart';
 import 'package:finance_mobile/domain/usecases/assign_role_usecase.dart';
 import 'package:finance_mobile/domain/usecases/change_password_usecase.dart';
 import 'package:finance_mobile/domain/usecases/create_account_usecase.dart';
+import 'package:finance_mobile/domain/usecases/create_deposit_usecase.dart';
+import 'package:finance_mobile/domain/usecases/create_hold_usecase.dart';
+import 'package:finance_mobile/domain/usecases/create_payment_usecase.dart';
+import 'package:finance_mobile/domain/usecases/create_release_usecase.dart';
+import 'package:finance_mobile/domain/usecases/create_transfer_usecase.dart';
 import 'package:finance_mobile/domain/usecases/create_user_usecase.dart';
+import 'package:finance_mobile/domain/usecases/create_withdrawal_usecase.dart';
 import 'package:finance_mobile/domain/usecases/forgot_password_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_account_balance_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_account_by_id_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_account_transactions_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_accounts_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_available_roles_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_permissions_usecase.dart';
@@ -18,6 +28,9 @@ import 'package:finance_mobile/domain/usecases/get_roles_usecase.dart';
 import 'package:finance_mobile/domain/usecases/activate_role_usecase.dart';
 import 'package:finance_mobile/domain/usecases/deactivate_role_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_role_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_transaction_by_id_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_transactions_usecase.dart';
+import 'package:finance_mobile/domain/usecases/update_account_alias_usecase.dart';
 import 'package:finance_mobile/domain/usecases/update_role_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_subscription_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_user_info_usecase.dart';
@@ -32,12 +45,14 @@ import 'package:finance_mobile/infrastructure/datasources/auth_remote_datasource
 import 'package:finance_mobile/infrastructure/datasources/permission_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/role_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/subscription_remote_datasource.dart';
+import 'package:finance_mobile/infrastructure/datasources/transaction_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/user_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/repositories/account_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/auth_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/permission_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/role_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/subscription_repository_impl.dart';
+import 'package:finance_mobile/infrastructure/repositories/transaction_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/user_repository_impl.dart';
 import 'package:finance_mobile/presentation/viewmodels/accounts_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/forgot_password_viewmodel.dart';
@@ -47,6 +62,7 @@ import 'package:finance_mobile/presentation/viewmodels/permissions_viewmodel.dar
 import 'package:finance_mobile/presentation/viewmodels/reset_password_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/roles_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/signup_viewmodel.dart';
+import 'package:finance_mobile/presentation/viewmodels/transactions_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/users_viewmodel.dart';
 import 'package:get_it/get_it.dart';
 
@@ -62,6 +78,7 @@ Future<void> init() async {
   initSubscriptionModule();
   initHomeModule();
   initAccountsModule();
+  initTransactionModule();
 }
 
 void initPermissionModule() {
@@ -177,9 +194,49 @@ void initAccountsModule() {
     () => AccountRepositoryImpl(sl()),
   );
   sl.registerLazySingleton(() => GetAccountsUseCase(sl()));
+  sl.registerLazySingleton(() => GetAccountByIdUseCase(sl()));
+  sl.registerLazySingleton(() => GetAccountBalanceUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateAccountAliasUseCase(sl()));
+  sl.registerLazySingleton(() => GetAccountTransactionsUseCase(sl()));
   sl.registerLazySingleton(() => CreateAccountUseCase(sl()));
   sl.registerFactory(
-    () =>
-        AccountsViewModel(getAccountsUseCase: sl(), createAccountUseCase: sl()),
+    () => AccountsViewModel(
+      getAccountsUseCase: sl(),
+      getAccountByIdUseCase: sl(),
+      getAccountBalanceUseCase: sl(),
+      updateAccountAliasUseCase: sl(),
+      getAccountTransactionsUseCase: sl(),
+      createAccountUseCase: sl(),
+    ),
+  );
+}
+
+void initTransactionModule() {
+  // Transactions feature
+  sl.registerLazySingleton<TransactionRemoteDataSource>(
+    () => TransactionRemoteDataSourceImpl(sl()),
+  );
+  sl.registerLazySingleton<TransactionRepository>(
+    () => TransactionRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton(() => GetTransactionsUseCase(sl()));
+  sl.registerLazySingleton(() => GetTransactionByIdUseCase(sl()));
+  sl.registerLazySingleton(() => CreateDepositUseCase(sl()));
+  sl.registerLazySingleton(() => CreateHoldUseCase(sl()));
+  sl.registerLazySingleton(() => CreatePaymentUseCase(sl()));
+  sl.registerLazySingleton(() => CreateReleaseUseCase(sl()));
+  sl.registerLazySingleton(() => CreateTransferUseCase(sl()));
+  sl.registerLazySingleton(() => CreateWithdrawalUseCase(sl()));
+  sl.registerFactory(
+    () => TransactionsViewModel(
+      getTransactionsUseCase: sl(),
+      getTransactionByIdUseCase: sl(),
+      createDepositUseCase: sl(),
+      createHoldUseCase: sl(),
+      createPaymentUseCase: sl(),
+      createReleaseUseCase: sl(),
+      createTransferUseCase: sl(),
+      createWithdrawalUseCase: sl(),
+    ),
   );
 }

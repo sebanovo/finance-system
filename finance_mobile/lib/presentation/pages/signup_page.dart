@@ -104,7 +104,7 @@ class _SignupPageState extends State<SignupPage> {
     if (value == null || value.trim().isEmpty) {
       return 'El correo electrónico es obligatorio';
     }
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$');
     if (!emailRegex.hasMatch(value.trim())) {
       return 'Ingresa un correo válido';
     }
