@@ -1,4 +1,6 @@
-class Transaction {
+import 'package:equatable/equatable.dart';
+
+class Transaction extends Equatable {
   final String id;
   final String type;
   final String status;
@@ -18,12 +20,12 @@ class Transaction {
   final String? requestedByUserId;
   final String? approvedByUserId;
   final DateTime processedAt;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
   final FxDetail? fxDetail;
   final List<Movement> movements;
 
-  Transaction({
+  const Transaction({
     required this.id,
     required this.type,
     required this.status,
@@ -43,8 +45,8 @@ class Transaction {
     this.requestedByUserId,
     this.approvedByUserId,
     required this.processedAt,
-    required this.createdAt,
-    required this.updatedAt,
+    this.createdAt,
+    this.updatedAt,
     this.fxDetail,
     required this.movements,
   });
@@ -58,12 +60,31 @@ class Transaction {
   bool get isTransfer => type == 'TRANSFER';
   bool get isHold => type == 'HOLD';
   bool get isRelease => type == 'RELEASE';
+  bool get isPayment => type == 'PAYMENT';
   bool get isCompleted => status == 'COMPLETED';
   bool get isPending => status == 'PENDING';
   bool get isFailed => status == 'FAILED';
+  bool get isIncoming => targetAccountId != null && sourceAccountId == null;
+  bool get isOutgoing => sourceAccountId != null && targetAccountId == null;
+
+  @override
+  List<Object?> get props => [
+    id,
+    type,
+    status,
+    channel,
+    amount,
+    currency,
+    sourceAccountId,
+    sourceAccountNumber,
+    targetAccountId,
+    targetAccountNumber,
+    processedAt,
+  ];
 }
 
-class FxDetail {
+// ✅ Clase FxDetail
+class FxDetail extends Equatable {
   final bool applied;
   final String? operationCode;
   final String? sourceCurrency;
@@ -79,7 +100,7 @@ class FxDetail {
   final String? calculationMode;
   final bool feeIncludedInRate;
 
-  FxDetail({
+  const FxDetail({
     required this.applied,
     this.operationCode,
     this.sourceCurrency,
@@ -95,9 +116,28 @@ class FxDetail {
     this.calculationMode,
     required this.feeIncludedInRate,
   });
+
+  @override
+  List<Object?> get props => [
+    applied,
+    operationCode,
+    sourceCurrency,
+    targetCurrency,
+    sourceAmount,
+    targetAmountGross,
+    targetAmountNet,
+    exchangeRate,
+    effectiveExchangeRate,
+    feeAmount,
+    feeCurrency,
+    feeType,
+    calculationMode,
+    feeIncludedInRate,
+  ];
 }
 
-class Movement {
+// ✅ Clase Movement
+class Movement extends Equatable {
   final String id;
   final String accountId;
   final String accountNumber;
@@ -110,7 +150,7 @@ class Movement {
   final String description;
   final DateTime createdAt;
 
-  Movement({
+  const Movement({
     required this.id,
     required this.accountId,
     required this.accountNumber,
@@ -126,4 +166,17 @@ class Movement {
 
   bool get isCredit => movementType == 'CREDIT';
   bool get isDebit => movementType == 'DEBIT';
+
+  @override
+  List<Object?> get props => [
+    id,
+    accountId,
+    accountNumber,
+    movementType,
+    amount,
+    currency,
+    balanceBefore,
+    balanceAfter,
+    createdAt,
+  ];
 }

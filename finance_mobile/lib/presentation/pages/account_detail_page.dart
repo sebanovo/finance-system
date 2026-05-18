@@ -1,4 +1,3 @@
-// lib/features/accounts/presentation/pages/account_detail_page.dart
 import 'package:flutter/material.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../viewmodels/accounts_viewmodel.dart';

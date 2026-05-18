@@ -24,6 +24,7 @@ dependencies:
   firebase_core: ^4.7.0 #(Para notificaciones lo necesita firebaes_messaging)
   firebase_messaging: ^16.2.0 #(Para notificaciones push online + servidor)
   flutter_local_notifications: ^21.0.0 #(Para notificacione push offline)
+  equatable: ^2.0.8
 
 
 dev_dependencies:

@@ -20,8 +20,8 @@ class TransactionModel {
   final String? requestedByUserId;
   final String? approvedByUserId;
   final DateTime processedAt;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
   final FxDetailModel? fxDetail;
   final List<MovementModel> movements;
 
@@ -45,8 +45,8 @@ class TransactionModel {
     this.requestedByUserId,
     this.approvedByUserId,
     required this.processedAt,
-    required this.createdAt,
-    required this.updatedAt,
+    this.createdAt,
+    this.updatedAt,
     this.fxDetail,
     required this.movements,
   });
@@ -72,8 +72,12 @@ class TransactionModel {
       requestedByUserId: json['requestedByUserId'],
       approvedByUserId: json['approvedByUserId'],
       processedAt: DateTime.parse(json['processedAt']),
-      createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: DateTime.parse(json['updatedAt']),
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'])
+          : null,
       fxDetail: json['fxDetail'] != null
           ? FxDetailModel.fromJson(json['fxDetail'])
           : null,

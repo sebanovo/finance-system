@@ -182,6 +182,16 @@ class _HomePageState extends State<HomePage> {
                   context.push('/accounts');
                 },
               ),
+
+            if (_hasAnyRole(['USER']))
+              _buildDrawerItem(
+                icon: Icons.history,
+                title: 'Movimientos',
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/transactions');
+                },
+              ),
             // ✅ Cambiar contraseña - visible para todos
             _buildDrawerItem(
               icon: Icons.lock_reset,
