@@ -55,6 +55,18 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // ✅ Método para verificar si el usuario tiene un rol específico
+  // bool _hasRole(String role) {
+  //   final roles = _viewModel.userInfo?.roles ?? [];
+  //   return roles.contains(role);
+  // }
+
+  // ✅ Método para verificar si el usuario tiene al menos uno de los roles
+  bool _hasAnyRole(List<String> roles) {
+    final userRoles = _viewModel.userInfo?.roles ?? [];
+    return roles.any((role) => userRoles.contains(role));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -125,35 +137,52 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ],
               ),
+            // ✅ Dashboard - visible para todos
             _buildDrawerItem(
               icon: Icons.dashboard,
               title: 'Dashboard',
               onTap: () => Navigator.pop(context),
             ),
-            _buildDrawerItem(
-              icon: Icons.people,
-              title: 'Usuarios',
-              onTap: () {
-                Navigator.pop(context);
-                context.push('/users');
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.security,
-              title: 'Roles',
-              onTap: () {
-                Navigator.pop(context);
-                context.push('/roles');
-              },
-            ),
-            _buildDrawerItem(
-              icon: Icons.vpn_key,
-              title: 'Permisos',
-              onTap: () {
-                Navigator.pop(context);
-                context.push('/permissions');
-              },
-            ),
+            // ✅ Usuarios - solo para OWNER_ADMIN y ADMIN
+            if (_hasAnyRole(['OWNER_ADMIN', 'ADMIN']))
+              _buildDrawerItem(
+                icon: Icons.people,
+                title: 'Usuarios',
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/users');
+                },
+              ),
+            // ✅ Roles - solo para OWNER_ADMIN y ADMIN
+            if (_hasAnyRole(['OWNER_ADMIN', 'ADMIN']))
+              _buildDrawerItem(
+                icon: Icons.security,
+                title: 'Roles',
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/roles');
+                },
+              ),
+            // ✅ Permisos - solo para OWNER_ADMIN y ADMIN
+            if (_hasAnyRole(['OWNER_ADMIN', 'ADMIN']))
+              _buildDrawerItem(
+                icon: Icons.vpn_key,
+                title: 'Permisos',
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/permissions');
+                },
+              ),
+            if (_hasAnyRole(['USER']))
+              _buildDrawerItem(
+                icon: Icons.account_balance_wallet,
+                title: 'Mis Cuentas',
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/accounts');
+                },
+              ),
+            // ✅ Cambiar contraseña - visible para todos
             _buildDrawerItem(
               icon: Icons.lock_reset,
               title: 'Cambiar contraseña',
@@ -162,6 +191,7 @@ class _HomePageState extends State<HomePage> {
                 _showChangePasswordDialog();
               },
             ),
+            // ✅ Cerrar sesión - visible para todos
             _buildDrawerItem(
               icon: Icons.logout,
               title: 'Cerrar sesión',
