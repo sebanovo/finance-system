@@ -10,6 +10,9 @@ import 'package:finance_mobile/domain/usecases/change_password_usecase.dart';
 import 'package:finance_mobile/domain/usecases/create_account_usecase.dart';
 import 'package:finance_mobile/domain/usecases/create_user_usecase.dart';
 import 'package:finance_mobile/domain/usecases/forgot_password_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_account_balance_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_account_by_id_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_account_transactions_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_accounts_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_available_roles_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_permissions_usecase.dart';
@@ -18,6 +21,7 @@ import 'package:finance_mobile/domain/usecases/get_roles_usecase.dart';
 import 'package:finance_mobile/domain/usecases/activate_role_usecase.dart';
 import 'package:finance_mobile/domain/usecases/deactivate_role_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_role_usecase.dart';
+import 'package:finance_mobile/domain/usecases/update_account_alias_usecase.dart';
 import 'package:finance_mobile/domain/usecases/update_role_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_subscription_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_user_info_usecase.dart';
@@ -177,9 +181,19 @@ void initAccountsModule() {
     () => AccountRepositoryImpl(sl()),
   );
   sl.registerLazySingleton(() => GetAccountsUseCase(sl()));
+  sl.registerLazySingleton(() => GetAccountByIdUseCase(sl()));
+  sl.registerLazySingleton(() => GetAccountBalanceUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateAccountAliasUseCase(sl()));
+  sl.registerLazySingleton(() => GetAccountTransactionsUseCase(sl()));
   sl.registerLazySingleton(() => CreateAccountUseCase(sl()));
   sl.registerFactory(
-    () =>
-        AccountsViewModel(getAccountsUseCase: sl(), createAccountUseCase: sl()),
+    () => AccountsViewModel(
+      getAccountsUseCase: sl(),
+      getAccountByIdUseCase: sl(),
+      getAccountBalanceUseCase: sl(),
+      updateAccountAliasUseCase: sl(),
+      getAccountTransactionsUseCase: sl(),
+      createAccountUseCase: sl(),
+    ),
   );
 }

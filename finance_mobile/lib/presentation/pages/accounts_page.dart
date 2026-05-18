@@ -316,7 +316,7 @@ class _AccountsPageState extends State<AccountsPage> {
                       color: Colors.grey.shade400,
                     ),
                     onTap: () {
-                      // TODO: Navegar a detalle de cuenta
+                      context.push('/accounts/${account.id}');
                     },
                   ),
                 ),
@@ -442,7 +442,7 @@ class _CreateAccountSheetState extends State<_CreateAccountSheet> {
 
               // Tipo de cuenta
               DropdownButtonFormField<String>(
-                value: _selectedAccountName,
+                initialValue: _selectedAccountName,
                 decoration: const InputDecoration(
                   labelText: 'Tipo de cuenta',
                   prefixIcon: Icon(Icons.account_balance_wallet),
@@ -466,7 +466,7 @@ class _CreateAccountSheetState extends State<_CreateAccountSheet> {
 
               // Tipo de cuenta (clasificación)
               DropdownButtonFormField<String>(
-                value: _selectedAccountType,
+                initialValue: _selectedAccountType,
                 decoration: const InputDecoration(
                   labelText: 'Clasificación',
                   prefixIcon: Icon(Icons.category),
@@ -490,7 +490,7 @@ class _CreateAccountSheetState extends State<_CreateAccountSheet> {
 
               // Moneda
               DropdownButtonFormField<String>(
-                value: _selectedCurrency,
+                initialValue: _selectedCurrency,
                 decoration: const InputDecoration(
                   labelText: 'Moneda',
                   prefixIcon: Icon(Icons.currency_exchange),

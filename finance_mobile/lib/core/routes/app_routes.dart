@@ -1,3 +1,4 @@
+import 'package:finance_mobile/presentation/pages/account_detail_page.dart';
 import 'package:finance_mobile/presentation/pages/accounts_page.dart';
 import 'package:go_router/go_router.dart';
 import 'package:finance_mobile/presentation/pages/home_page.dart';
@@ -33,5 +34,12 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(path: '/accounts', builder: (context, _) => const AccountsPage()),
+    GoRoute(
+      path: '/accounts/:id',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        return AccountDetailPage(accountId: id);
+      },
+    ),
   ],
 );

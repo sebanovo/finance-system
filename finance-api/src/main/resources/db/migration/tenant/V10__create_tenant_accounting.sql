@@ -72,7 +72,9 @@ CREATE TABLE IF NOT EXISTS tenant_journal_entries (
             'REFUND',
             'FEE',
             'ADJUSTMENT',
-            'SETTLEMENT'
+            'SETTLEMENT',
+            'HOLD',
+            'RELEASE'
         )),
 
     CONSTRAINT chk_tenant_journal_entries_status

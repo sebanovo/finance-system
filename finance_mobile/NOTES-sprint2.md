@@ -501,3 +501,9 @@ pm.test("Saldo actualizado", function () {
 ```
 
 ¿Necesitas que profundice en algún endpoint específico o que te ayude a crear la colección completa para importar a Postman?
+
+
+heldBalance = saldo retenido
+hold = retener
+
+/release = /liberar (liberar saldo detenido)
