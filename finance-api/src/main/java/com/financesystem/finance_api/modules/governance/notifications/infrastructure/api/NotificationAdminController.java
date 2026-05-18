@@ -15,7 +15,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/notifications")
 @SecurityRequirement(name = "bearerAuth")
-@PreAuthorize("hasAnyRole('OWNER_ADMIN', 'ADMIN')")
+// @PreAuthorize("hasAnyRole('OWNER_ADMIN', 'ADMIN')")
 public class NotificationAdminController {
 
     private final NotificationApplicationService notificationApplicationService;
@@ -30,6 +30,7 @@ public class NotificationAdminController {
     }
 
     @GetMapping("/templates")
+    @PreAuthorize("hasAuthority('notifications.templates.read')")
     public ApiResponse<List<NotificationTemplateResponse>> listTemplates() {
         return ApiResponse.success(
                 "Notification templates retrieved successfully",
@@ -40,6 +41,7 @@ public class NotificationAdminController {
     }
 
     @GetMapping("/templates/{id}")
+    @PreAuthorize("hasAuthority('notifications.templates.detail')")
     public ApiResponse<NotificationTemplateResponse> getTemplateById(@PathVariable UUID id) {
         return ApiResponse.success(
                 "Notification template retrieved successfully",
@@ -48,6 +50,7 @@ public class NotificationAdminController {
     }
 
     @GetMapping("/{notificationId}/deliveries")
+    @PreAuthorize("hasAuthority('notifications.deliveries.read')")
     public ApiResponse<List<NotificationDeliveryResponse>> listDeliveriesByNotification(
             @PathVariable UUID notificationId
     ) {

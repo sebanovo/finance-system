@@ -40,7 +40,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
               decoration: const InputDecoration(labelText: 'Nueva contraseña'),
               validator: (v) {
                 if (v == null || v.isEmpty) return 'Campo obligatorio';
-                if (v.length < 6) return 'Mínimo 6 caracteres';
+                if (v.length < 8) return 'Mínimo 8 caracteres';
                 return null;
               },
             ),

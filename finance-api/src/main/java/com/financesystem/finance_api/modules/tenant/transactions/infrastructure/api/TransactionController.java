@@ -38,7 +38,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/transactions")
 @SecurityRequirement(name = "bearerAuth")
-@PreAuthorize("hasAnyRole('OWNER_ADMIN', 'ADMIN')")
+// @PreAuthorize("hasAnyRole('OWNER_ADMIN', 'ADMIN')")
 public class TransactionController {
 
     private final CreateDepositTransactionUseCase createDepositTransactionUseCase;
@@ -86,51 +86,61 @@ public class TransactionController {
     }
 
     @PostMapping("/deposits")
+    @PreAuthorize("hasAuthority('transactions.create.deposit')")
     public ApiResponse<TransactionResponse> createDeposit(@Valid @RequestBody CreateDepositTransactionRequest request) {
         return ApiResponse.success("Deposit created successfully", createDepositTransactionUseCase.execute(request));
     }
 
     @PostMapping("/fees")
+    @PreAuthorize("hasAuthority('transactions.fee')")
     public ApiResponse<TransactionResponse> createFee(@Valid @RequestBody CreateFeeTransactionRequest request) {
         return ApiResponse.success("Fee created successfully", createFeeTransactionUseCase.execute(request));
     }
 
     @PostMapping("/holds")
+    @PreAuthorize("hasAuthority('transactions.hold')")
     public ApiResponse<TransactionResponse> createHold(@Valid @RequestBody CreateHoldTransactionRequest request) {
         return ApiResponse.success("Hold created successfully", createHoldTransactionUseCase.execute(request));
     }
 
     @PostMapping("/qr/intents")
+    @PreAuthorize("hasAuthority('transactions.qr.create')")
     public ApiResponse<QrTransactionIntentResponse> createQrIntent(@Valid @RequestBody CreateQrTransactionIntentRequest request) {
         return ApiResponse.success("QR intent created successfully", createQrTransactionIntentUseCase.execute(request));
     }
 
     @PostMapping("/payments")
+    @PreAuthorize("hasAuthority('transactions.create.payment')")
     public ApiResponse<TransactionResponse> createPayment(@Valid @RequestBody CreatePaymentTransactionRequest request) {
         return ApiResponse.success("Payment created successfully", createPaymentTransactionUseCase.execute(request));
     }
 
     @PostMapping("/adjustments")
+    @PreAuthorize("hasAuthority('transactions.adjust')")
     public ApiResponse<TransactionResponse> createAdjustment(@Valid @RequestBody CreateAdjustmentTransactionRequest request) {
         return ApiResponse.success("Adjustment created successfully", createAdjustmentTransactionUseCase.execute(request));
     }
 
     @PostMapping("/withdrawals")
+    @PreAuthorize("hasAuthority('transactions.create.withdrawal')")
     public ApiResponse<TransactionResponse> createWithdrawal(@Valid @RequestBody CreateWithdrawalTransactionRequest request) {
         return ApiResponse.success("Withdrawal created successfully", createWithdrawalTransactionUseCase.execute(request));
     }
 
     @PostMapping("/releases")
+    @PreAuthorize("hasAuthority('transactions.release')")
     public ApiResponse<TransactionResponse> createRelease(@Valid @RequestBody CreateReleaseTransactionRequest request) {
         return ApiResponse.success("Release created successfully", createReleaseTransactionUseCase.execute(request));
     }
 
     @PostMapping("/transfers")
+    @PreAuthorize("hasAuthority('transactions.create.transfer')")
     public ApiResponse<TransactionResponse> createTransfer(@Valid @RequestBody CreateTransferTransactionRequest request) {
         return ApiResponse.success("Transfer created successfully", createTransferTransactionUseCase.execute(request));
     }
 
     @PostMapping("/{id}/reversal")
+    @PreAuthorize("hasAuthority('transactions.reverse')")
     public ApiResponse<TransactionResponse> reverseTransaction(
             @PathVariable UUID id,
             @Valid @RequestBody CreateReversalTransactionRequest request
@@ -139,6 +149,7 @@ public class TransactionController {
     }
 
     @PostMapping("/{id}/refunds")
+    @PreAuthorize("hasAuthority('transactions.refund')")
     public ApiResponse<TransactionResponse> refundTransaction(
             @PathVariable UUID id,
             @Valid @RequestBody CreateRefundTransactionRequest request
@@ -147,11 +158,13 @@ public class TransactionController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('transactions.admin.read')")
     public ApiResponse<List<TransactionResponse>> listTransactions() {
         return ApiResponse.success("Transactions retrieved successfully", listTransactionsUseCase.execute());
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('transactions.detail')")
     public ApiResponse<TransactionResponse> getTransactionById(@PathVariable UUID id) {
         return ApiResponse.success("Transaction retrieved successfully", getTransactionByIdUseCase.execute(id));
     }

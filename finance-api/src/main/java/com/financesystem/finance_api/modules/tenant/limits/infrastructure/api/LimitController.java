@@ -45,25 +45,25 @@ public class LimitController {
     }
 
     @GetMapping("/rules")
-    @PreAuthorize("hasRole('OWNER_ADMIN')")
+    @PreAuthorize("hasAuthority('limits.read')")
     public ApiResponse<List<LimitRuleResponse>> listRules() {
         return ApiResponse.success("Limit rules retrieved successfully", listLimitRulesUseCase.execute());
     }
 
     @GetMapping("/rules/{id}")
-    @PreAuthorize("hasRole('OWNER_ADMIN')")
+    @PreAuthorize("hasAuthority('limits.detail')")
     public ApiResponse<LimitRuleResponse> getRuleById(@PathVariable UUID id) {
         return ApiResponse.success("Limit rule retrieved successfully", getLimitRuleByIdUseCase.execute(id));
     }
 
     @PostMapping("/rules")
-    @PreAuthorize("hasRole('OWNER_ADMIN')")
+    @PreAuthorize("hasAuthority('limits.create')")
     public ApiResponse<LimitRuleResponse> createRule(@Valid @RequestBody CreateLimitRuleRequest request) {
         return ApiResponse.success("Limit rule created successfully", createLimitRuleUseCase.execute(request));
     }
 
     @PatchMapping("/rules/{id}")
-    @PreAuthorize("hasRole('OWNER_ADMIN')")
+    @PreAuthorize("hasAuthority('limits.update')")
     public ApiResponse<LimitRuleResponse> updateRule(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateLimitRuleRequest request
@@ -72,13 +72,13 @@ public class LimitController {
     }
 
     @DeleteMapping("/rules/{id}")
-    @PreAuthorize("hasRole('OWNER_ADMIN')")
+    @PreAuthorize("hasAuthority('limits.delete')")
     public ApiResponse<LimitRuleResponse> deleteRule(@PathVariable UUID id) {
         return ApiResponse.success("Limit rule deactivated successfully", deleteLimitRuleUseCase.execute(id));
     }
 
     @PostMapping("/evaluate")
-    @PreAuthorize("hasRole('OWNER_ADMIN')")
+    @PreAuthorize("hasAuthority('limits.evaluate')")
     public ApiResponse<LimitEvaluationResponse> evaluate(@Valid @RequestBody LimitEvaluationRequest request) {
         return ApiResponse.success("Limit evaluation completed successfully", evaluateLimitUseCase.execute(request));
     }

@@ -130,7 +130,6 @@ docker volume prune
 	  src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/angularjs/angularjs-original.svg"
 	  width="60px"
 	  alt="Angular">
-
   <img 
     src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/flutter/flutter-original.svg" 
     width="60px"

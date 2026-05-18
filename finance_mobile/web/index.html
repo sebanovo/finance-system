@@ -43,5 +43,28 @@
   -->
   <!-- <script src="flutter_bootstrap.js" async></script> -->
   <script>{{flutter_bootstrap_js}}</script>
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+
+    // Your web app's Firebase configuration
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    const firebaseConfig = {
+      apiKey: "AIzaSyCZPmAnJnsPqzlhi86ZxJvM-vpaNQ7IY4c",
+      authDomain: "finance-system-29d3d.firebaseapp.com",
+      projectId: "finance-system-29d3d",
+      storageBucket: "finance-system-29d3d.firebasestorage.app",
+      messagingSenderId: "788345017826",
+      appId: "1:788345017826:web:6e00ae6fdc2238488cd5bb",
+      measurementId: "G-XEK7JX11GH"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+  </script>
 </body>
 </html>

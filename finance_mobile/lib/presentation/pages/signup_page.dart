@@ -104,7 +104,7 @@ class _SignupPageState extends State<SignupPage> {
     if (value == null || value.trim().isEmpty) {
       return 'El correo electrónico es obligatorio';
     }
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$');
     if (!emailRegex.hasMatch(value.trim())) {
       return 'Ingresa un correo válido';
     }
@@ -117,12 +117,6 @@ class _SignupPageState extends State<SignupPage> {
     }
     if (value.length < 8) {
       return 'Debe tener al menos 8 caracteres';
-    }
-    if (!value.contains(RegExp(r'[0-9]'))) {
-      return 'Debe contener al menos un dígito';
-    }
-    if (!value.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
-      return 'Debe contener al menos un carácter especial';
     }
     return null;
   }

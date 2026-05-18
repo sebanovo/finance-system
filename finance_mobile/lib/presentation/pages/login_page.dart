@@ -28,7 +28,6 @@ class _LoginPageState extends State<LoginPage> {
   void _onViewModelChanged() {
     if (!mounted) return;
     if (_viewModel.errorMessage != null) {
-      // El error se mostrará en la UI, no en SnackBar
       setState(() {});
     }
   }
@@ -83,12 +82,6 @@ class _LoginPageState extends State<LoginPage> {
     }
     if (value.length < 8) {
       return 'Debe tener al menos 8 caracteres';
-    }
-    if (!value.contains(RegExp(r'[0-9]'))) {
-      return 'Debe contener al menos un dígito';
-    }
-    if (!value.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
-      return 'Debe contener al menos un carácter especial';
     }
     return null;
   }
