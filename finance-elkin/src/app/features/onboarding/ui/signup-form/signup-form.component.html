@@ -1,16 +1,32 @@
-<div class="w-full max-w-lg mx-auto bg-card rounded-xl shadow-lg border border-border p-8">
-  <div class="text-center mb-8">
-    <h2 class="text-2xl font-bold text-primary">Crea tu cuenta empresarial</h2>
+<div class="w-full max-w-lg mx-auto bg-card rounded-xl shadow-lg border border-border p-8 relative">
+  
+  <a routerLink="/login" class="absolute top-4 left-4 text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 text-sm font-medium">
+    <lucide-icon name="arrow-left" class="h-4 w-4"></lucide-icon>
+    Volver
+  </a>
+
+  <div class="text-center mb-8 mt-4">
+    <h2 class="text-2xl font-bold text-primary flex items-center justify-center gap-2">
+      <lucide-icon name="building-2" class="h-6 w-6"></lucide-icon>
+      Crea tu cuenta empresarial
+    </h2>
     <p class="text-muted-foreground mt-2">Empieza a gestionar tus finanzas hoy mismo.</p>
   </div>
 
   <!-- Mensaje de Éxito -->
-  <div *ngIf="success" class="mb-6 p-4 bg-accent text-accent-foreground rounded-md border border-primary/20">
-    ¡Cuenta creada exitosamente! Revisa tu correo electrónico.
+  <div *ngIf="success" @fadeSlideInOut class="mb-6 p-4 bg-accent text-accent-foreground rounded-md border border-primary/20 flex flex-col items-center gap-3 text-center">
+    <lucide-icon name="arrow-right" class="h-10 w-10 text-primary animate-bounce"></lucide-icon>
+    <div>
+      <h3 class="font-bold text-lg">¡Cuenta creada exitosamente!</h3>
+      <p class="text-sm mt-1">Revisa tu correo electrónico para continuar.</p>
+    </div>
+    <a routerLink="/login" class="mt-4 bg-primary text-primary-foreground px-4 py-2 rounded-md font-medium text-sm hover:bg-primary/90 transition-colors">
+      Ir al Login
+    </a>
   </div>
 
   <!-- Mensaje de Error -->
-  <div *ngIf="error" class="mb-6 p-4 bg-destructive/10 text-destructive border border-destructive/20 rounded-md">
+  <div *ngIf="error" @fadeSlideInOut class="mb-6 p-4 bg-destructive/10 text-destructive border border-destructive/20 rounded-md">
     {{ error }}
   </div>
 
@@ -19,7 +35,10 @@
     
     <!-- Datos de Empresa -->
     <div class="space-y-4 pb-4 border-b border-border">
-      <h3 class="text-sm font-semibold text-foreground uppercase tracking-wider">Datos de la Empresa</h3>
+      <h3 class="text-sm font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
+        <lucide-icon name="building-2" class="h-4 w-4 text-muted-foreground"></lucide-icon>
+        Datos de la Empresa
+      </h3>
       
       <div>
         <label for="companyName" class="block text-sm font-medium text-foreground mb-1">Nombre de la Empresa</label>
@@ -51,7 +70,10 @@
 
     <!-- Datos del Administrador -->
     <div class="space-y-4 pt-2">
-      <h3 class="text-sm font-semibold text-foreground uppercase tracking-wider">Administrador Principal</h3>
+      <h3 class="text-sm font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
+        <lucide-icon name="user" class="h-4 w-4 text-muted-foreground"></lucide-icon>
+        Administrador Principal
+      </h3>
       
       <div class="grid grid-cols-2 gap-4">
         <div>
@@ -89,7 +111,9 @@
       </div>
 
       <div>
-        <label for="password" class="block text-sm font-medium text-foreground mb-1">Contraseña</label>
+        <label for="password" class="block text-sm font-medium text-foreground mb-1 flex items-center gap-1">
+          Contraseña
+        </label>
         <input 
           id="password" 
           type="password" 

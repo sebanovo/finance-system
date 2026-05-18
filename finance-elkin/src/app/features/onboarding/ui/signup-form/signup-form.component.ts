@@ -1,13 +1,32 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { trigger, transition, style, animate } from '@angular/animations';
 import { PublicSignupRequest } from '../../../../entities/tenant/model/public-signup-request.model';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-signup-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './signup-form.component.html'
+  imports: [
+    CommonModule, 
+    ReactiveFormsModule, 
+    RouterModule, 
+    LucideAngularModule,
+  ],
+  templateUrl: './signup-form.component.html',
+  animations: [
+    trigger('fadeSlideInOut', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(-10px)' }),
+        animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+      ]),
+      transition(':leave', [
+        animate('300ms ease-in', style({ opacity: 0, transform: 'translateY(-10px)' }))
+      ])
+    ])
+  ]
 })
 export class SignupFormComponent {
   @Input() loading = false;

@@ -20,6 +20,7 @@
   },
   "private": true,
   "dependencies": {
+    "@angular/animations": "^20.3.21",
     "@angular/cdk": "^21.2.9",
     "@angular/common": "^20.1.0",
     "@angular/compiler": "^20.1.0",
@@ -29,6 +30,7 @@
     "@angular/router": "^20.1.0",
     "@spartan-ng/brain": "^0.0.1-alpha.684",
     "@tailwindcss/postcss": "^4.2.4",
+    "lucide-angular": "^1.0.0",
     "postcss": "^8.5.14",
     "rxjs": "~7.8.0",
     "tailwindcss": "^4.2.4",
