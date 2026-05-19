@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { ApiResponse } from '../../../shared/api';
 import { LoginRequest } from '../model/login-request.model';
 import { AuthTokenResponse } from '../model/auth-token-response.model';
+import { AuthenticatedTenantUserResponse } from '../model/authenticated-tenant-user-response.model';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
@@ -29,5 +30,9 @@ export class AuthService {
     };
 
     return this.http.post<ApiResponse<AuthTokenResponse>>(`${this.API_URL}/login`, body, { headers });
+  }
+
+  getMe(): Observable<ApiResponse<AuthenticatedTenantUserResponse>> {
+    return this.http.get<ApiResponse<AuthenticatedTenantUserResponse>>(`${this.API_URL}/me`);
   }
 }
