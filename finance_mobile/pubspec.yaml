@@ -20,12 +20,15 @@ dependencies:
   image_picker: ^1.2.1 # (Agregar permisos)
   dio: ^5.9.2 #(Para peticiones HTTP/HTTPS)
   get_it: ^9.2.1 #(Para injection de dependencias)
-  package_info_plus: ^10.1.0 #(Para mostrar la version en el pie de la app)
   firebase_core: ^4.7.0 #(Para notificaciones lo necesita firebaes_messaging)
   firebase_messaging: ^16.2.0 #(Para notificaciones push online + servidor)
   flutter_local_notifications: ^21.0.0 #(Para notificacione push offline)
-  equatable: ^2.0.8
-
+  equatable: ^2.0.8 #(Para comparar objetos de forma profunda o1 == o2)
+  device_info_plus: ^13.1.0 #(Para obtener información detallada del dispositivo)
+  package_info_plus: ^10.1.0 #(Para obtener información detallada de la app, como la version)
+  universal_html: ^2.3.0
+  # timezone: ^0.11.0
+  
 
 dev_dependencies:
   flutter_test:

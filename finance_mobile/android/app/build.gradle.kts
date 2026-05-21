@@ -24,6 +24,8 @@ android {
     }
 
     defaultConfig {
+        // flutter_local_notifications
+        // multiDexEnabled = true
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.finance_mobile"
         // You can update the following values to match your application needs.
@@ -63,4 +65,5 @@ dependencies {
     // For example, add the dependencies for Firebase Authentication and Cloud Firestore
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

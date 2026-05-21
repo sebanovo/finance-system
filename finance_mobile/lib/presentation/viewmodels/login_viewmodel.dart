@@ -1,3 +1,4 @@
+import 'package:finance_mobile/presentation/viewmodels/notifications_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/network/api_client.dart';
@@ -8,13 +9,12 @@ class LoginViewModel extends ChangeNotifier {
   final LoginUseCase loginUseCase;
   final ApiClient apiClient;
 
-  bool _isLoading = false;
-  String? _errorMessage;
-
   LoginViewModel({required this.loginUseCase}) : apiClient = di.sl<ApiClient>();
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  bool _isLoading = false;
+  String? _errorMessage;
 
   Future<bool> login(String email, String password, String tenantSlug) async {
     _isLoading = true;
@@ -37,6 +37,10 @@ class LoginViewModel extends ChangeNotifier {
       await prefs.setString('accessToken', accessToken);
       await prefs.setString('refreshToken', refreshToken);
       await prefs.setString('tenantSlug', tenantSlug);
+
+      // ✅ Registrar dispositivo en el backend
+      final notifViewModel = di.sl<NotificationsViewModel>();
+      await notifViewModel.registerCurrentDevice();
 
       return true;
     } catch (e) {

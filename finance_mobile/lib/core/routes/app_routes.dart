@@ -6,6 +6,8 @@ import 'package:finance_mobile/presentation/pages/create_payment_page.dart';
 import 'package:finance_mobile/presentation/pages/create_release_page.dart';
 import 'package:finance_mobile/presentation/pages/create_transfer_page.dart';
 import 'package:finance_mobile/presentation/pages/create_withdrawal_page.dart';
+import 'package:finance_mobile/presentation/pages/devices_page.dart';
+import 'package:finance_mobile/presentation/pages/notifications_page.dart';
 import 'package:finance_mobile/presentation/pages/transaction_detail_page.dart';
 import 'package:finance_mobile/presentation/pages/transactions_page.dart';
 import 'package:go_router/go_router.dart';
@@ -84,5 +86,10 @@ final appRouter = GoRouter(
         return TransactionDetailPage(transactionId: id);
       },
     ),
+    GoRoute(
+      path: '/notifications',
+      builder: (context, _) => const NotificationsPage(),
+    ),
+    GoRoute(path: '/devices', builder: (context, _) => const DevicesPage()),
   ],
 );

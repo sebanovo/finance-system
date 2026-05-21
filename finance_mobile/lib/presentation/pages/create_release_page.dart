@@ -138,7 +138,7 @@ class _CreateReleasePageState extends State<CreateReleasePage> {
                         const Text('No hay cuentas disponibles')
                       else
                         DropdownButtonFormField<String>(
-                          value: _selectedAccountId,
+                          initialValue: _selectedAccountId,
                           isExpanded: true,
                           decoration: const InputDecoration(
                             border: OutlineInputBorder(
@@ -207,12 +207,15 @@ class _CreateReleasePageState extends State<CreateReleasePage> {
                                 prefixText: 'Bs. ',
                               ),
                               validator: (value) {
-                                if (value == null || value.isEmpty)
+                                if (value == null || value.isEmpty) {
                                   return 'Campo requerido';
-                                if (double.tryParse(value) == null)
+                                }
+                                if (double.tryParse(value) == null) {
                                   return 'Monto inválido';
-                                if (double.parse(value) <= 0)
+                                }
+                                if (double.parse(value) <= 0) {
                                   return 'Monto debe ser mayor a 0';
+                                }
                                 return null;
                               },
                             ),
@@ -220,7 +223,7 @@ class _CreateReleasePageState extends State<CreateReleasePage> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: _selectedCurrency,
+                              initialValue: _selectedCurrency,
                               isExpanded: true,
                               decoration: const InputDecoration(
                                 border: OutlineInputBorder(
