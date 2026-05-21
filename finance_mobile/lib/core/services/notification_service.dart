@@ -27,7 +27,7 @@ class NotificationService {
     await _fcm.requestPermission(alert: true, badge: true, sound: true);
 
     final token = await _fcm.getToken();
-    print('📱 FCM Token: ${token?.substring(0, 20)}...');
+    debugPrint('📱 FCM Token: ${token?.substring(0, 20)}...');
   }
 
   static Future<void> showNotification({
@@ -71,9 +71,9 @@ class NotificationService {
         notificationDetails: details,
         payload: payload,
       );
-      print('📱 Notificación móvil mostrada: $title');
+      debugPrint('📱 Notificación móvil mostrada: $title');
     } catch (e) {
-      print('❌ Error mostrando notificación móvil: $e');
+      debugPrint('❌ Error mostrando notificación móvil: $e');
     }
   }
 
@@ -83,7 +83,7 @@ class NotificationService {
 
   static void onMessage(Function(RemoteMessage) callback) {
     FirebaseMessaging.onMessage.listen((message) {
-      print('🔔 Mensaje FCM recibido: ${message.notification?.title}');
+      debugPrint('🔔 Mensaje FCM recibido: ${message.notification?.title}');
 
       showNotification(
         title: message.notification?.title ?? 'Nueva notificación',
