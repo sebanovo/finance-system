@@ -26,7 +26,8 @@ dependencies:
   equatable: ^2.0.8 #(Para comparar objetos de forma profunda o1 == o2)
   device_info_plus: ^13.1.0 #(Para obtener información detallada del dispositivo)
   package_info_plus: ^10.1.0 #(Para obtener información detallada de la app, como la version)
-  timezone: ^0.11.0
+  universal_html: ^2.3.0
+  # timezone: ^0.11.0
   
 
 dev_dependencies:

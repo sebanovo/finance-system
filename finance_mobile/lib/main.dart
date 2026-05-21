@@ -1,12 +1,9 @@
 import 'package:finance_mobile/core/routes/app_routes.dart';
-import 'package:finance_mobile/core/services/notification_service.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:finance_mobile/constants/env.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:timezone/data/latest.dart' as tzdata;
-// import 'package:timezone/timezone.dart' as tz;
 
 import 'core/di/injection_container.dart' as di;
 
@@ -14,19 +11,15 @@ import 'core/di/injection_container.dart' as di;
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  // Inicializar notificaciones locales en segundo plano
-  tzdata.initializeTimeZones();
-  await NotificationService.initialize();
-  // Aquí puedes procesar la notificación en segundo plano
+  debugPrint(
+    '🔔 Notificación en segundo plano: ${message.notification?.title}',
+  );
 }
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp();
-
-  // ✅ Inicializar servicio de notificaciones locales
-  await NotificationService.initialize();
 
   final fcm = FirebaseMessaging.instance;
 

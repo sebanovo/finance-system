@@ -26,6 +26,7 @@ class _HomePageState extends State<HomePage> {
     _notifViewModel.addListener(_onNotifChanged);
     _viewModel.addListener(_onUserInfoLoaded);
     _notifViewModel.loadUnreadCount();
+    _setupFcmListeners();
   }
 
   void _onUserInfoLoaded() {
@@ -42,6 +43,25 @@ class _HomePageState extends State<HomePage> {
         _notifViewModel.registerCurrentDevice();
       }
     }
+  }
+
+  void _setupFcmListeners() {
+    // Escuchar notificaciones en primer plano
+    NotificationService.onMessage((message) {
+      debugPrint('🔔 Notificación recibida: ${message.notification?.title}');
+
+      // Actualizar contador de notificaciones no leídas
+      _notifViewModel.loadUnreadCount();
+    });
+
+    // Escuchar cuando el usuario abre la notificación
+    NotificationService.onMessageOpenedApp((message) {
+      debugPrint('🔔 Notificación abierta: ${message.notification?.title}');
+      final actionUrl = message.data['actionUrl'];
+      if (actionUrl != null && actionUrl.isNotEmpty && mounted) {
+        context.push(actionUrl);
+      }
+    });
   }
 
   void _onNotifChanged() {
@@ -97,21 +117,6 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          try {
-            await NotificationService.showNotification(
-              title: '🧪 Test Local',
-              body: 'Esta es una notificación local de prueba',
-              payload: '/test',
-            );
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Notificación enviada')),
-            );
-          } catch (e) {}
-        },
-        child: const Icon(Icons.notifications_active),
-      ),
       appBar: AppBar(
         title: const Text("Dashboard"),
         backgroundColor: Colors.white,
