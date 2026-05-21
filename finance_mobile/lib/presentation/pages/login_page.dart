@@ -1,3 +1,4 @@
+import 'package:finance_mobile/presentation/viewmodels/notifications_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart' as di;
@@ -41,6 +42,8 @@ class _LoginPageState extends State<LoginPage> {
     );
     if (success && mounted) {
       context.go('/home');
+      final notifViewModel = di.sl<NotificationsViewModel>();
+      await notifViewModel.registerCurrentDevice();
     }
   }
 

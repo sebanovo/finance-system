@@ -1,3 +1,5 @@
+import 'package:finance_mobile/core/services/notification_service.dart';
+import 'package:finance_mobile/presentation/viewmodels/notifications_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart' as di;
@@ -13,12 +15,37 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late HomeViewModel _viewModel;
+  late NotificationsViewModel _notifViewModel;
 
   @override
   void initState() {
     super.initState();
     _viewModel = di.sl<HomeViewModel>();
     _viewModel.addListener(_onViewModelChanged);
+    _notifViewModel = di.sl<NotificationsViewModel>();
+    _notifViewModel.addListener(_onNotifChanged);
+    _viewModel.addListener(_onUserInfoLoaded);
+    _notifViewModel.loadUnreadCount();
+  }
+
+  void _onUserInfoLoaded() {
+    if (_viewModel.userInfo != null) {
+      // ✅ Obtener el primer rol (o el más relevante)
+      final userRole = _viewModel.userInfo!.roles.firstWhere(
+        (r) => r == 'USER' || r == 'ADMIN' || r == 'OWNER_ADMIN',
+        orElse: () => 'UNKNOWN',
+      );
+      _notifViewModel.setCurrentUserRole(userRole);
+
+      // ✅ Solo registrar dispositivo si es USER
+      if (userRole == 'USER') {
+        _notifViewModel.registerCurrentDevice();
+      }
+    }
+  }
+
+  void _onNotifChanged() {
+    if (mounted) setState(() {});
   }
 
   void _onViewModelChanged() {
@@ -70,11 +97,57 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          try {
+            await NotificationService.showNotification(
+              title: '🧪 Test Local',
+              body: 'Esta es una notificación local de prueba',
+              payload: '/test',
+            );
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Notificación enviada')),
+            );
+          } catch (e) {}
+        },
+        child: const Icon(Icons.notifications_active),
+      ),
       appBar: AppBar(
         title: const Text("Dashboard"),
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: const Color(0xFF2E7D32),
+        actions: [
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications),
+                onPressed: () => context.push('/notifications'),
+              ),
+              if (_notifViewModel.unreadCount > 0)
+                Positioned(
+                  right: 4,
+                  top: 4,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 12,
+                      minHeight: 12,
+                    ),
+                    child: Text(
+                      '${_notifViewModel.unreadCount}',
+                      style: const TextStyle(color: Colors.white, fontSize: 8),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
       ),
       drawer: _buildDrawer(),
       body: RefreshIndicator(
@@ -201,6 +274,23 @@ class _HomePageState extends State<HomePage> {
                 _showChangePasswordDialog();
               },
             ),
+            if (_hasAnyRole(['USER']))
+              _buildDrawerItem(
+                icon: Icons.notifications,
+                title: 'Mis notificaciones',
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/notifications');
+                },
+              ),
+            _buildDrawerItem(
+              icon: Icons.phone_android,
+              title: 'Mis Dispositivos',
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/devices');
+              },
+            ),
             // ✅ Cerrar sesión - visible para todos
             _buildDrawerItem(
               icon: Icons.logout,
@@ -208,6 +298,14 @@ class _HomePageState extends State<HomePage> {
               onTap: () => _logout(),
               isDestructive: true,
             ),
+            if (_hasAnyRole(['USER']))
+              ElevatedButton(
+                onPressed: () async {
+                  final notifViewModel = di.sl<NotificationsViewModel>();
+                  await notifViewModel.registerCurrentDevice();
+                },
+                child: const Text('Registrar dispositivo'),
+              ),
           ],
         ),
       ),

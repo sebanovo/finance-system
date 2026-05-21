@@ -1,6 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- permisos para http -->
+    <!-- permiso para http -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- permiso para que el sistema operativo no mate el proceso de la app -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- permiso para acceder al motor de vibración -->
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <!-- permisos para speech_to_text-->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
@@ -25,6 +29,17 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" /> <!-- Opcional: para ubicación en segundo plano -->
+
+
+    <!-- Para Android 13+ (API 33+) necesitas este permiso para notificaciones -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    
+    <!-- Para recibir notificaciones después de reiniciar el dispositivo -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    
+    <!-- Para notificaciones en pantalla completa (opcional) -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+
 
     <!-- Para que la app se inicie con el dispositivo (recepción de notificaciones) -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -66,6 +81,21 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Necesario para mostrar notificaciones programadas -->
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+        
+        <!-- Necesario para restaurar notificaciones después del reinicio -->
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
+        </receiver>
+        
+        <!-- Para acciones de notificaciones (botones) -->
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
