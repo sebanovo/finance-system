@@ -79,5 +79,10 @@
 	<string>Necesitamos usar la cámara para tomar fotos de las piezas dañadas.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Se requiere el micrófono si vas a grabar videos del motor.</string>
+	<!-- Recibir Notificaciones -->
+	<key>UIBackgroundModes</key>
+	<array>
+			<string>remote-notification</string>
+	</array>
 </dict>
 </plist>
