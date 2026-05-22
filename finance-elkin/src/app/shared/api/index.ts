@@ -6,3 +6,7 @@ export * from './interceptors/auth.interceptor';
 
 // export guards
 export * from './guards/auth.guard';
+export * from './guards/permission.guard';
+
+// export pipes
+export * from './pipes/has-permission.pipe';

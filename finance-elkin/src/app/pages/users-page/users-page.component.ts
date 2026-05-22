@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { UserListUseCase, UserTableComponent, UserCreateUseCase, UserCreateFormComponent, UserUpdateUseCase, UserStatusUseCase, UserEditFormComponent } from '../../features/user-management';
 import { CreateTenantUserRequest, TenantUserResponse, UpdateTenantUserRequest } from '../../entities/user';
 import { UserRoleAssignmentComponent, UserRoleUseCase } from '../../features/user-role-management';
+import { ToastService } from '../../shared/ui/toast/toast.service';
 
 @Component({
   selector: 'app-users-page',
@@ -61,14 +62,6 @@ import { UserRoleAssignmentComponent, UserRoleUseCase } from '../../features/use
             (editUser)="openEditModal($event)"
             (toggleStatus)="handleToggleStatus($event)">
           </app-user-table>
-        </div>
-      }
-      
-      <!-- Mensaje de Éxito (Toast simple) -->
-      @if (showSuccessToast()) {
-        <div class="fixed bottom-4 right-4 bg-primary text-primary-foreground px-4 py-3 rounded-md shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4 z-50">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          {{ toastMessage() }}
         </div>
       }
     </div>
@@ -188,8 +181,7 @@ export class UsersPageComponent implements OnInit {
   public readonly selectedUser = signal<TenantUserResponse | null>(null);
   public readonly selectedUserToEdit = signal<TenantUserResponse | null>(null);
   
-  public readonly showSuccessToast = signal(false);
-  public readonly toastMessage = signal('');
+  private readonly toastService = inject(ToastService);
 
   constructor() {
     // Éxito al crear usuario
@@ -198,7 +190,7 @@ export class UsersPageComponent implements OnInit {
         this.closeCreateModal();
         this.userCreateUseCase.resetState();
         this.userListUseCase.reloadUsers();
-        this.triggerToast('Usuario creado correctamente');
+        this.toastService.success('Usuario creado correctamente');
       }
     }, { allowSignalWrites: true });
 
@@ -208,7 +200,7 @@ export class UsersPageComponent implements OnInit {
         this.closeEditModal();
         this.userUpdateUseCase.resetState();
         this.userListUseCase.reloadUsers();
-        this.triggerToast('Usuario actualizado correctamente');
+        this.toastService.success('Usuario actualizado correctamente');
       }
     }, { allowSignalWrites: true });
 
@@ -217,7 +209,7 @@ export class UsersPageComponent implements OnInit {
       if (this.userRoleUseCase.status() === 'success') {
         this.closeRoleModal();
         this.userRoleUseCase.resetState();
-        this.triggerToast('Roles actualizados correctamente');
+        this.toastService.success('Roles actualizados correctamente');
       }
     }, { allowSignalWrites: true });
   }
@@ -270,10 +262,10 @@ export class UsersPageComponent implements OnInit {
     if (confirm(`¿Estás seguro que deseas ${action} a este usuario?`)) {
       const success = await this.userStatusUseCase.toggleStatus(user.id.toString(), user.active);
       if (success) {
-        this.triggerToast(`Usuario ${user.active ? 'desactivado' : 'activado'} correctamente`);
+        this.toastService.success(`Usuario ${user.active ? 'desactivado' : 'activado'} correctamente`);
         this.userListUseCase.reloadUsers();
       } else {
-        alert(this.userStatusUseCase.error());
+        this.toastService.error(this.userStatusUseCase.error() || 'Error al cambiar el estado del usuario');
       }
     }
   }
@@ -298,11 +290,5 @@ export class UsersPageComponent implements OnInit {
     if (user) {
       this.userRoleUseCase.assignRoles(user.id.toString(), roleIds);
     }
-  }
-
-  private triggerToast(message: string): void {
-    this.toastMessage.set(message);
-    this.showSuccessToast.set(true);
-    setTimeout(() => this.showSuccessToast.set(false), 3000);
   }
 }

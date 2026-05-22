@@ -4,11 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { TransactionsListUseCase, TransactionSlideOverComponent, TransactionActionType } from '../../features/transactions-management';
 import { TransactionResponse } from '../../entities/transactions';
 import { LucideAngularModule, Plus, ChevronDown, MoreHorizontal, RotateCcw, Reply, CheckCircle, XCircle, AlertTriangle, CornerDownLeft, X } from 'lucide-angular';
+import { HasPermissionPipe, HasAnyPermissionPipe } from '../../shared/api';
+import { ToastService } from '../../shared/ui/toast/toast.service';
 
 @Component({
   selector: 'app-transactions-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TransactionSlideOverComponent, LucideAngularModule],
+  imports: [CommonModule, FormsModule, TransactionSlideOverComponent, LucideAngularModule, HasPermissionPipe, HasAnyPermissionPipe],
   providers: [DatePipe, CurrencyPipe],
   template: `
     <div class="space-y-6 relative">
@@ -21,7 +23,7 @@ import { LucideAngularModule, Plus, ChevronDown, MoreHorizontal, RotateCcw, Repl
         <!-- Dropdown Nueva Transacción -->
         <div class="relative group">
           <button 
-            *ngIf="hasPermission('transactions.create')"
+            *ngIf="['transactions.create.deposit', 'transactions.create.withdrawal', 'transactions.create.transfer', 'transactions.create.payment'] | hasAnyPermission"
             type="button"
             class="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
             <lucide-icon name="plus" [size]="16"></lucide-icon>
@@ -31,10 +33,10 @@ import { LucideAngularModule, Plus, ChevronDown, MoreHorizontal, RotateCcw, Repl
           
           <div class="absolute right-0 top-full mt-2 w-48 bg-card border border-border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 overflow-hidden">
             <div class="py-1">
-              <button *ngIf="hasPermission('transactions.create.deposit')" (click)="openSlideOver('deposit')" class="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors">Crear Depósito</button>
-              <button *ngIf="hasPermission('transactions.create.withdrawal')" (click)="openSlideOver('withdrawal')" class="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors">Crear Retiro</button>
-              <button *ngIf="hasPermission('transactions.create.transfer')" (click)="openSlideOver('transfer')" class="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors">Crear Transferencia</button>
-              <button *ngIf="hasPermission('transactions.create.payment')" (click)="openSlideOver('payment')" class="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors">Crear Pago</button>
+              <button *ngIf="'transactions.create.deposit' | hasPermission" (click)="openSlideOver('deposit')" class="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors">Crear Depósito</button>
+              <button *ngIf="'transactions.create.withdrawal' | hasPermission" (click)="openSlideOver('withdrawal')" class="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors">Crear Retiro</button>
+              <button *ngIf="'transactions.create.transfer' | hasPermission" (click)="openSlideOver('transfer')" class="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors">Crear Transferencia</button>
+              <button *ngIf="'transactions.create.payment' | hasPermission" (click)="openSlideOver('payment')" class="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors">Crear Pago</button>
             </div>
           </div>
         </div>
@@ -149,14 +151,14 @@ import { LucideAngularModule, Plus, ChevronDown, MoreHorizontal, RotateCcw, Repl
                         <div class="absolute right-0 mt-1 w-48 bg-card border border-border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
                           <div class="py-1">
                             <!-- Acciones (ej. Reverse, Refund) -->
-                            <button *ngIf="hasPermission('transactions.reverse') && tx.status === 'COMPLETED'" (click)="reverseTransaction(tx.id)" class="w-full text-left px-4 py-2 text-xs text-orange-600 hover:bg-orange-500/10 transition-colors flex items-center gap-2">
+                            <button *ngIf="('transactions.reverse' | hasPermission) && tx.status === 'COMPLETED'" (click)="reverseTransaction(tx.id)" class="w-full text-left px-4 py-2 text-xs text-orange-600 hover:bg-orange-500/10 transition-colors flex items-center gap-2">
                               <lucide-icon name="rotate-ccw" [size]="14"></lucide-icon> Revertir
                             </button>
-                            <button *ngIf="hasPermission('transactions.refund') && tx.status === 'COMPLETED'" (click)="refundTransaction(tx.id)" class="w-full text-left px-4 py-2 text-xs text-blue-600 hover:bg-blue-500/10 transition-colors flex items-center gap-2">
+                            <button *ngIf="('transactions.refund' | hasPermission) && tx.status === 'COMPLETED'" (click)="refundTransaction(tx.id)" class="w-full text-left px-4 py-2 text-xs text-blue-600 hover:bg-blue-500/10 transition-colors flex items-center gap-2">
                               <lucide-icon name="reply" [size]="14"></lucide-icon> Reembolsar
                             </button>
                             <!-- Placeholder si no hay acciones -->
-                            <div *ngIf="!(hasPermission('transactions.reverse') && tx.status === 'COMPLETED') && !(hasPermission('transactions.refund') && tx.status === 'COMPLETED')" class="px-4 py-2 text-xs text-muted-foreground italic text-center">
+                            <div *ngIf="!('transactions.reverse' | hasPermission) && !('transactions.refund' | hasPermission)" class="px-4 py-2 text-xs text-muted-foreground italic text-center">
                               Sin acciones
                             </div>
                           </div>
@@ -275,6 +277,7 @@ import { LucideAngularModule, Plus, ChevronDown, MoreHorizontal, RotateCcw, Repl
 })
 export class TransactionsPageComponent implements OnInit {
   public readonly useCase = inject(TransactionsListUseCase);
+  private readonly toastService = inject(ToastService);
 
   isSlideOverOpen = false;
   selectedTransactionType: TransactionActionType = 'deposit';
@@ -296,11 +299,6 @@ export class TransactionsPageComponent implements OnInit {
     this.useCase.loadTransactions();
   }
 
-  // Permisos simulados
-  hasPermission(permission: string): boolean {
-    return true; // Admin tiene todos los permisos
-  }
-
   openSlideOver(type: TransactionActionType) {
     this.selectedTransactionType = type;
     this.isSlideOverOpen = true;
@@ -309,9 +307,10 @@ export class TransactionsPageComponent implements OnInit {
   async onTransactionSaved(event: { type: TransactionActionType, request: any }) {
     try {
       await this.useCase.executeTransaction(event.type, event.request);
+      this.toastService.success('Transacción procesada con éxito.');
       this.isSlideOverOpen = false;
     } catch (error) {
-      alert('Error al procesar la transacción: ' + error);
+      this.toastService.error('Error al procesar la transacción: ' + error);
     }
   }
 

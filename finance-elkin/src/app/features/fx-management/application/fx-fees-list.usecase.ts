@@ -58,4 +58,28 @@ export class FxFeesListUseCase {
       return false;
     }
   }
+
+  async createFee(request: import('../../../entities/fx').CreateOperationFeeRequest): Promise<void> {
+    this.state.set({ ...this.state(), status: 'loading', error: null });
+    try {
+      await firstValueFrom(this.fxService.createFee(request));
+      await this.loadFees();
+    } catch (err: any) {
+      const errorMsg = err.error?.message || err.message || 'Error al crear la comisión';
+      this.state.set({ ...this.state(), status: 'error', error: errorMsg });
+      throw err;
+    }
+  }
+
+  async updateFee(id: string, request: import('../../../entities/fx').UpdateOperationFeeRequest): Promise<void> {
+    this.state.set({ ...this.state(), status: 'loading', error: null });
+    try {
+      await firstValueFrom(this.fxService.updateFee(id, request));
+      await this.loadFees();
+    } catch (err: any) {
+      const errorMsg = err.error?.message || err.message || 'Error al actualizar la comisión';
+      this.state.set({ ...this.state(), status: 'error', error: errorMsg });
+      throw err;
+    }
+  }
 }

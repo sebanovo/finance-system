@@ -58,4 +58,28 @@ export class FxRatesListUseCase {
       return false;
     }
   }
+
+  async createRate(request: import('../../../entities/fx').CreateFxExchangeRateRequest): Promise<void> {
+    this.state.set({ ...this.state(), status: 'loading', error: null });
+    try {
+      await firstValueFrom(this.fxService.createRate(request));
+      await this.loadRates();
+    } catch (err: any) {
+      const errorMsg = err.error?.message || err.message || 'Error al crear la tasa';
+      this.state.set({ ...this.state(), status: 'error', error: errorMsg });
+      throw err;
+    }
+  }
+
+  async updateRate(id: string, request: import('../../../entities/fx').UpdateFxExchangeRateRequest): Promise<void> {
+    this.state.set({ ...this.state(), status: 'loading', error: null });
+    try {
+      await firstValueFrom(this.fxService.updateRate(id, request));
+      await this.loadRates();
+    } catch (err: any) {
+      const errorMsg = err.error?.message || err.message || 'Error al actualizar la tasa';
+      this.state.set({ ...this.state(), status: 'error', error: errorMsg });
+      throw err;
+    }
+  }
 }

@@ -3,11 +3,13 @@ import { CommonModule, CurrencyPipe } from '@angular/common';
 import { AccountListUseCase, AccountFormComponent } from '../../features/account-management';
 import { LucideAngularModule, Plus, MoreHorizontal, CheckCircle, Play, Ban, Snowflake, XCircle, Pencil, Wallet } from 'lucide-angular';
 import { AccountOwnerResponse, CreateAccountRequest, UpdateAccountRequest } from '../../entities/accounts';
+import { HasPermissionPipe } from '../../shared/api';
+import { ToastService } from '../../shared/ui/toast/toast.service';
 
 @Component({
   selector: 'app-accounts-page',
   standalone: true,
-  imports: [CommonModule, AccountFormComponent, LucideAngularModule],
+  imports: [CommonModule, AccountFormComponent, LucideAngularModule, HasPermissionPipe],
   providers: [CurrencyPipe],
   template: `
     <div class="space-y-6 relative">
@@ -18,7 +20,7 @@ import { AccountOwnerResponse, CreateAccountRequest, UpdateAccountRequest } from
         </div>
         
         <button 
-          *ngIf="hasPermission('accounts.create')"
+          *ngIf="'accounts.create' | hasPermission"
           (click)="openCreateForm()"
           type="button"
           class="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
@@ -97,29 +99,29 @@ import { AccountOwnerResponse, CreateAccountRequest, UpdateAccountRequest } from
                         </button>
                         <div class="absolute right-0 mt-1 w-48 bg-card border border-border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
                           <div class="py-1">
-                            <button *ngIf="hasPermission('accounts.balance.read')" (click)="viewBalance(account)" class="w-full text-left px-4 py-2 text-xs text-foreground hover:bg-muted transition-colors flex items-center gap-2">
+                            <button *ngIf="'accounts.balance.read' | hasPermission" (click)="viewBalance(account)" class="w-full text-left px-4 py-2 text-xs text-foreground hover:bg-muted transition-colors flex items-center gap-2">
                               <lucide-icon name="wallet" [size]="14"></lucide-icon> Ver Saldo
                             </button>
-                            <button *ngIf="hasPermission('accounts.update')" (click)="openEditForm(account)" class="w-full text-left px-4 py-2 text-xs text-foreground hover:bg-muted transition-colors flex items-center gap-2">
+                            <button *ngIf="'accounts.update' | hasPermission" (click)="openEditForm(account)" class="w-full text-left px-4 py-2 text-xs text-foreground hover:bg-muted transition-colors flex items-center gap-2">
                               <lucide-icon name="pencil" [size]="14"></lucide-icon> Editar
                             </button>
                             
                             <div class="h-px bg-border my-1"></div>
                             
                             <!-- Acciones de estado (condicionales al rol) -->
-                            <button *ngIf="hasPermission('accounts.approve') && account.status === 'PENDING_APPROVAL'" (click)="changeState(account, 'approve')" class="w-full text-left px-4 py-2 text-xs text-green-600 hover:bg-green-500/10 transition-colors flex items-center gap-2">
+                            <button *ngIf="('accounts.approve' | hasPermission) && account.status === 'PENDING_APPROVAL'" (click)="changeState(account, 'approve')" class="w-full text-left px-4 py-2 text-xs text-green-600 hover:bg-green-500/10 transition-colors flex items-center gap-2">
                               <lucide-icon name="check-circle" [size]="14"></lucide-icon> Aprobar
                             </button>
-                            <button *ngIf="hasPermission('accounts.activate') && (account.status === 'PENDING_APPROVAL' || account.status === 'FROZEN')" (click)="changeState(account, 'activate')" class="w-full text-left px-4 py-2 text-xs text-green-600 hover:bg-green-500/10 transition-colors flex items-center gap-2">
+                            <button *ngIf="('accounts.activate' | hasPermission) && (account.status === 'PENDING_APPROVAL' || account.status === 'FROZEN')" (click)="changeState(account, 'activate')" class="w-full text-left px-4 py-2 text-xs text-green-600 hover:bg-green-500/10 transition-colors flex items-center gap-2">
                               <lucide-icon name="play" [size]="14"></lucide-icon> Activar
                             </button>
-                            <button *ngIf="hasPermission('accounts.block') && account.status !== 'BLOCKED' && account.status !== 'CLOSED'" (click)="changeStateWithReason(account, 'block')" class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-red-500/10 transition-colors flex items-center gap-2">
+                            <button *ngIf="('accounts.block' | hasPermission) && account.status !== 'BLOCKED' && account.status !== 'CLOSED'" (click)="changeStateWithReason(account, 'block')" class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-red-500/10 transition-colors flex items-center gap-2">
                               <lucide-icon name="ban" [size]="14"></lucide-icon> Bloquear
                             </button>
-                            <button *ngIf="hasPermission('accounts.freeze') && account.status === 'ACTIVE'" (click)="changeStateWithReason(account, 'freeze')" class="w-full text-left px-4 py-2 text-xs text-yellow-600 hover:bg-yellow-500/10 transition-colors flex items-center gap-2">
+                            <button *ngIf="('accounts.freeze' | hasPermission) && account.status === 'ACTIVE'" (click)="changeStateWithReason(account, 'freeze')" class="w-full text-left px-4 py-2 text-xs text-yellow-600 hover:bg-yellow-500/10 transition-colors flex items-center gap-2">
                               <lucide-icon name="snowflake" [size]="14"></lucide-icon> Congelar
                             </button>
-                            <button *ngIf="hasPermission('accounts.close') && account.status !== 'CLOSED'" (click)="changeStateWithReason(account, 'close')" class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-red-500/10 transition-colors flex items-center gap-2">
+                            <button *ngIf="('accounts.close' | hasPermission) && account.status !== 'CLOSED'" (click)="changeStateWithReason(account, 'close')" class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-red-500/10 transition-colors flex items-center gap-2">
                               <lucide-icon name="x-circle" [size]="14"></lucide-icon> Cerrar Cuenta
                             </button>
                           </div>
@@ -202,7 +204,8 @@ import { AccountOwnerResponse, CreateAccountRequest, UpdateAccountRequest } from
 })
 export class AccountsPageComponent implements OnInit {
   public readonly useCase = inject(AccountListUseCase);
-  
+  private readonly toastService = inject(ToastService);
+
   isFormOpen = false;
   selectedAccount: AccountOwnerResponse | null = null;
   balanceData: any = null;
@@ -213,11 +216,6 @@ export class AccountsPageComponent implements OnInit {
 
   loadAccounts() {
     this.useCase.loadAccounts();
-  }
-
-  // Permisos simulados para la UI (aquí se inyectaría un AuthService)
-  hasPermission(permission: string): boolean {
-    return true; // Asumimos que el admin tiene todos los permisos
   }
 
   openCreateForm() {
@@ -239,7 +237,7 @@ export class AccountsPageComponent implements OnInit {
       }
       this.isFormOpen = false;
     } catch (error) {
-      alert('Error al guardar la cuenta: ' + error);
+      this.toastService.error('Error al guardar la cuenta: ' + error);
     }
   }
 
@@ -247,8 +245,9 @@ export class AccountsPageComponent implements OnInit {
     if (confirm(`¿Estás seguro que deseas ${action === 'approve' ? 'aprobar' : 'activar'} esta cuenta?`)) {
       try {
         await this.useCase.changeAccountState(account.id, action);
+        this.toastService.success(`Cuenta ${action === 'approve' ? 'aprobada' : 'activada'} con éxito.`);
       } catch (error) {
-        alert('Error: ' + error);
+        this.toastService.error(`Error al ${action === 'approve' ? 'aprobar' : 'activar'}: ` + error);
       }
     }
   }
@@ -256,11 +255,12 @@ export class AccountsPageComponent implements OnInit {
   async changeStateWithReason(account: AccountOwnerResponse, action: 'block' | 'freeze' | 'close') {
     const actionLabel = action === 'block' ? 'bloquear' : action === 'freeze' ? 'congelar' : 'cerrar';
     const reason = prompt(`Por favor, ingresa el motivo para ${actionLabel} la cuenta:`);
-    if (reason !== null) { // if not cancelled
+    if (reason !== null) {
       try {
         await this.useCase.changeAccountState(account.id, action, reason);
+        this.toastService.success(`Cuenta ${actionLabel}da con éxito.`);
       } catch (error) {
-        alert('Error: ' + error);
+        this.toastService.error('Error al cambiar estado: ' + error);
       }
     }
   }
@@ -272,7 +272,7 @@ export class AccountsPageComponent implements OnInit {
         this.balanceData = response.data;
       }
     } catch (error) {
-      alert('Error al consultar saldo: ' + error);
+      this.toastService.error('Error al consultar saldo: ' + error);
     }
   }
 
