@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:finance_db}
+    url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:55432}/${DB_NAME:finance_db}
     username: ${DB_USER:finance_user}
     password: ${DB_PASSWORD:finance_password}
     driver-class-name: org.postgresql.Driver

@@ -37,7 +37,7 @@ app:
       - /api/platform/**
   security:
     jwt:
-      secret: ${JWT_SECRET}
+      secret: ${JWT_SECRET:4a2d6b9f8e7c1a5d3f2b4c6e8a0d9f1b3c5e7a9d2f4b6c8e0a1d3f5b7c9e2a4}
       access-expiration-ms: ${JWT_ACCESS_EXPIRATION:900000}
       refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION:604800000}
   bootstrap:

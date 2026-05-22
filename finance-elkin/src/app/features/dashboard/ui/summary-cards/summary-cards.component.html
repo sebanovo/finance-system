@@ -1,0 +1,53 @@
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" *ngIf="data">
+  
+  <!-- Tarjeta Plan Activo -->
+  <div class="bg-card rounded-xl border border-border p-6 shadow-sm flex flex-col">
+    <div class="flex items-center gap-3 text-muted-foreground mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>
+      <h3 class="text-sm font-medium">Plan Actual</h3>
+    </div>
+    <div class="mt-auto">
+      <p class="text-2xl font-bold text-foreground capitalize">{{ data.activePlan }}</p>
+    </div>
+  </div>
+
+  <!-- Tarjeta Usuarios -->
+  <div class="bg-card rounded-xl border border-border p-6 shadow-sm flex flex-col">
+    <div class="flex items-center gap-3 text-muted-foreground mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <h3 class="text-sm font-medium">Usuarios Registrados</h3>
+    </div>
+    <div class="mt-auto flex items-end justify-between">
+      <p class="text-2xl font-bold text-foreground">
+        {{ data.totalUsers }} <span class="text-lg text-muted-foreground font-normal">/ {{ data.maxUsers }}</span>
+      </p>
+      <!-- Indicador de capacidad -->
+      <div class="w-1/2 bg-muted rounded-full h-1.5 overflow-hidden flex">
+        <div class="bg-primary h-full" [style.width.%]="(data.totalUsers / data.maxUsers) * 100"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tarjeta Días Restantes (Trial) -->
+  <div class="bg-card rounded-xl border border-border p-6 shadow-sm flex flex-col relative overflow-hidden" 
+       [ngClass]="{'border-secondary/50 bg-secondary/5': data.trialDaysLeft > 0}">
+    
+    <!-- Ribbon si está en trial -->
+    <div *ngIf="data.trialDaysLeft > 0" class="absolute top-0 right-0">
+      <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-medium leading-none text-secondary-foreground bg-secondary rounded-bl-lg">
+        TRIAL
+      </span>
+    </div>
+
+    <div class="flex items-center gap-3 text-muted-foreground mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <h3 class="text-sm font-medium">Días Restantes</h3>
+    </div>
+    <div class="mt-auto">
+      <p class="text-2xl font-bold text-foreground">
+        {{ data.trialDaysLeft }} <span class="text-sm font-normal text-muted-foreground">días</span>
+      </p>
+    </div>
+  </div>
+
+</div>
