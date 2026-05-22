@@ -1,11 +1,13 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
-import { AccountListUseCase } from '../../features/account-management';
+import { AccountListUseCase, AccountFormComponent } from '../../features/account-management';
+import { LucideAngularModule, Plus, MoreHorizontal, CheckCircle, Play, Ban, Snowflake, XCircle, Pencil, Wallet } from 'lucide-angular';
+import { AccountOwnerResponse, CreateAccountRequest, UpdateAccountRequest } from '../../entities/accounts';
 
 @Component({
   selector: 'app-accounts-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AccountFormComponent, LucideAngularModule],
   providers: [CurrencyPipe],
   template: `
     <div class="space-y-6 relative">
@@ -16,9 +18,11 @@ import { AccountListUseCase } from '../../features/account-management';
         </div>
         
         <button 
+          *ngIf="hasPermission('accounts.create')"
+          (click)="openCreateForm()"
           type="button"
           class="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+          <lucide-icon name="plus" [size]="16"></lucide-icon>
           Nueva Cuenta
         </button>
       </div>
@@ -48,8 +52,8 @@ import { AccountListUseCase } from '../../features/account-management';
 
       <!-- Estado: Éxito o Recargando -->
       @if (useCase.status() === 'success' || (useCase.status() === 'loading' && useCase.data().length > 0)) {
-        <div class="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-          <div class="overflow-x-auto">
+        <div class="bg-card border border-border rounded-xl shadow-sm">
+          <div class="overflow-x-auto min-h-[300px]">
             <table class="w-full text-sm text-left">
               <thead class="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
                 <tr>
@@ -59,6 +63,7 @@ import { AccountListUseCase } from '../../features/account-management';
                   <th scope="col" class="px-6 py-4 font-medium text-right">Saldo Disp.</th>
                   <th scope="col" class="px-6 py-4 font-medium text-right">Saldo Reten.</th>
                   <th scope="col" class="px-6 py-4 font-medium text-center">Estado</th>
+                  <th scope="col" class="px-6 py-4 font-medium text-center w-16">Acciones</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-border">
@@ -85,6 +90,42 @@ import { AccountListUseCase } from '../../features/account-management';
                         {{ account.status }}
                       </span>
                     </td>
+                    <td class="px-6 py-4 text-center">
+                      <div class="relative group inline-block text-left">
+                        <button class="p-2 rounded-md hover:bg-muted text-muted-foreground transition-colors focus:outline-none">
+                          <lucide-icon name="more-horizontal" [size]="16"></lucide-icon>
+                        </button>
+                        <div class="absolute right-0 mt-1 w-48 bg-card border border-border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
+                          <div class="py-1">
+                            <button *ngIf="hasPermission('accounts.balance.read')" (click)="viewBalance(account)" class="w-full text-left px-4 py-2 text-xs text-foreground hover:bg-muted transition-colors flex items-center gap-2">
+                              <lucide-icon name="wallet" [size]="14"></lucide-icon> Ver Saldo
+                            </button>
+                            <button *ngIf="hasPermission('accounts.update')" (click)="openEditForm(account)" class="w-full text-left px-4 py-2 text-xs text-foreground hover:bg-muted transition-colors flex items-center gap-2">
+                              <lucide-icon name="pencil" [size]="14"></lucide-icon> Editar
+                            </button>
+                            
+                            <div class="h-px bg-border my-1"></div>
+                            
+                            <!-- Acciones de estado (condicionales al rol) -->
+                            <button *ngIf="hasPermission('accounts.approve') && account.status === 'PENDING_APPROVAL'" (click)="changeState(account, 'approve')" class="w-full text-left px-4 py-2 text-xs text-green-600 hover:bg-green-500/10 transition-colors flex items-center gap-2">
+                              <lucide-icon name="check-circle" [size]="14"></lucide-icon> Aprobar
+                            </button>
+                            <button *ngIf="hasPermission('accounts.activate') && (account.status === 'PENDING_APPROVAL' || account.status === 'FROZEN')" (click)="changeState(account, 'activate')" class="w-full text-left px-4 py-2 text-xs text-green-600 hover:bg-green-500/10 transition-colors flex items-center gap-2">
+                              <lucide-icon name="play" [size]="14"></lucide-icon> Activar
+                            </button>
+                            <button *ngIf="hasPermission('accounts.block') && account.status !== 'BLOCKED' && account.status !== 'CLOSED'" (click)="changeStateWithReason(account, 'block')" class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-red-500/10 transition-colors flex items-center gap-2">
+                              <lucide-icon name="ban" [size]="14"></lucide-icon> Bloquear
+                            </button>
+                            <button *ngIf="hasPermission('accounts.freeze') && account.status === 'ACTIVE'" (click)="changeStateWithReason(account, 'freeze')" class="w-full text-left px-4 py-2 text-xs text-yellow-600 hover:bg-yellow-500/10 transition-colors flex items-center gap-2">
+                              <lucide-icon name="snowflake" [size]="14"></lucide-icon> Congelar
+                            </button>
+                            <button *ngIf="hasPermission('accounts.close') && account.status !== 'CLOSED'" (click)="changeStateWithReason(account, 'close')" class="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-red-500/10 transition-colors flex items-center gap-2">
+                              <lucide-icon name="x-circle" [size]="14"></lucide-icon> Cerrar Cuenta
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
                   </tr>
                 } @empty {
                   <tr>
@@ -99,10 +140,72 @@ import { AccountListUseCase } from '../../features/account-management';
         </div>
       }
     </div>
+
+    <!-- Formulario Slide-over -->
+    <app-account-form
+      [isOpen]="isFormOpen"
+      [account]="selectedAccount"
+      (closed)="isFormOpen = false"
+      (saved)="onFormSaved($event)">
+    </app-account-form>
+
+    <!-- Modal de Saldo -->
+    <div *ngIf="balanceData" class="fixed inset-0 z-[100] flex items-center justify-center">
+      <!-- Overlay blur -->
+      <div 
+        class="absolute inset-0 bg-background/80 backdrop-blur-sm transition-opacity"
+        (click)="closeBalanceModal()">
+      </div>
+      
+      <!-- Contenido del modal -->
+      <div class="relative w-full max-w-sm bg-card rounded-2xl shadow-2xl border border-border p-6 transform transition-all">
+        <!-- Cerrar -->
+        <button 
+          (click)="closeBalanceModal()"
+          class="absolute right-4 top-4 p-2 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+          <lucide-icon name="x" [size]="20"></lucide-icon>
+        </button>
+
+        <div class="flex flex-col items-center text-center mt-2">
+          <div class="h-16 w-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4">
+            <lucide-icon name="wallet" [size]="32"></lucide-icon>
+          </div>
+          <h3 class="text-xl font-bold text-foreground">Saldo de la Cuenta</h3>
+          <p class="text-sm text-muted-foreground mt-1">{{ balanceData.accountNumber }}</p>
+          <p class="text-xs text-muted-foreground">{{ balanceData.accountNameLabel || balanceData.customAlias }}</p>
+        </div>
+
+        <div class="mt-8 space-y-4">
+          <div class="bg-green-500/10 border border-green-500/20 rounded-xl p-4 flex flex-col items-center">
+            <span class="text-xs font-semibold text-green-600 uppercase tracking-wider">Saldo Disponible</span>
+            <span class="text-2xl font-black text-green-700 dark:text-green-500 mt-1">
+              {{ balanceData.availableBalance | currency:balanceData.currency }}
+            </span>
+          </div>
+
+          <div class="bg-muted rounded-xl p-4 flex justify-between items-center">
+            <span class="text-sm font-medium text-muted-foreground">Saldo Retenido</span>
+            <span class="text-base font-bold text-foreground">
+              {{ balanceData.heldBalance | currency:balanceData.currency }}
+            </span>
+          </div>
+        </div>
+
+        <button 
+          (click)="closeBalanceModal()"
+          class="mt-6 w-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium py-2.5 rounded-xl transition-colors">
+          Entendido
+        </button>
+      </div>
+    </div>
   `
 })
 export class AccountsPageComponent implements OnInit {
   public readonly useCase = inject(AccountListUseCase);
+  
+  isFormOpen = false;
+  selectedAccount: AccountOwnerResponse | null = null;
+  balanceData: any = null;
 
   ngOnInit() {
     this.loadAccounts();
@@ -110,5 +213,70 @@ export class AccountsPageComponent implements OnInit {
 
   loadAccounts() {
     this.useCase.loadAccounts();
+  }
+
+  // Permisos simulados para la UI (aquí se inyectaría un AuthService)
+  hasPermission(permission: string): boolean {
+    return true; // Asumimos que el admin tiene todos los permisos
+  }
+
+  openCreateForm() {
+    this.selectedAccount = null;
+    this.isFormOpen = true;
+  }
+
+  openEditForm(account: AccountOwnerResponse) {
+    this.selectedAccount = account;
+    this.isFormOpen = true;
+  }
+
+  async onFormSaved(event: { request: CreateAccountRequest | UpdateAccountRequest, isEditing: boolean }) {
+    try {
+      if (event.isEditing && this.selectedAccount) {
+        await this.useCase.updateAccount(this.selectedAccount.id, event.request as UpdateAccountRequest);
+      } else {
+        await this.useCase.createAccount(event.request as CreateAccountRequest);
+      }
+      this.isFormOpen = false;
+    } catch (error) {
+      alert('Error al guardar la cuenta: ' + error);
+    }
+  }
+
+  async changeState(account: AccountOwnerResponse, action: 'approve' | 'activate') {
+    if (confirm(`¿Estás seguro que deseas ${action === 'approve' ? 'aprobar' : 'activar'} esta cuenta?`)) {
+      try {
+        await this.useCase.changeAccountState(account.id, action);
+      } catch (error) {
+        alert('Error: ' + error);
+      }
+    }
+  }
+
+  async changeStateWithReason(account: AccountOwnerResponse, action: 'block' | 'freeze' | 'close') {
+    const actionLabel = action === 'block' ? 'bloquear' : action === 'freeze' ? 'congelar' : 'cerrar';
+    const reason = prompt(`Por favor, ingresa el motivo para ${actionLabel} la cuenta:`);
+    if (reason !== null) { // if not cancelled
+      try {
+        await this.useCase.changeAccountState(account.id, action, reason);
+      } catch (error) {
+        alert('Error: ' + error);
+      }
+    }
+  }
+
+  async viewBalance(account: AccountOwnerResponse) {
+    try {
+      const response = await this.useCase.getAccountBalance(account.id);
+      if (response && response.data) {
+        this.balanceData = response.data;
+      }
+    } catch (error) {
+      alert('Error al consultar saldo: ' + error);
+    }
+  }
+
+  closeBalanceModal() {
+    this.balanceData = null;
   }
 }

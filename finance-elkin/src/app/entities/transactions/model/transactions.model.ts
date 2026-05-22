@@ -58,6 +58,7 @@ export interface CreateDepositTransactionRequest {
   currency: string;
   description: string;
   channel: string;
+  idempotencyKey: string;
   externalReference?: string;
 }
 
@@ -93,6 +94,7 @@ export interface CreatePaymentTransactionRequest {
   amount: number;
   currency: string;
   description: string;
+  idempotencyKey: string;
   paymentReference?: string;
   externalReference?: string;
 }
@@ -112,6 +114,7 @@ export interface CreateWithdrawalTransactionRequest {
   currency: string;
   description: string;
   channel: string;
+  idempotencyKey: string;
   externalReference?: string;
 }
 
@@ -128,16 +131,19 @@ export interface CreateTransferTransactionRequest {
   amount: number;
   currency: string;
   description: string;
+  idempotencyKey: string;
   externalReference?: string;
 }
 
 export interface CreateReversalTransactionRequest {
   description: string;
   reason: string;
+  idempotencyKey: string;
 }
 
 export interface CreateRefundTransactionRequest {
-  amount?: number;
+  amount: number;
   description: string;
   reason: string;
+  idempotencyKey: string;
 }
