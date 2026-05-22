@@ -19,6 +19,9 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await dotenv.load(fileName: ".env");
+  await di.init();
+
   await Firebase.initializeApp();
 
   final fcm = FirebaseMessaging.instance;
@@ -28,9 +31,6 @@ Future<void> main() async {
 
   // Registrar handler para notificaciones en segundo plano
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-  await dotenv.load(fileName: ".env");
-  await di.init();
 
   runApp(const MyApp());
 }
