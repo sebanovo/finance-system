@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './shared/api';
+import { authGuard, permissionGuard } from './shared/api';
 
 export const routes: Routes = [
   { path: 'login', loadComponent: () => import('./pages/login-page/login-page.component').then(m => m.LoginPageComponent) },
@@ -13,8 +13,8 @@ export const routes: Routes = [
       { path: 'summary', loadComponent: () => import('./pages/summary-page/summary-page.component').then(m => m.SummaryPageComponent)},
       { path: 'users', loadComponent: () => import('./pages/users-page/users-page.component').then(m => m.UsersPageComponent)},
       { path: 'roles', loadComponent: () => import('./pages/roles-page/roles-page.component').then(m => m.RolesPageComponent)},
-      { path: 'accounts', loadComponent: () => import('./pages/accounts-page/accounts-page.component').then(m => m.AccountsPageComponent)},
-      { path: 'transactions', loadComponent: () => import('./pages/transactions-page/transactions-page.component').then(m => m.TransactionsPageComponent)},
+      { path: 'accounts', canActivate: [permissionGuard('accounts.admin.read', 'accounts.create')], loadComponent: () => import('./pages/accounts-page/accounts-page.component').then(m => m.AccountsPageComponent)},
+      { path: 'transactions', canActivate: [permissionGuard('transactions.admin.read')], loadComponent: () => import('./pages/transactions-page/transactions-page.component').then(m => m.TransactionsPageComponent)},
       { path: 'fx/rates', loadComponent: () => import('./pages/fx-rates-page/fx-rates-page.component').then(m => m.FxRatesPageComponent)},
       { path: 'fx/fees', loadComponent: () => import('./pages/fx-fees-page/fx-fees-page.component').then(m => m.FxFeesPageComponent)},
       { path: 'limits/rules', loadComponent: () => import('./pages/limits-rules-page/limits-rules-page.component').then(m => m.LimitsRulesPageComponent)},

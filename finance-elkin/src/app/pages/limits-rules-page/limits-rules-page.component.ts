@@ -1,11 +1,15 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe, CurrencyPipe } from '@angular/common';
-import { LimitRulesListUseCase } from '../../features/limits-management';
+import { LimitRulesListUseCase, LimitRuleFormComponent } from '../../features/limits-management';
+import { HasPermissionPipe } from '../../shared/api';
+import { ToastService } from '../../shared/ui/toast/toast.service';
+import { LimitRuleResponse } from '../../entities/limits';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-limits-rules-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LimitRuleFormComponent, HasPermissionPipe, LucideAngularModule],
   providers: [DatePipe, CurrencyPipe],
   template: `
     <div class="space-y-6 relative">
@@ -16,9 +20,11 @@ import { LimitRulesListUseCase } from '../../features/limits-management';
         </div>
         
         <button 
+          *ngIf="'limits.create' | hasPermission"
+          (click)="openCreateForm()"
           type="button"
           class="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          <lucide-icon name="plus" [size]="16"></lucide-icon>
           Nueva Regla
         </button>
       </div>
@@ -118,8 +124,8 @@ import { LimitRulesListUseCase } from '../../features/limits-management';
                       }
                     </td>
                     <td class="px-6 py-4 text-right space-x-3">
-                      <button class="text-primary hover:underline text-xs font-medium">Editar</button>
-                      <button (click)="deleteRule(rule.id)" class="text-destructive hover:underline text-xs font-medium">Eliminar</button>
+                      <button *ngIf="'limits.update' | hasPermission" (click)="openEditForm(rule)" class="text-primary hover:underline text-xs font-medium">Editar</button>
+                      <button *ngIf="'limits.delete' | hasPermission" (click)="deleteRule(rule.id)" class="text-destructive hover:underline text-xs font-medium">Eliminar</button>
                     </td>
                   </tr>
                 } @empty {
@@ -134,11 +140,25 @@ import { LimitRulesListUseCase } from '../../features/limits-management';
           </div>
         </div>
       }
+
+      @if (isFormOpen) {
+        <app-limit-rule-form
+          [rule]="selectedRule"
+          [loading]="isSubmitting"
+          (formSubmit)="onFormSubmit($event)"
+          (cancel)="closeForm()"
+        ></app-limit-rule-form>
+      }
     </div>
   `
 })
 export class LimitsRulesPageComponent implements OnInit {
   public readonly useCase = inject(LimitRulesListUseCase);
+  private readonly toastService = inject(ToastService);
+
+  isFormOpen = false;
+  selectedRule: LimitRuleResponse | null = null;
+  isSubmitting = false;
 
   ngOnInit() {
     this.loadRules();
@@ -148,9 +168,54 @@ export class LimitsRulesPageComponent implements OnInit {
     this.useCase.loadRules();
   }
 
-  deleteRule(id: string) {
+  openCreateForm() {
+    this.selectedRule = null;
+    this.isFormOpen = true;
+  }
+
+  openEditForm(rule: LimitRuleResponse) {
+    this.selectedRule = rule;
+    this.isFormOpen = true;
+  }
+
+  closeForm() {
+    this.isFormOpen = false;
+    this.selectedRule = null;
+  }
+
+  async onFormSubmit(event: { type: 'create' | 'update', data: any }) {
+    this.isSubmitting = true;
+    try {
+      if (event.type === 'create') {
+        await this.useCase.createRule(event.data);
+        this.toastService.success('Regla de límite creada exitosamente');
+      } else {
+        await this.useCase.updateRule(this.selectedRule!.id, event.data);
+        this.toastService.success('Regla de límite actualizada exitosamente');
+      }
+      this.closeForm();
+    } catch (error: any) {
+      let msg = error.error?.message || error.message || 'Error al procesar la solicitud';
+      
+      // Traducciones amigables para el usuario
+      if (msg.includes('already exists')) {
+        msg = 'Ya existe una regla de límite con este código único.';
+      }
+      
+      this.toastService.error(msg, 'No se pudo guardar la regla');
+    } finally {
+      this.isSubmitting = false;
+    }
+  }
+
+  async deleteRule(id: string) {
     if (confirm('¿Estás seguro de eliminar (desactivar) esta regla de límite?')) {
-      this.useCase.deleteRule(id);
+      const success = await this.useCase.deleteRule(id);
+      if (success) {
+        this.toastService.success('Regla desactivada exitosamente');
+      } else {
+        this.toastService.error('No se pudo desactivar la regla');
+      }
     }
   }
 }

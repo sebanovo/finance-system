@@ -30,8 +30,10 @@ export interface CreateFxExchangeRateRequest {
 }
 
 export interface UpdateFxExchangeRateRequest {
-  rate?: number;
-  active?: boolean;
+  sourceCurrency: string;
+  targetCurrency: string;
+  rate: number;
+  active: boolean;
   description?: string;
 }
 
@@ -45,8 +47,10 @@ export interface CreateOperationFeeRequest {
 }
 
 export interface UpdateOperationFeeRequest {
-  feeValue?: number;
-  calculationMode?: string;
-  active?: boolean;
+  operationCode: string;
+  feeType: string;
+  feeValue: number;
+  calculationMode: string;
+  active: boolean;
   description?: string;
 }

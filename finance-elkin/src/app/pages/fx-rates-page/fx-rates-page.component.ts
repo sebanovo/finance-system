@@ -1,11 +1,15 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { FxRatesListUseCase } from '../../features/fx-management';
+import { FxRatesListUseCase, FxRateFormComponent } from '../../features/fx-management';
+import { HasPermissionPipe } from '../../shared/api';
+import { ToastService } from '../../shared/ui/toast/toast.service';
+import { FxExchangeRateResponse } from '../../entities/fx';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-fx-rates-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FxRateFormComponent, HasPermissionPipe, LucideAngularModule],
   providers: [DatePipe],
   template: `
     <div class="space-y-6 relative">
@@ -16,9 +20,11 @@ import { FxRatesListUseCase } from '../../features/fx-management';
         </div>
         
         <button 
+          *ngIf="'fx.rates.create' | hasPermission"
+          (click)="openCreateForm()"
           type="button"
           class="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+          <lucide-icon name="plus" [size]="16"></lucide-icon>
           Nueva Tasa
         </button>
       </div>
@@ -81,8 +87,8 @@ import { FxRatesListUseCase } from '../../features/fx-management';
                     </td>
                     <td class="px-6 py-4 text-muted-foreground">{{ rate.updatedAt | date:'short' }}</td>
                     <td class="px-6 py-4 text-right space-x-3">
-                      <button class="text-primary hover:underline text-xs font-medium">Editar</button>
-                      <button (click)="deleteRate(rate.id)" class="text-destructive hover:underline text-xs font-medium">Eliminar</button>
+                      <button *ngIf="'fx.rates.update' | hasPermission" (click)="openEditForm(rate)" class="text-primary hover:underline text-xs font-medium">Editar</button>
+                      <button *ngIf="'fx.rates.delete' | hasPermission" (click)="deleteRate(rate.id)" class="text-destructive hover:underline text-xs font-medium">Eliminar</button>
                     </td>
                   </tr>
                 } @empty {
@@ -97,11 +103,25 @@ import { FxRatesListUseCase } from '../../features/fx-management';
           </div>
         </div>
       }
+
+      @if (isFormOpen) {
+        <app-fx-rate-form
+          [rate]="selectedRate"
+          [loading]="isSubmitting"
+          (formSubmit)="onFormSubmit($event)"
+          (cancel)="closeForm()"
+        ></app-fx-rate-form>
+      }
     </div>
   `
 })
 export class FxRatesPageComponent implements OnInit {
   public readonly useCase = inject(FxRatesListUseCase);
+  private readonly toastService = inject(ToastService);
+
+  isFormOpen = false;
+  selectedRate: FxExchangeRateResponse | null = null;
+  isSubmitting = false;
 
   ngOnInit() {
     this.loadRates();
@@ -111,9 +131,58 @@ export class FxRatesPageComponent implements OnInit {
     this.useCase.loadRates();
   }
 
-  deleteRate(id: string) {
+  openCreateForm() {
+    this.selectedRate = null;
+    this.isFormOpen = true;
+  }
+
+  openEditForm(rate: FxExchangeRateResponse) {
+    this.selectedRate = rate;
+    this.isFormOpen = true;
+  }
+
+  closeForm() {
+    this.isFormOpen = false;
+    this.selectedRate = null;
+  }
+
+  async onFormSubmit(event: { type: 'create' | 'update', data: any }) {
+    this.isSubmitting = true;
+    try {
+      if (event.type === 'create') {
+        await this.useCase.createRate(event.data);
+        this.toastService.success('Tasa de cambio creada exitosamente');
+      } else {
+        await this.useCase.updateRate(this.selectedRate!.id, event.data);
+        this.toastService.success('Tasa de cambio actualizada exitosamente');
+      }
+      this.closeForm();
+    } catch (error: any) {
+      let msg = error.error?.message || error.message || 'Error al procesar la solicitud';
+      
+      // Traducciones amigables para el usuario
+      if (msg.includes('already exists for pair')) {
+        msg = 'Ya existe una tasa de cambio activa para este par de divisas.';
+      } else if (msg.includes('already exists')) {
+        msg = 'Esta tasa de cambio ya está registrada en el sistema.';
+      } else if (msg.includes('Self exchange rate must be 1')) {
+        msg = 'La tasa de cambio para una misma moneda (ej. USD a USD) debe ser exactamente 1.';
+      }
+      
+      this.toastService.error(msg, 'No se pudo guardar');
+    } finally {
+      this.isSubmitting = false;
+    }
+  }
+
+  async deleteRate(id: string) {
     if (confirm('¿Estás seguro de eliminar este tipo de cambio?')) {
-      this.useCase.deleteRate(id);
+      const success = await this.useCase.deleteRate(id);
+      if (success) {
+        this.toastService.success('Tasa de cambio eliminada');
+      } else {
+        this.toastService.error('No se pudo eliminar la tasa de cambio');
+      }
     }
   }
 }

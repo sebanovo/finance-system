@@ -1,6 +1,6 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { LimitsService, LimitRuleResponse } from '../../../entities/limits';
+import { LimitsService, LimitRuleResponse, CreateLimitRuleRequest, UpdateLimitRuleRequest } from '../../../entities/limits';
 
 export interface LimitRulesListState {
   status: 'idle' | 'loading' | 'success' | 'error';
@@ -46,6 +46,24 @@ export class LimitRulesListUseCase {
     } catch (err: any) {
       const errorMsg = err.error?.message || err.message || 'Error al conectar con el servidor';
       this.state.set({ status: 'error', data: [], error: errorMsg });
+    }
+  }
+
+  async createRule(request: CreateLimitRuleRequest): Promise<void> {
+    try {
+      await firstValueFrom(this.limitsService.createRule(request));
+      await this.loadRules();
+    } catch (err: any) {
+      throw err;
+    }
+  }
+
+  async updateRule(id: string, request: UpdateLimitRuleRequest): Promise<void> {
+    try {
+      await firstValueFrom(this.limitsService.updateRule(id, request));
+      await this.loadRules();
+    } catch (err: any) {
+      throw err;
     }
   }
 
