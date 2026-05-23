@@ -4,16 +4,13 @@ import 'package:finance_mobile/domain/entities/notification.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:universal_html/html.dart' as html;
 import '../../../domain/usecases/get_notifications_usecase.dart';
 import '../../domain/usecases/get_unread_count_usecase.dart';
 import '../../domain/usecases/mark_notification_as_read_usecase.dart';
 import '../../domain/usecases/mark_all_notifications_as_read_usecase.dart';
 import '../../domain/usecases/archive_notification_usecase.dart';
 import '../../domain/usecases/register_device_usecase.dart';
-
-// ✅ Importaciones específicas para Web
-// ignore: avoid_web_libraries_in_flutter, unused_import, deprecated_member_use
-import 'dart:html' as html;
 
 class NotificationsViewModel extends ChangeNotifier {
   final GetNotificationsUseCase getNotificationsUseCase;
@@ -169,73 +166,13 @@ class NotificationsViewModel extends ChangeNotifier {
     } catch (e) {}
   }
 
-  // Future<void> registerCurrentDevice() async {
-  //   if (!canRegisterDevice) {
-  //     debugdebugPrint(
-  //       '❌ Usuario con rol $_currentUserRole no puede registrar dispositivos',
-  //     );
-  //     return;
-  //   }
-  //   try {
-  //     // Obtener token FCM
-  //     final fcmToken = await _getFcmToken();
-  //     if (fcmToken == null) {
-  //       debugdebugPrint('❌ No se pudo obtener FCM Token');
-  //       return;
-  //     }
-  //     debugdebugPrint('✅ FCM Token obtenido: $fcmToken');
-
-  //     // Obtener datos reales del dispositivo
-  //     final deviceId = await _getDeviceId();
-  //     final platform = _getPlatform();
-  //     final deviceName = await _getDeviceName();
-  //     final appVersion = await _getAppVersion();
-  //     final osVersion = await _getOsVersion();
-
-  //     // ✅ Validar que ningún valor sea nulo
-  //     debugdebugPrint('📱 Datos del dispositivo:');
-  //     debugdebugPrint('   deviceId: $deviceId');
-  //     debugdebugPrint('   platform: $platform');
-  //     debugdebugPrint('   deviceName: $deviceName');
-  //     debugdebugPrint('   appVersion: $appVersion');
-  //     debugdebugPrint('   osVersion: $osVersion');
-
-  //     // ✅ Asegurar que ningún valor sea null
-  //     if (deviceId.isEmpty) {
-  //       throw Exception('deviceId es nulo o vacío');
-  //     }
-  //     if (platform.isEmpty) {
-  //       throw Exception('platform es nulo o vacío');
-  //     }
-  //     if (deviceName.isEmpty) {
-  //       throw Exception('deviceName es nulo o vacío');
-  //     }
-  //     if (appVersion.isEmpty) {
-  //       throw Exception('appVersion es nulo o vacío');
-  //     }
-  //     if (osVersion.isEmpty) {
-  //       throw Exception('osVersion es nulo o vacío');
-  //     }
-
-  //     await registerDeviceUseCase(
-  //       deviceId: deviceId,
-  //       fcmToken: fcmToken,
-  //       platform: platform,
-  //       deviceName: deviceName,
-  //       appVersion: appVersion,
-  //       osVersion: osVersion,
-  //     );
-  //     debugdebugPrint('✅ Dispositivo registrado exitosamente');
-  //   } catch (e) {
-  //     debugdebugPrint('❌ Error al registrar dispositivo: $e');
-  //   }
-  // }
-
-  // Métodos auxiliares para obtener datos reales (puedes moverlos a un servicio)
+  // Métodos auxiliares
   Future<String?> _getFcmToken() async {
     try {
       final token = await FirebaseMessaging.instance.getToken();
-      debugPrint('🔑 FCM Token real: $token');
+      debugPrint(
+        '🔑 FCM Token real: ${token?.substring(0, token.length > 20 ? 20 : token.length)}...',
+      );
       return token;
     } catch (e) {
       debugPrint('❌ Error obteniendo FCM Token: $e');
@@ -243,10 +180,7 @@ class NotificationsViewModel extends ChangeNotifier {
     }
   }
 
-  // ✅ CORREGIDO - Detectar plataforma correctamente
-
-  // ✅ CORREGIDO - Obtener nombre real del dispositivo
-
+  // ✅ Registro de dispositivo (funciona en Web y Móvil)
   Future<void> registerCurrentDevice() async {
     if (!canRegisterDevice) {
       debugPrint(
@@ -261,7 +195,9 @@ class NotificationsViewModel extends ChangeNotifier {
         return;
       }
 
-      debugPrint('✅ FCM Token obtenido: $fcmToken');
+      debugPrint(
+        '✅ FCM Token obtenido: ${fcmToken.substring(0, fcmToken.length > 20 ? 20 : fcmToken.length)}...',
+      );
 
       // ✅ Obtener datos según la plataforma
       String deviceId;
@@ -310,7 +246,6 @@ class NotificationsViewModel extends ChangeNotifier {
   // 🌐 Métodos específicos para Web
   Future<String> _getWebDeviceId() async {
     try {
-      // Usar localStorage o generar un ID único persistente
       var deviceId = html.window.localStorage['deviceId'];
       if (deviceId == null || deviceId.isEmpty) {
         deviceId =
@@ -362,6 +297,8 @@ class NotificationsViewModel extends ChangeNotifier {
 
   // 📱 Métodos específicos para móvil
   Future<String> _getMobileDeviceId() async {
+    if (kIsWeb) return 'not_mobile';
+
     try {
       final deviceInfo = DeviceInfoPlugin();
       if (Platform.isAndroid) {
@@ -379,12 +316,15 @@ class NotificationsViewModel extends ChangeNotifier {
   }
 
   String _getMobilePlatform() {
+    if (kIsWeb) return 'WEB';
     if (Platform.isAndroid) return 'ANDROID';
     if (Platform.isIOS) return 'IOS';
     return 'MOBILE';
   }
 
   Future<String> _getMobileDeviceName() async {
+    if (kIsWeb) return 'Web Browser';
+
     try {
       final deviceInfo = DeviceInfoPlugin();
       if (Platform.isAndroid) {
@@ -410,6 +350,8 @@ class NotificationsViewModel extends ChangeNotifier {
   }
 
   Future<String> _getMobileOsVersion() async {
+    if (kIsWeb) return 'Unknown';
+
     try {
       final deviceInfo = DeviceInfoPlugin();
       if (Platform.isAndroid) {
@@ -427,13 +369,10 @@ class NotificationsViewModel extends ChangeNotifier {
 
   String _generateRandomString(int length) {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    return String.fromCharCodes(
-      Iterable.generate(
-        length,
-        (_) => chars.codeUnitAt(
-          DateTime.now().millisecondsSinceEpoch % chars.length,
-        ),
-      ),
-    );
+    var result = '';
+    for (var i = 0; i < length; i++) {
+      result += chars[DateTime.now().millisecondsSinceEpoch % chars.length];
+    }
+    return result;
   }
 }

@@ -1,5 +1,6 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { v4 as uuidv4 } from 'uuid';
 import { 
   TransactionsService, 
   TransactionResponse, 
@@ -62,7 +63,7 @@ export class TransactionsListUseCase {
   ): Promise<void> {
     try {
       if (!request.idempotencyKey) {
-        request.idempotencyKey = crypto.randomUUID();
+        request.idempotencyKey = uuidv4(); // ✅ Cambiado a uuidv4()
       }
 
       let response;
@@ -96,7 +97,7 @@ export class TransactionsListUseCase {
       const request = { 
         description: `Reversión: ${reason}`, 
         reason,
-        idempotencyKey: crypto.randomUUID()
+        idempotencyKey: uuidv4() // ✅ Cambiado a uuidv4()
       };
       const response = await firstValueFrom(this.transactionsService.reverseTransaction(id, request));
       if (response.success) {
@@ -115,7 +116,7 @@ export class TransactionsListUseCase {
         description: `Reembolso: ${reason}`, 
         reason, 
         amount,
-        idempotencyKey: crypto.randomUUID()
+        idempotencyKey: uuidv4() // ✅ Cambiado a uuidv4()
       };
       const response = await firstValueFrom(this.transactionsService.refundTransaction(id, request));
       if (response.success) {
