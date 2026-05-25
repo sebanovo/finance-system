@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:finance_mobile/core/observers/notification_counter.dart';
 import 'package:finance_mobile/domain/entities/notification.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -138,6 +139,7 @@ class NotificationsViewModel extends ChangeNotifier {
         );
         _unreadCount = (_unreadCount - 1).clamp(0, _unreadCount);
         notifyListeners();
+        NotificationCounter().update(_unreadCount);
       }
     } catch (e) {
       // manejo silencioso o snackbar desde UI

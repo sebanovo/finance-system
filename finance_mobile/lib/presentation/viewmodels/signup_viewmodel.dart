@@ -15,6 +15,64 @@ class SignupViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get success => _success;
 
+  // ✅ Validaciones movidas al ViewModel
+  String? validateCompanyName(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'El nombre de la empresa es obligatorio';
+    }
+    if (value.trim().length < 3) {
+      return 'Debe tener al menos 3 caracteres';
+    }
+    return null;
+  }
+
+  String? validateTenantSlug(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'El slug del tenant es obligatorio';
+    }
+    final trimmed = value.trim().toLowerCase();
+    final regex = RegExp(r'^[a-z0-9]+(-[a-z0-9]+)*$');
+    if (!regex.hasMatch(trimmed)) {
+      return 'Solo letras minúsculas, números y guiones medios (-)';
+    }
+    return null;
+  }
+
+  String? validateEmail(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'El correo electrónico es obligatorio';
+    }
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$');
+    if (!emailRegex.hasMatch(value.trim())) {
+      return 'Ingresa un correo válido';
+    }
+    return null;
+  }
+
+  String? validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'La contraseña es obligatoria';
+    }
+    if (value.length < 8) {
+      return 'Debe tener al menos 8 caracteres';
+    }
+    return null;
+  }
+
+  String? validateFirstName(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'El nombre es obligatorio';
+    }
+    return null;
+  }
+
+  String? validateLastName(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'El apellido es obligatorio';
+    }
+    return null;
+  }
+
   Future<bool> signup({
     required String companyName,
     required String tenantSlug,
@@ -47,6 +105,10 @@ class SignupViewModel extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  void clearSuccess() {
+    _success = false;
   }
 
   void clearError() {

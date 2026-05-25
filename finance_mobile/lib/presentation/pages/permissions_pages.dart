@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../viewmodels/permissions_viewmodel.dart';
 import '../../core/di/injection_container.dart' as di;
+import '../widgets/permission_card.dart';
+import '../widgets/permission_skeleton.dart';
 
 class PermissionsPage extends StatefulWidget {
   const PermissionsPage({super.key});
@@ -23,7 +25,6 @@ class _PermissionsPageState extends State<PermissionsPage> {
 
   void _onViewModelChanged() {
     if (!mounted) return;
-    // Si el error es de autenticación (401), redirigir al login
     if (_viewModel.errorMessage != null &&
         (_viewModel.errorMessage!.contains('Sesión expirada') ||
             _viewModel.errorMessage!.contains('401') ||
@@ -65,42 +66,17 @@ class _PermissionsPageState extends State<PermissionsPage> {
   }
 
   Widget _buildBody() {
+    // ✅ Skeleton mientras carga
     if (_viewModel.loading) {
-      return const Center(child: CircularProgressIndicator());
+      return ListView.builder(
+        padding: const EdgeInsets.all(8),
+        itemCount: 4,
+        itemBuilder: (context, index) => const PermissionSkeleton(),
+      );
     }
 
     if (_viewModel.errorMessage != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
-            const SizedBox(height: 16),
-            Text(
-              _viewModel.errorMessage!,
-              style: const TextStyle(fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () => _viewModel.loadPermissions(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2E7D32),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-              child: const Text('Reintentar'),
-            ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: () => context.go('/login'),
-              child: const Text('Ir a inicio de sesión'),
-            ),
-          ],
-        ),
-      );
+      return _buildErrorWidget();
     }
 
     if (_viewModel.permissions.isEmpty) {
@@ -111,37 +87,42 @@ class _PermissionsPageState extends State<PermissionsPage> {
     return ListView(
       padding: const EdgeInsets.all(8),
       children: grouped.entries.map((entry) {
-        return Card(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+        return PermissionCard(module: entry.key, permissions: entry.value);
+      }).toList(),
+    );
+  }
+
+  Widget _buildErrorWidget() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
+          const SizedBox(height: 16),
+          Text(
+            _viewModel.errorMessage!,
+            style: const TextStyle(fontSize: 16),
+            textAlign: TextAlign.center,
           ),
-          child: ExpansionTile(
-            title: Text(
-              entry.key.toUpperCase(),
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF2E7D32),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () => _viewModel.loadPermissions(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2E7D32),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
               ),
             ),
-            children: entry.value.map((perm) {
-              return ListTile(
-                leading: const Icon(
-                  Icons.lock_outline,
-                  size: 20,
-                  color: Color(0xFF4CAF50),
-                ),
-                title: Text(
-                  perm.code,
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                ),
-                subtitle: Text(perm.description),
-                dense: true,
-              );
-            }).toList(),
+            child: const Text('Reintentar'),
           ),
-        );
-      }).toList(),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: () => context.go('/login'),
+            child: const Text('Ir a inicio de sesión'),
+          ),
+        ],
+      ),
     );
   }
 }

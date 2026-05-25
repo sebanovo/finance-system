@@ -1,7 +1,12 @@
+// lib/presentation/pages/notifications_page.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../viewmodels/notifications_viewmodel.dart';
+import '../widgets/notification_item.dart';
+import '../widgets/notification_item_skeleton.dart';
+import '../widgets/notifications_empty_widget.dart';
+import '../widgets/notification_options_modal.dart';
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
@@ -13,6 +18,7 @@ class NotificationsPage extends StatefulWidget {
 class _NotificationsPageState extends State<NotificationsPage> {
   late NotificationsViewModel _viewModel;
   final ScrollController _scrollController = ScrollController();
+  static const int _skeletonItemCount = 5;
 
   @override
   void initState() {
@@ -20,6 +26,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
     _viewModel = di.sl<NotificationsViewModel>();
     _viewModel.addListener(_onViewModelChanged);
     _viewModel.loadInitial();
+    _viewModel.loadUnreadCount(); // ✅ Cargar contador inicial
     _scrollController.addListener(_onScroll);
   }
 
@@ -36,6 +43,28 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   Future<void> _onRefresh() async {
     await _viewModel.loadInitial();
+    await _viewModel.loadUnreadCount(); // ✅ Actualizar contador al refrescar
+  }
+
+  // ✅ Método para marcar como leída y actualizar contador
+  Future<void> _markAsRead(String id) async {
+    await _viewModel.markAsRead(id);
+    await _viewModel.loadUnreadCount();
+    setState(() {});
+  }
+
+  // ✅ Método para marcar todas como leídas y actualizar contador
+  Future<void> _markAllAsRead() async {
+    await _viewModel.markAllAsRead();
+    await _viewModel.loadUnreadCount();
+    setState(() {});
+  }
+
+  // ✅ Método para archivar y actualizar contador
+  Future<void> _archive(String id) async {
+    await _viewModel.archive(id);
+    await _viewModel.loadUnreadCount();
+    setState(() {});
   }
 
   @override
@@ -51,9 +80,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
             IconButton(
               icon: const Icon(Icons.done_all),
               tooltip: 'Marcar todas como leídas',
-              onPressed: () async {
-                await _viewModel.markAllAsRead();
-              },
+              onPressed: _markAllAsRead,
             ),
         ],
       ),
@@ -63,32 +90,27 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   Widget _buildBody() {
     if (_viewModel.loading && _viewModel.notifications.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (_viewModel.errorMessage != null && _viewModel.notifications.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
-            const SizedBox(height: 16),
-            Text(_viewModel.errorMessage!, textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => _viewModel.loadInitial(),
-              child: const Text('Reintentar'),
-            ),
-          ],
-        ),
+      return ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemCount: _skeletonItemCount,
+        itemBuilder: (context, index) => const NotificationItemSkeleton(),
       );
     }
-    if (_viewModel.notifications.isEmpty) {
-      return const Center(child: Text('No hay notificaciones'));
+
+    if (_viewModel.errorMessage != null && _viewModel.notifications.isEmpty) {
+      return _buildErrorWidget();
     }
+
+    if (_viewModel.notifications.isEmpty) {
+      return const NotificationsEmptyWidget();
+    }
+
     return RefreshIndicator(
       onRefresh: _onRefresh,
+      color: const Color(0xFF2E7D32),
       child: ListView.builder(
         controller: _scrollController,
+        padding: const EdgeInsets.symmetric(vertical: 8),
         itemCount:
             _viewModel.notifications.length + (_viewModel.loadingMore ? 1 : 0),
         itemBuilder: (context, index) {
@@ -98,91 +120,63 @@ class _NotificationsPageState extends State<NotificationsPage> {
               child: Center(child: CircularProgressIndicator()),
             );
           }
+
           final notif = _viewModel.notifications[index];
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            color: notif.isUnread ? const Color(0xFFF1F8E9) : Colors.white,
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: notif.isUnread
-                    ? const Color(0xFF2E7D32)
-                    : Colors.grey.shade300,
-                child: Icon(
-                  _getIconForCategory(notif.category),
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              title: Text(
-                notif.title,
-                style: TextStyle(
-                  fontWeight: notif.isUnread
-                      ? FontWeight.bold
-                      : FontWeight.normal,
-                ),
-              ),
-              subtitle: Text(
-                notif.body,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              trailing: notif.isUnread
-                  ? Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF2E7D32),
-                        shape: BoxShape.circle,
-                      ),
-                    )
-                  : null,
-              onTap: () async {
-                if (notif.isUnread) {
-                  await _viewModel.markAsRead(notif.id);
-                }
-                if (notif.actionUrl != null && notif.actionUrl!.isNotEmpty) {
-                  // Navegar a la ruta indicada (por ej. /transactions/:id)
+          return NotificationItem(
+            notification: notif,
+            onTap: () async {
+              if (notif.isUnread) {
+                await _markAsRead(notif.id);
+              }
+              if (notif.actionUrl != null && notif.actionUrl!.isNotEmpty) {
+                if (mounted) {
                   context.push(notif.actionUrl!.replaceFirst('/api/me', ''));
                 }
-              },
-              onLongPress: () {
-                _showOptionsModal(notif.id);
-              },
-            ),
+              }
+            },
+            onLongPress: () {
+              _showOptionsModal(notif.id);
+            },
           );
         },
       ),
     );
   }
 
-  IconData _getIconForCategory(String category) {
-    switch (category) {
-      case 'TRANSACTIONS':
-        return Icons.payment;
-      case 'SECURITY':
-        return Icons.security;
-      default:
-        return Icons.notifications;
-    }
+  Widget _buildErrorWidget() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
+          const SizedBox(height: 16),
+          Text(_viewModel.errorMessage!, textAlign: TextAlign.center),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () async {
+              await _viewModel.loadInitial();
+              await _viewModel.loadUnreadCount();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2E7D32),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+            child: const Text('Reintentar'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showOptionsModal(String id) {
     showModalBottomSheet(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.archive_outlined),
-              title: const Text('Archivar'),
-              onTap: () async {
-                Navigator.pop(context);
-                await _viewModel.archive(id);
-              },
-            ),
-          ],
-        ),
+      builder: (context) => NotificationOptionsModal(
+        notificationId: id,
+        onArchive: () => _archive(id),
       ),
     );
   }

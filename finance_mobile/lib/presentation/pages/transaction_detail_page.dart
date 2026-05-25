@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../viewmodels/transactions_viewmodel.dart';
+import '../widgets/transaction_header_card.dart';
+import '../widgets/transaction_details_card.dart';
+import '../widgets/transaction_movements_card.dart';
+import '../widgets/transaction_detail_skeleton.dart';
 
 class TransactionDetailPage extends StatefulWidget {
   final String transactionId;
@@ -26,13 +30,11 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
   void _onViewModelChanged() {
     if (!mounted) return;
 
-    // ✅ Manejo seguro de errores
     final errorMsg = _viewModel.errorMessage;
     if (errorMsg != null && errorMsg.isNotEmpty) {
       _showSnackBar(errorMsg);
       _viewModel.clearError();
 
-      // Si el error indica que la transacción no existe, volver atrás
       if (errorMsg.contains('no encontrada') || errorMsg.contains('404')) {
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) context.pop();
@@ -67,7 +69,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
 
   Widget _buildBody() {
     if (_viewModel.loading && _viewModel.selectedTransaction == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const TransactionDetailSkeleton();
     }
 
     final tx = _viewModel.selectedTransaction;
@@ -91,213 +93,29 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
       );
     }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // Estado y tipo
-          Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: tx.isCompleted
-                          ? const Color(0xFFE8F5E9)
-                          : tx.isFailed
-                          ? Colors.red.shade50
-                          : Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Text(
-                      tx.status,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: tx.isCompleted
-                            ? const Color(0xFF2E7D32)
-                            : tx.isFailed
-                            ? Colors.red.shade700
-                            : Colors.grey.shade600,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    tx.formattedAmount,
-                    style: const TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2E7D32),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _getTransactionTypeLabel(tx.type),
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Detalles
-          Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  _detailRow('ID', tx.id),
-                  const Divider(),
-                  _detailRow('Canal', tx.channel),
-                  if (tx.sourceAccountNumber != null) ...[
-                    const Divider(),
-                    _detailRow('Cuenta origen', tx.sourceAccountNumber!),
-                  ],
-                  if (tx.targetAccountNumber != null) ...[
-                    const Divider(),
-                    _detailRow('Cuenta destino', tx.targetAccountNumber!),
-                  ],
-                  const Divider(),
-                  _detailRow('Fecha', _formatDateTime(tx.processedAt)),
-                  if (tx.description != null && tx.description!.isNotEmpty) ...[
-                    const Divider(),
-                    _detailRow('Descripción', tx.description!),
-                  ],
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Movimientos
-          if (tx.movements.isNotEmpty)
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Movimientos',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2E7D32),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    ...tx.movements.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final movement = entry.value;
-                      final isLast = index == tx.movements.length - 1;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  movement.movementType,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Text(
-                                  '${movement.movementType == 'CREDIT' ? '+' : '-'}${movement.amount.toStringAsFixed(2)} ${movement.currency}',
-                                  style: TextStyle(
-                                    color: movement.movementType == 'CREDIT'
-                                        ? const Color(0xFF2E7D32)
-                                        : Colors.red.shade700,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              movement.description,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                            Text(
-                              'Saldo: ${movement.balanceAfter.toStringAsFixed(2)} ${movement.currency}',
-                              style: const TextStyle(fontSize: 11),
-                            ),
-                            if (!isLast) const Divider(),
-                          ],
-                        ),
-                      );
-                    }),
-                  ],
-                ),
-              ),
-            ),
-        ],
+    return RefreshIndicator(
+      onRefresh: () => _viewModel.loadTransactionById(widget.transactionId),
+      color: const Color(0xFF2E7D32),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TransactionHeaderCard(transaction: tx),
+            const SizedBox(height: 16),
+            TransactionDetailsCard(transaction: tx),
+            if (tx.movements.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              TransactionMovementsCard(movements: tx.movements),
+            ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _detailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(label, style: TextStyle(color: Colors.grey.shade600)),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _getTransactionTypeLabel(String type) {
-    switch (type) {
-      case 'DEPOSIT':
-        return 'Depósito';
-      case 'WITHDRAWAL':
-        return 'Retiro';
-      case 'TRANSFER':
-        return 'Transferencia';
-      case 'HOLD':
-        return 'Bloqueo de fondos';
-      case 'RELEASE':
-        return 'Liberación de fondos';
-      case 'PAYMENT':
-        return 'Pago';
-      default:
-        return type;
-    }
-  }
-
-  String _formatDateTime(DateTime date) {
-    return '${date.day}/${date.month}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+  @override
+  void dispose() {
+    _viewModel.removeListener(_onViewModelChanged);
+    super.dispose();
   }
 }

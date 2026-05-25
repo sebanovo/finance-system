@@ -1,4 +1,4 @@
-import 'package:finance_mobile/presentation/viewmodels/notifications_viewmodel.dart';
+// lib/presentation/pages/login_page.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart' as di;
@@ -28,9 +28,7 @@ class _LoginPageState extends State<LoginPage> {
 
   void _onViewModelChanged() {
     if (!mounted) return;
-    if (_viewModel.errorMessage != null) {
-      setState(() {});
-    }
+    setState(() {});
   }
 
   Future<void> _login() async {
@@ -42,8 +40,6 @@ class _LoginPageState extends State<LoginPage> {
     );
     if (success && mounted) {
       context.go('/home');
-      final notifViewModel = di.sl<NotificationsViewModel>();
-      await notifViewModel.registerCurrentDevice();
     }
   }
 
@@ -54,39 +50,6 @@ class _LoginPageState extends State<LoginPage> {
     tenantController.dispose();
     _viewModel.removeListener(_onViewModelChanged);
     super.dispose();
-  }
-
-  String? _validateTenant(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'El nombre del tenant es obligatorio';
-    }
-    final trimmed = value.trim().toLowerCase();
-    final regex = RegExp(r'^[a-z0-9]+(-[a-z0-9]+)*$');
-    if (!regex.hasMatch(trimmed)) {
-      return 'Solo letras minúsculas, números y guiones medios (-)';
-    }
-    return null;
-  }
-
-  String? _validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'El correo electrónico es obligatorio';
-    }
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$');
-    if (!emailRegex.hasMatch(value.trim())) {
-      return 'Ingresa un correo válido';
-    }
-    return null;
-  }
-
-  String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'La contraseña es obligatoria';
-    }
-    if (value.length < 8) {
-      return 'Debe tener al menos 8 caracteres';
-    }
-    return null;
   }
 
   @override
@@ -122,7 +85,7 @@ class _LoginPageState extends State<LoginPage> {
                           children: [
                             TextFormField(
                               controller: tenantController,
-                              validator: _validateTenant,
+                              validator: _viewModel.validateTenant,
                               decoration: _buildInputDecoration(
                                 label: 'Nombre del tenant',
                                 hint: 'Ej: miempresa',
@@ -133,7 +96,7 @@ class _LoginPageState extends State<LoginPage> {
                             TextFormField(
                               controller: emailController,
                               keyboardType: TextInputType.emailAddress,
-                              validator: _validateEmail,
+                              validator: _viewModel.validateEmail,
                               decoration: _buildInputDecoration(
                                 label: 'Correo electrónico',
                                 hint: 'usuario@ejemplo.com',
@@ -144,7 +107,7 @@ class _LoginPageState extends State<LoginPage> {
                             TextFormField(
                               controller: passwordController,
                               obscureText: true,
-                              validator: _validatePassword,
+                              validator: _viewModel.validatePassword,
                               decoration: _buildInputDecoration(
                                 label: 'Contraseña',
                                 hint: '',
@@ -154,48 +117,7 @@ class _LoginPageState extends State<LoginPage> {
                             const SizedBox(height: 28),
                             SizedBox(
                               width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: _viewModel.isLoading ? null : _login,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.transparent,
-                                  shadowColor: Colors.transparent,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 14,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(40),
-                                  ),
-                                ),
-                                child: Ink(
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Color(0xFF2E7D32),
-                                        Color(0xFF66BB6A),
-                                      ],
-                                      begin: Alignment.centerLeft,
-                                      end: Alignment.centerRight,
-                                    ),
-                                    borderRadius: BorderRadius.circular(40),
-                                  ),
-                                  child: Container(
-                                    height: 40,
-                                    alignment: Alignment.center,
-                                    child: _viewModel.isLoading
-                                        ? const CircularProgressIndicator(
-                                            color: Colors.white,
-                                          )
-                                        : const Text(
-                                            'Iniciar sesión',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                  ),
-                                ),
-                              ),
+                              child: _buildLoginButton(),
                             ),
                             if (_viewModel.errorMessage != null)
                               Padding(
@@ -238,6 +160,42 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoginButton() {
+    return ElevatedButton(
+      onPressed: _viewModel.isLoading ? null : _login,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),
+      ),
+      child: Ink(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF2E7D32), Color(0xFF66BB6A)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(40),
+        ),
+        child: Container(
+          height: 40,
+          alignment: Alignment.center,
+          child: _viewModel.isLoading
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text(
+                  'Iniciar sesión',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
         ),
       ),
     );
