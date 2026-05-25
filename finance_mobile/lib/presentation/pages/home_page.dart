@@ -288,14 +288,15 @@ class _HomePageState extends State<HomePage> {
                   context.push('/notifications');
                 },
               ),
-            _buildDrawerItem(
-              icon: Icons.phone_android,
-              title: 'Mis Dispositivos',
-              onTap: () {
-                Navigator.pop(context);
-                context.push('/devices');
-              },
-            ),
+            if (_hasAnyRole(['USER']))
+              _buildDrawerItem(
+                icon: Icons.phone_android,
+                title: 'Mis Dispositivos',
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/devices');
+                },
+              ),
             // ✅ Cerrar sesión - visible para todos
             _buildDrawerItem(
               icon: Icons.logout,

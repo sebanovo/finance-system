@@ -26,8 +26,10 @@ dependencies:
   equatable: ^2.0.8 #(Para comparar objetos de forma profunda o1 == o2)
   device_info_plus: ^13.1.0 #(Para obtener información detallada del dispositivo)
   package_info_plus: ^10.1.0 #(Para obtener información detallada de la app, como la version)
-  universal_html: ^2.3.0
-  # timezone: ^0.11.0
+  universal_html: ^2.3.0 #(Para html en dart que funcione en web y mobile)
+  provider: ^6.1.5+1 #(Para escuchar proveedores)
+  skeletonizer: ^2.1.3 #(Para skeletons en vistas)
+  # timezone: ^0.11.0 #(Para obtener la hora)
   
 
 dev_dependencies:
