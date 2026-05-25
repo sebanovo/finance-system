@@ -63,12 +63,8 @@ class UsersViewModel extends ChangeNotifier {
     notifyListeners();
     try {
       _users = await getUsersUseCase();
-      // Cargar roles para cada usuario
-      for (var user in _users) {
-        if (!_rolesMap.containsKey(user.id)) {
-          loadUserRoles(user.id);
-        }
-      }
+      // ✅ Cargar roles sin notificar por cada uno
+      await _loadAllUserRoles();
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
@@ -77,9 +73,37 @@ class UsersViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> loadUserRoles(String userId) async {
-    _loadingRolesMap[userId] = true;
+  // ✅ Nuevo método: cargar todos los roles de una vez sin notificaciones intermedias
+  Future<void> _loadAllUserRoles() async {
+    // Marcar todos como cargando
+    for (var user in _users) {
+      _loadingRolesMap[user.id] = true;
+    }
+    // ✅ Notificar solo una vez al inicio
     notifyListeners();
+
+    // Cargar roles en paralelo
+    final futures = _users.map((user) async {
+      try {
+        final roles = await getUserRolesUseCase(user.id);
+        _rolesMap[user.id] = roles;
+      } catch (e) {
+        _rolesMap[user.id] = [];
+      } finally {
+        _loadingRolesMap[user.id] = false;
+      }
+    });
+
+    await Future.wait(futures);
+
+    // ✅ Notificar solo una vez al final
+    notifyListeners();
+  }
+
+  Future<void> loadUserRoles(String userId) async {
+    // ✅ No notificar al inicio
+    _loadingRolesMap[userId] = true;
+
     try {
       final roles = await getUserRolesUseCase(userId);
       _rolesMap[userId] = roles;
@@ -87,6 +111,7 @@ class UsersViewModel extends ChangeNotifier {
       _rolesMap[userId] = [];
     } finally {
       _loadingRolesMap[userId] = false;
+      // ✅ Notificar solo una vez al final
       notifyListeners();
     }
   }

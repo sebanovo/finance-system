@@ -82,16 +82,27 @@ presentation:
 
 ```
 
+```
+Clean Architecture
 
-dentro de lib:
-domain/entities
-domain/repositories
-domain/usecases
+lib/core/constants
+lib/core/di
+lib/core/error
+lib/core/network
+lib/core/routes
+lib/core/services
 
-infrastructure/datasources
-infrastructure/models
-infrastructure/repositories
+lib/domain/entities
+lib/domain/repositories
+lib/domain/usecases
 
-presentation/pages
-presentation/viewmodels
-presentation/widgets
+lib/infrastructure/datasources
+lib/infrastructure/models
+lib/infrastructure/repositories
+
+lib/presentation/pages
+lib/presentation/viewmodels
+lib/presentation/widgets
+
+lib/main.dart
+```

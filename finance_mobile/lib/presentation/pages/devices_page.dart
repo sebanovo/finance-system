@@ -1,7 +1,9 @@
-import 'package:finance_mobile/domain/entities/notification_device.dart';
+// lib/presentation/pages/devices_page.dart
 import 'package:flutter/material.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../viewmodels/devices_viewmodel.dart';
+import '../widgets/device_card.dart';
+import '../widgets/device_card_skeleton.dart';
 
 class DevicesPage extends StatefulWidget {
   const DevicesPage({super.key});
@@ -12,6 +14,7 @@ class DevicesPage extends StatefulWidget {
 
 class _DevicesPageState extends State<DevicesPage> {
   late DevicesViewModel _viewModel;
+  static const int _skeletonItemCount = 1;
 
   @override
   void initState() {
@@ -43,7 +46,7 @@ class _DevicesPageState extends State<DevicesPage> {
     );
   }
 
-  Future<void> _confirmDeactivate(NotificationDevice device) async {
+  Future<void> _confirmDeactivate(device) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -73,6 +76,37 @@ class _DevicesPageState extends State<DevicesPage> {
     }
   }
 
+  Future<void> _confirmRevoke(device) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Revocar dispositivo'),
+        content: Text(
+          '¿Estás seguro de que deseas revocar "${device.deviceName}"?\n\n'
+          'Esta acción es irreversible y el dispositivo no podrá volver a conectarse.',
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade700,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Revocar'),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      await _viewModel.revokeDevice(device.id);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,7 +122,11 @@ class _DevicesPageState extends State<DevicesPage> {
 
   Widget _buildBody() {
     if (_viewModel.loading) {
-      return const Center(child: CircularProgressIndicator());
+      return ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _skeletonItemCount,
+        itemBuilder: (context, index) => const DeviceCardSkeleton(),
+      );
     }
 
     if (_viewModel.errorMessage != null && _viewModel.devices.isEmpty) {
@@ -146,138 +184,13 @@ class _DevicesPageState extends State<DevicesPage> {
         itemCount: _viewModel.devices.length,
         itemBuilder: (context, index) {
           final device = _viewModel.devices[index];
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: device.isActive
-                    ? const Color(0xFFE8F5E9)
-                    : Colors.grey.shade200,
-                child: Text(device.platform, style: TextStyle(fontSize: 20)),
-              ),
-              title: Text(
-                device.deviceName,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${device.platform} - v${device.appVersion}',
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  Text(
-                    'Último acceso: ${_formatDate(device.lastSeenAt)}',
-                    style: const TextStyle(fontSize: 11, color: Colors.grey),
-                  ),
-                ],
-              ),
-              // En el trailing del ListTile, modificar los botones
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: device.isActive
-                          ? Colors.green[100]
-                          : Colors.red[100],
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      device.isActive ? 'Activo' : device.status,
-                      style: TextStyle(
-                        color: device.isActive
-                            ? Colors.green[700]
-                            : Colors.red[700],
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  if (device.isActive)
-                    PopupMenuButton<String>(
-                      onSelected: (value) {
-                        if (value == 'deactivate') {
-                          _confirmDeactivate(device);
-                        } else if (value == 'revoke') {
-                          _confirmRevoke(device);
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'deactivate',
-                          child: Row(
-                            children: [
-                              Icon(Icons.block, size: 18, color: Colors.orange),
-                              SizedBox(width: 8),
-                              Text('Desactivar'),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuItem(
-                          value: 'revoke',
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.delete_forever,
-                                size: 18,
-                                color: Colors.red,
-                              ),
-                              SizedBox(width: 8),
-                              Text('Revocar'),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
-            ),
+          return DeviceCard(
+            device: device,
+            onDeactivate: () => _confirmDeactivate(device),
+            onRevoke: () => _confirmRevoke(device),
           );
         },
       ),
     );
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-  }
-
-  Future<void> _confirmRevoke(NotificationDevice device) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Revocar dispositivo'),
-        content: Text(
-          '¿Estás seguro de que deseas revocar "${device.deviceName}"?\n\n'
-          'Esta acción es irreversible y el dispositivo no podrá volver a conectarse.',
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.shade700,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Revocar'),
-          ),
-        ],
-      ),
-    );
-    if (confirm == true) {
-      await _viewModel.revokeDevice(device.id);
-    }
   }
 }

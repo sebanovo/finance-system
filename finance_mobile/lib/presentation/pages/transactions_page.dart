@@ -1,8 +1,11 @@
-import 'package:finance_mobile/domain/entities/transaction.dart';
+// lib/presentation/pages/transactions_page.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../viewmodels/transactions_viewmodel.dart';
+import '../widgets/transaction_item.dart';
+import '../widgets/transaction_item_skeleton.dart';
+import '../widgets/transactions_empty_widget.dart';
 
 class TransactionsPage extends StatefulWidget {
   const TransactionsPage({super.key});
@@ -13,6 +16,16 @@ class TransactionsPage extends StatefulWidget {
 
 class _TransactionsPageState extends State<TransactionsPage> {
   late TransactionsViewModel _viewModel;
+  static const int _skeletonItemCount = 5;
+
+  final List<Map<String, dynamic>> _menuItems = [
+    {'value': 'deposit', 'icon': Icons.arrow_downward, 'label': 'Depositar'},
+    {'value': 'transfer', 'icon': Icons.swap_horiz, 'label': 'Transferir'},
+    {'value': 'withdrawal', 'icon': Icons.arrow_upward, 'label': 'Retirar'},
+    {'value': 'payment', 'icon': Icons.payment, 'label': 'Pagar'},
+    {'value': 'hold', 'icon': Icons.block, 'label': 'Bloquear fondos'},
+    {'value': 'release', 'icon': Icons.check_circle, 'label': 'Liberar fondos'},
+  ];
 
   @override
   void initState() {
@@ -52,286 +65,102 @@ class _TransactionsPageState extends State<TransactionsPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: const Color(0xFF2E7D32),
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              switch (value) {
-                case 'deposit':
-                  context.push('/transactions/deposit');
-                  break;
-                case 'transfer':
-                  context.push('/transactions/transfer');
-                  break;
-                case 'withdrawal':
-                  context.push('/transactions/withdrawal');
-                  break;
-                case 'payment':
-                  context.push('/transactions/payment');
-                  break;
-                case 'hold':
-                  context.push('/transactions/hold');
-                  break; // ✅ nuevo
-                case 'release':
-                  context.push('/transactions/release');
-                  break; // ✅ nuevo
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'deposit',
-                child: Row(
-                  children: [
-                    Icon(Icons.arrow_downward, color: Color(0xFF2E7D32)),
-                    SizedBox(width: 8),
-                    Text('Depositar'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'transfer',
-                child: Row(
-                  children: [
-                    Icon(Icons.swap_horiz, color: Color(0xFF2E7D32)),
-                    SizedBox(width: 8),
-                    Text('Transferir'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'withdrawal',
-                child: Row(
-                  children: [
-                    Icon(Icons.arrow_upward, color: Color(0xFF2E7D32)),
-                    SizedBox(width: 8),
-                    Text('Retirar'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'payment',
-                child: Row(
-                  children: [
-                    Icon(Icons.payment, color: Color(0xFF2E7D32)),
-                    SizedBox(width: 8),
-                    Text('Pagar'),
-                  ],
-                ),
-              ),
-              // ... opciones existentes
-              const PopupMenuItem(
-                value: 'hold',
-                child: Row(
-                  children: [
-                    Icon(Icons.block, color: Color(0xFF2E7D32)),
-                    SizedBox(width: 8),
-                    Text('Bloquear fondos'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'release',
-                child: Row(
-                  children: [
-                    Icon(Icons.check_circle, color: Color(0xFF2E7D32)),
-                    SizedBox(width: 8),
-                    Text('Liberar fondos'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
+        actions: [_buildMenuButton()],
       ),
       body: _buildBody(),
     );
   }
 
+  Widget _buildMenuButton() {
+    return PopupMenuButton<String>(
+      onSelected: (value) => context.push('/transactions/$value'),
+      itemBuilder: (context) => _menuItems.map((item) {
+        return PopupMenuItem<String>(
+          // ✅ Especificar tipo String
+          value: item['value'] as String,
+          child: Row(
+            children: [
+              Icon(item['icon'] as IconData, color: const Color(0xFF2E7D32)),
+              const SizedBox(width: 8),
+              Text(item['label'] as String),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   Widget _buildBody() {
     if (_viewModel.loading) {
-      return const Center(child: CircularProgressIndicator());
+      return ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _skeletonItemCount,
+        itemBuilder: (context, index) => const TransactionItemSkeleton(),
+      );
     }
 
     if (_viewModel.errorMessage != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
-            const SizedBox(height: 16),
-            Text(
-              _viewModel.errorMessage!,
-              style: const TextStyle(fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () => _viewModel.loadTransactions(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2E7D32),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-              child: const Text('Reintentar'),
-            ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: () => context.go('/login'),
-              child: const Text('Ir a inicio de sesión'),
-            ),
-          ],
-        ),
-      );
+      return _buildErrorWidget();
     }
 
     if (_viewModel.transactions.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.history, size: 64, color: Colors.grey.shade400),
-            const SizedBox(height: 16),
-            const Text(
-              'No hay movimientos',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Realiza tu primer depósito o transferencia',
-              style: TextStyle(color: Colors.grey),
-            ),
-          ],
-        ),
-      );
+      return const TransactionsEmptyWidget();
     }
 
     return RefreshIndicator(
-      onRefresh: () => _viewModel.loadTransactions(),
+      onRefresh: () async => _viewModel.loadTransactions(),
       color: const Color(0xFF2E7D32),
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: _viewModel.transactions.length,
         itemBuilder: (context, index) {
           final tx = _viewModel.transactions[index];
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: tx.isDeposit
-                    ? const Color(0xFFE8F5E9)
-                    : tx.isWithdrawal
-                    ? Colors.red.shade50
-                    : Colors.grey.shade100,
-                child: Icon(
-                  tx.isDeposit
-                      ? Icons.arrow_downward
-                      : tx.isWithdrawal
-                      ? Icons.arrow_upward
-                      : tx.isTransfer
-                      ? Icons.swap_horiz
-                      : tx.isHold
-                      ? Icons.block
-                      : tx.isRelease
-                      ? Icons.check_circle
-                      : Icons.payment,
-                  color: tx.isDeposit
-                      ? const Color(0xFF2E7D32)
-                      : tx.isWithdrawal
-                      ? Colors.red.shade700
-                      : Colors.grey.shade600,
-                  size: 20,
-                ),
-              ),
-              title: Text(
-                _getTransactionTitle(tx),
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _formatDateTime(tx.processedAt),
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  if (tx.description != null && tx.description!.isNotEmpty)
-                    Text(
-                      tx.description!,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey.shade500,
-                      ),
-                    ),
-                ],
-              ),
-              trailing: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    tx.isDeposit
-                        ? '+${tx.formattedAmount}'
-                        : tx.formattedAmount,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: tx.isDeposit
-                          ? const Color(0xFF2E7D32)
-                          : Colors.red.shade700,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.only(top: 4),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: tx.isCompleted
-                          ? const Color(0xFFE8F5E9)
-                          : tx.isFailed
-                          ? Colors.red.shade50
-                          : Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      tx.status,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: tx.isCompleted
-                            ? const Color(0xFF2E7D32)
-                            : tx.isFailed
-                            ? Colors.red.shade700
-                            : Colors.grey.shade600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              onTap: () {
-                context.push('/transactions/${tx.id}');
-              },
-            ),
+          return TransactionItem(
+            transaction: tx,
+            onTap: () => context.push('/transactions/${tx.id}'),
           );
         },
       ),
     );
   }
 
-  String _getTransactionTitle(Transaction tx) {
-    if (tx.isDeposit) return 'Depósito';
-    if (tx.isWithdrawal) return 'Retiro';
-    if (tx.isTransfer) return 'Transferencia';
-    if (tx.isHold) return 'Bloqueo de fondos';
-    if (tx.isRelease) return 'Liberación de fondos';
-    if (tx.isPayment) return 'Pago';
-    return tx.type;
+  Widget _buildErrorWidget() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
+          const SizedBox(height: 16),
+          Text(
+            _viewModel.errorMessage!,
+            style: const TextStyle(fontSize: 16),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () => _viewModel.loadTransactions(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2E7D32),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+            child: const Text('Reintentar'),
+          ),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: () => context.go('/login'),
+            child: const Text('Ir a inicio de sesión'),
+          ),
+        ],
+      ),
+    );
   }
 
-  String _formatDateTime(DateTime date) {
-    return '${date.day}/${date.month}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+  @override
+  void dispose() {
+    _viewModel.removeListener(_onViewModelChanged);
+    super.dispose();
   }
 }

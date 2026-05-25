@@ -16,6 +16,40 @@ class LoginViewModel extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
+  // ✅ Validaciones movidas al ViewModel o a un servicio
+  String? validateTenant(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'El nombre del tenant es obligatorio';
+    }
+    final trimmed = value.trim().toLowerCase();
+    final regex = RegExp(r'^[a-z0-9]+(-[a-z0-9]+)*$');
+    if (!regex.hasMatch(trimmed)) {
+      return 'Solo letras minúsculas, números y guiones medios (-)';
+    }
+    return null;
+  }
+
+  String? validateEmail(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'El correo electrónico es obligatorio';
+    }
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$');
+    if (!emailRegex.hasMatch(value.trim())) {
+      return 'Ingresa un correo válido';
+    }
+    return null;
+  }
+
+  String? validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'La contraseña es obligatoria';
+    }
+    if (value.length < 8) {
+      return 'Debe tener al menos 8 caracteres';
+    }
+    return null;
+  }
+
   Future<bool> login(String email, String password, String tenantSlug) async {
     _isLoading = true;
     _errorMessage = null;
