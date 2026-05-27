@@ -1,5 +1,7 @@
 <!DOCTYPE html>
+
 <html>
+
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -27,11 +29,12 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" href="favicon.png" />
 
   <title>finance_mobile</title>
   <link rel="manifest" href="manifest.json">
 </head>
+
 <body>
   <!--
     You can customize the "flutter_bootstrap.js" script.
@@ -42,7 +45,7 @@
     * httsps://docs.flutter.dev/platform-integration/web/initialization
   -->
   <!-- <script src="flutter_bootstrap.js" async></script> -->
-  <script>{{flutter_bootstrap_js}}</script>
+  <script src="flutter_bootstrap.js" async></script>
   <!-- <script type="module">
     // Import the functions you need from the SDKs you need
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
@@ -66,10 +69,10 @@
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
   </script> -->
-   <!-- ✅ Registrar Service Worker de Firebase Messaging -->
-  <script>
+  <!-- ✅ Registrar Service Worker de Firebase Messaging -->
+  <!-- <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/firebase-messaging-sw.js')
+      navigator.serviceWorker.register('/flutter/firebase-messaging-sw.js')
         .then((registration) => {
           console.log('✅ Service Worker registrado:', registration);
         })
@@ -77,9 +80,9 @@
           console.log('❌ Error al registrar Service Worker:', error);
         });
     }
-  </script>
-  
-  <script type="module">
+  </script> -->
+
+  <!-- <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js";
     import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-messaging.js";
@@ -128,8 +131,55 @@
         );
       }
     });
+  </script> -->
+  <!-- ✅ Firebase y FCM con registro manual de SW -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js";
+    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-messaging.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCZPmAnJnsPqzlhi86ZxJvM-vpaNQ7IY4c",
+      authDomain: "finance-system-29d3d.firebaseapp.com",
+      projectId: "finance-system-29d3d",
+      storageBucket: "finance-system-29d3d.firebasestorage.app",
+      messagingSenderId: "788345017826",
+      appId: "1:788345017826:web:6e00ae6fdc2238488cd5bb",
+      measurementId: "G-XEK7JX11GH"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const messaging = getMessaging(app);
+
+    navigator.serviceWorker.register('/flutter/firebase-messaging-sw.js')
+      .then(registration => getToken(messaging, {
+        vapidKey: 'BLyCPhPXXBLVzUkTyMDb2nxuhQuo8Wyj3TEvlrL6A9QONY5qqFhc4vmAGO3LS6tbNW9YDD_T_Ue28sw10G09000',
+        serviceWorkerRegistration: registration
+      }))
+      .then(currentToken => {
+        if (currentToken) {
+          console.log('✅ FCM Token web:', currentToken);
+          window.parent.postMessage({ type: 'fcmToken', token: currentToken }, '*');
+        } else {
+          console.log('⚠️ No se pudo obtener token FCM');
+        }
+      })
+      .catch(err => console.log('❌ Error obteniendo token FCM:', err));
+
+    onMessage(messaging, (payload) => {
+      console.log('🔔 Notificación en primer plano:', payload);
+      if (window.showNotification) {
+        window.showNotification(
+          payload.notification.title,
+          payload.notification.body,
+          payload.data?.actionUrl
+        );
+      }
+    });
   </script>
-  
+
   <script src="local_notification.js"></script>
 </body>
+
 </html>
