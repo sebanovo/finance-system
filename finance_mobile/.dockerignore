@@ -1,0 +1,14 @@
+# Flutter ephemeral
+flutter/ephemeral/
+**/ephemeral/
+**/.plugin_symlinks/
+
+# Flutter generated
+.flutter-plugins
+.flutter-plugins-dependencies
+.dart_tool/
+build/
+
+# General
+.git/
+*.md

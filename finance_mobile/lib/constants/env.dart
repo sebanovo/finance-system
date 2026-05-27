@@ -1,10 +1,7 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Env {
-  static String baseUrl = dotenv.get(
-    "BASE_URL",
-    fallback: "http://3.144.192.20:80",
-  );
+  static String baseUrl = dotenv.get("BASE_URL", fallback: "");
   static String systemName = dotenv.get(
     "SYSTEM_NAME",
     fallback: "Finance System",
