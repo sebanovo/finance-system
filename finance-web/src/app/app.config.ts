@@ -1,16 +1,6 @@
-import {
-  provideHttpClient,
-  withFetch,
-  withInterceptors,
-} from "@angular/common/http";
-import {
-  ApplicationConfig,
-  inject,
-  provideAppInitializer,
-  provideBrowserGlobalErrorListeners,
-} from "@angular/core";
+import { provideHttpClient, withFetch, withInterceptors } from "@angular/common/http";
+import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from "@angular/core";
 import { provideRouter } from "@angular/router";
-
 import { routes } from "./app.routes";
 import { authRefreshInterceptor } from "./core/http/interceptors/auth-refresh.interceptor";
 import { authTokenInterceptor } from "./core/http/interceptors/auth-token.interceptor";
@@ -19,13 +9,12 @@ import { SessionBootstrapService } from "./core/session/services/session-bootstr
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideBrowserGlobalErrorListeners(), // catch global errors
+    provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-
     provideHttpClient(
       withFetch(),
       withInterceptors([
-        authTokenInterceptor,
+        authTokenInterceptor, 
         // credentialsInterceptor,
         authRefreshInterceptor,
         httpErrorInterceptor,
