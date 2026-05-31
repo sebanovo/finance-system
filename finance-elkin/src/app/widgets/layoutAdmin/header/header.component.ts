@@ -1,9 +1,11 @@
-import { Component, EventEmitter, Output, HostListener, ElementRef, inject, OnInit } from '@angular/core';
+// widgets/layoutAdmin/header/header.component.ts
+import { Component, EventEmitter, Output, HostListener, ElementRef, inject, OnInit, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { AuthFacade } from '../../../shared/lib/auth/auth.facade';
+import { PlatformFacade } from '../../../features/platform/lib/platform.facade';
 
 @Component({
   selector: 'app-header',
@@ -21,50 +23,46 @@ import { AuthFacade } from '../../../shared/lib/auth/auth.facade';
     ])
   ],
   template: `
-    <!-- Spacer for Mobile so the title doesn't hide behind the hamburger button -->
-    <header class="h-16 flex items-center justify-between px-6 md:px-8 bg-card border-b border-border shadow-sm w-full sticky top-0 z-30">
+    <header class="h-16 flex items-center justify-between px-6 md:px-8 bg-white border-b border-[#C8E6C9] shadow-sm w-full sticky top-0 z-30">
       
-      <!-- Lado Izquierdo -->
       <div class="flex items-center gap-4">
-        <!-- En móvil, el sidebar tiene un botón en el top-left. Así que damos un margen izquierdo extra al título en móvil. -->
-        <h1 class="text-xl font-semibold text-foreground ml-10 md:ml-0 tracking-tight">Panel de Control</h1>
+        <h1 class="text-xl font-semibold text-[#2E7D32] ml-10 md:ml-0 tracking-tight">
+          @if (isPlatformRoute) {
+            Panel de Control - Plataforma
+          } @else {
+            Panel de Control
+          }
+        </h1>
       </div>
 
-      <!-- Lado Derecho (Notificaciones + Perfil) -->
       <div class="flex items-center gap-2 md:gap-4 relative">
         
-        <!-- Notificaciones -->
-        <button class="relative p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-full transition-colors">
-          <lucide-icon name="bell" class="h-5 w-5"></lucide-icon>
-          <span class="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive border-2 border-card"></span>
-        </button>
+        <div class="h-6 w-px bg-[#C8E6C9] mx-1"></div>
 
-        <div class="h-6 w-px bg-border mx-1"></div>
-
-        <!-- Perfil Usuario -->
+        <!-- Perfil Usuario (adaptado para Platform o Tenant) -->
         <div class="relative">
           <button 
             (click)="toggleProfileMenu()"
-            class="flex items-center gap-2 md:gap-3 p-1.5 rounded-full md:rounded-md hover:bg-accent transition-colors focus:outline-none"
-            [class.bg-accent]="isProfileOpen"
+            class="flex items-center gap-2 md:gap-3 p-1.5 rounded-full md:rounded-md hover:bg-[#F1F8E9] transition-colors focus:outline-none"
+            [class.bg-[#F1F8E9]]="isProfileOpen"
           >
             <!-- Avatar -->
-            <div class="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm border border-primary/20 uppercase">
+            <div class="h-8 w-8 rounded-full bg-[#2E7D32]/10 text-[#2E7D32] flex items-center justify-center font-bold text-sm border border-[#2E7D32]/20 uppercase">
               {{ getInitials() }}
             </div>
             <!-- Info Desktop -->
             <div class="hidden md:flex flex-col items-start text-left">
-              <span class="text-sm font-semibold text-foreground leading-none">
-                {{ user() ? (user()!.firstName + ' ' + user()!.lastName) : 'Cargando...' }}
+              <span class="text-sm font-semibold text-[#2E7D32] leading-none">
+                {{ getDisplayName() }}
               </span>
-              <span class="text-xs text-muted-foreground mt-1 capitalize">
+              <span class="text-xs text-[#666666] mt-1 capitalize">
                 {{ getRole() }}
               </span>
             </div>
             <!-- Chevron -->
             <lucide-icon 
               name="chevron-down" 
-              class="hidden md:block h-4 w-4 text-muted-foreground transition-transform duration-200"
+              class="hidden md:block h-4 w-4 text-[#666666] transition-transform duration-200"
               [class.rotate-180]="isProfileOpen"
             ></lucide-icon>
           </button>
@@ -73,35 +71,35 @@ import { AuthFacade } from '../../../shared/lib/auth/auth.facade';
           <div 
             *ngIf="isProfileOpen"
             @dropdownAnimation
-            class="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-card border border-border ring-1 ring-black/5 focus:outline-none z-50 overflow-hidden"
+            class="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white border border-[#C8E6C9] ring-1 ring-black/5 focus:outline-none z-50 overflow-hidden"
           >
-            <!-- Header Dropdown (Mobile visible info) -->
-            <div class="px-4 py-3 border-b border-border bg-muted/30">
-              <p class="text-sm font-medium text-foreground">
-                {{ user() ? (user()!.firstName + ' ' + user()!.lastName) : 'Usuario' }}
+            <!-- Header Dropdown -->
+            <div class="px-4 py-3 border-b border-[#C8E6C9] bg-[#F1F8E9]">
+              <p class="text-sm font-medium text-[#2E7D32]">
+                {{ getDisplayName() }}
               </p>
-              <p class="text-xs font-medium text-muted-foreground truncate">
-                {{ user()?.email || 'Cargando...' }}
+              <p class="text-xs font-medium text-[#666666] truncate">
+                {{ getEmail() }}
               </p>
             </div>
 
             <div class="py-1">
-              <a routerLink="/dashboard/settings" class="group flex items-center px-4 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors">
-                <lucide-icon name="user" class="mr-3 h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors"></lucide-icon>
+              <a routerLink="/dashboard/settings" class="group flex items-center px-4 py-2 text-sm text-[#333333] hover:bg-[#F1F8E9] transition-colors">
+                <lucide-icon name="user" class="mr-3 h-4 w-4 text-[#666666] group-hover:text-[#2E7D32]"></lucide-icon>
                 Mi Perfil
               </a>
-              <a routerLink="/dashboard/settings" class="group flex items-center px-4 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors">
-                <lucide-icon name="settings" class="mr-3 h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors"></lucide-icon>
+              <a routerLink="/dashboard/settings" class="group flex items-center px-4 py-2 text-sm text-[#333333] hover:bg-[#F1F8E9] transition-colors">
+                <lucide-icon name="settings" class="mr-3 h-4 w-4 text-[#666666] group-hover:text-[#2E7D32]"></lucide-icon>
                 Configuración
               </a>
             </div>
 
-            <div class="border-t border-border py-1">
+            <div class="border-t border-[#C8E6C9] py-1">
               <button 
                 (click)="onLogout()"
-                class="group flex w-full items-center px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                class="group flex w-full items-center px-4 py-2 text-sm text-[#C62828] hover:bg-red-50 transition-colors"
               >
-                <lucide-icon name="log-out" class="mr-3 h-4 w-4 text-destructive/70 group-hover:text-destructive transition-colors"></lucide-icon>
+                <lucide-icon name="log-out" class="mr-3 h-4 w-4 text-[#C62828]/70 group-hover:text-[#C62828]"></lucide-icon>
                 Cerrar Sesión
               </button>
             </div>
@@ -117,35 +115,88 @@ export class HeaderComponent implements OnInit {
   isProfileOpen = false;
 
   private elementRef = inject(ElementRef);
+  private router = inject(Router);
   private authFacade = inject(AuthFacade);
+  private platformFacade = inject(PlatformFacade);
 
-  readonly user = this.authFacade.currentUser;
+  readonly platformSuperadmin = this.platformFacade.currentSuperadmin;
+  readonly tenantUser = this.authFacade.currentUser;
 
   ngOnInit(): void {
-    if (!this.user()) {
-      this.authFacade.loadCurrentUser();
+    this.loadUserData();
+  }
+
+  loadUserData(): void {
+    if (this.isPlatformRoute) {
+      // ✅ Cargar datos del superadmin de platform
+      this.platformFacade.loadCurrentSuperadmin();
+    } else {
+      // ✅ Cargar datos del usuario tenant
+      if (!this.tenantUser()) {
+        this.authFacade.loadCurrentUser();
+      }
+    }
+  }
+
+  get isPlatformRoute(): boolean {
+    return this.router.url.startsWith('/platform');
+  }
+
+  getDisplayName(): string {
+    if (this.isPlatformRoute) {
+      const user = this.platformSuperadmin();
+      if (user) {
+        return `${user.firstName} ${user.lastName}`;
+      }
+      return 'SuperAdmin';
+    } else {
+      const user = this.tenantUser();
+      if (user) {
+        return `${user.firstName} ${user.lastName}`;
+      }
+      return 'Cargando...';
+    }
+  }
+
+  getEmail(): string {
+    if (this.isPlatformRoute) {
+      return this.platformSuperadmin()?.email || 'superadmin@finance.local';
+    } else {
+      return this.tenantUser()?.email || 'cargando...';
     }
   }
 
   getInitials(): string {
-    const u = this.user();
-    if (!u) return 'US';
-    return (u.firstName.charAt(0) + u.lastName.charAt(0)).toUpperCase();
+    if (this.isPlatformRoute) {
+      const user = this.platformSuperadmin();
+      if (user) {
+        return (user.firstName.charAt(0) + user.lastName.charAt(0)).toUpperCase();
+      }
+      return 'SA';
+    } else {
+      const user = this.tenantUser();
+      if (user) {
+        return (user.firstName.charAt(0) + user.lastName.charAt(0)).toUpperCase();
+      }
+      return 'US';
+    }
   }
 
   getRole(): string {
-    const roles = this.user()?.roles;
-    if (!roles || roles.length === 0) return 'Usuario';
-    // Removemos el prefijo ROLE_ si existe y capitalizamos
-    const role = roles[0].replace('ROLE_', '').toLowerCase();
-    return role;
+    if (this.isPlatformRoute) {
+      return 'Super Administrador';
+    } else {
+      const roles = this.tenantUser()?.roles;
+      if (!roles || roles.length === 0) return 'Usuario';
+      const role = roles[0].replace('ROLE_', '').toLowerCase();
+      return role;
+    }
   }
 
   toggleProfileMenu(): void {
     this.isProfileOpen = !this.isProfileOpen;
   }
 
-  // Cerrar el dropdown si se hace clic afuera
   @HostListener('document:click', ['$event.target'])
   onClickOutside(targetElement: EventTarget | null): void {
     if (!targetElement) return;

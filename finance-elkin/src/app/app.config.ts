@@ -2,7 +2,7 @@ import { ApplicationConfig, importProvidersFrom, provideBrowserGlobalErrorListen
 import { provideRouter } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { authInterceptor } from './shared/api';
+import { authTokenInterceptor } from './shared/api';
 
 import { 
   LucideAngularModule, Building2, User, ArrowRight, ArrowLeft, Eye, EyeOff,
@@ -11,7 +11,7 @@ import {
   BookOpen, Calendar, FileText, LogOut, ChevronDown, Menu, X, Bell,
   Plus, UserCircle2, Save, MoreHorizontal, Wallet, Pencil, CheckCircle, 
   Play, Ban, Snowflake, XCircle, ArrowDownToLine, ArrowUpFromLine, Send, 
-  RotateCcw, Reply
+  RotateCcw, Reply, ClipboardList  
 } from 'lucide-angular';
 
 
@@ -22,7 +22,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([authTokenInterceptor])),
     provideAnimationsAsync(),
     importProvidersFrom(LucideAngularModule.pick({ 
       Building2, User, ArrowRight, ArrowLeft, Eye, EyeOff,
@@ -31,7 +31,7 @@ export const appConfig: ApplicationConfig = {
       BookOpen, Calendar, FileText, LogOut, ChevronDown, Menu, X, Bell,
       Plus, UserCircle2, Save, MoreHorizontal, Wallet, Pencil, CheckCircle, 
       Play, Ban, Snowflake, XCircle, ArrowDownToLine, ArrowUpFromLine, Send, 
-      RotateCcw, Reply
+      RotateCcw, Reply, ClipboardList 
     }))
 
   ]
