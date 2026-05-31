@@ -30,6 +30,18 @@ spring:
           starttls:
             enable: ${MAIL_SMTP_STARTTLS_ENABLE:false}
 
+app:
+  backups:
+    local-path: ${BACKUP_LOCAL_PATH:/storage/backups}
+    pg-dump-path: ${PG_DUMP_PATH:pg_dump}
+    pg-restore-path: ${PG_RESTORE_PATH:pg_restore}
+    psql-path: ${PSQL_PATH:psql}
+    host: ${DB_HOST:127.0.0.1}
+    port: ${DB_PORT:55432}
+    database: ${DB_NAME:finance_db}
+    username: ${DB_USER:finance_user}
+    password: ${DB_PASSWORD:finance_password}
+
 logging:
   level:
     root: INFO

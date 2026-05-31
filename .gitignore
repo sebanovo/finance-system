@@ -1,2 +1,6 @@
 # Ignorar Variables de entorno
 .env
+
+scripts/
+
+finance-api-all.md

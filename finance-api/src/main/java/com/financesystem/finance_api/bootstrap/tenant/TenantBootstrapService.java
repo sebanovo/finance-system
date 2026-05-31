@@ -106,8 +106,15 @@ public class TenantBootstrapService {
             "fx.fees.detail",
             "fx.fees.create",
             "fx.fees.update",
-            "fx.fees.delete"
+            "fx.fees.delete",
+
+            "backups.create",
+            "backups.list",
+            "backups.detail",
+            "backups.download",
+            "backups.restore"
     );
+
     private static final List<String> DEFAULT_ADMIN_PERMISSION_CODES = List.of(
             "me.accounts.create",
             "me.accounts.list",
@@ -175,7 +182,13 @@ public class TenantBootstrapService {
             "fx.rates.read",
             "fx.rates.detail",
             "fx.fees.read",
-            "fx.fees.detail"
+            "fx.fees.detail",
+
+            "backups.create",
+            "backups.list",
+            "backups.detail",
+            "backups.download",
+            "backups.restore"
     );
     private static final List<String> DEFAULT_CLIENT_PERMISSION_CODES = List.of(
             "me.accounts.create",

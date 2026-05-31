@@ -30,7 +30,6 @@ services:
       - finance-net
 
   serv-finance-api:
-
     build:
       context: ./finance-api
       dockerfile: Dockerfile.dev
@@ -46,6 +45,7 @@ services:
     volumes:
       - ./finance-api:/app
       - maven_cache:/root/.m2
+      - ./backups:/storage/backups
     working_dir: /app
     networks:
       - finance-net
@@ -81,4 +81,3 @@ networks:
     # custom network name (avoid auto-generated compose name)
     name: finance-system_finance-net
     driver: bridge
-
