@@ -8,6 +8,7 @@ import com.financesystem.finance_api.modules.governance.notifications.domain.mod
 import com.financesystem.finance_api.modules.governance.notifications.domain.port.NotificationPublisherPort;
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.identity.audit.IdentityAuditPayloads;
 import com.financesystem.finance_api.modules.identity.auth.application.dto.ResetPasswordRequest;
 import com.financesystem.finance_api.modules.identity.auth.domain.exception.InvalidPasswordResetTokenException;
 import com.financesystem.finance_api.modules.identity.auth.domain.model.PasswordResetToken;
@@ -113,7 +114,19 @@ public class ResetPasswordUseCase {
                 AuditEventTypes.PASSWORD_RESET_COMPLETED,
                 "USER",
                 tenantUser.id().toString(),
-                Map.of("email", tenantUser.email())
+                IdentityAuditPayloads.of(
+                        "operation", "RESET_PASSWORD",
+                        "email", tenantUser.email()
+                ),
+                IdentityAuditPayloads.of(
+                        "resetTokenState", "ISSUED",
+                        "used", false
+                ),
+                IdentityAuditPayloads.of(
+                        "resetTokenState", "USED",
+                        "used", true,
+                        "completedAt", now.toString()
+                )
         );
     }
 

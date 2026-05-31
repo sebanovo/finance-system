@@ -5,6 +5,7 @@ import com.financesystem.finance_api.common.security.jwt.JwtClaimNames;
 import com.financesystem.finance_api.common.security.jwt.JwtTokenService;
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.platform.audit.PlatformAuditPayloads;
 import com.financesystem.finance_api.modules.identity.auth.domain.exception.AuthenticationFailedException;
 import com.financesystem.finance_api.modules.platform.auth.application.dto.PlatformAuthTokenResponse;
 import com.financesystem.finance_api.modules.platform.auth.application.dto.PlatformRefreshTokenRequest;
@@ -60,6 +61,8 @@ public class RefreshPlatformTokenUseCase {
 
         String accessToken = jwtTokenService.generateAccessToken(
                 superadmin.email(),
+                superadmin.email(),
+                fullName(superadmin.firstName(), superadmin.lastName()),
                 PlatformAuthConstants.PLATFORM_TENANT_SLUG,
                 PlatformAuthConstants.PLATFORM_ROLES,
                 List.of()
@@ -74,7 +77,10 @@ public class RefreshPlatformTokenUseCase {
                 AuditEventTypes.TOKEN_REFRESHED,
                 "PLATFORM_SUPERADMIN",
                 superadmin.id().toString(),
-                Map.of("email", superadmin.email())
+                PlatformAuditPayloads.details(
+                        "email", superadmin.email(),
+                        "tenantSlug", PlatformAuthConstants.PLATFORM_TENANT_SLUG
+                )
         );
 
         return new PlatformAuthTokenResponse(
@@ -83,5 +89,20 @@ public class RefreshPlatformTokenUseCase {
                 refreshToken,
                 jwtProperties.getAccessExpirationMs()
         );
+    }
+
+    private String fullName(String firstName, String lastName) {
+        StringBuilder builder = new StringBuilder();
+        if (firstName != null && !firstName.isBlank()) {
+            builder.append(firstName.trim());
+        }
+        if (lastName != null && !lastName.isBlank()) {
+            if (builder.length() > 0) {
+                builder.append(' ');
+            }
+            builder.append(lastName.trim());
+        }
+        String value = builder.toString().trim();
+        return value.isEmpty() ? null : value;
     }
 }

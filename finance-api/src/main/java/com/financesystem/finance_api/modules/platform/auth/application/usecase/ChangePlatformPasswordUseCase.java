@@ -4,6 +4,7 @@ import com.financesystem.finance_api.common.exception.BusinessException;
 import com.financesystem.finance_api.common.security.context.SecurityContextFacade;
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.platform.audit.PlatformAuditPayloads;
 import com.financesystem.finance_api.modules.platform.auth.application.dto.PlatformChangePasswordRequest;
 import com.financesystem.finance_api.modules.platform.superadmin.domain.model.PlatformSuperadmin;
 import com.financesystem.finance_api.modules.platform.superadmin.domain.repository.PlatformSuperadminRepository;
@@ -65,7 +66,10 @@ public class ChangePlatformPasswordUseCase {
                 AuditEventTypes.PASSWORD_CHANGED,
                 "PLATFORM_SUPERADMIN",
                 superadmin.id().toString(),
-                Map.of("email", superadmin.email())
+                PlatformAuditPayloads.details(
+                        "email", superadmin.email(),
+                        "changedBy", currentSubject
+                )
         );
     }
 }

@@ -5,9 +5,14 @@ public final class AuditEventTypes {
     public static final String TENANT_CREATED = "TENANT_CREATED";
     public static final String TENANT_ACTIVATED = "TENANT_ACTIVATED";
     public static final String TENANT_DEACTIVATED = "TENANT_DEACTIVATED";
+    public static final String TENANT_SETTINGS_UPDATED = "TENANT_SETTINGS_UPDATED";
 
     public static final String SUBSCRIPTION_ASSIGNED = "SUBSCRIPTION_ASSIGNED";
+    public static final String SUBSCRIPTION_EXPIRED = "SUBSCRIPTION_EXPIRED";
     public static final String PUBLIC_SIGNUP_COMPLETED = "PUBLIC_SIGNUP_COMPLETED";
+    public static final String PLATFORM_PLAN_CREATED = "PLATFORM_PLAN_CREATED";
+    public static final String PLATFORM_PLAN_ACTIVATED = "PLATFORM_PLAN_ACTIVATED";
+    public static final String PLATFORM_PLAN_DEACTIVATED = "PLATFORM_PLAN_DEACTIVATED";
 
     public static final String USER_CREATED = "USER_CREATED";
     public static final String USER_UPDATED = "USER_UPDATED";
@@ -36,10 +41,19 @@ public final class AuditEventTypes {
     public static final String ACCOUNT_CLOSED = "ACCOUNT_CLOSED";
     public static final String ACCOUNT_ALIAS_UPDATED = "ACCOUNT_ALIAS_UPDATED";
     public static final String ACCOUNT_APPROVAL_REQUESTED = "ACCOUNT_APPROVAL_REQUESTED";
+    public static final String ACCOUNTING_PERIOD_CREATED = "ACCOUNTING_PERIOD_CREATED";
+    public static final String ACCOUNTING_PERIOD_CLOSED = "ACCOUNTING_PERIOD_CLOSED";
+    public static final String LIMIT_RULE_CREATED = "LIMIT_RULE_CREATED";
+    public static final String LIMIT_RULE_UPDATED = "LIMIT_RULE_UPDATED";
+    public static final String LIMIT_RULE_DEACTIVATED = "LIMIT_RULE_DEACTIVATED";
 
     public static final String TRANSACTION_CREATED = "TRANSACTION_CREATED";
     public static final String TRANSACTION_COMPLETED = "TRANSACTION_COMPLETED";
     public static final String TRANSACTION_FAILED = "TRANSACTION_FAILED";
+
+    public static final String REPORT_EXECUTED = "REPORT_EXECUTED";
+    public static final String REPORT_EXPORTED = "REPORT_EXPORTED";
+    public static final String REPORT_RERUN = "REPORT_RERUN";
 
     private AuditEventTypes() {
     }

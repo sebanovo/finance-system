@@ -2,6 +2,7 @@ package com.financesystem.finance_api.modules.identity.access.application.usecas
 
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.identity.audit.IdentityAuditPayloads;
 import com.financesystem.finance_api.modules.identity.access.application.dto.TenantRoleResponse;
 import com.financesystem.finance_api.modules.identity.access.application.mapper.TenantRoleMapper;
 import com.financesystem.finance_api.modules.identity.access.domain.exception.TenantRoleNotFoundException;
@@ -39,6 +40,11 @@ public class DeactivateTenantRoleUseCase {
         TenantRole existingRole = tenantRoleRepository.findById(id)
                 .orElseThrow(() -> new TenantRoleNotFoundException("Tenant role not found with id: " + id));
 
+        java.util.List<String> existingPermissionCodes = tenantRolePermissionRepository
+                .findPermissionCodesByRoleId(existingRole.id())
+                .stream()
+                .toList();
+
         TenantRole updatedRole = new TenantRole(
                 existingRole.id(),
                 existingRole.name(),
@@ -53,7 +59,23 @@ public class DeactivateTenantRoleUseCase {
                 AuditEventTypes.ROLE_DEACTIVATED,
                 "ROLE",
                 savedRole.id().toString(),
-                Map.of("name", savedRole.name())
+                IdentityAuditPayloads.of(
+                        "operation", "DEACTIVATE_ROLE",
+                        "name", savedRole.name(),
+                        "active", false
+                ),
+                IdentityAuditPayloads.roleState(
+                        existingRole.name(),
+                        existingRole.description(),
+                        existingRole.active(),
+                        existingPermissionCodes.size()
+                ),
+                IdentityAuditPayloads.roleState(
+                        savedRole.name(),
+                        savedRole.description(),
+                        savedRole.active(),
+                        existingPermissionCodes.size()
+                )
         );
 
         return tenantRoleMapper.toResponse(

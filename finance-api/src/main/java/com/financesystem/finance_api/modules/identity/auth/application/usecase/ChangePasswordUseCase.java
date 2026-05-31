@@ -4,6 +4,7 @@ import com.financesystem.finance_api.common.exception.BusinessException;
 import com.financesystem.finance_api.common.security.context.SecurityContextFacade;
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.identity.audit.IdentityAuditPayloads;
 import com.financesystem.finance_api.modules.governance.notifications.application.dto.NotificationPublishRequest;
 import com.financesystem.finance_api.modules.governance.notifications.domain.model.NotificationCategory;
 import com.financesystem.finance_api.modules.governance.notifications.domain.model.NotificationPriority;
@@ -81,10 +82,11 @@ public class ChangePasswordUseCase {
 
         tenantUserRepository.save(updatedUser);
 
+        Instant changedAt = Instant.now();
         ObjectNode data = objectMapper.createObjectNode()
                 .put("email", tenantUser.email())
                 .put("status", "CHANGED")
-                .put("changedAt", Instant.now().toString());
+                .put("changedAt", changedAt.toString());
 
         publishNotificationSafely(new NotificationPublishRequest(
                 tenantUser.id(),
@@ -103,7 +105,19 @@ public class ChangePasswordUseCase {
                 AuditEventTypes.PASSWORD_CHANGED,
                 "USER",
                 tenantUser.id().toString(),
-                Map.of("email", tenantUser.email())
+                IdentityAuditPayloads.of(
+                        "operation", "CHANGE_PASSWORD",
+                        "email", tenantUser.email(),
+                        "tenantSlug", securityContextFacade.getCurrentTenantSlug(),
+                        "subject", currentSubject
+                ),
+                IdentityAuditPayloads.of(
+                        "passwordState", "CURRENT"
+                ),
+                IdentityAuditPayloads.of(
+                        "passwordState", "UPDATED",
+                        "changedAt", changedAt.toString()
+                )
         );
     }
 

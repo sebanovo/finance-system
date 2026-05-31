@@ -40,6 +40,7 @@ import com.financesystem.finance_api.modules.tenant.transactions.application.dto
 import com.financesystem.finance_api.modules.tenant.transactions.application.dto.CreateWithdrawalTransactionRequest;
 import com.financesystem.finance_api.modules.tenant.transactions.application.dto.TransactionResponse;
 import com.financesystem.finance_api.modules.tenant.transactions.application.mapper.TransactionMapper;
+import com.financesystem.finance_api.modules.tenant.transactions.audit.TenantTransactionAuditPayloads;
 import com.financesystem.finance_api.modules.tenant.transactions.domain.model.*;
 import com.financesystem.finance_api.modules.tenant.transactions.domain.repository.TransactionMovementRepository;
 import com.financesystem.finance_api.modules.tenant.transactions.domain.repository.TransactionRepository;
@@ -370,13 +371,16 @@ public class TransactionProcessorService {
                 AuditEventTypes.TRANSACTION_COMPLETED,
                 "TRANSACTION",
                 persistedCompleted.id().toString(),
-                Map.of(
+                TenantTransactionAuditPayloads.details(
+                        "operation", "TRANSFER",
                         "type", persistedCompleted.type().name(),
                         "status", persistedCompleted.status().name(),
                         "sourceAccount", sourceAccount.accountNumber(),
                         "targetAccount", targetAccount.accountNumber(),
-                        "movements", String.valueOf(movements.size())
-                )
+                        "movementCount", movements.size()
+                ),
+                TenantTransactionAuditPayloads.transactionState(savedTransaction),
+                TenantTransactionAuditPayloads.transactionState(persistedCompleted)
         );
 
         publishTransactionNotifications(persistedCompleted, movements);
@@ -560,12 +564,15 @@ public class TransactionProcessorService {
                 AuditEventTypes.TRANSACTION_COMPLETED,
                 "TRANSACTION",
                 persistedCompleted.id().toString(),
-                Map.of(
+                TenantTransactionAuditPayloads.details(
+                        "operation", "DEPOSIT",
                         "type", persistedCompleted.type().name(),
                         "status", persistedCompleted.status().name(),
                         "account", targetAccount.accountNumber(),
                         "movement", "CREDIT"
-                )
+                ),
+                TenantTransactionAuditPayloads.transactionState(savedTransaction),
+                TenantTransactionAuditPayloads.transactionState(persistedCompleted)
         );
 
         publishTransactionNotifications(persistedCompleted, movements);
@@ -755,12 +762,15 @@ public class TransactionProcessorService {
                 AuditEventTypes.TRANSACTION_COMPLETED,
                 "TRANSACTION",
                 persistedCompleted.id().toString(),
-                Map.of(
+                TenantTransactionAuditPayloads.details(
+                        "operation", "WITHDRAWAL",
                         "type", persistedCompleted.type().name(),
                         "status", persistedCompleted.status().name(),
                         "account", sourceAccount.accountNumber(),
                         "movement", "DEBIT"
-                )
+                ),
+                TenantTransactionAuditPayloads.transactionState(savedTransaction),
+                TenantTransactionAuditPayloads.transactionState(persistedCompleted)
         );
 
         publishTransactionNotifications(persistedCompleted, movements);
@@ -929,12 +939,15 @@ public class TransactionProcessorService {
                 AuditEventTypes.TRANSACTION_COMPLETED,
                 "TRANSACTION",
                 persistedCompleted.id().toString(),
-                Map.of(
+                TenantTransactionAuditPayloads.details(
+                        "operation", "PAYMENT",
                         "type", persistedCompleted.type().name(),
                         "status", persistedCompleted.status().name(),
                         "account", sourceAccount.accountNumber(),
                         "movement", "DEBIT"
-                )
+                ),
+                TenantTransactionAuditPayloads.transactionState(savedTransaction),
+                TenantTransactionAuditPayloads.transactionState(persistedCompleted)
         );
 
         publishTransactionNotifications(persistedCompleted, movements);
@@ -1085,12 +1098,15 @@ public class TransactionProcessorService {
                 AuditEventTypes.TRANSACTION_COMPLETED,
                 "TRANSACTION",
                 persistedCompleted.id().toString(),
-                Map.of(
+                TenantTransactionAuditPayloads.details(
+                        "operation", "HOLD",
                         "type", persistedCompleted.type().name(),
                         "status", persistedCompleted.status().name(),
                         "account", account.accountNumber(),
                         "movement", "HOLD"
-                )
+                ),
+                TenantTransactionAuditPayloads.transactionState(savedTransaction),
+                TenantTransactionAuditPayloads.transactionState(persistedCompleted)
         );
 
         publishTransactionNotifications(persistedCompleted, movements);
@@ -1241,12 +1257,15 @@ public class TransactionProcessorService {
                 AuditEventTypes.TRANSACTION_COMPLETED,
                 "TRANSACTION",
                 persistedCompleted.id().toString(),
-                Map.of(
+                TenantTransactionAuditPayloads.details(
+                        "operation", "RELEASE",
                         "type", persistedCompleted.type().name(),
                         "status", persistedCompleted.status().name(),
                         "account", account.accountNumber(),
                         "movement", "RELEASE"
-                )
+                ),
+                TenantTransactionAuditPayloads.transactionState(savedTransaction),
+                TenantTransactionAuditPayloads.transactionState(persistedCompleted)
         );
 
         publishTransactionNotifications(persistedCompleted, movements);
@@ -1533,12 +1552,15 @@ public class TransactionProcessorService {
                 AuditEventTypes.TRANSACTION_COMPLETED,
                 "TRANSACTION",
                 persistedCompleted.id().toString(),
-                Map.of(
+                TenantTransactionAuditPayloads.details(
+                        "operation", "ADJUSTMENT",
                         "type", persistedCompleted.type().name(),
                         "status", persistedCompleted.status().name(),
                         "account", account.accountNumber(),
                         "movement", movementType.name()
-                )
+                ),
+                TenantTransactionAuditPayloads.transactionState(savedTransaction),
+                TenantTransactionAuditPayloads.transactionState(persistedCompleted)
         );
 
         publishTransactionNotifications(persistedCompleted, movements);
@@ -1627,12 +1649,15 @@ public class TransactionProcessorService {
                 AuditEventTypes.TRANSACTION_CREATED,
                 "QR_TRANSACTION_INTENT",
                 savedIntent.id().toString(),
-                Map.of(
+                TenantTransactionAuditPayloads.details(
+                        "operation", "CREATE_QR_INTENT",
                         "type", TransactionType.PAYMENT.name(),
                         "status", savedIntent.status().name(),
                         "channel", savedIntent.channel().name(),
                         "account", targetAccount.accountNumber()
-                )
+                ),
+                null,
+                TenantTransactionAuditPayloads.intentState(savedIntent)
         );
 
         return toQrTransactionIntentResponse(savedIntent);
@@ -1725,11 +1750,14 @@ public class TransactionProcessorService {
                 AuditEventTypes.TRANSACTION_COMPLETED,
                 "TRANSACTION",
                 persistedCompleted.id().toString(),
-                Map.of(
+                TenantTransactionAuditPayloads.details(
+                        "operation", "REVERSAL",
                         "type", persistedCompleted.type().name(),
                         "status", persistedCompleted.status().name(),
                         "originalTransactionId", original.id().toString()
-                )
+                ),
+                TenantTransactionAuditPayloads.transactionState(savedReversal),
+                TenantTransactionAuditPayloads.transactionState(persistedCompleted)
         );
 
         publishTransactionNotifications(persistedCompleted, reversalMovements);
@@ -1840,12 +1868,15 @@ public class TransactionProcessorService {
                 AuditEventTypes.TRANSACTION_COMPLETED,
                 "TRANSACTION",
                 persistedCompleted.id().toString(),
-                Map.of(
+                TenantTransactionAuditPayloads.details(
+                        "operation", "REFUND",
                         "type", persistedCompleted.type().name(),
                         "status", persistedCompleted.status().name(),
                         "originalTransactionId", original.id().toString(),
                         "refundAmount", requestedAmount.toPlainString()
-                )
+                ),
+                TenantTransactionAuditPayloads.transactionState(savedRefund),
+                TenantTransactionAuditPayloads.transactionState(persistedCompleted)
         );
 
         publishTransactionNotifications(persistedCompleted, movements);
@@ -2020,7 +2051,7 @@ public class TransactionProcessorService {
         Transaction completed = markCompleted(savedConfirmed);
         Transaction persistedCompleted = transactionRepository.save(completed);
 
-        qrTransactionIntentRepository.save(new QrTransactionIntent(
+        QrTransactionIntent updatedIntent = new QrTransactionIntent(
                 intent.id(),
                 QrTransactionIntentStatus.CONFIRMED,
                 intent.channel(),
@@ -2035,7 +2066,8 @@ public class TransactionProcessorService {
                 Instant.now(),
                 intent.createdAt(),
                 Instant.now()
-        ));
+        );
+        qrTransactionIntentRepository.save(updatedIntent);
 
         limitPolicyService.registerUsage(limitRequest, limitEvaluation.checks().stream()
                 .filter(check -> check.matched() && check.allowed())
@@ -2046,16 +2078,36 @@ public class TransactionProcessorService {
 
         auditTrailService.recordTenantEvent(
                 AuditEventTypes.TRANSACTION_COMPLETED,
-                "TRANSACTION",
-                persistedCompleted.id().toString(),
-                Map.of(
+                "QR_TRANSACTION_INTENT",
+                intent.id().toString(),
+                TenantTransactionAuditPayloads.details(
+                        "operation", "CONFIRM_QR_INTENT",
                         "type", persistedCompleted.type().name(),
                         "status", persistedCompleted.status().name(),
                         "channel", persistedCompleted.channel().name(),
                         "intentId", intent.id().toString(),
                         "sourceAccount", sourceAccount.accountNumber(),
                         "targetAccount", targetAccount.accountNumber()
-                )
+                ),
+                TenantTransactionAuditPayloads.intentState(intent),
+                TenantTransactionAuditPayloads.intentState(updatedIntent)
+        );
+
+        auditTrailService.recordTenantEvent(
+                AuditEventTypes.TRANSACTION_COMPLETED,
+                "TRANSACTION",
+                persistedCompleted.id().toString(),
+                TenantTransactionAuditPayloads.details(
+                        "operation", "CONFIRM_QR_TRANSACTION",
+                        "type", persistedCompleted.type().name(),
+                        "status", persistedCompleted.status().name(),
+                        "channel", persistedCompleted.channel().name(),
+                        "intentId", intent.id().toString(),
+                        "sourceAccount", sourceAccount.accountNumber(),
+                        "targetAccount", targetAccount.accountNumber()
+                ),
+                TenantTransactionAuditPayloads.transactionState(savedConfirmed),
+                TenantTransactionAuditPayloads.transactionState(persistedCompleted)
         );
 
         publishTransactionNotifications(persistedCompleted, movements);
@@ -2803,6 +2855,52 @@ public class TransactionProcessorService {
         }
 
         return "/api/me/transactions/" + transaction.id();
+    }
+
+    private Map<String, Object> transactionAuditDetails(String operation, Transaction transaction, Object... extras) {
+        Object[] base = new Object[] {
+                "operation", operation,
+                "type", transaction.type().name(),
+                "status", transaction.status().name(),
+                "channel", transaction.channel().name(),
+                "amount", transaction.amount(),
+                "currency", transaction.currency(),
+                "sourceAccountId", transaction.sourceAccountId(),
+                "targetAccountId", transaction.targetAccountId(),
+                "externalReference", transaction.externalReference(),
+                "idempotencyKey", transaction.idempotencyKey(),
+                "description", transaction.description(),
+                "failureReason", transaction.failureReason(),
+                "requestedByUserId", transaction.requestedByUserId(),
+                "approvedByUserId", transaction.approvedByUserId(),
+                "processedAt", transaction.processedAt()
+        };
+
+        Object[] payload = new Object[base.length + extras.length];
+        System.arraycopy(base, 0, payload, 0, base.length);
+        System.arraycopy(extras, 0, payload, base.length, extras.length);
+        return TenantTransactionAuditPayloads.details(payload);
+    }
+
+    private Map<String, Object> intentAuditDetails(String operation, QrTransactionIntent intent, Object... extras) {
+        Object[] base = new Object[] {
+                "operation", operation,
+                "status", intent.status(),
+                "channel", intent.channel(),
+                "amount", intent.amount(),
+                "currency", intent.currency(),
+                "targetAccountId", intent.targetAccountId(),
+                "externalReference", intent.externalReference(),
+                "idempotencyKey", intent.idempotencyKey(),
+                "confirmedTransactionId", intent.confirmedTransactionId(),
+                "requestedByUserId", intent.requestedByUserId(),
+                "confirmedAt", intent.confirmedAt()
+        };
+
+        Object[] payload = new Object[base.length + extras.length];
+        System.arraycopy(base, 0, payload, 0, base.length);
+        System.arraycopy(extras, 0, payload, base.length, extras.length);
+        return TenantTransactionAuditPayloads.details(payload);
     }
 
     private UUID resolveRequestedByUserId() {

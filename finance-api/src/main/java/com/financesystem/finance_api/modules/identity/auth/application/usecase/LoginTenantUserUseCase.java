@@ -6,6 +6,7 @@ import com.financesystem.finance_api.common.tenancy.context.TenantContext;
 import com.financesystem.finance_api.common.tenancy.context.TenantContextHolder;
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.identity.audit.IdentityAuditPayloads;
 import com.financesystem.finance_api.modules.identity.access.domain.repository.TenantUserRoleRepository;
 import com.financesystem.finance_api.modules.identity.auth.application.dto.AuthTokenResponse;
 import com.financesystem.finance_api.modules.identity.auth.application.dto.LoginRequest;
@@ -67,6 +68,8 @@ public class LoginTenantUserUseCase {
 
         String accessToken = jwtTokenService.generateAccessToken(
                 subject,
+                tenantUser.email(),
+                fullName(tenantUser.firstName(), tenantUser.lastName()),
                 tenantContext.tenantSlug(),
                 roles,
                 permissions
@@ -81,9 +84,22 @@ public class LoginTenantUserUseCase {
                 AuditEventTypes.LOGIN,
                 "USER",
                 tenantUser.id().toString(),
-                Map.of(
+                IdentityAuditPayloads.of(
+                        "operation", "LOGIN",
                         "email", tenantUser.email(),
-                        "roles", roles
+                        "tenantSlug", tenantContext.tenantSlug(),
+                        "roles", roles,
+                        "permissionCount", permissions.size()
+                ),
+                IdentityAuditPayloads.of(
+                        "authenticated", false,
+                        "tokenIssued", false
+                ),
+                IdentityAuditPayloads.of(
+                        "authenticated", true,
+                        "tokenIssued", true,
+                        "roleCount", roles.size(),
+                        "permissionCount", permissions.size()
                 )
         );
 
@@ -102,5 +118,20 @@ public class LoginTenantUserUseCase {
 
         return "ADMIN".equalsIgnoreCase(roleName.trim())
                 || "OWNER_ADMIN".equalsIgnoreCase(roleName.trim());
+    }
+
+    private String fullName(String firstName, String lastName) {
+        StringBuilder builder = new StringBuilder();
+        if (firstName != null && !firstName.isBlank()) {
+            builder.append(firstName.trim());
+        }
+        if (lastName != null && !lastName.isBlank()) {
+            if (builder.length() > 0) {
+                builder.append(' ');
+            }
+            builder.append(lastName.trim());
+        }
+        String value = builder.toString().trim();
+        return value.isEmpty() ? null : value;
     }
 }

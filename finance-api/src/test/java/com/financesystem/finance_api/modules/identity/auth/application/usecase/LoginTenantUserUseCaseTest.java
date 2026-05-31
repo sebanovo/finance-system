@@ -84,7 +84,14 @@ class LoginTenantUserUseCaseTest {
         assertEquals(tenantUser.id().toString(), principal.subject());
         assertEquals("financruz", principal.tenantSlug());
         assertTrue(principal.roles().contains("ADMIN"));
-        verify(auditTrailService).recordTenantEvent(anyString(), eq("USER"), eq(tenantUser.id().toString()), any());
+        verify(auditTrailService).recordTenantEvent(
+                anyString(),
+                eq("USER"),
+                eq(tenantUser.id().toString()),
+                any(),
+                any(),
+                any()
+        );
     }
 
     @Test

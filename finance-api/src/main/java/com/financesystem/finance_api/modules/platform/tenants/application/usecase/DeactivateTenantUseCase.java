@@ -2,6 +2,7 @@ package com.financesystem.finance_api.modules.platform.tenants.application.useca
 
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.platform.audit.PlatformAuditPayloads;
 import com.financesystem.finance_api.modules.platform.tenants.application.dto.PlatformTenantResponse;
 import com.financesystem.finance_api.modules.platform.tenants.application.mapper.PlatformTenantMapper;
 import com.financesystem.finance_api.modules.platform.tenants.domain.exception.PlatformTenantNotFoundException;
@@ -35,6 +36,7 @@ public class DeactivateTenantUseCase {
     public PlatformTenantResponse execute(UUID id) {
         PlatformTenant tenant = platformTenantRepository.findById(id)
                 .orElseThrow(() -> new PlatformTenantNotFoundException("Tenant not found with id: " + id));
+        PlatformTenant beforeState = tenant;
 
         PlatformTenant updated = new PlatformTenant(
                 tenant.id(),
@@ -54,7 +56,12 @@ public class DeactivateTenantUseCase {
                 AuditEventTypes.TENANT_DEACTIVATED,
                 "TENANT",
                 saved.id().toString(),
-                Map.of("slug", saved.slug())
+                PlatformAuditPayloads.details(
+                        "slug", saved.slug(),
+                        "status", saved.status().name()
+                ),
+                PlatformAuditPayloads.tenantState(beforeState),
+                PlatformAuditPayloads.tenantState(saved)
         );
 
         return platformTenantMapper.toResponse(saved);

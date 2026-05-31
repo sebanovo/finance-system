@@ -4,6 +4,7 @@ import com.financesystem.finance_api.modules.platform.superadmin.domain.model.Pl
 import com.financesystem.finance_api.modules.platform.superadmin.domain.repository.PlatformSuperadminRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -25,6 +26,14 @@ public class PlatformSuperadminRepositoryAdapter implements PlatformSuperadminRe
     @Override
     public Optional<PlatformSuperadmin> findByEmail(String email) {
         return jpaRepository.findByEmail(email).map(this::toDomain);
+    }
+
+    @Override
+    public List<PlatformSuperadmin> findAll() {
+        return jpaRepository.findAll()
+                .stream()
+                .map(this::toDomain)
+                .toList();
     }
 
     @Override

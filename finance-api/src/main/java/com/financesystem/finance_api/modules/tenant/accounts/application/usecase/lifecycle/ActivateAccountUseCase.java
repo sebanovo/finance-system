@@ -9,6 +9,7 @@ import com.financesystem.finance_api.modules.governance.notifications.domain.mod
 import com.financesystem.finance_api.modules.governance.notifications.domain.port.NotificationPublisherPort;
 import com.financesystem.finance_api.modules.tenant.accounts.application.dto.AccountOwnerResponse;
 import com.financesystem.finance_api.modules.tenant.accounts.application.mapper.AccountMapper;
+import com.financesystem.finance_api.modules.tenant.audit.TenantAuditPayloads;
 import com.financesystem.finance_api.modules.tenant.accounts.domain.exception.AccountNotFoundException;
 import com.financesystem.finance_api.modules.tenant.accounts.domain.exception.InvalidAccountStatusException;
 import com.financesystem.finance_api.modules.tenant.accounts.domain.model.Account;
@@ -22,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -89,9 +89,13 @@ public class ActivateAccountUseCase {
                 AuditEventTypes.ACCOUNT_ACTIVATED,
                 "ACCOUNT",
                 savedAccount.id().toString(),
-                Map.of(
-                        "accountNumber", savedAccount.accountNumber()
-                )
+                TenantAuditPayloads.details(
+                        "accountNumber", savedAccount.accountNumber(),
+                        "fromStatus", existingAccount.status().name(),
+                        "toStatus", savedAccount.status().name()
+                ),
+                TenantAuditPayloads.accountState(existingAccount),
+                TenantAuditPayloads.accountState(savedAccount)
         );
 
         ObjectNode data = objectMapper.createObjectNode()

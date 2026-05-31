@@ -3,6 +3,7 @@ package com.financesystem.finance_api.modules.platform.subscriptions.application
 import com.financesystem.finance_api.common.exception.BusinessException;
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.platform.audit.PlatformAuditPayloads;
 import com.financesystem.finance_api.modules.platform.plans.domain.exception.PlatformPlanNotFoundException;
 import com.financesystem.finance_api.modules.platform.plans.domain.model.PlatformPlan;
 import com.financesystem.finance_api.modules.platform.plans.domain.repository.PlatformPlanRepository;
@@ -64,6 +65,7 @@ public class PlatformSubscriptionProvisioningService {
         PlatformSubscriptionStatus status;
         boolean isTrial;
         Instant expiresAt = null;
+        PlatformSubscription previousCurrentSubscription = platformSubscriptionRepository.findCurrentByTenantId(tenant.id()).orElse(null);
 
         if ("DEMO".equalsIgnoreCase(plan.planType())) {
             int effectiveTrialDays = overrideTrialDays != null
@@ -118,14 +120,18 @@ public class PlatformSubscriptionProvisioningService {
                     AuditEventTypes.SUBSCRIPTION_ASSIGNED,
                     "TENANT_SUBSCRIPTION",
                     created.id().toString(),
-                    Map.of(
+                    PlatformAuditPayloads.details(
                             "tenantId", tenant.id().toString(),
                             "tenantSlug", tenant.slug(),
                             "planCode", plan.code(),
                             "planType", plan.planType(),
                             "status", created.status().name(),
-                            "expiresAt", String.valueOf(created.expiresAt())
-                    )
+                            "trial", created.trial(),
+                            "currentSubscription", created.currentSubscription(),
+                            "expiresAt", created.expiresAt()
+                    ),
+                    previousCurrentSubscription,
+                    created
             );
         }
 

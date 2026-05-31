@@ -1,5 +1,8 @@
 package com.financesystem.finance_api.modules.platform.tenantsettings.application.usecase;
 
+import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
+import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.platform.audit.PlatformAuditPayloads;
 import com.financesystem.finance_api.modules.platform.tenantsettings.application.dto.TenantSettingsResponse;
 import com.financesystem.finance_api.modules.platform.tenantsettings.application.dto.UpdateTenantSettingsRequest;
 import com.financesystem.finance_api.modules.platform.tenantsettings.application.mapper.TenantSettingsMapper;
@@ -9,22 +12,29 @@ import com.financesystem.finance_api.modules.platform.tenantsettings.domain.repo
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class UpdateTenantSettingsUseCase {
 
     private final TenantSettingRepository tenantSettingRepository;
     private final TenantSettingsMapper tenantSettingsMapper;
+    private final AuditTrailService auditTrailService;
 
     public UpdateTenantSettingsUseCase(
             TenantSettingRepository tenantSettingRepository,
-            TenantSettingsMapper tenantSettingsMapper
+            TenantSettingsMapper tenantSettingsMapper,
+            AuditTrailService auditTrailService
     ) {
         this.tenantSettingRepository = tenantSettingRepository;
         this.tenantSettingsMapper = tenantSettingsMapper;
+        this.auditTrailService = auditTrailService;
     }
 
     @Transactional
     public TenantSettingsResponse execute(UpdateTenantSettingsRequest request) {
+        List<TenantSetting> beforeState = tenantSettingRepository.findAll();
+
         saveOrUpdate(TenantSettingKeys.COMPANY_NAME, normalizeRequired(request.companyName()));
         saveOrUpdate(TenantSettingKeys.COMPANY_LEGAL_NAME, normalizeNullable(request.legalName()));
         saveOrUpdate(TenantSettingKeys.COMPANY_TIMEZONE, normalizeRequired(request.timezone()));
@@ -32,7 +42,27 @@ public class UpdateTenantSettingsUseCase {
         saveOrUpdate(TenantSettingKeys.COMPANY_CONTACT_EMAIL, normalizeNullable(request.contactEmail()));
         saveOrUpdate(TenantSettingKeys.COMPANY_CONTACT_PHONE, normalizeNullable(request.contactPhone()));
 
-        return tenantSettingsMapper.toResponse(tenantSettingRepository.findAll());
+        List<TenantSetting> afterState = tenantSettingRepository.findAll();
+
+        auditTrailService.recordPlatformEvent(
+                AuditEventTypes.TENANT_SETTINGS_UPDATED,
+                "TENANT_SETTINGS",
+                "GLOBAL",
+                PlatformAuditPayloads.details(
+                        "updatedKeys", List.of(
+                                TenantSettingKeys.COMPANY_NAME,
+                                TenantSettingKeys.COMPANY_LEGAL_NAME,
+                                TenantSettingKeys.COMPANY_TIMEZONE,
+                                TenantSettingKeys.COMPANY_CURRENCY,
+                                TenantSettingKeys.COMPANY_CONTACT_EMAIL,
+                                TenantSettingKeys.COMPANY_CONTACT_PHONE
+                        )
+                ),
+                PlatformAuditPayloads.settingsState(beforeState),
+                PlatformAuditPayloads.settingsState(afterState)
+        );
+
+        return tenantSettingsMapper.toResponse(afterState);
     }
 
     private void saveOrUpdate(String key, String value) {

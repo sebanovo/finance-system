@@ -76,6 +76,13 @@ class ForgotPasswordUseCaseTest {
         verify(passwordResetTokenRepository).save(any());
         verify(sendPasswordResetNotificationUseCase).execute(any());
         verify(notificationPublisherPort).publish(any(NotificationPublishRequest.class));
-        verify(auditTrailService).recordTenantEvent(anyString(), eq("USER"), eq(tenantUser.id().toString()), any());
+        verify(auditTrailService).recordTenantEvent(
+                anyString(),
+                eq("USER"),
+                eq(tenantUser.id().toString()),
+                any(),
+                any(),
+                any()
+        );
     }
 }

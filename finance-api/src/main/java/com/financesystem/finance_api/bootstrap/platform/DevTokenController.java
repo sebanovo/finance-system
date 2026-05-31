@@ -29,8 +29,11 @@ public class DevTokenController {
 
         String accessToken = jwtTokenService.generateAccessToken(
                 request.email(),
+                request.email(),
+                null,
                 request.tenantSlug(),
-                roles
+                roles,
+                List.of()
         );
 
         String refreshToken = jwtTokenService.generateRefreshToken(

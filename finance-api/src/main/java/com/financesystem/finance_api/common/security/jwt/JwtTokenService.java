@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -34,11 +35,17 @@ public class JwtTokenService {
     }
 
     public String generateAccessToken(String subject, String tenantSlug, List<String> roles) {
-        return generateAccessToken(subject, tenantSlug, roles, List.of());
+        return generateAccessToken(subject, null, null, tenantSlug, roles, List.of());
+    }
+
+    public String generateAccessToken(String subject, String email, String tenantSlug, List<String> roles) {
+        return generateAccessToken(subject, email, null, tenantSlug, roles, List.of());
     }
 
     public String generateAccessToken(
             String subject,
+            String email,
+            String displayName,
             String tenantSlug,
             List<String> roles,
             List<String> permissions
@@ -48,12 +55,7 @@ public class JwtTokenService {
 
         return Jwts.builder()
                 .setSubject(requireText(subject, "subject"))
-                .addClaims(Map.of(
-                        JwtClaimNames.TENANT, requireText(tenantSlug, "tenantSlug"),
-                        JwtClaimNames.ROLES, normalizeRoleNames(roles),
-                        JwtClaimNames.PERMISSIONS, normalizePermissionCodes(permissions),
-                        JwtClaimNames.TOKEN_TYPE, JwtClaimNames.ACCESS
-                ))
+                .addClaims(buildAccessClaims(email, displayName, tenantSlug, roles, permissions))
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(expiration))
                 .signWith(secretKey)
@@ -85,6 +87,8 @@ public class JwtTokenService {
         }
 
         String subject = claims.getSubject();
+        String email = claims.get(JwtClaimNames.EMAIL, String.class);
+        String displayName = claims.get(JwtClaimNames.DISPLAY_NAME, String.class);
         String tenantSlug = claims.get(JwtClaimNames.TENANT, String.class);
 
         List<String> roles = normalizeRoleNames(readStringListClaim(claims, JwtClaimNames.ROLES));
@@ -100,6 +104,8 @@ public class JwtTokenService {
 
         return new AuthenticatedUserPrincipal(
                 subject,
+                normalizeOptionalText(email),
+                displayName,
                 tenantSlug,
                 roles,
                 permissions
@@ -131,6 +137,37 @@ public class JwtTokenService {
         }
 
         return value.trim();
+    }
+
+    private String normalizeOptionalText(String value) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+
+        return value.trim();
+    }
+
+    private Map<String, Object> buildAccessClaims(
+            String email,
+            String displayName,
+            String tenantSlug,
+            List<String> roles,
+            List<String> permissions
+    ) {
+        Map<String, Object> claims = new LinkedHashMap<>();
+        String normalizedEmail = normalizeOptionalText(email);
+        if (normalizedEmail != null) {
+            claims.put(JwtClaimNames.EMAIL, normalizedEmail);
+        }
+        String normalizedDisplayName = normalizeOptionalText(displayName);
+        if (normalizedDisplayName != null) {
+            claims.put(JwtClaimNames.DISPLAY_NAME, normalizedDisplayName);
+        }
+        claims.put(JwtClaimNames.TENANT, requireText(tenantSlug, "tenantSlug"));
+        claims.put(JwtClaimNames.ROLES, normalizeRoleNames(roles));
+        claims.put(JwtClaimNames.PERMISSIONS, normalizePermissionCodes(permissions));
+        claims.put(JwtClaimNames.TOKEN_TYPE, JwtClaimNames.ACCESS);
+        return claims;
     }
 
     private List<String> readStringListClaim(Claims claims, String claimName) {

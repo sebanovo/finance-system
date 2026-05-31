@@ -2,6 +2,7 @@ package com.financesystem.finance_api.modules.identity.access.application.usecas
 
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.identity.audit.IdentityAuditPayloads;
 import com.financesystem.finance_api.modules.identity.access.application.dto.AssignUserRolesRequest;
 import com.financesystem.finance_api.modules.identity.access.application.dto.TenantRoleResponse;
 import com.financesystem.finance_api.modules.identity.access.application.dto.UserRolesResponse;
@@ -17,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -58,6 +58,7 @@ public class AssignUserRolesUseCase {
             throw new TenantRoleNotFoundException("One or more tenant roles do not exist");
         }
 
+        List<String> previousRoleNames = tenantUserRoleRepository.findRoleNamesByUserId(userId);
         tenantUserRoleRepository.replaceUserRoles(userId, roleIds);
 
         List<TenantRoleResponse> roleResponses = roles.stream()
@@ -71,7 +72,19 @@ public class AssignUserRolesUseCase {
                 AuditEventTypes.USER_ROLES_ASSIGNED,
                 "USER",
                 userId.toString(),
-                Map.of("roleIds", roleIds)
+                IdentityAuditPayloads.of(
+                        "operation", "ASSIGN_USER_ROLES",
+                        "roleIds", roleIds,
+                        "roleCount", roleIds.size()
+                ),
+                IdentityAuditPayloads.of(
+                        "roleNames", previousRoleNames,
+                        "roleCount", previousRoleNames.size()
+                ),
+                IdentityAuditPayloads.of(
+                        "roleNames", roleResponses.stream().map(TenantRoleResponse::name).toList(),
+                        "roleCount", roleResponses.size()
+                )
         );
 
         return new UserRolesResponse(userId, roleResponses);

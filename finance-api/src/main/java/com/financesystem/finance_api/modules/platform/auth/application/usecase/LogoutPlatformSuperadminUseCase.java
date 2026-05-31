@@ -3,9 +3,8 @@ package com.financesystem.finance_api.modules.platform.auth.application.usecase;
 import com.financesystem.finance_api.common.security.context.SecurityContextFacade;
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.platform.audit.PlatformAuditPayloads;
 import org.springframework.stereotype.Service;
-
-import java.util.Map;
 
 @Service
 public class LogoutPlatformSuperadminUseCase {
@@ -28,7 +27,10 @@ public class LogoutPlatformSuperadminUseCase {
                 AuditEventTypes.LOGOUT,
                 "PLATFORM_SUPERADMIN",
                 currentSubject,
-                Map.of("subject", currentSubject)
+                PlatformAuditPayloads.details(
+                        "subject", currentSubject,
+                        "email", securityContextFacade.getCurrentEmail()
+                )
         );
     }
 }

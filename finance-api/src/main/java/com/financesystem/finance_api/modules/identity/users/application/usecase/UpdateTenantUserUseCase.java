@@ -2,6 +2,7 @@ package com.financesystem.finance_api.modules.identity.users.application.usecase
 
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.identity.audit.IdentityAuditPayloads;
 import com.financesystem.finance_api.modules.identity.users.application.dto.TenantUserResponse;
 import com.financesystem.finance_api.modules.identity.users.application.dto.UpdateTenantUserRequest;
 import com.financesystem.finance_api.modules.identity.users.application.mapper.TenantUserMapper;
@@ -65,7 +66,27 @@ public class UpdateTenantUserUseCase {
                 AuditEventTypes.USER_UPDATED,
                 "USER",
                 savedUser.id().toString(),
-                Map.of("email", savedUser.email())
+                IdentityAuditPayloads.of(
+                        "operation", "UPDATE_USER",
+                        "previousEmail", existingUser.email(),
+                        "newEmail", savedUser.email(),
+                        "firstName", savedUser.firstName(),
+                        "lastName", savedUser.lastName()
+                ),
+                IdentityAuditPayloads.userState(
+                        existingUser.email(),
+                        existingUser.firstName(),
+                        existingUser.lastName(),
+                        existingUser.active(),
+                        existingUser.status().name()
+                ),
+                IdentityAuditPayloads.userState(
+                        savedUser.email(),
+                        savedUser.firstName(),
+                        savedUser.lastName(),
+                        savedUser.active(),
+                        savedUser.status().name()
+                )
         );
 
         return tenantUserMapper.toResponse(savedUser);

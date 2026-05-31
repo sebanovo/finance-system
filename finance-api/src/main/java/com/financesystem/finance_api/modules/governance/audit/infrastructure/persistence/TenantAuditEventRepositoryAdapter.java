@@ -31,14 +31,30 @@ public class TenantAuditEventRepositoryAdapter implements TenantAuditEventReposi
                 .toList();
     }
 
+    @Override
+    public long count() {
+        return jpaRepository.count();
+    }
+
     private TenantAuditEventEntity toEntity(TenantAuditEvent event) {
         TenantAuditEventEntity entity = new TenantAuditEventEntity();
         entity.setId(event.id());
         entity.setActorSubject(event.actorSubject());
+        entity.setActorId(event.actorId());
+        entity.setActorEmail(event.actorEmail());
+        entity.setTenantSlug(event.tenantSlug());
         entity.setEventType(event.eventType());
         entity.setResourceType(event.resourceType());
         entity.setResourceId(event.resourceId());
         entity.setEventDetails(event.eventDetails());
+        entity.setIpAddress(event.ipAddress());
+        entity.setUserAgent(event.userAgent());
+        entity.setRequestId(event.requestId());
+        entity.setCorrelationId(event.correlationId());
+        entity.setSource(event.source());
+        entity.setOutcome(event.outcome());
+        entity.setBeforeState(event.beforeState());
+        entity.setAfterState(event.afterState());
         return entity;
     }
 
@@ -46,10 +62,21 @@ public class TenantAuditEventRepositoryAdapter implements TenantAuditEventReposi
         return new TenantAuditEvent(
                 entity.getId(),
                 entity.getActorSubject(),
+                entity.getActorId(),
+                entity.getActorEmail(),
+                entity.getTenantSlug(),
                 entity.getEventType(),
                 entity.getResourceType(),
                 entity.getResourceId(),
                 entity.getEventDetails(),
+                entity.getIpAddress(),
+                entity.getUserAgent(),
+                entity.getRequestId(),
+                entity.getCorrelationId(),
+                entity.getSource(),
+                entity.getOutcome(),
+                entity.getBeforeState(),
+                entity.getAfterState(),
                 entity.getCreatedAt()
         );
     }

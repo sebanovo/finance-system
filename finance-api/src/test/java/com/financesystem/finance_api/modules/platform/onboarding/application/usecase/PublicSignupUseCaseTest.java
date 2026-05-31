@@ -126,7 +126,6 @@ class PublicSignupUseCaseTest {
         assertEquals("TRIAL", response.subscriptionStatus());
         assertEquals(expiresAt, response.trialExpiresAt());
         assertTrue(response.loginHint().contains("financruz"));
-
         verify(tenantOwnerAdminProvisioningService).provisionOwnerAdmin(
                 "tenant_financruz",
                 "admin@financruz.com",

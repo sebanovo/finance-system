@@ -4,6 +4,7 @@ import com.financesystem.finance_api.common.tenancy.TenancyProperties;
 import com.financesystem.finance_api.common.tenancy.context.TenantContext;
 import com.financesystem.finance_api.common.tenancy.context.TenantContextHolder;
 import com.financesystem.finance_api.common.tenancy.resolver.TenantResolver;
+import com.financesystem.finance_api.common.tenancy.validation.TenantSchemaReadinessService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.lang.NonNull;
@@ -15,13 +16,16 @@ public class TenantContextInterceptor implements HandlerInterceptor {
 
     private final TenancyProperties tenancyProperties;
     private final TenantResolver tenantResolver;
+    private final TenantSchemaReadinessService tenantSchemaReadinessService;
 
     public TenantContextInterceptor(
             TenancyProperties tenancyProperties,
-            TenantResolver tenantResolver
+            TenantResolver tenantResolver,
+            TenantSchemaReadinessService tenantSchemaReadinessService
     ) {
         this.tenancyProperties = tenancyProperties;
         this.tenantResolver = tenantResolver;
+        this.tenantSchemaReadinessService = tenantSchemaReadinessService;
     }
 
     @Override
@@ -42,6 +46,11 @@ public class TenantContextInterceptor implements HandlerInterceptor {
         }
 
         TenantContext resolvedTenant = tenantResolver.resolve(request);
+        tenantSchemaReadinessService.assertTenantSchemaReady(
+                resolvedTenant.schemaName(),
+                tenancyProperties.getHeaderName(),
+                resolvedTenant.tenantSlug()
+        );
         TenantContextHolder.set(resolvedTenant);
         return true;
     }

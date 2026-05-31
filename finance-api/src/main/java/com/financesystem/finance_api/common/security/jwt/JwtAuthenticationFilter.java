@@ -2,6 +2,7 @@ package com.financesystem.finance_api.common.security.jwt;
 
 import com.financesystem.finance_api.common.security.principal.AuthenticatedUserPrincipal;
 import com.financesystem.finance_api.common.tenancy.TenancyProperties;
+import com.financesystem.finance_api.modules.platform.auth.domain.model.PlatformAuthConstants;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -75,9 +76,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = authorizationHeader.substring(BEARER_PREFIX.length());
             AuthenticatedUserPrincipal principal = jwtTokenService.parseAccessToken(token);
 
-            String tenantHeaderValue = request.getHeader(tenancyProperties.getHeaderName());
-            if (StringUtils.hasText(tenantHeaderValue) && !tenantHeaderValue.equalsIgnoreCase(principal.tenantSlug())) {
-                throw new BadCredentialsException("Token tenant does not match request tenant header");
+            String requestUri = request.getRequestURI();
+            if (isPlatformToken(principal)) {
+                if (!isPlatformRequest(requestUri)) {
+                    throw new BadCredentialsException("Platform token cannot be used for tenant resources");
+                }
+            } else {
+                String tenantHeaderValue = request.getHeader(tenancyProperties.getHeaderName());
+                if (StringUtils.hasText(tenantHeaderValue)
+                        && !tenantHeaderValue.equalsIgnoreCase(principal.tenantSlug())) {
+                    throw new BadCredentialsException("Token tenant does not match request tenant header");
+                }
             }
 
             List<SimpleGrantedAuthority> authorities = buildAuthorities(principal);
@@ -125,5 +134,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return authorityValues.stream()
                 .map(SimpleGrantedAuthority::new)
                 .toList();
+    }
+
+    private boolean isPlatformToken(AuthenticatedUserPrincipal principal) {
+        return principal != null
+                && principal.tenantSlug() != null
+                && PlatformAuthConstants.PLATFORM_TENANT_SLUG.equalsIgnoreCase(principal.tenantSlug());
+    }
+
+    private boolean isPlatformRequest(String requestUri) {
+        return antPathMatcher.match("/api/platform/**", requestUri)
+                || antPathMatcher.match("/api/dashboard/superadmin/**", requestUri);
     }
 }

@@ -33,6 +33,7 @@ public class HeaderTenantResolver implements TenantResolver {
         }
 
         String normalizedSlug = tenantSchemaNamingStrategy.normalizeSlug(rawTenantSlug);
+
         String schemaName = tenantSchemaNamingStrategy.toSchemaName(normalizedSlug);
 
         return new TenantContext(normalizedSlug, schemaName, false);

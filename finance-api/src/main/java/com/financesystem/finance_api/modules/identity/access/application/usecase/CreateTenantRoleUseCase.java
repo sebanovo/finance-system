@@ -2,6 +2,7 @@ package com.financesystem.finance_api.modules.identity.access.application.usecas
 
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.identity.audit.IdentityAuditPayloads;
 import com.financesystem.finance_api.modules.identity.access.application.dto.CreateTenantRoleRequest;
 import com.financesystem.finance_api.modules.identity.access.application.dto.TenantRoleResponse;
 import com.financesystem.finance_api.modules.identity.access.application.mapper.TenantRoleMapper;
@@ -77,9 +78,18 @@ public class CreateTenantRoleUseCase {
                 AuditEventTypes.ROLE_CREATED,
                 "ROLE",
                 createdRole.id().toString(),
-                Map.of(
+                IdentityAuditPayloads.of(
+                        "operation", "CREATE_ROLE",
                         "name", createdRole.name(),
-                        "permissionCodes", normalizedPermissionCodes
+                        "description", createdRole.description(),
+                        "permissionCount", normalizedPermissionCodes.size()
+                ),
+                null,
+                IdentityAuditPayloads.roleState(
+                        createdRole.name(),
+                        createdRole.description(),
+                        createdRole.active(),
+                        normalizedPermissionCodes.size()
                 )
         );
 

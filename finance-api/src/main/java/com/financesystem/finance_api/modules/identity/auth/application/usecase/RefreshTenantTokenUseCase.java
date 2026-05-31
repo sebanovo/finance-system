@@ -7,6 +7,7 @@ import com.financesystem.finance_api.common.tenancy.context.TenantContext;
 import com.financesystem.finance_api.common.tenancy.context.TenantContextHolder;
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.identity.audit.IdentityAuditPayloads;
 import com.financesystem.finance_api.modules.identity.access.domain.repository.TenantUserRoleRepository;
 import com.financesystem.finance_api.modules.identity.auth.application.dto.AuthTokenResponse;
 import com.financesystem.finance_api.modules.identity.auth.application.dto.RefreshTokenRequest;
@@ -79,6 +80,8 @@ public class RefreshTenantTokenUseCase {
 
         String newAccessToken = jwtTokenService.generateAccessToken(
                 tenantUser.id().toString(),
+                tenantUser.email(),
+                fullName(tenantUser.firstName(), tenantUser.lastName()),
                 tenantContext.tenantSlug(),
                 roles,
                 permissions
@@ -93,7 +96,23 @@ public class RefreshTenantTokenUseCase {
                 AuditEventTypes.TOKEN_REFRESHED,
                 "USER",
                 tenantUser.id().toString(),
-                Map.of("email", tenantUser.email())
+                IdentityAuditPayloads.of(
+                        "operation", "REFRESH_TOKEN",
+                        "email", tenantUser.email(),
+                        "tenantSlug", tenantContext.tenantSlug(),
+                        "roles", roles,
+                        "permissionCount", permissions.size()
+                ),
+                IdentityAuditPayloads.of(
+                        "refreshTokenValidated", true,
+                        "tenantSlug", tenantContext.tenantSlug()
+                ),
+                IdentityAuditPayloads.of(
+                        "accessTokenIssued", true,
+                        "refreshTokenRotated", true,
+                        "roleCount", roles.size(),
+                        "permissionCount", permissions.size()
+                )
         );
 
         return new AuthTokenResponse(
@@ -119,5 +138,20 @@ public class RefreshTenantTokenUseCase {
         } catch (IllegalArgumentException exception) {
             throw new AuthenticationFailedException("Invalid refresh token subject");
         }
+    }
+
+    private String fullName(String firstName, String lastName) {
+        StringBuilder builder = new StringBuilder();
+        if (firstName != null && !firstName.isBlank()) {
+            builder.append(firstName.trim());
+        }
+        if (lastName != null && !lastName.isBlank()) {
+            if (builder.length() > 0) {
+                builder.append(' ');
+            }
+            builder.append(lastName.trim());
+        }
+        String value = builder.toString().trim();
+        return value.isEmpty() ? null : value;
     }
 }
