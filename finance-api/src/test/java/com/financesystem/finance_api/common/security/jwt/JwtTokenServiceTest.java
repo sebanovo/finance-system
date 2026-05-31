@@ -29,8 +29,37 @@ class JwtTokenServiceTest {
         AuthenticatedUserPrincipal principal = jwtTokenService.parseAccessToken(token);
 
         assertEquals("admin@tenant.com", principal.subject());
+        assertNull(principal.email());
         assertEquals("financruz", principal.tenantSlug());
         assertEquals(List.of("ADMIN", "USER"), principal.roles());
+    }
+
+    @Test
+    void shouldGenerateAndParseAccessTokenWithEmailSuccessfully() {
+        JwtProperties properties = new JwtProperties();
+        properties.setSecret("this-is-a-very-secure-jwt-secret-key-with-more-than-32-chars");
+        properties.setAccessExpirationMs(900000);
+        properties.setRefreshExpirationMs(604800000);
+
+        JwtTokenService jwtTokenService = new JwtTokenService(properties);
+
+        String token = jwtTokenService.generateAccessToken(
+                "admin@tenant.com",
+                "admin@tenant.com",
+                "Admin Tenant",
+                "financruz",
+                List.of("ADMIN"),
+                List.of("users.read")
+        );
+
+        AuthenticatedUserPrincipal principal = jwtTokenService.parseAccessToken(token);
+
+        assertEquals("admin@tenant.com", principal.subject());
+        assertEquals("admin@tenant.com", principal.email());
+        assertEquals("Admin Tenant", principal.displayName());
+        assertEquals("financruz", principal.tenantSlug());
+        assertEquals(List.of("ADMIN"), principal.roles());
+        assertEquals(List.of("users.read"), principal.permissions());
     }
 
     @Test

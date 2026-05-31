@@ -1,6 +1,9 @@
 package com.financesystem.finance_api.modules.platform.plans.application.usecase;
 
 import com.financesystem.finance_api.common.exception.BusinessException;
+import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
+import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.platform.audit.PlatformAuditPayloads;
 import com.financesystem.finance_api.modules.platform.plans.application.dto.CreatePlatformPlanRequest;
 import com.financesystem.finance_api.modules.platform.plans.application.dto.PlatformPlanResponse;
 import com.financesystem.finance_api.modules.platform.plans.application.mapper.PlatformPlanMapper;
@@ -15,13 +18,16 @@ public class CreatePlatformPlanUseCase {
 
     private final PlatformPlanRepository platformPlanRepository;
     private final PlatformPlanMapper platformPlanMapper;
+    private final AuditTrailService auditTrailService;
 
     public CreatePlatformPlanUseCase(
             PlatformPlanRepository platformPlanRepository,
-            PlatformPlanMapper platformPlanMapper
+            PlatformPlanMapper platformPlanMapper,
+            AuditTrailService auditTrailService
     ) {
         this.platformPlanRepository = platformPlanRepository;
         this.platformPlanMapper = platformPlanMapper;
+        this.auditTrailService = auditTrailService;
     }
 
     @Transactional
@@ -52,6 +58,21 @@ public class CreatePlatformPlanUseCase {
         );
 
         PlatformPlan createdPlan = platformPlanRepository.save(planToCreate);
+
+        auditTrailService.recordPlatformEvent(
+                AuditEventTypes.PLATFORM_PLAN_CREATED,
+                "PLATFORM_PLAN",
+                createdPlan.id().toString(),
+                PlatformAuditPayloads.details(
+                        "code", createdPlan.code(),
+                        "name", createdPlan.name(),
+                        "planType", createdPlan.planType(),
+                        "trialDays", createdPlan.trialDays()
+                ),
+                null,
+                PlatformAuditPayloads.planState(createdPlan)
+        );
+
         return platformPlanMapper.toResponse(createdPlan);
     }
 

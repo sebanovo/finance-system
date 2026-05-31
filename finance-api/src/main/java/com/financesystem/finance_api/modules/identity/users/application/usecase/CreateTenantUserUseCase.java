@@ -2,6 +2,7 @@ package com.financesystem.finance_api.modules.identity.users.application.usecase
 
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.identity.audit.IdentityAuditPayloads;
 import com.financesystem.finance_api.modules.identity.access.domain.repository.TenantRoleRepository;
 import com.financesystem.finance_api.modules.identity.access.domain.repository.TenantUserRoleRepository;
 import com.financesystem.finance_api.modules.identity.users.application.dto.CreateTenantUserRequest;
@@ -80,21 +81,40 @@ public class CreateTenantUserUseCase {
 
         TenantUser createdTenantUser = tenantUserRepository.save(tenantUserToCreate);
 
-        tenantRoleRepository.findByName("USER")
+        boolean defaultRoleAssigned = tenantRoleRepository.findByName("USER")
                 .map(role -> role.id())
-                .ifPresentOrElse(
-                        userRoleId -> tenantUserRoleRepository.replaceUserRoles(createdTenantUser.id(), List.of(userRoleId)),
-                        () -> logger.warn(
-                                "Default tenant role 'USER' was not found for user '{}'; user will be created without roles",
-                                createdTenantUser.email()
-                        )
-                );
+                .map(userRoleId -> {
+                    tenantUserRoleRepository.replaceUserRoles(createdTenantUser.id(), List.of(userRoleId));
+                    return true;
+                })
+                .orElseGet(() -> {
+                    logger.warn(
+                            "Default tenant role 'USER' was not found for user '{}'; user will be created without roles",
+                            createdTenantUser.email()
+                    );
+                    return false;
+                });
 
         auditTrailService.recordTenantEvent(
                 AuditEventTypes.USER_CREATED,
                 "USER",
                 createdTenantUser.id().toString(),
-                Map.of("email", createdTenantUser.email())
+                IdentityAuditPayloads.of(
+                        "operation", "CREATE_USER",
+                        "email", createdTenantUser.email(),
+                        "firstName", createdTenantUser.firstName(),
+                        "lastName", createdTenantUser.lastName(),
+                        "defaultRole", "USER",
+                        "defaultRoleAssigned", defaultRoleAssigned
+                ),
+                null,
+                IdentityAuditPayloads.userState(
+                        createdTenantUser.email(),
+                        createdTenantUser.firstName(),
+                        createdTenantUser.lastName(),
+                        createdTenantUser.active(),
+                        createdTenantUser.status().name()
+                )
         );
 
         return tenantUserMapper.toResponse(createdTenantUser);

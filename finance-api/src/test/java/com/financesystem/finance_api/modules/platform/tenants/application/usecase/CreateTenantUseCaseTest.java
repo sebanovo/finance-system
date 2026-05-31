@@ -38,7 +38,8 @@ class CreateTenantUseCaseTest {
                 migrationService,
                 bootstrapService,
                 mapper,
-                subscriptionProvisioningService
+                subscriptionProvisioningService,
+                mock(com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService.class)
         );
 
         CreateTenantRequest request = new CreateTenantRequest("FinanCruz Ltda", "financruz", "DEMO");

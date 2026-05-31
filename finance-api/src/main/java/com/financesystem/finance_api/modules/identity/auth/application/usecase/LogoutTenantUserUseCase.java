@@ -3,9 +3,8 @@ package com.financesystem.finance_api.modules.identity.auth.application.usecase;
 import com.financesystem.finance_api.common.security.context.SecurityContextFacade;
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.identity.audit.IdentityAuditPayloads;
 import org.springframework.stereotype.Service;
-
-import java.util.Map;
 
 @Service
 public class LogoutTenantUserUseCase {
@@ -28,7 +27,17 @@ public class LogoutTenantUserUseCase {
                 AuditEventTypes.LOGOUT,
                 "USER",
                 currentSubject,
-                Map.of("subject", currentSubject)
+                IdentityAuditPayloads.of(
+                        "operation", "LOGOUT",
+                        "subject", currentSubject,
+                        "tenantSlug", securityContextFacade.getCurrentTenantSlug()
+                ),
+                IdentityAuditPayloads.of(
+                        "authenticated", true
+                ),
+                IdentityAuditPayloads.of(
+                        "authenticated", false
+                )
         );
     }
 }

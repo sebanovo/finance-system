@@ -2,6 +2,7 @@ package com.financesystem.finance_api.modules.identity.users.application.usecase
 
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.identity.audit.IdentityAuditPayloads;
 import com.financesystem.finance_api.modules.identity.users.application.dto.TenantUserResponse;
 import com.financesystem.finance_api.modules.identity.users.application.mapper.TenantUserMapper;
 import com.financesystem.finance_api.modules.identity.users.domain.exception.TenantUserNotFoundException;
@@ -64,7 +65,25 @@ public class ActivateTenantUserUseCase {
                 AuditEventTypes.USER_ACTIVATED,
                 "USER",
                 savedUser.id().toString(),
-                Map.of("email", savedUser.email())
+                IdentityAuditPayloads.of(
+                        "operation", "ACTIVATE_USER",
+                        "email", savedUser.email(),
+                        "active", true
+                ),
+                IdentityAuditPayloads.userState(
+                        existingUser.email(),
+                        existingUser.firstName(),
+                        existingUser.lastName(),
+                        existingUser.active(),
+                        existingUser.status().name()
+                ),
+                IdentityAuditPayloads.userState(
+                        savedUser.email(),
+                        savedUser.firstName(),
+                        savedUser.lastName(),
+                        savedUser.active(),
+                        savedUser.status().name()
+                )
         );
 
         return tenantUserMapper.toResponse(savedUser);

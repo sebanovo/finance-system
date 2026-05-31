@@ -1,7 +1,7 @@
 package com.financesystem.finance_api.modules.platform.tenants.infrastructure.api;
 
 import com.financesystem.finance_api.common.response.ApiResponse;
-import com.financesystem.finance_api.modules.platform.tenants.application.dto.CreateTenantRequest;
+import com.financesystem.finance_api.modules.platform.tenants.application.dto.CreatePlatformTenantRequest;
 import com.financesystem.finance_api.modules.platform.tenants.application.dto.PlatformTenantResponse;
 import com.financesystem.finance_api.modules.platform.tenants.application.usecase.*;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -22,27 +22,30 @@ public class PlatformTenantController {
     private final GetTenantByIdUseCase getTenantByIdUseCase;
     private final ActivateTenantUseCase activateTenantUseCase;
     private final DeactivateTenantUseCase deactivateTenantUseCase;
+    private final CreatePlatformTenantUseCase createPlatformTenantUseCase;
 
     public PlatformTenantController(
             CreateTenantUseCase createTenantUseCase,
             ListTenantsUseCase listTenantsUseCase,
             GetTenantByIdUseCase getTenantByIdUseCase,
             ActivateTenantUseCase activateTenantUseCase,
-            DeactivateTenantUseCase deactivateTenantUseCase
+            DeactivateTenantUseCase deactivateTenantUseCase,
+            CreatePlatformTenantUseCase createPlatformTenantUseCase
     ) {
         this.createTenantUseCase = createTenantUseCase;
         this.listTenantsUseCase = listTenantsUseCase;
         this.getTenantByIdUseCase = getTenantByIdUseCase;
         this.activateTenantUseCase = activateTenantUseCase;
         this.deactivateTenantUseCase = deactivateTenantUseCase;
+        this.createPlatformTenantUseCase = createPlatformTenantUseCase;
     }
 
     @PostMapping
     @PreAuthorize("@authorizationGuards.isPlatformAdmin()")
-    public ApiResponse<PlatformTenantResponse> createTenant(@Valid @RequestBody CreateTenantRequest request) {
+    public ApiResponse<PlatformTenantResponse> createTenant(@Valid @RequestBody CreatePlatformTenantRequest request) {
         return ApiResponse.success(
                 "Tenant created successfully",
-                createTenantUseCase.execute(request)
+                createPlatformTenantUseCase.execute(request)
         );
     }
 

@@ -1,9 +1,12 @@
 package com.financesystem.finance_api.modules.tenant.limits.application.usecase.update;
 
 import com.financesystem.finance_api.common.exception.BusinessException;
+import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
+import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
 import com.financesystem.finance_api.modules.tenant.limits.application.dto.LimitRuleResponse;
 import com.financesystem.finance_api.modules.tenant.limits.application.dto.UpdateLimitRuleRequest;
 import com.financesystem.finance_api.modules.tenant.limits.application.mapper.LimitRuleMapper;
+import com.financesystem.finance_api.modules.tenant.audit.TenantAuditPayloads;
 import com.financesystem.finance_api.modules.tenant.limits.domain.exception.LimitRuleNotFoundException;
 import com.financesystem.finance_api.modules.tenant.limits.domain.model.*;
 import com.financesystem.finance_api.modules.tenant.limits.domain.repository.LimitRuleRepository;
@@ -18,13 +21,16 @@ public class UpdateLimitRuleUseCase {
 
     private final LimitRuleRepository limitRuleRepository;
     private final LimitRuleMapper limitRuleMapper;
+    private final AuditTrailService auditTrailService;
 
     public UpdateLimitRuleUseCase(
             LimitRuleRepository limitRuleRepository,
-            LimitRuleMapper limitRuleMapper
+            LimitRuleMapper limitRuleMapper,
+            AuditTrailService auditTrailService
     ) {
         this.limitRuleRepository = limitRuleRepository;
         this.limitRuleMapper = limitRuleMapper;
+        this.auditTrailService = auditTrailService;
     }
 
     @Transactional
@@ -68,7 +74,25 @@ public class UpdateLimitRuleUseCase {
         validateScopeConfiguration(updated);
         validateThresholds(updated);
 
-        return limitRuleMapper.toResponse(limitRuleRepository.save(updated));
+        LimitRule saved = limitRuleRepository.save(updated);
+
+        auditTrailService.recordTenantEvent(
+                AuditEventTypes.LIMIT_RULE_UPDATED,
+                "LIMIT_RULE",
+                saved.id().toString(),
+                TenantAuditPayloads.details(
+                        "code", saved.code(),
+                        "limitType", saved.limitType(),
+                        "scopeType", saved.scopeType(),
+                        "period", saved.period(),
+                        "active", saved.active(),
+                        "requireReviewExceed", saved.requireReviewExceed()
+                ),
+                TenantAuditPayloads.limitRuleState(existing),
+                TenantAuditPayloads.limitRuleState(saved)
+        );
+
+        return limitRuleMapper.toResponse(saved);
     }
 
     private String normalizeCode(String value) {

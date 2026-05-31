@@ -1,8 +1,9 @@
 package com.financesystem.finance_api.modules.governance.audit.application.service;
 
+import com.financesystem.finance_api.common.audit.AuditContextFacade;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.financesystem.finance_api.common.security.context.SecurityContextFacade;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.PlatformAuditEvent;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.TenantAuditEvent;
 import com.financesystem.finance_api.modules.governance.audit.domain.repository.PlatformAuditEventRepository;
@@ -14,18 +15,18 @@ public class AuditTrailService {
 
     private final PlatformAuditEventRepository platformAuditEventRepository;
     private final TenantAuditEventRepository tenantAuditEventRepository;
-    private final SecurityContextFacade securityContextFacade;
+    private final AuditContextFacade auditContextFacade;
     private final ObjectMapper objectMapper;
 
     public AuditTrailService(
             PlatformAuditEventRepository platformAuditEventRepository,
             TenantAuditEventRepository tenantAuditEventRepository,
-            SecurityContextFacade securityContextFacade,
+            AuditContextFacade auditContextFacade,
             ObjectMapper objectMapper
     ) {
         this.platformAuditEventRepository = platformAuditEventRepository;
         this.tenantAuditEventRepository = tenantAuditEventRepository;
-        this.securityContextFacade = securityContextFacade;
+        this.auditContextFacade = auditContextFacade;
         this.objectMapper = objectMapper;
     }
 
@@ -35,14 +36,37 @@ public class AuditTrailService {
             String resourceId,
             Object details
     ) {
+        recordPlatformEvent(eventType, resourceType, resourceId, details, null, null);
+    }
+
+    public void recordPlatformEvent(
+            String eventType,
+            String resourceType,
+            String resourceId,
+            Object details,
+            Object beforeState,
+            Object afterState
+    ) {
+        AuditContextFacade.AuditContext context = auditContextFacade.resolve();
         platformAuditEventRepository.save(
                 new PlatformAuditEvent(
                         null,
-                        resolveActorSubject(),
+                        context.actorSubject(),
+                        context.actorId(),
+                        context.actorEmail(),
+                        context.tenantSlug(),
                         eventType,
                         resourceType,
                         resourceId,
                         serializeDetails(details),
+                        context.ipAddress(),
+                        context.userAgent(),
+                        context.requestId(),
+                        context.correlationId(),
+                        context.source(),
+                        context.outcome(),
+                        serializeValue(beforeState),
+                        serializeValue(afterState),
                         null
                 )
         );
@@ -54,22 +78,57 @@ public class AuditTrailService {
             String resourceId,
             Object details
     ) {
+        recordTenantEvent(eventType, resourceType, resourceId, details, null, null);
+    }
+
+    public void recordTenantEvent(
+            String eventType,
+            String resourceType,
+            String resourceId,
+            Object details,
+            Object beforeState,
+            Object afterState
+    ) {
+        AuditContextFacade.AuditContext context = auditContextFacade.resolve();
         tenantAuditEventRepository.save(
                 new TenantAuditEvent(
                         null,
-                        resolveActorSubject(),
+                        context.actorSubject(),
+                        context.actorId(),
+                        context.actorEmail(),
+                        context.tenantSlug(),
                         eventType,
                         resourceType,
                         resourceId,
                         serializeDetails(details),
+                        context.ipAddress(),
+                        context.userAgent(),
+                        context.requestId(),
+                        context.correlationId(),
+                        context.source(),
+                        context.outcome(),
+                        serializeValue(beforeState),
+                        serializeValue(afterState),
                         null
                 )
         );
     }
 
-    private String resolveActorSubject() {
-        String subject = securityContextFacade.getCurrentSubject();
-        return (subject == null || subject.isBlank()) ? "SYSTEM" : subject;
+    private JsonNode serializeValue(Object value) {
+        if (value == null) {
+            return null;
+        }
+
+        return serializeValueAsJsonNode(value);
+    }
+
+    private JsonNode serializeValueAsJsonNode(Object value) {
+        JsonNode node = objectMapper.valueToTree(value);
+        if (node == null) {
+            throw new IllegalStateException("Unable to serialize audit state");
+        }
+
+        return node;
     }
 
     private String serializeDetails(Object details) {

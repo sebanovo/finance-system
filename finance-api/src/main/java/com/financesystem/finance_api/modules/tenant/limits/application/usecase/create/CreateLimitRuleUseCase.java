@@ -1,9 +1,12 @@
 package com.financesystem.finance_api.modules.tenant.limits.application.usecase.create;
 
 import com.financesystem.finance_api.common.exception.BusinessException;
+import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
+import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
 import com.financesystem.finance_api.modules.tenant.limits.application.dto.CreateLimitRuleRequest;
 import com.financesystem.finance_api.modules.tenant.limits.application.dto.LimitRuleResponse;
 import com.financesystem.finance_api.modules.tenant.limits.application.mapper.LimitRuleMapper;
+import com.financesystem.finance_api.modules.tenant.audit.TenantAuditPayloads;
 import com.financesystem.finance_api.modules.tenant.limits.domain.model.*;
 import com.financesystem.finance_api.modules.tenant.limits.domain.repository.LimitRuleRepository;
 import org.springframework.stereotype.Service;
@@ -16,13 +19,16 @@ public class CreateLimitRuleUseCase {
 
     private final LimitRuleRepository limitRuleRepository;
     private final LimitRuleMapper limitRuleMapper;
+    private final AuditTrailService auditTrailService;
 
     public CreateLimitRuleUseCase(
             LimitRuleRepository limitRuleRepository,
-            LimitRuleMapper limitRuleMapper
+            LimitRuleMapper limitRuleMapper,
+            AuditTrailService auditTrailService
     ) {
         this.limitRuleRepository = limitRuleRepository;
         this.limitRuleMapper = limitRuleMapper;
+        this.auditTrailService = auditTrailService;
     }
 
     @Transactional
@@ -59,7 +65,25 @@ public class CreateLimitRuleUseCase {
         validateScopeConfiguration(limitRule);
         validateThresholds(limitRule);
 
-        return limitRuleMapper.toResponse(limitRuleRepository.save(limitRule));
+        LimitRule saved = limitRuleRepository.save(limitRule);
+
+        auditTrailService.recordTenantEvent(
+                AuditEventTypes.LIMIT_RULE_CREATED,
+                "LIMIT_RULE",
+                saved.id().toString(),
+                TenantAuditPayloads.details(
+                        "code", saved.code(),
+                        "limitType", saved.limitType(),
+                        "scopeType", saved.scopeType(),
+                        "period", saved.period(),
+                        "active", saved.active(),
+                        "requireReviewExceed", saved.requireReviewExceed()
+                ),
+                null,
+                TenantAuditPayloads.limitRuleState(saved)
+        );
+
+        return limitRuleMapper.toResponse(saved);
     }
 
     private String normalizeCode(String value) {

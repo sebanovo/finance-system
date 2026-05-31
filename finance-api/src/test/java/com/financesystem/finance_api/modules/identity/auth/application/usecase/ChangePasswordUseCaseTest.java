@@ -65,7 +65,14 @@ class ChangePasswordUseCaseTest {
 
         verify(tenantUserRepository).save(any(TenantUser.class));
         verify(notificationPublisherPort).publish(any(NotificationPublishRequest.class));
-        verify(auditTrailService).recordTenantEvent(anyString(), eq("USER"), eq(tenantUser.id().toString()), any());
+        verify(auditTrailService).recordTenantEvent(
+                anyString(),
+                eq("USER"),
+                eq(tenantUser.id().toString()),
+                any(),
+                any(),
+                any()
+        );
     }
 
     @Test

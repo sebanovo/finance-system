@@ -3,6 +3,7 @@ package com.financesystem.finance_api.common.exception;
 import com.financesystem.finance_api.common.response.ApiErrorResponse;
 import com.financesystem.finance_api.common.tenancy.exception.TenantResolutionException;
 import com.financesystem.finance_api.modules.identity.auth.domain.exception.AuthenticationFailedException;
+import com.financesystem.finance_api.modules.tenant.reporting.domain.exception.ReportException;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,8 +46,32 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(TenantResolutionException.class)
     public ResponseEntity<ApiErrorResponse> handleTenantResolutionException(TenantResolutionException exception) {
+        String message = exception.getMessage();
+        String userMessage = "Invalid tenant configuration";
+        String guidance = "Verify the X-Tenant-Slug header matches an existing tenant and try again.";
+
+        if (message != null && !message.isBlank()) {
+            if (message.contains("missing")) {
+                userMessage = "Missing tenant header";
+            } else if (message.contains("was not found")) {
+                userMessage = "Unknown tenant";
+            } else if (message.contains("not ready")) {
+                userMessage = "Tenant schema is not ready";
+            } else if (message.contains("does not match any registered tenant")) {
+                userMessage = "Unknown tenant";
+            } else if (message.contains("invalid")) {
+                userMessage = "Invalid tenant value";
+            }
+        }
+
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiErrorResponse.of(exception.getMessage(), List.of(exception.getMessage())));
+                .body(ApiErrorResponse.of(
+                        userMessage,
+                        List.of(
+                                message != null && !message.isBlank() ? message : guidance,
+                                "Verify the X-Tenant-Slug header matches an existing tenant and that the tenant schema has been migrated."
+                        )
+                ));
     }
 
     @ExceptionHandler({AccessDeniedException.class, AuthorizationDeniedException.class})
@@ -119,6 +144,16 @@ public class GlobalExceptionHandler {
         String reason = extractDataIntegrityReason(exception);
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ApiErrorResponse.of("Database constraint violation", List.of(reason)));
+    }
+
+    @ExceptionHandler(ReportException.class)
+    public ResponseEntity<ApiErrorResponse> handleReportException(ReportException exception) {
+        String message = exception.getMessage();
+        if (message == null || message.isBlank()) {
+            message = "Report processing failed";
+        }
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiErrorResponse.of("Report processing failed", List.of(message)));
     }
 
     @ExceptionHandler(Exception.class)

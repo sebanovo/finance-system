@@ -103,6 +103,15 @@ public class PlatformBootstrapService {
                 new PermissionSeed("notifications.templates.detail", "notifications", "Read notification template details"),
                 new PermissionSeed("notifications.deliveries.read", "notifications", "Read notification deliveries"),
 
+                // REPORTS PERMISSIONS
+                new PermissionSeed("reports.analytic.read", "reports", "Read analytic reports"),
+                new PermissionSeed("reports.managerial.read", "reports", "Read managerial reports"),
+                new PermissionSeed("reports.analytic.run", "reports", "Run analytic reports"),
+                new PermissionSeed("reports.managerial.run", "reports", "Run managerial reports"),
+                new PermissionSeed("reports.export", "reports", "Export reports"),
+                new PermissionSeed("reports.executions.read", "reports", "Read report executions"),
+                new PermissionSeed("reports.executions.rerun", "reports", "Rerun report executions"),
+
                 // TENANT SETTINGS PERMISSIONS
                 new PermissionSeed("tenant-settings.read", "tenantsettings", "Read tenant settings"),
                 new PermissionSeed("tenant-settings.update", "tenantsettings", "Update tenant settings")

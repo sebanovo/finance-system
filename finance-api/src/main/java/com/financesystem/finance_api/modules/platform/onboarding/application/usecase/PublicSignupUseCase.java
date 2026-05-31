@@ -2,6 +2,7 @@ package com.financesystem.finance_api.modules.platform.onboarding.application.us
 
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.platform.audit.PlatformAuditPayloads;
 import com.financesystem.finance_api.modules.platform.onboarding.application.dto.PublicSignupRequest;
 import com.financesystem.finance_api.modules.platform.onboarding.application.dto.PublicSignupResponse;
 import com.financesystem.finance_api.modules.platform.onboarding.application.service.TenantOwnerAdminProvisioningService;
@@ -16,8 +17,6 @@ import com.financesystem.finance_api.modules.platform.tenants.domain.model.Platf
 import com.financesystem.finance_api.modules.platform.tenants.domain.repository.PlatformTenantRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Map;
 
 @Service
 public class PublicSignupUseCase {
@@ -75,11 +74,14 @@ public class PublicSignupUseCase {
                 AuditEventTypes.PUBLIC_SIGNUP_COMPLETED,
                 "TENANT",
                 createdTenant.id().toString(),
-                Map.of(
+                PlatformAuditPayloads.details(
                         "tenantSlug", createdTenant.slug(),
                         "adminEmail", request.adminEmail().trim().toLowerCase(),
-                        "planCode", currentPlan.code()
-                )
+                        "planCode", currentPlan.code(),
+                        "subscriptionStatus", currentSubscription.status().name()
+                ),
+                null,
+                PlatformAuditPayloads.tenantState(createdTenant)
         );
 
         return new PublicSignupResponse(

@@ -8,6 +8,7 @@ import com.financesystem.finance_api.modules.tenant.accounts.application.dto.Cre
 import com.financesystem.finance_api.modules.tenant.accounts.application.mapper.AccountMapper;
 import com.financesystem.finance_api.modules.tenant.accounts.application.service.AccountNumberGeneratorService;
 import com.financesystem.finance_api.modules.tenant.accounts.application.service.CurrentTenantAccountUserService;
+import com.financesystem.finance_api.modules.tenant.audit.TenantAuditPayloads;
 import com.financesystem.finance_api.modules.tenant.accounts.domain.exception.AccountNotFoundException;
 import com.financesystem.finance_api.modules.tenant.accounts.domain.model.Account;
 import com.financesystem.finance_api.modules.tenant.accounts.domain.model.AccountOwnerView;
@@ -18,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -98,7 +98,7 @@ public class CreateMyAccountUseCase {
                 eventType,
                 "ACCOUNT",
                 createdAccount.id().toString(),
-                Map.of(
+                TenantAuditPayloads.details(
                         "userId", createdAccount.userId().toString(),
                         "accountNumber", createdAccount.accountNumber(),
                         "accountType", createdAccount.accountType().name(),
@@ -106,8 +106,10 @@ public class CreateMyAccountUseCase {
                         "status", createdAccount.status().name(),
                         "directCreationLimit", DIRECT_CREATION_LIMIT,
                         "accountName", createdAccount.accountName().name(),
-                        "customAlias", createdAccount.customAlias() != null ? createdAccount.customAlias() : ""
-                )
+                        "customAlias", createdAccount.customAlias()
+                ),
+                null,
+                TenantAuditPayloads.accountState(createdAccount)
         );
 
         AccountOwnerView view = accountRepository.findViewById(createdAccount.id())

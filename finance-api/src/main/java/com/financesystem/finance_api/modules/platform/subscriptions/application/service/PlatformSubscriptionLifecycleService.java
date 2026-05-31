@@ -1,5 +1,8 @@
 package com.financesystem.finance_api.modules.platform.subscriptions.application.service;
 
+import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
+import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.platform.audit.PlatformAuditPayloads;
 import com.financesystem.finance_api.modules.platform.subscriptions.domain.model.PlatformSubscription;
 import com.financesystem.finance_api.modules.platform.subscriptions.domain.model.PlatformSubscriptionStatus;
 import com.financesystem.finance_api.modules.platform.subscriptions.domain.repository.PlatformSubscriptionRepository;
@@ -13,11 +16,14 @@ import java.util.List;
 public class PlatformSubscriptionLifecycleService {
 
     private final PlatformSubscriptionRepository platformSubscriptionRepository;
+    private final AuditTrailService auditTrailService;
 
     public PlatformSubscriptionLifecycleService(
-            PlatformSubscriptionRepository platformSubscriptionRepository
+            PlatformSubscriptionRepository platformSubscriptionRepository,
+            AuditTrailService auditTrailService
     ) {
         this.platformSubscriptionRepository = platformSubscriptionRepository;
+        this.auditTrailService = auditTrailService;
     }
 
     @Transactional
@@ -53,6 +59,20 @@ public class PlatformSubscriptionLifecycleService {
                 );
 
                 platformSubscriptionRepository.save(expired);
+
+                auditTrailService.recordPlatformEvent(
+                        AuditEventTypes.SUBSCRIPTION_EXPIRED,
+                        "TENANT_SUBSCRIPTION",
+                        expired.id().toString(),
+                        PlatformAuditPayloads.details(
+                                "tenantId", expired.tenantId(),
+                                "planId", expired.planId(),
+                                "status", expired.status().name(),
+                                "expiresAt", expired.expiresAt()
+                        ),
+                        PlatformAuditPayloads.subscriptionState(subscription),
+                        PlatformAuditPayloads.subscriptionState(expired)
+                );
             }
         }
     }

@@ -1,8 +1,11 @@
 package com.financesystem.finance_api.modules.platform.tenants.application.usecase;
 
 import com.financesystem.finance_api.bootstrap.tenant.TenantBootstrapService;
+import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
+import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
 import com.financesystem.finance_api.common.tenancy.migration.TenantSchemaMigrationService;
 import com.financesystem.finance_api.common.tenancy.schema.TenantSchemaNamingStrategy;
+import com.financesystem.finance_api.modules.platform.audit.PlatformAuditPayloads;
 import com.financesystem.finance_api.modules.platform.subscriptions.application.service.PlatformSubscriptionProvisioningService;
 import com.financesystem.finance_api.modules.platform.tenants.application.dto.CreateTenantRequest;
 import com.financesystem.finance_api.modules.platform.tenants.application.dto.PlatformTenantResponse;
@@ -23,6 +26,7 @@ public class CreateTenantUseCase {
     private final TenantBootstrapService tenantBootstrapService;
     private final PlatformTenantMapper platformTenantMapper;
     private final PlatformSubscriptionProvisioningService platformSubscriptionProvisioningService;
+    private final AuditTrailService auditTrailService;
 
     public CreateTenantUseCase(
             PlatformTenantRepository platformTenantRepository,
@@ -30,7 +34,8 @@ public class CreateTenantUseCase {
             TenantSchemaMigrationService tenantSchemaMigrationService,
             TenantBootstrapService tenantBootstrapService,
             PlatformTenantMapper platformTenantMapper,
-            PlatformSubscriptionProvisioningService platformSubscriptionProvisioningService
+            PlatformSubscriptionProvisioningService platformSubscriptionProvisioningService,
+            AuditTrailService auditTrailService
     ) {
         this.platformTenantRepository = platformTenantRepository;
         this.tenantSchemaNamingStrategy = tenantSchemaNamingStrategy;
@@ -38,6 +43,7 @@ public class CreateTenantUseCase {
         this.tenantBootstrapService = tenantBootstrapService;
         this.platformTenantMapper = platformTenantMapper;
         this.platformSubscriptionProvisioningService = platformSubscriptionProvisioningService;
+        this.auditTrailService = auditTrailService;
     }
 
     @Transactional
@@ -78,6 +84,21 @@ public class CreateTenantUseCase {
         );
 
         PlatformTenant updatedTenant = platformTenantRepository.findById(createdTenant.id()).orElseThrow();
+
+        auditTrailService.recordPlatformEvent(
+                AuditEventTypes.TENANT_CREATED,
+                "TENANT",
+                updatedTenant.id().toString(),
+                PlatformAuditPayloads.details(
+                        "name", updatedTenant.name(),
+                        "slug", updatedTenant.slug(),
+                        "schemaName", updatedTenant.schemaName(),
+                        "planCode", request.planCode()
+                ),
+                null,
+                PlatformAuditPayloads.tenantState(updatedTenant)
+        );
+
         return platformTenantMapper.toResponse(updatedTenant);
     }
 }

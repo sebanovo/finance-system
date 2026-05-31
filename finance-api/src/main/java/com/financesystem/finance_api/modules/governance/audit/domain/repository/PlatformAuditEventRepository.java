@@ -8,5 +8,9 @@ public interface PlatformAuditEventRepository {
 
     PlatformAuditEvent save(PlatformAuditEvent event);
 
+    List<PlatformAuditEvent> findAll();
+
     List<PlatformAuditEvent> findRecent(int limit);
+
+    long count();
 }

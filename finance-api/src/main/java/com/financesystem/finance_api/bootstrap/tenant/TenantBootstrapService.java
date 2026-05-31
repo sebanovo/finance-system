@@ -97,6 +97,14 @@ public class TenantBootstrapService {
             "notifications.templates.detail",
             "notifications.deliveries.read",
 
+            "reports.analytic.read",
+            "reports.managerial.read",
+            "reports.analytic.run",
+            "reports.managerial.run",
+            "reports.export",
+            "reports.executions.read",
+            "reports.executions.rerun",
+
             "fx.rates.read",
             "fx.rates.detail",
             "fx.rates.create",
@@ -171,6 +179,14 @@ public class TenantBootstrapService {
             "notifications.templates.read",
             "notifications.templates.detail",
             "notifications.deliveries.read",
+
+            "reports.analytic.read",
+            "reports.managerial.read",
+            "reports.analytic.run",
+            "reports.managerial.run",
+            "reports.export",
+            "reports.executions.read",
+            "reports.executions.rerun",
 
             "fx.rates.read",
             "fx.rates.detail",

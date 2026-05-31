@@ -6,6 +6,7 @@ import com.financesystem.finance_api.modules.tenant.accounts.application.dto.Acc
 import com.financesystem.finance_api.modules.tenant.accounts.application.dto.UpdateAccountAliasRequest;
 import com.financesystem.finance_api.modules.tenant.accounts.application.mapper.AccountMapper;
 import com.financesystem.finance_api.modules.tenant.accounts.application.service.CurrentTenantAccountUserService;
+import com.financesystem.finance_api.modules.tenant.audit.TenantAuditPayloads;
 import com.financesystem.finance_api.modules.tenant.accounts.domain.exception.AccountNotFoundException;
 import com.financesystem.finance_api.modules.tenant.accounts.domain.model.Account;
 import com.financesystem.finance_api.modules.tenant.accounts.domain.model.AccountOwnerView;
@@ -13,7 +14,6 @@ import com.financesystem.finance_api.modules.tenant.accounts.domain.repository.A
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -77,11 +77,13 @@ public class UpdateMyAccountAliasUseCase {
                 AuditEventTypes.ACCOUNT_ALIAS_UPDATED,
                 "ACCOUNT",
                 savedAccount.id().toString(),
-                Map.of(
+                TenantAuditPayloads.details(
                         "accountNumber", savedAccount.accountNumber(),
-                        "accountName", savedAccount.accountName(),
-                        "customAlias", savedAccount.customAlias() != null ? savedAccount.customAlias(): ""
-                )
+                        "accountName", savedAccount.accountName() == null ? null : savedAccount.accountName().name(),
+                        "customAlias", savedAccount.customAlias()
+                ),
+                TenantAuditPayloads.accountState(existingAccount),
+                TenantAuditPayloads.accountState(savedAccount)
         );
 
         AccountOwnerView view = accountRepository.findViewById(savedAccount.id())

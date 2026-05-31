@@ -7,6 +7,7 @@ import com.financesystem.finance_api.modules.tenant.accounts.application.dto.Acc
 import com.financesystem.finance_api.modules.tenant.accounts.application.dto.CreateAccountRequest;
 import com.financesystem.finance_api.modules.tenant.accounts.application.mapper.AccountMapper;
 import com.financesystem.finance_api.modules.tenant.accounts.application.service.AccountNumberGeneratorService;
+import com.financesystem.finance_api.modules.tenant.audit.TenantAuditPayloads;
 import com.financesystem.finance_api.modules.tenant.accounts.domain.exception.AccountAlreadyExistsException;
 import com.financesystem.finance_api.modules.tenant.accounts.domain.exception.AccountNotFoundException;
 import com.financesystem.finance_api.modules.tenant.accounts.domain.model.Account;
@@ -18,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Map;
 
 @Service
 public class CreateAccountUseCase {
@@ -84,15 +84,17 @@ public class CreateAccountUseCase {
                 AuditEventTypes.ACCOUNT_CREATED,
                 "ACCOUNT",
                 createdAccount.id().toString(),
-                Map.of(
+                TenantAuditPayloads.details(
                         "userId", createdAccount.userId().toString(),
                         "accountNumber", createdAccount.accountNumber(),
                         "accountType", createdAccount.accountType().name(),
                         "currency", createdAccount.currency().name(),
                         "primary", createdAccount.primary(),
                         "accountName", createdAccount.accountName().name(),
-                        "customAlias", createdAccount.customAlias() != null ? createdAccount.customAlias() : ""
-                )
+                        "customAlias", createdAccount.customAlias()
+                ),
+                null,
+                TenantAuditPayloads.accountState(createdAccount)
         );
 
         AccountOwnerView view = accountRepository.findViewById(createdAccount.id())

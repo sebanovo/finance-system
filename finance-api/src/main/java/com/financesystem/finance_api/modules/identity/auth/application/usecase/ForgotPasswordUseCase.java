@@ -4,6 +4,7 @@ import com.financesystem.finance_api.common.tenancy.context.TenantContext;
 import com.financesystem.finance_api.common.tenancy.context.TenantContextHolder;
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
+import com.financesystem.finance_api.modules.identity.audit.IdentityAuditPayloads;
 import com.financesystem.finance_api.modules.governance.notifications.application.dto.NotificationPublishRequest;
 import com.financesystem.finance_api.modules.governance.notifications.application.config.PasswordResetNotificationProperties;
 import com.financesystem.finance_api.modules.governance.notifications.domain.model.NotificationCategory;
@@ -124,7 +125,19 @@ public class ForgotPasswordUseCase {
                 AuditEventTypes.PASSWORD_RESET_REQUESTED,
                 "USER",
                 tenantUser.id().toString(),
-                Map.of("email", normalizedEmail)
+                IdentityAuditPayloads.of(
+                        "operation", "FORGOT_PASSWORD",
+                        "email", normalizedEmail,
+                        "tenantSlug", tenantContext.tenantSlug(),
+                        "expiresAt", expiresAt.toString()
+                ),
+                IdentityAuditPayloads.of(
+                        "resetTokenState", "NONE"
+                ),
+                IdentityAuditPayloads.of(
+                        "resetTokenState", "REQUESTED",
+                        "expiresAt", expiresAt.toString()
+                )
         );
     }
 
