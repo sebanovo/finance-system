@@ -89,19 +89,18 @@ public class PlatformBootstrapService {
                 new PermissionSeed("access.roles.deactivate", "access", "Deactivate tenant roles"),
                 new PermissionSeed("access.users.roles.read", "access", "Read user role assignments"),
                 new PermissionSeed("access.users.roles.assign", "access", "Assign roles to users"),
-
                 new PermissionSeed("users.list", "users", "List tenant users"),
                 new PermissionSeed("users.create", "users", "Create tenant users"),
                 new PermissionSeed("users.detail", "users", "Read tenant user details"),
                 new PermissionSeed("users.update", "users", "Update tenant users"),
                 new PermissionSeed("users.activate", "users", "Activate tenant users"),
                 new PermissionSeed("users.deactivate", "users", "Deactivate tenant users"),
-
                 // GOVERNANCE PERMISSIONS
                 new PermissionSeed("audit.events.read", "audit", "Read tenant audit events"),
                 new PermissionSeed("notifications.templates.read", "notifications", "Read notification templates"),
                 new PermissionSeed("notifications.templates.detail", "notifications", "Read notification template details"),
                 new PermissionSeed("notifications.deliveries.read", "notifications", "Read notification deliveries"),
+
 
                 // REPORTS PERMISSIONS
                 new PermissionSeed("reports.analytic.read", "reports", "Read analytic reports"),
@@ -111,6 +110,7 @@ public class PlatformBootstrapService {
                 new PermissionSeed("reports.export", "reports", "Export reports"),
                 new PermissionSeed("reports.executions.read", "reports", "Read report executions"),
                 new PermissionSeed("reports.executions.rerun", "reports", "Rerun report executions"),
+
 
                 // TENANT SETTINGS PERMISSIONS
                 new PermissionSeed("tenant-settings.read", "tenantsettings", "Read tenant settings"),
@@ -138,7 +138,6 @@ public class PlatformBootstrapService {
                 new PermissionSeed("accounts.freeze", "accounts", "Freeze tenant accounts"),
                 new PermissionSeed("accounts.close", "accounts", "Close tenant accounts"),
                 new PermissionSeed("accounts.transactions.read", "accounts", "Read transactions for a tenant account"),
-
                 // CLIENT PERMISSIONS
                 new PermissionSeed("me.accounts.create", "accounts", "Create own accounts"),
                 new PermissionSeed("me.accounts.list", "accounts", "List own accounts"),
@@ -174,7 +173,6 @@ public class PlatformBootstrapService {
                 new PermissionSeed("transactions.admin.export", "transactions", "Export transaction data"),
                 new PermissionSeed("transactions.qr.create", "transactions", "Create QR transaction intents"),
                 new PermissionSeed("transactions.qr.confirm", "transactions", "Confirm QR transaction intents"),
-
                 // CLIENT PERMISSIONS
                 new PermissionSeed("me.transactions.read", "transactions", "Read own transactions"),
                 new PermissionSeed("me.transactions.detail", "transactions", "Read own transaction details"),
@@ -249,6 +247,22 @@ public class PlatformBootstrapService {
         logger.info("Base fx permissions seeded successfully.");
     }
 
+    public void seedBaseBackupPermissions() {
+        logger.info("Seeding base backup permissions...");
+
+        List<PermissionSeed> permissions = List.of(
+                new PermissionSeed("backups.create", "backups", "Create tenant backups"),
+                new PermissionSeed("backups.list", "backups", "List tenant backups"),
+                new PermissionSeed("backups.detail", "backups", "Read tenant backup details"),
+                new PermissionSeed("backups.download", "backups", "Download tenant backups"),
+                new PermissionSeed("backups.restore", "backups", "Restore tenant backups")
+        );
+
+        seedPermissions(permissions);
+
+        logger.info("Base backup permissions seeded successfully.");
+    }
+
     public void seedInitialPlatformSuperadmin() {
         logger.info("Seeding initial platform superadmin...");
 
@@ -285,14 +299,16 @@ public class PlatformBootstrapService {
             int maxRoles,
             String planType,
             Integer trialDays
-    ) {
+            ) {
+
     }
 
     private record PermissionSeed(
             String code,
             String module,
             String description
-    ) {
+            ) {
+
     }
 
     private void seedPermissions(List<PermissionSeed> permissions) {
@@ -357,4 +373,89 @@ public class PlatformBootstrapService {
 
         return value.trim();
     }
+
+    public void seedBackupPermissionsForRegisteredTenants() {
+        logger.info("Assigning backup permissions to registered tenant roles...");
+
+        List<TenantSchemaSeed> tenants = jdbcTemplate.query(
+                """
+            SELECT slug, schema_name
+            FROM public.platform_tenants
+            WHERE active = true
+              AND schema_name IS NOT NULL
+              AND schema_name <> ''
+            ORDER BY slug ASC
+            """,
+                (rs, rowNum) -> new TenantSchemaSeed(
+                        rs.getString("slug"),
+                        rs.getString("schema_name")
+                )
+        );
+
+        for (TenantSchemaSeed tenant : tenants) {
+            validateSchemaName(tenant.schemaName());
+
+            seedTenantRolePermissions(
+                    tenant.schemaName(),
+                    "OWNER_ADMIN",
+                    List.of(
+                            "backups.create",
+                            "backups.list",
+                            "backups.detail",
+                            "backups.download",
+                            "backups.restore"
+                    )
+            );
+
+            seedTenantRolePermissions(
+                    tenant.schemaName(),
+                    "ADMIN",
+                    List.of(
+                            "backups.create",
+                            "backups.list",
+                            "backups.detail",
+                            "backups.download"
+                    )
+            );
+        }
+
+        logger.info("Backup permissions assigned to registered tenants successfully.");
+    }
+
+    private void seedTenantRolePermissions(String schemaName, String roleName, List<String> permissionCodes) {
+        for (String permissionCode : permissionCodes) {
+            jdbcTemplate.update(
+                    """
+                INSERT INTO %s.tenant_role_permissions (role_id, permission_code, assigned_at)
+                SELECT r.id, ?, NOW()
+                FROM %s.tenant_roles r
+                JOIN public.system_permissions sp
+                    ON sp.code = ? AND sp.active = true
+                WHERE r.name = ?
+                ON CONFLICT (role_id, permission_code) DO NOTHING
+                """.formatted(schemaName, schemaName),
+                    permissionCode,
+                    permissionCode,
+                    roleName
+            );
+        }
+    }
+
+    private void validateSchemaName(String schemaName) {
+        if (schemaName == null || schemaName.isBlank()) {
+            throw new IllegalArgumentException("Schema name must not be blank");
+        }
+
+        if (!schemaName.matches("^[a-zA-Z0-9_]+$")) {
+            throw new IllegalArgumentException("Invalid schema name: " + schemaName);
+        }
+    }
+
+    private record TenantSchemaSeed(
+            String slug,
+            String schemaName
+            ) {
+
+    }
+
 }

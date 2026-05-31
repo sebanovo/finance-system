@@ -1,12 +1,12 @@
-// export models
-export * from './models/api-response.model';
+// export guards
+export * from './guards/auth.guard';
+export * from './guards/permission.guard';
 
 // export interceptors
 export * from './interceptors/auth.interceptor';
 
-// export guards
-export * from './guards/auth.guard';
-export * from './guards/permission.guard';
+// export models
+export * from './models/api-response.model';
 
 // export pipes
 export * from './pipes/has-permission.pipe';
