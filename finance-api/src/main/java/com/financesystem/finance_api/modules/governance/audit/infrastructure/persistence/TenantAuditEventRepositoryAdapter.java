@@ -24,6 +24,14 @@ public class TenantAuditEventRepositoryAdapter implements TenantAuditEventReposi
     }
 
     @Override
+    public List<TenantAuditEvent> findAll() {
+        return jpaRepository.findAll()
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
     public List<TenantAuditEvent> findRecent(int limit) {
         return jpaRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(0, limit))
                 .stream()

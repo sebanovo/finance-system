@@ -8,7 +8,10 @@ import com.financesystem.finance_api.modules.tenant.reporting.domain.model.Repor
 import com.financesystem.finance_api.modules.tenant.reporting.domain.model.ReportType;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -96,15 +99,14 @@ public class ReportController {
 
     @GetMapping("/executions")
     @PreAuthorize("hasAuthority('reports.executions.read')")
-    public ApiResponse<List<ReportExecutionSummaryResponse>> listExecutions(
+    public ApiResponse<Page<ReportExecutionSummaryResponse>> listExecutions(
             @RequestParam(required = false) String reportType,
             @RequestParam(required = false) String mode,
-            @RequestParam(defaultValue = "50") @Min(1) int limit,
-            @RequestParam(defaultValue = "0") @Min(0) int offset
+            @ParameterObject @PageableDefault(size = 50) Pageable pageable
     ) {
         return ApiResponse.success(
                 "Report executions retrieved successfully",
-                listReportExecutionsUseCase.execute(reportType, mode, limit, offset)
+                listReportExecutionsUseCase.execute(reportType, mode, pageable)
         );
     }
 

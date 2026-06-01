@@ -1,11 +1,16 @@
 package com.financesystem.finance_api.modules.platform.tenants.infrastructure.api;
 
 import com.financesystem.finance_api.common.response.ApiResponse;
+import com.financesystem.finance_api.common.pagination.PaginationSupport;
 import com.financesystem.finance_api.modules.platform.tenants.application.dto.CreatePlatformTenantRequest;
 import com.financesystem.finance_api.modules.platform.tenants.application.dto.PlatformTenantResponse;
 import com.financesystem.finance_api.modules.platform.tenants.application.usecase.*;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,10 +56,10 @@ public class PlatformTenantController {
 
     @GetMapping
     @PreAuthorize("@authorizationGuards.isPlatformAdmin()")
-    public ApiResponse<List<PlatformTenantResponse>> listTenants() {
+    public ApiResponse<Page<PlatformTenantResponse>> listTenants(@ParameterObject @PageableDefault(size = 50) Pageable pageable) {
         return ApiResponse.success(
                 "Tenants retrieved successfully",
-                listTenantsUseCase.execute()
+                PaginationSupport.page(listTenantsUseCase.execute(), pageable)
         );
     }
 

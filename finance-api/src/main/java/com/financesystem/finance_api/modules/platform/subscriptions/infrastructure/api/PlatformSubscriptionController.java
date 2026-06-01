@@ -1,6 +1,7 @@
 package com.financesystem.finance_api.modules.platform.subscriptions.infrastructure.api;
 
 import com.financesystem.finance_api.common.response.ApiResponse;
+import com.financesystem.finance_api.common.pagination.PaginationSupport;
 import com.financesystem.finance_api.modules.platform.subscriptions.application.dto.AssignPlatformSubscriptionRequest;
 import com.financesystem.finance_api.modules.platform.subscriptions.application.dto.PlatformSubscriptionResponse;
 import com.financesystem.finance_api.modules.platform.subscriptions.application.usecase.AssignPlatformSubscriptionUseCase;
@@ -8,6 +9,10 @@ import com.financesystem.finance_api.modules.platform.subscriptions.application.
 import com.financesystem.finance_api.modules.platform.subscriptions.application.usecase.ListPlatformSubscriptionsUseCase;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,10 +51,10 @@ public class PlatformSubscriptionController {
 
     @GetMapping
     @PreAuthorize("@authorizationGuards.isPlatformAdmin()")
-    public ApiResponse<List<PlatformSubscriptionResponse>> listSubscriptions() {
+    public ApiResponse<Page<PlatformSubscriptionResponse>> listSubscriptions(@ParameterObject @PageableDefault(size = 50) Pageable pageable) {
         return ApiResponse.success(
                 "Platform subscriptions retrieved successfully",
-                listPlatformSubscriptionsUseCase.execute()
+                PaginationSupport.page(listPlatformSubscriptionsUseCase.execute(), pageable)
         );
     }
 

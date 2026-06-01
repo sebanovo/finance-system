@@ -1,12 +1,17 @@
 package com.financesystem.finance_api.modules.identity.users.infrastructure.api;
 
 import com.financesystem.finance_api.common.response.ApiResponse;
+import com.financesystem.finance_api.common.pagination.PaginationSupport;
 import com.financesystem.finance_api.modules.identity.users.application.dto.CreateTenantUserRequest;
 import com.financesystem.finance_api.modules.identity.users.application.dto.TenantUserResponse;
 import com.financesystem.finance_api.modules.identity.users.application.dto.UpdateTenantUserRequest;
 import com.financesystem.finance_api.modules.identity.users.application.usecase.*;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -56,10 +61,10 @@ public class TenantUserController {
     // @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     @PreAuthorize("hasAuthority('users.list')")
-    public ApiResponse<List<TenantUserResponse>> listUsers() {
+    public ApiResponse<Page<TenantUserResponse>> listUsers(@ParameterObject @PageableDefault(size = 50) Pageable pageable) {
         return ApiResponse.success(
                 "Tenant users retrieved successfully",
-                listTenantUsersUseCase.execute()
+                PaginationSupport.page(listTenantUsersUseCase.execute(), pageable)
         );
     }
 

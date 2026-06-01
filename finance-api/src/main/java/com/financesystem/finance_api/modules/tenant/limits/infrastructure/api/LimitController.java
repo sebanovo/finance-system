@@ -1,6 +1,7 @@
 package com.financesystem.finance_api.modules.tenant.limits.infrastructure.api;
 
 import com.financesystem.finance_api.common.response.ApiResponse;
+import com.financesystem.finance_api.common.pagination.PaginationSupport;
 import com.financesystem.finance_api.modules.tenant.limits.application.dto.*;
 import com.financesystem.finance_api.modules.tenant.limits.application.usecase.create.CreateLimitRuleUseCase;
 import com.financesystem.finance_api.modules.tenant.limits.application.usecase.delete.DeleteLimitRuleUseCase;
@@ -10,6 +11,10 @@ import com.financesystem.finance_api.modules.tenant.limits.application.usecase.q
 import com.financesystem.finance_api.modules.tenant.limits.application.usecase.update.UpdateLimitRuleUseCase;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,8 +51,8 @@ public class LimitController {
 
     @GetMapping("/rules")
     @PreAuthorize("hasAuthority('limits.read')")
-    public ApiResponse<List<LimitRuleResponse>> listRules() {
-        return ApiResponse.success("Limit rules retrieved successfully", listLimitRulesUseCase.execute());
+    public ApiResponse<Page<LimitRuleResponse>> listRules(@ParameterObject @PageableDefault(size = 50) Pageable pageable) {
+        return ApiResponse.success("Limit rules retrieved successfully", PaginationSupport.page(listLimitRulesUseCase.execute(), pageable));
     }
 
     @GetMapping("/rules/{id}")

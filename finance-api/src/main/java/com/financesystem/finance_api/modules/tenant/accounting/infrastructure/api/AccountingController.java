@@ -1,6 +1,7 @@
 package com.financesystem.finance_api.modules.tenant.accounting.infrastructure.api;
 
 import com.financesystem.finance_api.common.response.ApiResponse;
+import com.financesystem.finance_api.common.pagination.PaginationSupport;
 import com.financesystem.finance_api.modules.tenant.accounting.application.dto.*;
 import com.financesystem.finance_api.modules.tenant.accounting.application.usecase.journal.GetJournalEntryByIdUseCase;
 import com.financesystem.finance_api.modules.tenant.accounting.application.usecase.journal.ListJournalEntriesUseCase;
@@ -9,6 +10,10 @@ import com.financesystem.finance_api.modules.tenant.accounting.application.useca
 import com.financesystem.finance_api.modules.tenant.accounting.application.usecase.period.ListAccountingPeriodsUseCase;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,8 +48,8 @@ public class AccountingController {
 
     @GetMapping("/periods")
     @PreAuthorize("hasAuthority('accounting.periods.read')")
-    public ApiResponse<List<AccountingPeriodResponse>> listPeriods() {
-        return ApiResponse.success("Accounting periods retrieved successfully", listAccountingPeriodsUseCase.execute());
+    public ApiResponse<Page<AccountingPeriodResponse>> listPeriods(@ParameterObject @PageableDefault(size = 50) Pageable pageable) {
+        return ApiResponse.success("Accounting periods retrieved successfully", PaginationSupport.page(listAccountingPeriodsUseCase.execute(), pageable));
     }
 
     @PostMapping("/periods")
@@ -64,8 +69,8 @@ public class AccountingController {
 
     @GetMapping("/journal-entries")
     @PreAuthorize("hasAuthority('accounting.journal.read')")
-    public ApiResponse<List<JournalEntryResponse>> listJournalEntries() {
-        return ApiResponse.success("Journal entries retrieved successfully", listJournalEntriesUseCase.execute());
+    public ApiResponse<Page<JournalEntryResponse>> listJournalEntries(@ParameterObject @PageableDefault(size = 50) Pageable pageable) {
+        return ApiResponse.success("Journal entries retrieved successfully", PaginationSupport.page(listJournalEntriesUseCase.execute(), pageable));
     }
 
     @GetMapping("/journal-entries/{id}")

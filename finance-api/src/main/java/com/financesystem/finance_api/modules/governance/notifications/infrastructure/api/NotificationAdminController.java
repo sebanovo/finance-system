@@ -1,11 +1,16 @@
 package com.financesystem.finance_api.modules.governance.notifications.infrastructure.api;
 
 import com.financesystem.finance_api.common.response.ApiResponse;
+import com.financesystem.finance_api.common.pagination.PaginationSupport;
 import com.financesystem.finance_api.modules.governance.notifications.application.dto.NotificationDeliveryResponse;
 import com.financesystem.finance_api.modules.governance.notifications.application.dto.NotificationTemplateResponse;
 import com.financesystem.finance_api.modules.governance.notifications.application.mapper.NotificationMapper;
 import com.financesystem.finance_api.modules.governance.notifications.application.service.NotificationApplicationService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,12 +36,15 @@ public class NotificationAdminController {
 
     @GetMapping("/templates")
     @PreAuthorize("hasAuthority('notifications.templates.read')")
-    public ApiResponse<List<NotificationTemplateResponse>> listTemplates() {
+    public ApiResponse<Page<NotificationTemplateResponse>> listTemplates(@ParameterObject @PageableDefault(size = 50) Pageable pageable) {
         return ApiResponse.success(
                 "Notification templates retrieved successfully",
-                notificationApplicationService.listTemplates().stream()
+                PaginationSupport.page(
+                        notificationApplicationService.listTemplates().stream()
                         .map(notificationMapper::toResponse)
-                        .toList()
+                        .toList(),
+                        pageable
+                )
         );
     }
 
@@ -51,14 +59,18 @@ public class NotificationAdminController {
 
     @GetMapping("/{notificationId}/deliveries")
     @PreAuthorize("hasAuthority('notifications.deliveries.read')")
-    public ApiResponse<List<NotificationDeliveryResponse>> listDeliveriesByNotification(
-            @PathVariable UUID notificationId
+    public ApiResponse<Page<NotificationDeliveryResponse>> listDeliveriesByNotification(
+            @PathVariable UUID notificationId,
+            @ParameterObject @PageableDefault(size = 50) Pageable pageable
     ) {
         return ApiResponse.success(
                 "Notification deliveries retrieved successfully",
-                notificationApplicationService.listDeliveriesByNotification(notificationId).stream()
+                PaginationSupport.page(
+                        notificationApplicationService.listDeliveriesByNotification(notificationId).stream()
                         .map(notificationMapper::toResponse)
-                        .toList()
+                        .toList(),
+                        pageable
+                )
         );
     }
 }

@@ -21,6 +21,13 @@ public class ListTenantAuditEventsUseCase {
         this.auditEventMapper = auditEventMapper;
     }
 
+    public List<AuditEventResponse> execute() {
+        return tenantAuditEventRepository.findAll()
+                .stream()
+                .map(auditEventMapper::toResponse)
+                .toList();
+    }
+
     public List<AuditEventResponse> execute(int limit) {
         int safeLimit = Math.min(Math.max(limit, 1), 200);
 
