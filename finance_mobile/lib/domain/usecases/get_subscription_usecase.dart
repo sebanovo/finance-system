@@ -5,5 +5,5 @@ class GetSubscriptionUseCase {
   final SubscriptionRepository repository;
   GetSubscriptionUseCase(this.repository);
 
-  Future<Subscription> call() => repository.getCurrentSubscription();
+  Future<Subscription?> call() => repository.getCurrentSubscription();
 }

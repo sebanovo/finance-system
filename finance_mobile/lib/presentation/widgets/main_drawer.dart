@@ -17,9 +17,8 @@ class MainDrawer extends StatelessWidget {
     required this.onLogout,
   });
 
-  bool _hasAnyRole(List<String> roles) {
-    final userRoles = viewModel.userInfo?.roles ?? [];
-    return roles.any((role) => userRoles.contains(role));
+  bool _hasClientPermissionPrefix(String prefix) {
+    return viewModel.hasAnyPermissionPrefix(prefix);
   }
 
   @override
@@ -31,7 +30,12 @@ class MainDrawer extends StatelessWidget {
           children: [
             _buildDrawerHeader(),
             _buildDashboardItem(context),
-            if (_hasAnyRole(['OWNER_ADMIN', 'ADMIN'])) ...[
+            _buildDrawerItem(
+              icon: Icons.person_outline,
+              title: 'Mi perfil',
+              onTap: () => context.push('/profile'),
+            ),
+            if (viewModel.isOwnerAdmin) ...[
               _buildDrawerItem(
                 icon: Icons.people,
                 title: 'Usuarios',
@@ -47,41 +51,57 @@ class MainDrawer extends StatelessWidget {
                 title: 'Permisos',
                 onTap: () => context.push('/permissions'),
               ),
+            ] else if (viewModel.isClient) ...[
+              if (_hasClientPermissionPrefix('me.accounts.'))
+                _buildDrawerItem(
+                  icon: Icons.account_balance_wallet,
+                  title: 'Mis Cuentas',
+                  onTap: () => context.push('/accounts'),
+                ),
+              if (_hasClientPermissionPrefix('me.transactions.'))
+                _buildDrawerItem(
+                  icon: Icons.history,
+                  title: 'Movimientos',
+                  onTap: () => context.push('/transactions'),
+                ),
+              if (viewModel.hasAnyPermissionPrefix('limits.'))
+                _buildDrawerItem(
+                  icon: Icons.shield_outlined,
+                  title: 'Límites',
+                  onTap: () => context.push('/limits'),
+                ),
+              if (_hasClientPermissionPrefix('me.'))
+                _buildDrawerItem(
+                  icon: Icons.notifications,
+                  title: 'Mis notificaciones',
+                  onTap: () => context.push('/notifications'),
+                ),
+              if (_hasClientPermissionPrefix('me.'))
+                _buildDrawerItem(
+                  icon: Icons.phone_android,
+                  title: 'Mis Dispositivos',
+                  onTap: () => context.push('/devices'),
+                ),
+              if (_hasClientPermissionPrefix('me.'))
+                _buildDrawerItem(
+                  icon: Icons.tune,
+                  title: 'Preferencias',
+                  onTap: () => context.push('/notification-preferences'),
+                ),
+            ] else ...[
+              _buildDrawerItem(
+                icon: Icons.block,
+                title: 'Sin permisos de cliente',
+                onTap: () {},
+              ),
             ],
-            if (_hasAnyRole(['USER'])) ...[
-              _buildDrawerItem(
-                icon: Icons.account_balance_wallet,
-                title: 'Mis Cuentas',
-                onTap: () => context.push('/accounts'),
-              ),
-              _buildDrawerItem(
-                icon: Icons.history,
-                title: 'Movimientos',
-                onTap: () => context.push('/transactions'),
-              ),
-              _buildDrawerItem(
-                icon: Icons.notifications,
-                title: 'Mis notificaciones',
-                onTap: () => context.push('/notifications'),
-              ),
-              _buildDrawerItem(
-                icon: Icons.phone_android,
-                title: 'Mis Dispositivos',
-                onTap: () => context.push('/devices'),
-              ),
-            ],
-            _buildDrawerItem(
-              icon: Icons.lock_reset,
-              title: 'Cambiar contraseña',
-              onTap: onChangePassword,
-            ),
             _buildDrawerItem(
               icon: Icons.logout,
               title: 'Cerrar sesión',
               onTap: onLogout,
               isDestructive: true,
             ),
-            if (_hasAnyRole(['USER']))
+            if (viewModel.isClient)
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: ElevatedButton(

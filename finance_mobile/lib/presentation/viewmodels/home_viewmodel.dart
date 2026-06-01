@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../../core/network/api_client.dart';
+import '../../../domain/entities/customer_dashboard.dart';
 import '../../../domain/usecases/get_subscription_usecase.dart';
+import '../../../domain/usecases/get_customer_dashboard_usecase.dart';
 import '../../../domain/usecases/get_user_info_usecase.dart';
 import '../../../domain/usecases/change_password_usecase.dart';
 import '../../../domain/usecases/logout_usecase.dart';
@@ -8,34 +11,76 @@ import '../../../../domain/entities/user_info.dart';
 
 class HomeViewModel extends ChangeNotifier {
   final GetSubscriptionUseCase getSubscriptionUseCase;
+  final GetCustomerDashboardUseCase getCustomerDashboardUseCase;
   final GetUserInfoUseCase getUserInfoUseCase;
   final ChangePasswordUseCase changePasswordUseCase;
   final LogoutUseCase logoutUseCase;
+  final ApiClient apiClient;
 
+  CustomerDashboard? _customerDashboard;
   Subscription? _subscription;
   UserInfo? _userInfo;
+  bool _loadingDashboard = true;
   bool _loadingSubscription = true;
   bool _loadingUserInfo = true;
+  String? _dashboardErrorMessage;
   String? _errorMessage;
 
   HomeViewModel({
     required this.getSubscriptionUseCase,
+    required this.getCustomerDashboardUseCase,
     required this.getUserInfoUseCase,
     required this.changePasswordUseCase,
     required this.logoutUseCase,
-  }) {
-    loadData();
-  }
+    required this.apiClient,
+  });
 
   // Getters
+  CustomerDashboard? get customerDashboard => _customerDashboard;
   Subscription? get subscription => _subscription;
   UserInfo? get userInfo => _userInfo;
+  bool get loadingDashboard => _loadingDashboard;
   bool get loadingSubscription => _loadingSubscription;
   bool get loadingUserInfo => _loadingUserInfo;
+  String? get dashboardErrorMessage => _dashboardErrorMessage;
   String? get errorMessage => _errorMessage;
+  bool get isOwnerAdmin =>
+      (userInfo?.roles.contains('OWNER_ADMIN') ?? false) || apiClient.isOwnerAdmin;
+  List<String> get permissions => apiClient.permissions;
+
+  bool hasPermission(String code) => apiClient.hasPermission(code);
+
+  bool hasAnyPermissionPrefix(String prefix) =>
+      apiClient.hasAnyPermissionPrefix(prefix);
+  bool get isClient => hasAnyPermissionPrefix('me.');
 
   Future<void> loadData() async {
-    await Future.wait([loadSubscription(), loadUserInfo()]);
+    await Future.wait([
+      loadSubscription(),
+      loadUserInfo(),
+      if (isClient) loadCustomerDashboard() else Future<void>.value(),
+    ]);
+    if (!isClient) {
+      _customerDashboard = null;
+      _loadingDashboard = false;
+      _dashboardErrorMessage = null;
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadCustomerDashboard() async {
+    _loadingDashboard = true;
+    notifyListeners();
+    try {
+      _customerDashboard = await getCustomerDashboardUseCase();
+      _dashboardErrorMessage = null;
+    } catch (e) {
+      _dashboardErrorMessage = e.toString();
+      _customerDashboard = null;
+    } finally {
+      _loadingDashboard = false;
+      notifyListeners();
+    }
   }
 
   Future<void> loadSubscription() async {

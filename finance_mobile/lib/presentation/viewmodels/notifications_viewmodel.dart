@@ -45,14 +45,14 @@ class NotificationsViewModel extends ChangeNotifier {
   int get unreadCount => _unreadCount;
   String? get errorMessage => _errorMessage;
 
-  String? _currentUserRole;
+  bool _isClient = false;
 
-  void setCurrentUserRole(String role) {
-    _currentUserRole = role;
+  void setIsClient(bool value) {
+    _isClient = value;
   }
 
   bool get canRegisterDevice {
-    return _currentUserRole == 'USER';
+    return _isClient;
   }
 
   Future<void> loadInitial() async {
@@ -106,6 +106,7 @@ class NotificationsViewModel extends ChangeNotifier {
   Future<void> loadUnreadCount() async {
     try {
       _unreadCount = await getUnreadCountUseCase();
+      NotificationCounter().update(_unreadCount);
       notifyListeners();
     } catch (e) {
       // silencioso, no romper UI
@@ -154,6 +155,7 @@ class NotificationsViewModel extends ChangeNotifier {
         if (index != -1) _notifications[index] = updatedNotif;
       }
       _unreadCount = 0;
+      NotificationCounter().update(_unreadCount);
       notifyListeners();
     } catch (e) {
       // error manejado en UI
@@ -163,7 +165,8 @@ class NotificationsViewModel extends ChangeNotifier {
   Future<void> archive(String id) async {
     try {
       await archiveUseCase(id);
-      _notifications.removeWhere((n) => n.id == id);
+        _notifications.removeWhere((n) => n.id == id);
+      loadUnreadCount();
       notifyListeners();
     } catch (e) {}
   }
@@ -183,18 +186,18 @@ class NotificationsViewModel extends ChangeNotifier {
   }
 
   // ✅ Registro de dispositivo (funciona en Web y Móvil)
-  Future<void> registerCurrentDevice() async {
+  Future<bool> registerCurrentDevice() async {
     if (!canRegisterDevice) {
       debugPrint(
-        '❌ Usuario con rol $_currentUserRole no puede registrar dispositivos',
+        '❌ Usuario cliente no puede registrar dispositivos',
       );
-      return;
+      return false;
     }
     try {
       final fcmToken = await _getFcmToken();
       if (fcmToken == null) {
         debugPrint('❌ No se pudo obtener FCM Token');
-        return;
+        return false;
       }
 
       debugPrint(
@@ -240,8 +243,10 @@ class NotificationsViewModel extends ChangeNotifier {
         osVersion: osVersion,
       );
       debugPrint('✅ Dispositivo registrado exitosamente');
+      return true;
     } catch (e) {
       debugPrint('❌ Error al registrar dispositivo: $e');
+      return false;
     }
   }
 

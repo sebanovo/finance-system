@@ -1,7 +1,10 @@
 import '../../../domain/entities/transaction.dart';
 import '../../../domain/entities/deposit_request.dart';
+import '../../../domain/entities/confirm_qr_transaction_request.dart';
 import '../../../domain/entities/hold_request.dart';
 import '../../../domain/entities/payment_request.dart';
+import '../../../domain/entities/qr_transaction_intent.dart';
+import '../../../domain/entities/qr_transaction_intent_request.dart';
 import '../../../domain/entities/release_request.dart';
 import '../../../domain/entities/transfer_request.dart';
 import '../../../domain/entities/withdrawal_request.dart';
@@ -63,6 +66,46 @@ class TransactionRepositoryImpl implements TransactionRepository {
       if (request.externalReference != null)
         'externalReference': request.externalReference,
       if (request.description != null) 'description': request.description,
+    });
+    return model.toEntity();
+  }
+
+  @override
+  Future<QrTransactionIntent> createQrIntent(
+    QrTransactionIntentRequest request,
+  ) async {
+    final model = await remoteDataSource.createQrIntent({
+      'targetAccountId': request.targetAccountId,
+      'amount': request.amount,
+      'currency': request.currency,
+      'idempotencyKey': request.idempotencyKey,
+      if (request.externalReference != null)
+        'externalReference': request.externalReference,
+      if (request.description != null) 'description': request.description,
+    });
+    return model.toEntity();
+  }
+
+  @override
+  Future<QrTransactionIntent> getQrIntent(String id) async {
+    final model = await remoteDataSource.getQrIntent(id);
+    return model.toEntity();
+  }
+
+  @override
+  Future<QrTransactionIntent> cancelQrIntent(String id) async {
+    final model = await remoteDataSource.cancelQrIntent(id);
+    return model.toEntity();
+  }
+
+  @override
+  Future<Transaction> confirmQrTransaction(
+    String intentId,
+    ConfirmQrTransactionRequest request,
+  ) async {
+    final model = await remoteDataSource.confirmQrTransaction(intentId, {
+      'sourceAccountId': request.sourceAccountId,
+      'idempotencyKey': request.idempotencyKey,
     });
     return model.toEntity();
   }

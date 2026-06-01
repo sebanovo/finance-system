@@ -2,7 +2,7 @@ import '../../../../core/network/api_client.dart';
 import '../models/subscription_model.dart';
 
 abstract class SubscriptionRemoteDataSource {
-  Future<SubscriptionModel> getCurrentSubscription();
+  Future<SubscriptionModel?> getCurrentSubscription();
 }
 
 class SubscriptionRemoteDataSourceImpl implements SubscriptionRemoteDataSource {
@@ -11,12 +11,16 @@ class SubscriptionRemoteDataSourceImpl implements SubscriptionRemoteDataSource {
   SubscriptionRemoteDataSourceImpl(this.apiClient);
 
   @override
-  Future<SubscriptionModel> getCurrentSubscription() async {
+  Future<SubscriptionModel?> getCurrentSubscription() async {
     final response = await apiClient.get('/api/subscription/current');
     if (response.statusCode == 200) {
       final data = response.data as Map<String, dynamic>;
       if (data['success'] == true) {
-        return SubscriptionModel.fromJson(data['data']);
+        final payload = data['data'];
+        if (payload is! Map<String, dynamic>) {
+          return null;
+        }
+        return SubscriptionModel.tryFromJson(payload);
       } else {
         throw Exception(data['message'] ?? 'Error al obtener suscripción');
       }

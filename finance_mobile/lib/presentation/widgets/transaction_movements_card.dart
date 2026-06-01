@@ -51,9 +51,12 @@ class TransactionMovementsCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  movement.movementType,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                Expanded(
+                  child: Text(
+                    _friendlyMovementType(movement.movementType),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 Text(
                   '${movement.movementType == 'CREDIT' ? '+' : '-'}${movement.amount.toStringAsFixed(2)} ${movement.currency}',
@@ -67,6 +70,12 @@ class TransactionMovementsCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 4),
+            Text(
+              '${movement.accountDisplayName} · ${movement.accountNumber}',
+              style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
             Text(
               movement.description,
               style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
@@ -84,17 +93,20 @@ class TransactionMovementsCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                movement.movementType,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              Text(
-                '${movement.movementType == 'CREDIT' ? '+' : '-'}${movement.amount.toStringAsFixed(2)} ${movement.currency}',
-                style: TextStyle(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    _friendlyMovementType(movement.movementType),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Text(
+                  '${movement.movementType == 'CREDIT' ? '+' : '-'}${movement.amount.toStringAsFixed(2)} ${movement.currency}',
+                  style: TextStyle(
                   color: movement.movementType == 'CREDIT'
                       ? const Color(0xFF2E7D32)
                       : Colors.red.shade700,
@@ -104,6 +116,12 @@ class TransactionMovementsCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
+          Text(
+            '${movement.accountDisplayName} · ${movement.accountNumber}',
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
           Text(
             movement.description,
             style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
@@ -116,5 +134,16 @@ class TransactionMovementsCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _friendlyMovementType(String type) {
+    switch (type) {
+      case 'CREDIT':
+        return 'Crédito';
+      case 'DEBIT':
+        return 'Débito';
+      default:
+        return type;
+    }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/di/injection_container.dart' as di;
+import '../../domain/entities/account.dart';
 import '../viewmodels/accounts_viewmodel.dart';
 import '../widgets/account_info_card.dart';
 import '../widgets/account_detail_skeleton.dart';
@@ -111,23 +112,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
     final account = _viewModel.selectedAccount;
 
     if (account == null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('No se pudo cargar la cuenta'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadData,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2E7D32),
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Reintentar'),
-            ),
-          ],
-        ),
-      );
+      return _buildAccountNotFound();
     }
 
     final balance = _viewModel.accountBalance;
@@ -156,18 +141,84 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
     );
   }
 
-  Widget _buildAdditionalInfoCard(account) {
+  Widget _buildAdditionalInfoCard(Account account) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _infoRow('Tipo de cuenta', account.accountNameLabel),
-            const Divider(),
-            _infoRow('Moneda', account.currency),
-            const Divider(),
+            Text(
+              'Detalles',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade800,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _infoChip('Número', account.accountNumber),
+                _infoChip('Tipo', account.accountNameLabel),
+                _infoChip('Moneda', account.currency),
+                _infoChip('Estado', account.status),
+                if (account.primary) _infoChip('Principal', 'Sí'),
+              ],
+            ),
+            if (account.statusReason != null &&
+                account.statusReason!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(
+                account.statusReason!,
+                style: TextStyle(color: Colors.grey.shade600),
+              ),
+            ],
+            const SizedBox(height: 12),
             _infoRow('Fecha de apertura', _formatDate(account.openedAt)),
+            const Divider(),
+            _infoRow('Saldo retenido', _formatMoney(account.heldBalance, account.currency)),
+            const Divider(),
+            _infoRow('Saldo total', _formatMoney(account.totalBalance, account.currency)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAccountNotFound() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.account_balance_wallet_outlined,
+                size: 64, color: Colors.grey.shade400),
+            const SizedBox(height: 16),
+            const Text(
+              'No se pudo cargar el detalle de la cuenta',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Revisa tu conexión o intenta nuevamente.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _loadData,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2E7D32),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Reintentar'),
+            ),
           ],
         ),
       ),
@@ -225,6 +276,42 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
         ],
       ),
     );
+  }
+
+  Widget _infoChip(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F8E9),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey.shade700,
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Color(0xFF2E7D32),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatMoney(double amount, String currency) {
+    return '${amount.toStringAsFixed(2)} $currency';
   }
 
   String _formatDate(DateTime date) {

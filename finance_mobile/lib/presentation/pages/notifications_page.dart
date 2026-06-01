@@ -49,21 +49,18 @@ class _NotificationsPageState extends State<NotificationsPage> {
   // ✅ Método para marcar como leída y actualizar contador
   Future<void> _markAsRead(String id) async {
     await _viewModel.markAsRead(id);
-    await _viewModel.loadUnreadCount();
     setState(() {});
   }
 
   // ✅ Método para marcar todas como leídas y actualizar contador
   Future<void> _markAllAsRead() async {
     await _viewModel.markAllAsRead();
-    await _viewModel.loadUnreadCount();
     setState(() {});
   }
 
   // ✅ Método para archivar y actualizar contador
   Future<void> _archive(String id) async {
     await _viewModel.archive(id);
-    await _viewModel.loadUnreadCount();
     setState(() {});
   }
 
@@ -76,6 +73,18 @@ class _NotificationsPageState extends State<NotificationsPage> {
         elevation: 0,
         foregroundColor: const Color(0xFF2E7D32),
         actions: [
+          if (_viewModel.canRegisterDevice)
+            IconButton(
+              icon: const Icon(Icons.phone_android_outlined),
+              tooltip: 'Dispositivos',
+              onPressed: () => context.push('/devices'),
+            ),
+          if (_viewModel.canRegisterDevice)
+            IconButton(
+              icon: const Icon(Icons.tune),
+              tooltip: 'Preferencias',
+              onPressed: () => context.push('/notification-preferences'),
+            ),
           if (_viewModel.unreadCount > 0)
             IconButton(
               icon: const Icon(Icons.done_all),
@@ -128,10 +137,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
               if (notif.isUnread) {
                 await _markAsRead(notif.id);
               }
+              if (!context.mounted) return;
               if (notif.actionUrl != null && notif.actionUrl!.isNotEmpty) {
-                if (mounted) {
-                  context.push(notif.actionUrl!.replaceFirst('/api/me', ''));
-                }
+                final router = GoRouter.of(context);
+                router.push(notif.actionUrl!.replaceFirst('/api/me', ''));
               }
             },
             onLongPress: () {

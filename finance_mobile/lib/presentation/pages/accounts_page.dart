@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart' as di;
+import '../../../../core/network/api_client.dart';
 import '../viewmodels/accounts_viewmodel.dart';
 import '../widgets/account_card.dart';
 import '../widgets/account_card_skeleton.dart';
@@ -16,6 +17,7 @@ class AccountsPage extends StatefulWidget {
 
 class _AccountsPageState extends State<AccountsPage> {
   late AccountsViewModel _viewModel;
+  late ApiClient _apiClient;
   static const int _skeletonItemCount = 3;
 
   final Map<String, String> accountNameOptions = {
@@ -49,9 +51,12 @@ class _AccountsPageState extends State<AccountsPage> {
   void initState() {
     super.initState();
     _viewModel = di.sl<AccountsViewModel>();
+    _apiClient = di.sl<ApiClient>();
     _viewModel.addListener(_onViewModelChanged);
     _viewModel.loadAccounts();
   }
+
+  bool get _canCreateAccount => _apiClient.hasPermission('me.accounts.create');
 
   void _onViewModelChanged() {
     if (!mounted) return;
@@ -87,15 +92,108 @@ class _AccountsPageState extends State<AccountsPage> {
         accountTypeOptions: accountTypeOptions,
         currencyOptions: currencyOptions,
         onSubmit: (accountName, accountType, currency, customAlias) async {
+          final navigator = Navigator.of(context);
           await _viewModel.createAccount(
             accountName: accountName,
             accountType: accountType,
             currency: currency,
             customAlias: customAlias,
           );
-          if (mounted && _viewModel.errorMessage == null)
-            Navigator.of(context).pop();
+          if (!mounted || _viewModel.errorMessage != null) {
+            return;
+          }
+          navigator.pop();
         },
+      ),
+    );
+  }
+
+  Widget _buildAccountOverview() {
+    final activeCount = _viewModel.accounts.where((account) => account.active).length;
+    final pendingCount = _viewModel.accounts.where((account) {
+      final status = account.status.toUpperCase();
+      return status.startsWith('PENDING');
+    }).length;
+    final restrictedCount = _viewModel.accounts.where((account) {
+      final status = account.status.toUpperCase();
+      return ['FROZEN', 'BLOCKED', 'SUSPENDED'].contains(status);
+    }).length;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF66BB6A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Tus cuentas',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Resumen compacto de tus cuentas y saldos.',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.9),
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildOverviewChip('Activas', '$activeCount'),
+              _buildOverviewChip('Pendientes', '$pendingCount'),
+              _buildOverviewChip('Restringidas', '$restrictedCount'),
+              _buildOverviewChip('Total', '${_viewModel.accounts.length}'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOverviewChip(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -108,80 +206,92 @@ class _AccountsPageState extends State<AccountsPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: const Color(0xFF2E7D32),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications),
+            tooltip: 'Notificaciones',
+            onPressed: () => context.push('/notifications'),
+          ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openCreateAccountDialog,
-        backgroundColor: const Color(0xFF2E7D32),
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add),
-        label: const Text('Nueva Cuenta'),
-      ),
+      floatingActionButton: _canCreateAccount
+          ? FloatingActionButton.extended(
+              onPressed: _openCreateAccountDialog,
+              backgroundColor: const Color(0xFF2E7D32),
+              foregroundColor: Colors.white,
+              icon: const Icon(Icons.add),
+              label: const Text('Nueva Cuenta'),
+            )
+          : null,
       body: _buildBody(),
     );
   }
 
   Widget _buildBody() {
-    if (_viewModel.loading) {
-      return Column(
-        children: [
-          TotalBalanceCard(
-            totalBalance: '0.00 BOB',
-            accountsCount: 0,
-            isLoading: true,
-          ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _skeletonItemCount,
-              itemBuilder: (context, index) => const AccountCardSkeleton(),
-            ),
-          ),
-        ],
+    if (!_apiClient.hasPermission('me.accounts.list')) {
+      return _buildPermissionDeniedWidget(
+        'No tienes permisos para ver cuentas',
+        'Tu perfil no tiene acceso a la lista de cuentas.',
       );
     }
 
-    if (_viewModel.errorMessage != null) {
-      return _buildErrorWidget();
-    }
-
-    if (_viewModel.accounts.isEmpty) {
-      return _buildEmptyWidget();
-    }
-
-    return Column(
-      children: [
-        TotalBalanceCard(
-          totalBalance: _viewModel.formattedTotalBalance,
-          accountsCount: _viewModel.accounts.length,
-          isLoading: false,
-        ),
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: () => _viewModel.loadAccounts(),
-            color: const Color(0xFF2E7D32),
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _viewModel.accounts.length,
-              itemBuilder: (context, index) {
-                final account = _viewModel.accounts[index];
-                return AccountCard(
+    return RefreshIndicator(
+      onRefresh: () => _viewModel.loadAccounts(),
+      color: const Color(0xFF2E7D32),
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        children: [
+          if (_viewModel.loading) ...[
+            TotalBalanceCard(
+              totalBalance: '0.00 BOB',
+              accountsCount: 0,
+              isLoading: true,
+            ),
+            const SizedBox(height: 16),
+            ...List.generate(
+              _skeletonItemCount,
+              (_) => const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: AccountCardSkeleton(),
+              ),
+            ),
+          ] else if (_viewModel.errorMessage != null) ...[
+            _buildErrorWidget(),
+          ] else ...[
+            _buildAccountOverview(),
+            const SizedBox(height: 16),
+            TotalBalanceCard(
+              totalBalance: _viewModel.formattedTotalBalance,
+              accountsCount: _viewModel.accounts.length,
+              isLoading: false,
+            ),
+            const SizedBox(height: 16),
+            if (_viewModel.accounts.isEmpty)
+              _buildEmptyWidget()
+            else
+              ..._viewModel.accounts.map(
+                (account) => AccountCard(
                   account: account,
                   onTap: () => context.push('/accounts/${account.id}'),
-                );
-              },
-            ),
-          ),
-        ),
-      ],
+                ),
+              ),
+          ],
+        ],
+      ),
     );
   }
 
   Widget _buildErrorWidget() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
+    final height = MediaQuery.of(context).size.height * 0.7;
+
+    return SizedBox(
+      height: height,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
           const SizedBox(height: 16),
           Text(
             _viewModel.errorMessage!,
@@ -201,11 +311,38 @@ class _AccountsPageState extends State<AccountsPage> {
             child: const Text('Reintentar'),
           ),
           const SizedBox(height: 12),
-          TextButton(
-            onPressed: () => context.go('/login'),
-            child: const Text('Ir a inicio de sesión'),
-          ),
-        ],
+            TextButton(
+              onPressed: () => context.go('/login'),
+              child: const Text('Ir a inicio de sesión'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPermissionDeniedWidget(String title, String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.lock_outline, size: 64, color: Colors.grey.shade400),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: const TextStyle(color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -231,17 +368,18 @@ class _AccountsPageState extends State<AccountsPage> {
             style: TextStyle(color: Colors.grey),
           ),
           const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: _openCreateAccountDialog,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2E7D32),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
+          if (_canCreateAccount)
+            ElevatedButton(
+              onPressed: _openCreateAccountDialog,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2E7D32),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
               ),
+              child: const Text('Crear primera cuenta'),
             ),
-            child: const Text('Crear primera cuenta'),
-          ),
         ],
       ),
     );

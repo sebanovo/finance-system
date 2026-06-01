@@ -1,5 +1,6 @@
 import '../../../../core/network/api_client.dart';
 import '../models/account_model.dart';
+import '../models/account_lookup_model.dart';
 import '../models/account_balance_model.dart';
 import '../models/transaction_model.dart';
 import '../models/create_account_request.dart';
@@ -7,6 +8,7 @@ import '../models/create_account_request.dart';
 abstract class AccountRemoteDataSource {
   Future<List<AccountModel>> getAccounts();
   Future<AccountModel> getAccountById(String accountId);
+  Future<AccountLookupModel> getAccountByNumber(String accountNumber);
   Future<AccountBalanceModel> getAccountBalance(String accountId);
   Future<AccountModel> updateAccountAlias(String accountId, String customAlias);
   Future<List<TransactionModel>> getAccountTransactions(String accountId);
@@ -45,6 +47,27 @@ class AccountRemoteDataSourceImpl implements AccountRemoteDataSource {
         return AccountModel.fromJson(data['data']);
       } else {
         throw Exception(data['message'] ?? 'Error al obtener cuenta');
+      }
+    } else if (response.statusCode == 401) {
+      throw Exception('Sesión expirada');
+    } else if (response.statusCode == 404) {
+      throw Exception('Cuenta no encontrada');
+    } else {
+      throw Exception('Error ${response.statusCode}');
+    }
+  }
+
+  @override
+  Future<AccountLookupModel> getAccountByNumber(String accountNumber) async {
+    final response = await apiClient.get(
+      '/api/me/accounts/lookup/${Uri.encodeComponent(accountNumber)}',
+    );
+    if (response.statusCode == 200) {
+      final data = response.data as Map<String, dynamic>;
+      if (data['success'] == true) {
+        return AccountLookupModel.fromJson(data['data'] as Map<String, dynamic>);
+      } else {
+        throw Exception(data['message'] ?? 'Error al buscar cuenta');
       }
     } else if (response.statusCode == 401) {
       throw Exception('Sesión expirada');

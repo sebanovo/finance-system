@@ -6,8 +6,12 @@ import 'package:finance_mobile/presentation/pages/create_payment_page.dart';
 import 'package:finance_mobile/presentation/pages/create_release_page.dart';
 import 'package:finance_mobile/presentation/pages/create_transfer_page.dart';
 import 'package:finance_mobile/presentation/pages/create_withdrawal_page.dart';
+import 'package:finance_mobile/presentation/pages/create_qr_charge_page.dart';
 import 'package:finance_mobile/presentation/pages/devices_page.dart';
+import 'package:finance_mobile/presentation/pages/limits_page.dart';
+import 'package:finance_mobile/presentation/pages/notification_preferences_page.dart';
 import 'package:finance_mobile/presentation/pages/notifications_page.dart';
+import 'package:finance_mobile/presentation/pages/qr_payment_page.dart';
 import 'package:finance_mobile/presentation/pages/transaction_detail_page.dart';
 import 'package:finance_mobile/presentation/pages/transactions_page.dart';
 import 'package:finance_mobile/core/routes/app_route_observer.dart';
@@ -15,6 +19,7 @@ import 'package:finance_mobile/core/di/injection_container.dart' as di;
 import 'package:finance_mobile/core/network/api_client.dart';
 import 'package:go_router/go_router.dart';
 import 'package:finance_mobile/presentation/pages/home_page.dart';
+import 'package:finance_mobile/presentation/pages/profile_page.dart';
 import 'package:finance_mobile/presentation/pages/permissions_pages.dart';
 import 'package:finance_mobile/presentation/pages/roles_pages.dart';
 import 'package:finance_mobile/presentation/pages/login_page.dart';
@@ -23,7 +28,7 @@ import 'package:finance_mobile/presentation/pages/signup_page.dart';
 import 'package:finance_mobile/presentation/pages/forgot_password_page.dart';
 import 'package:finance_mobile/presentation/pages/users_page.dart';
 
-late final GoRouter appRouter = GoRouter(
+final GoRouter appRouter = GoRouter(
   initialLocation: _initialLocation(),
   observers: [appRouteObserver],
   refreshListenable: di.sl<ApiClient>(),
@@ -31,6 +36,7 @@ late final GoRouter appRouter = GoRouter(
     final apiClient = di.sl<ApiClient>();
     final loggedIn = apiClient.hasSession;
     final onPublicRoute = _publicRoutes.contains(state.matchedLocation);
+    final onClientOnlyRoute = _clientOnlyRoutes.contains(state.matchedLocation);
 
     if (!loggedIn && !onPublicRoute) {
       return '/login';
@@ -38,6 +44,13 @@ late final GoRouter appRouter = GoRouter(
 
     if (loggedIn && onPublicRoute) {
       return '/home';
+    }
+
+    if (loggedIn && onClientOnlyRoute) {
+      final hasClientContext = apiClient.hasAnyPermissionPrefix('me.');
+      if (apiClient.isOwnerAdmin || !hasClientContext) {
+        return '/home';
+      }
     }
 
     return null;
@@ -51,6 +64,7 @@ late final GoRouter appRouter = GoRouter(
       builder: (context, _) => const ForgotPasswordPage(),
     ),
     GoRoute(path: '/users', builder: (context, _) => const UsersPage()),
+    GoRoute(path: '/profile', builder: (context, _) => const ProfilePage()),
     GoRoute(path: '/roles', builder: (context, _) => const RolesPage()),
     GoRoute(
       path: '/permissions',
@@ -92,6 +106,14 @@ late final GoRouter appRouter = GoRouter(
       builder: (context, _) => const CreatePaymentPage(),
     ),
     GoRoute(
+      path: '/transactions/qr/charge',
+      builder: (context, _) => const CreateQrChargePage(),
+    ),
+    GoRoute(
+      path: '/transactions/qr/pay',
+      builder: (context, _) => const QrPaymentPage(),
+    ),
+    GoRoute(
       path: '/transactions/hold',
       builder: (context, _) => const CreateHoldPage(),
     ),
@@ -110,7 +132,12 @@ late final GoRouter appRouter = GoRouter(
       path: '/notifications',
       builder: (context, _) => const NotificationsPage(),
     ),
+    GoRoute(path: '/limits', builder: (context, _) => const LimitsPage()),
     GoRoute(path: '/devices', builder: (context, _) => const DevicesPage()),
+    GoRoute(
+      path: '/notification-preferences',
+      builder: (context, _) => const NotificationPreferencesPage(),
+    ),
   ],
 );
 
@@ -119,6 +146,12 @@ const Set<String> _publicRoutes = {
   '/signup',
   '/forgot-password',
   '/reset-password',
+};
+
+const Set<String> _clientOnlyRoutes = {
+  '/notifications',
+  '/devices',
+  '/notification-preferences',
 };
 
 String _initialLocation() {

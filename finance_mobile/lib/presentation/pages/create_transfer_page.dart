@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart' as di;
+import 'package:finance_mobile/domain/entities/account.dart';
+import 'package:finance_mobile/domain/entities/account_lookup.dart';
+import 'package:finance_mobile/domain/usecases/get_account_by_number_usecase.dart';
 import '../viewmodels/accounts_viewmodel.dart';
 import '../viewmodels/transactions_viewmodel.dart';
 
@@ -14,13 +17,18 @@ class CreateTransferPage extends StatefulWidget {
 class _CreateTransferPageState extends State<CreateTransferPage> {
   late TransactionsViewModel _viewModel;
   late AccountsViewModel _accountsViewModel;
+  late final GetAccountByNumberUseCase _getAccountByNumberUseCase;
 
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _idempotencyKeyController = TextEditingController();
+  final _targetAccountNumberController = TextEditingController();
+
   String? _sourceAccountId;
-  String? _targetAccountId;
+  AccountLookup? _resolvedTargetAccount;
+  bool _resolvingTargetAccount = false;
+  String? _targetLookupError;
   String _selectedCurrency = 'BOB';
 
   final Map<String, String> _currencies = {
@@ -35,8 +43,9 @@ class _CreateTransferPageState extends State<CreateTransferPage> {
     super.initState();
     _viewModel = di.sl<TransactionsViewModel>();
     _accountsViewModel = di.sl<AccountsViewModel>();
+    _getAccountByNumberUseCase = di.sl<GetAccountByNumberUseCase>();
     _viewModel.addListener(_onViewModelChanged);
-    _accountsViewModel.addListener(_onAccountsViewModelChanged); // ✅ Agregado
+    _accountsViewModel.addListener(_onAccountsViewModelChanged);
     _accountsViewModel.loadAccounts();
     _idempotencyKeyController.text = _generateIdempotencyKey();
   }
@@ -58,7 +67,6 @@ class _CreateTransferPageState extends State<CreateTransferPage> {
   }
 
   void _onAccountsViewModelChanged() {
-    // ✅ Método agregado
     if (!mounted) return;
     setState(() {});
   }
@@ -76,11 +84,78 @@ class _CreateTransferPageState extends State<CreateTransferPage> {
     return 'transfer_${DateTime.now().millisecondsSinceEpoch}_${DateTime.now().microsecond}';
   }
 
-  String _getAccountDisplayText(account) {
+  String _getAccountDisplayText(Account account) {
     final name = account.customAlias?.isNotEmpty == true
         ? account.customAlias!
         : account.accountNameLabel;
     return '$name - ${account.accountNumber} - ${account.formattedAvailableBalance}';
+  }
+
+  String _getLookupAccountDisplayText(AccountLookup account) {
+    final name = account.customAlias?.isNotEmpty == true
+        ? account.customAlias!
+        : account.displayName;
+    return '$name - ${account.accountNumber}';
+  }
+
+  Future<void> _resolveTargetAccount({bool showFeedback = true}) async {
+    final accountNumber = _targetAccountNumberController.text.trim();
+
+    if (accountNumber.isEmpty) {
+      setState(() {
+        _targetLookupError = 'Ingresa el número de cuenta destino';
+        _resolvedTargetAccount = null;
+      });
+      return;
+    }
+
+    setState(() {
+      _resolvingTargetAccount = true;
+      _targetLookupError = null;
+      _resolvedTargetAccount = null;
+    });
+
+    try {
+      final account = await _getAccountByNumberUseCase(accountNumber);
+      if (!account.active) {
+        if (!mounted) return;
+        setState(() {
+          _targetLookupError = 'La cuenta destino no está activa';
+        });
+        return;
+      }
+
+      if (account.id == _sourceAccountId) {
+        if (!mounted) return;
+        setState(() {
+          _targetLookupError = 'No puedes transferir a la misma cuenta';
+        });
+        return;
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _resolvedTargetAccount = account;
+      });
+
+      if (showFeedback) {
+        _showSnackBar('Cuenta destino verificada', isError: false);
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _targetLookupError = 'No se encontró la cuenta destino';
+      });
+      if (showFeedback) {
+        _showSnackBar('No se pudo verificar la cuenta destino');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _resolvingTargetAccount = false;
+        });
+      }
+    }
   }
 
   Future<void> _submit() async {
@@ -89,11 +164,24 @@ class _CreateTransferPageState extends State<CreateTransferPage> {
       _showSnackBar('Selecciona una cuenta origen');
       return;
     }
-    if (_targetAccountId == null) {
-      _showSnackBar('Selecciona una cuenta destino');
+
+    final targetAccountNumber = _targetAccountNumberController.text.trim();
+    if (targetAccountNumber.isEmpty) {
+      _showSnackBar('Ingresa el número de cuenta destino');
       return;
     }
-    if (_sourceAccountId == _targetAccountId) {
+
+    if (_resolvedTargetAccount == null ||
+        _resolvedTargetAccount!.accountNumber != targetAccountNumber) {
+      await _resolveTargetAccount(showFeedback: false);
+    }
+
+    if (_resolvedTargetAccount == null) {
+      _showSnackBar('Verifica la cuenta destino antes de continuar');
+      return;
+    }
+
+    if (_resolvedTargetAccount!.id == _sourceAccountId) {
       _showSnackBar('No puedes transferir a la misma cuenta');
       return;
     }
@@ -103,7 +191,7 @@ class _CreateTransferPageState extends State<CreateTransferPage> {
       currency: _selectedCurrency,
       idempotencyKey: _idempotencyKeyController.text,
       sourceAccountId: _sourceAccountId!,
-      targetAccountId: _targetAccountId!,
+      targetAccountId: _resolvedTargetAccount!.id,
       description: _descriptionController.text.isEmpty
           ? null
           : _descriptionController.text,
@@ -126,7 +214,6 @@ class _CreateTransferPageState extends State<CreateTransferPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Cuenta origen
               Card(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
@@ -175,8 +262,10 @@ class _CreateTransferPageState extends State<CreateTransferPage> {
                           onChanged: (value) {
                             setState(() {
                               _sourceAccountId = value;
-                              if (_targetAccountId == value) {
-                                _targetAccountId = null;
+                              if (_resolvedTargetAccount?.id == value) {
+                                _resolvedTargetAccount = null;
+                                _targetLookupError =
+                                    'No puedes transferir a la misma cuenta';
                               }
                             });
                           },
@@ -188,7 +277,6 @@ class _CreateTransferPageState extends State<CreateTransferPage> {
                 ),
               ),
               const SizedBox(height: 16),
-              // Cuenta destino
               Card(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
@@ -206,51 +294,109 @@ class _CreateTransferPageState extends State<CreateTransferPage> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      if (_accountsViewModel.loading)
-                        const Center(child: CircularProgressIndicator())
-                      else if (_accountsViewModel.accounts.isEmpty)
-                        const Text('No hay cuentas disponibles')
-                      else
-                        DropdownButtonFormField<String>(
-                          initialValue: _targetAccountId,
-                          isExpanded: true,
-                          decoration: const InputDecoration(
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(12),
+                      TextFormField(
+                        controller: _targetAccountNumberController,
+                        keyboardType: TextInputType.text,
+                        textCapitalization: TextCapitalization.none,
+                        decoration: const InputDecoration(
+                          labelText: 'Número de cuenta destino',
+                          hintText: 'Ej: 1234567890',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(12)),
+                          ),
+                        ),
+                        onChanged: (_) {
+                          if (_resolvedTargetAccount != null ||
+                              _targetLookupError != null) {
+                            setState(() {
+                              _resolvedTargetAccount = null;
+                              _targetLookupError = null;
+                            });
+                          }
+                        },
+                        validator: (value) => value == null || value.trim().isEmpty
+                            ? 'Ingresa el número de cuenta destino'
+                            : null,
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: _resolvingTargetAccount
+                                  ? null
+                                  : _resolveTargetAccount,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFF2E7D32),
+                                side: const BorderSide(
+                                  color: Color(0xFF2E7D32),
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
                               ),
-                            ),
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
+                              child: _resolvingTargetAccount
+                                  ? const SizedBox(
+                                      height: 18,
+                                      width: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Text('Verificar cuenta'),
                             ),
                           ),
-                          items: _accountsViewModel.accounts
-                              .where((a) => a.id != _sourceAccountId)
-                              .map((account) {
-                                return DropdownMenuItem(
-                                  value: account.id,
-                                  child: Text(
-                                    _getAccountDisplayText(account),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                );
-                              })
-                              .toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              _targetAccountId = value;
-                            });
-                          },
-                          validator: (value) =>
-                              value == null ? 'Selecciona una cuenta' : null,
+                        ],
+                      ),
+                      if (_targetLookupError != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          _targetLookupError!,
+                          style: TextStyle(
+                            color: Colors.red.shade700,
+                            fontSize: 13,
+                          ),
                         ),
+                      ],
+                      if (_resolvedTargetAccount != null) ...[
+                        const SizedBox(height: 12),
+                        Card(
+                          color: Colors.green.shade50,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            side: BorderSide(color: Colors.green.shade100),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _getLookupAccountDisplayText(
+                                    _resolvedTargetAccount!,
+                                  ),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  '${_resolvedTargetAccount!.accountType} · ${_resolvedTargetAccount!.currency}',
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Estado: ${_resolvedTargetAccount!.status}',
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 16),
-              // Monto
               Card(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
@@ -337,7 +483,6 @@ class _CreateTransferPageState extends State<CreateTransferPage> {
                 ),
               ),
               const SizedBox(height: 16),
-              // Descripción
               Card(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
@@ -410,10 +555,9 @@ class _CreateTransferPageState extends State<CreateTransferPage> {
     _amountController.dispose();
     _descriptionController.dispose();
     _idempotencyKeyController.dispose();
+    _targetAccountNumberController.dispose();
     _viewModel.removeListener(_onViewModelChanged);
-    _accountsViewModel.removeListener(
-      _onAccountsViewModelChanged,
-    ); // ✅ Agregado
+    _accountsViewModel.removeListener(_onAccountsViewModelChanged);
     super.dispose();
   }
 }
