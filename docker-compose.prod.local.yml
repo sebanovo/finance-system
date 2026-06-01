@@ -48,7 +48,7 @@ services:
 
   serv-finance-web:
     build:
-      context: ./finance-elkin # ./finance-web
+      context: ./finance-web-2 # ./finance-web
       dockerfile: Dockerfile.prod
     restart: unless-stopped
     depends_on:

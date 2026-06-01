@@ -178,7 +178,7 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, finance-elkin');
+    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, finance-web-2');
   });
 });
 
@@ -198,7 +198,7 @@ import { ToastComponent } from './shared/ui/toast/toast.component';
   styleUrl: './app.css'
 })
 export class App {
-  protected readonly title = signal('finance-elkin');
+  protected readonly title = signal('finance-web-2');
 }
 
 ```

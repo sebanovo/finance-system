@@ -7,9 +7,9 @@ Esta guía muestra cómo construir y subir imágenes a Docker Hub usando variabl
 
 # 1. Build de todas las imágenes
 ```bash
-docker build -t sebastiandevjs/finance-api:1.0.0       ./finance-api    -f ./finance-api/Dockerfile.prod
-# docker build -t sebastiandevjs/finance-web:1.0.0       ./finance-web    -f ./finance-web/Dockerfile.prod
-docker build -t sebastiandevjs/finance-web:1.0.0       ./finance-elkin    -f ./finance-elkin/Dockerfile.prod
+docker build -t sebastiandevjs/finance-api:1.0.0         ./finance-api    -f ./finance-api/Dockerfile.prod
+# docker build -t sebastiandevjs/finance-web:1.0.0         ./finance-web    -f ./finance-web/Dockerfile.prod
+docker build -t sebastiandevjs/finance-web:1.0.0         ./finance-web-2    -f ./finance-web-2/Dockerfile.prod
 docker build -t sebastiandevjs/finance-flutter-web:1.0.0 ./finance_mobile -f ./finance_mobile/Dockerfile.prod
 ```
 

@@ -1,5 +1,5 @@
 ```
-└── 📁finance-elkin
+└── 📁finance-web-2
     └── 📁.angular
     └── 📁.vscode
         ├── extensions.json
