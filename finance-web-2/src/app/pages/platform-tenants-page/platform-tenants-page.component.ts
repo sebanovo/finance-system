@@ -8,20 +8,12 @@ import { PlatformTenantCreateUseCase } from '../../features/platform/application
 import { PlatformTenantDeactivateUseCase } from '../../features/platform/application/platform-tenant-deactivate.usecase';
 import { PlatformTenantListUseCase } from '../../features/platform/application/platform-tenant-list.usecase';
 import { PlatformPlanListUseCase } from '../../features/platform/application/platform-plan-list.usecase';
-import { PlatformTenantFormComponent } from '../../features/platform/ui/platform-tenant-form/platform-tenant-form.component';
+import { CreateTenantFormData, PlatformTenantFormComponent, TenantPlanOption } from '../../features/platform/ui/platform-tenant-form/platform-tenant-form.component';
 import { PlatformTenantTableComponent } from '../../features/platform/ui/platform-tenant-table/platform-tenant-table.component';
 import { PlatformPaginationComponent } from '../../features/platform/ui/platform-pagination/platform-pagination.component';
 import { PlatformPlan, PlatformTenant } from '../../entities/platform/api/platform.service';
 
 type TenantStatusFilter = 'all' | 'ACTIVE' | 'INACTIVE';
-
-interface TenantPlanOption {
-  code: string;
-  name: string;
-  planType: string;
-  active: boolean;
-  trialDays: number | null;
-}
 
 @Component({
   selector: 'app-platform-tenants-page',
@@ -296,11 +288,15 @@ export class PlatformTenantsPageComponent implements OnInit {
 
   readonly planOptions = computed<TenantPlanOption[]>(() => {
     return this.planUseCase.plans().map((plan: PlatformPlan) => ({
-      code: plan.code,
-      name: plan.name,
-      planType: plan.planType,
-      active: plan.active,
-      trialDays: plan.trialDays
+        id: plan.id,                    // ✅ Agregar id
+        code: plan.code,
+        name: plan.name,
+        description: plan.description,   // ✅ Agregar description
+        maxUsers: plan.maxUsers,         // ✅ Agregar maxUsers
+        maxRoles: plan.maxRoles,         // ✅ Agregar maxRoles
+        planType: plan.planType,
+        active: plan.active,
+        trialDays: plan.trialDays
     }));
   });
 
@@ -383,7 +379,7 @@ export class PlatformTenantsPageComponent implements OnInit {
     this.statusFilter.set(value);
   }
 
-  async onCreateTenant(data: { name: string; slug: string; planCode: string }): Promise<void> {
+  async onCreateTenant(data: CreateTenantFormData): Promise<void> {
     const success = await this.createUseCase.createTenant(data);
     if (success) {
       this.toastService.success('Tenant creado exitosamente');

@@ -77,11 +77,12 @@ import { PlatformSuperadminMeUseCase } from '../../features/platform/application
             <p class="mt-2 text-xs text-[#6B7D6C]">Permiso de acceso a plataforma</p>
           </div>
 
-          <div class="rounded-2xl border border-[#C8E6C9] bg-white p-5 shadow-sm">
+          <!-- Que pero si no hay roles que carajo -->
+          <!-- <div class="rounded-2xl border border-[#C8E6C9] bg-white p-5 shadow-sm">
             <p class="text-sm font-semibold text-[#567157]">Roles</p>
             <p class="mt-4 text-xl font-black text-[#1B5E20]">{{ user.roles.length }}</p>
             <p class="mt-2 text-xs text-[#6B7D6C]">Roles activos asignados</p>
-          </div>
+          </div> -->
         </section>
 
         <section class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
