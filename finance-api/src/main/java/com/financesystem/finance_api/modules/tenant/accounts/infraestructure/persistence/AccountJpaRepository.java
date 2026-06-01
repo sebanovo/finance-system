@@ -102,6 +102,34 @@ public interface AccountJpaRepository extends JpaRepository<AccountEntity, UUID>
                 a.updated_at AS updatedAt
             FROM tenant_accounts a
             JOIN tenant_users u ON u.id = a.user_id
+            WHERE a.account_number = :accountNumber
+            """, nativeQuery = true)
+    Optional<AccountOwnerViewProjection> findViewByAccountNumber(String accountNumber);
+
+    @Query(value = """
+            SELECT
+                a.id AS id,
+                a.user_id AS userId,
+                u.email AS userEmail,
+                u.first_name AS userFirstName,
+                u.last_name AS userLastName,
+                a.account_number AS accountNumber,
+                a.account_name AS accountName,
+                a.custom_alias AS customAlias,
+                a.account_type AS accountType,
+                a.currency AS currency,
+                a.available_balance AS availableBalance,
+                a.held_balance AS heldBalance,
+                a.status AS status,
+                a.status_reason AS statusReason,
+                a.active AS active,
+                a.is_primary AS primary,
+                a.opened_at AS openedAt,
+                a.closed_at AS closedAt,
+                a.created_at AS createdAt,
+                a.updated_at AS updatedAt
+            FROM tenant_accounts a
+            JOIN tenant_users u ON u.id = a.user_id
             WHERE a.user_id = :userId
             ORDER BY a.is_primary DESC, a.created_at DESC
             """, nativeQuery = true)

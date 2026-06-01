@@ -310,7 +310,9 @@ type TransactionTypeFilter = 'ALL' | 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER' | 'PA
               </thead>
               <tbody class="divide-y divide-[#EEF5EA] bg-white">
                 @for (tx of visibleTransactions(); track tx.id) {
-                  <tr class="cursor-pointer transition-colors hover:bg-[#F7FBF3]" (click)="openDetail(tx)">
+                  <tr
+                    [ngClass]="canViewTransactionDetail ? 'cursor-pointer transition-colors hover:bg-[#F7FBF3]' : 'transition-colors'"
+                    (click)="canViewTransactionDetail && openDetail(tx)">
                     <td class="px-6 py-4">
                       <div class="font-semibold text-[#1B5E20]">{{ typeLabel(tx.type) }}</div>
                       <div class="text-xs text-[#6B7D6C]">{{ tx.channel }}</div>
@@ -353,27 +355,31 @@ type TransactionTypeFilter = 'ALL' | 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER' | 'PA
                       <div class="text-xs text-[#6B7D6C]">{{ formatTime(tx.processedAt || tx.createdAt) }}</div>
                     </td>
                     <td class="px-6 py-4 text-center">
-                      <div class="relative group inline-block text-left" (click)="$event.stopPropagation()">
-                        <button type="button" class="cursor-pointer rounded-md p-2 text-[#6B7D6C] transition-colors hover:bg-[#F1F8E9] hover:text-[#1B5E20]">
-                          <lucide-icon name="more-horizontal" [size]="16"></lucide-icon>
-                        </button>
-                        <div class="absolute right-0 mt-1 w-48 overflow-hidden rounded-2xl border border-[#DDEED8] bg-white shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                          <div class="py-1">
-                            <button type="button" (click)="openDetail(tx)" class="flex w-full cursor-pointer items-center gap-2 px-4 py-2.5 text-left text-xs font-medium text-[#1B5E20] hover:bg-[#F7FBF3]">
-                              <lucide-icon name="eye" [size]="14"></lucide-icon>
-                              Ver detalle
-                            </button>
-                            <button *ngIf="('transactions.reverse' | hasPermission) && tx.status === 'COMPLETED'" type="button" (click)="openActionModal('reverse', tx)" class="flex w-full cursor-pointer items-center gap-2 px-4 py-2.5 text-left text-xs font-medium text-orange-600 hover:bg-orange-50">
-                              <lucide-icon name="rotate-ccw" [size]="14"></lucide-icon>
-                              Revertir
-                            </button>
-                            <button *ngIf="('transactions.refund' | hasPermission) && tx.status === 'COMPLETED'" type="button" (click)="openActionModal('refund', tx)" class="flex w-full cursor-pointer items-center gap-2 px-4 py-2.5 text-left text-xs font-medium text-blue-600 hover:bg-blue-50">
-                              <lucide-icon name="reply" [size]="14"></lucide-icon>
-                              Reembolsar
-                            </button>
+                      @if (canViewTransactionActions) {
+                        <div class="relative group inline-block text-left" (click)="$event.stopPropagation()">
+                          <button type="button" class="cursor-pointer rounded-md p-2 text-[#6B7D6C] transition-colors hover:bg-[#F1F8E9] hover:text-[#1B5E20]">
+                            <lucide-icon name="more-horizontal" [size]="16"></lucide-icon>
+                          </button>
+                          <div class="absolute right-0 mt-1 w-48 overflow-hidden rounded-2xl border border-[#DDEED8] bg-white shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                            <div class="py-1">
+                              @if (canViewTransactionDetail) {
+                                <button type="button" (click)="openDetail(tx)" class="flex w-full cursor-pointer items-center gap-2 px-4 py-2.5 text-left text-xs font-medium text-[#1B5E20] hover:bg-[#F7FBF3]">
+                                  <lucide-icon name="eye" [size]="14"></lucide-icon>
+                                  Ver detalle
+                                </button>
+                              }
+                              <button *ngIf="('transactions.reverse' | hasPermission) && tx.status === 'COMPLETED'" type="button" (click)="openActionModal('reverse', tx)" class="flex w-full cursor-pointer items-center gap-2 px-4 py-2.5 text-left text-xs font-medium text-orange-600 hover:bg-orange-50">
+                                <lucide-icon name="rotate-ccw" [size]="14"></lucide-icon>
+                                Revertir
+                              </button>
+                              <button *ngIf="('transactions.refund' | hasPermission) && tx.status === 'COMPLETED'" type="button" (click)="openActionModal('refund', tx)" class="flex w-full cursor-pointer items-center gap-2 px-4 py-2.5 text-left text-xs font-medium text-blue-600 hover:bg-blue-50">
+                                <lucide-icon name="reply" [size]="14"></lucide-icon>
+                                Reembolsar
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      }
                     </td>
                   </tr>
                 } @empty {
@@ -389,7 +395,9 @@ type TransactionTypeFilter = 'ALL' | 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER' | 'PA
 
           <div class="grid gap-3 md:hidden">
             @for (tx of visibleTransactions(); track tx.id) {
-              <article class="cursor-pointer rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] p-4 shadow-sm transition-colors hover:bg-[#F7FBF3]" (click)="openDetail(tx)">
+              <article
+                [ngClass]="canViewTransactionDetail ? 'cursor-pointer rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] p-4 shadow-sm transition-colors hover:bg-[#F7FBF3]' : 'rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] p-4 shadow-sm transition-colors'"
+                (click)="canViewTransactionDetail && openDetail(tx)">
                 <div class="flex items-start justify-between gap-3">
                   <div>
                     <p class="text-sm font-semibold text-[#1B5E20]">{{ typeLabel(tx.type) }}</p>
@@ -413,22 +421,26 @@ type TransactionTypeFilter = 'ALL' | 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER' | 'PA
                   </div>
                 </div>
 
-                <div class="mt-3 flex items-center justify-between gap-2" (click)="$event.stopPropagation()">
-                  <button type="button" (click)="openDetail(tx)" class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#DDEED8] bg-white px-3 py-2 text-xs font-semibold text-[#1B5E20] transition-colors hover:bg-[#F7FBF3]">
-                    <lucide-icon name="eye" [size]="14"></lucide-icon>
-                    Ver detalle
-                  </button>
-                  <div class="flex items-center gap-2">
-                    <button *ngIf="('transactions.reverse' | hasPermission) && tx.status === 'COMPLETED'" type="button" (click)="openActionModal('reverse', tx)" class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-700 transition-colors hover:bg-orange-100">
-                      <lucide-icon name="rotate-ccw" [size]="14"></lucide-icon>
-                      Revertir
-                    </button>
-                    <button *ngIf="('transactions.refund' | hasPermission) && tx.status === 'COMPLETED'" type="button" (click)="openActionModal('refund', tx)" class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100">
-                      <lucide-icon name="reply" [size]="14"></lucide-icon>
-                      Reembolsar
-                    </button>
+                @if (canViewTransactionActions) {
+                  <div class="mt-3 flex items-center justify-between gap-2" (click)="$event.stopPropagation()">
+                    @if (canViewTransactionDetail) {
+                      <button type="button" (click)="openDetail(tx)" class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#DDEED8] bg-white px-3 py-2 text-xs font-semibold text-[#1B5E20] transition-colors hover:bg-[#F7FBF3]">
+                        <lucide-icon name="eye" [size]="14"></lucide-icon>
+                        Ver detalle
+                      </button>
+                    }
+                    <div class="flex items-center gap-2">
+                      <button *ngIf="('transactions.reverse' | hasPermission) && tx.status === 'COMPLETED'" type="button" (click)="openActionModal('reverse', tx)" class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-700 transition-colors hover:bg-orange-100">
+                        <lucide-icon name="rotate-ccw" [size]="14"></lucide-icon>
+                        Revertir
+                      </button>
+                      <button *ngIf="('transactions.refund' | hasPermission) && tx.status === 'COMPLETED'" type="button" (click)="openActionModal('refund', tx)" class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100">
+                        <lucide-icon name="reply" [size]="14"></lucide-icon>
+                        Reembolsar
+                      </button>
+                    </div>
                   </div>
-                </div>
+                }
               </article>
             } @empty {
               <div class="rounded-2xl border border-[#DDEED8] bg-white p-8 text-center text-sm text-[#6B7D6C]">
@@ -867,7 +879,18 @@ export class TransactionsPageComponent implements OnInit {
     }
   }
 
+  get canViewTransactionDetail(): boolean {
+    return this.permissionService.hasAnyPermission('transactions.detail', 'transactions.admin.read');
+  }
+
+  get canViewTransactionActions(): boolean {
+    return this.canViewTransactionDetail || this.permissionService.hasAnyPermission('transactions.reverse', 'transactions.refund');
+  }
+
   openDetail(transaction: TransactionResponse): void {
+    if (!this.canViewTransactionDetail) {
+      return;
+    }
     this.selectedTransaction.set(transaction);
   }
 

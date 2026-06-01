@@ -2,6 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LucideAngularModule, AlertTriangle, ArrowDownToLine, ArrowRightLeft, ArrowUpFromLine, CheckCircle, CreditCard, RotateCcw, Send, X } from 'lucide-angular';
+import { firstValueFrom } from 'rxjs';
+import { AccountsService, AccountLookupResponse } from '../../../../entities/accounts';
 import { AccountOwnerResponse } from '../../../../entities/accounts';
 import { TransactionOperationType } from '../../../../entities/transactions';
 
@@ -106,6 +108,51 @@ type HeaderConfig = {
                   {{ acc.accountNumber }} - {{ acc.customAlias || acc.accountNameLabel }} ({{ acc.currency }})
                 </option>
               </select>
+            </div>
+          }
+
+          @if (requiresTransferDestinationInput()) {
+            <div class="space-y-3">
+              <div class="space-y-2">
+                <label class="text-sm font-semibold text-[#1B5E20]">Número de cuenta destino</label>
+                <div class="flex gap-2">
+                  <input
+                    type="text"
+                    formControlName="targetAccountNumber"
+                    (input)="clearResolvedTargetAccount()"
+                    placeholder="Ingresa el número de cuenta"
+                    class="flex h-11 min-w-0 flex-1 rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition focus:border-[#A5D6A7] focus:bg-white" />
+                  <button
+                    type="button"
+                    (click)="lookupTransferTargetAccount()"
+                    [disabled]="isResolvingTargetAccount || !form.get('targetAccountNumber')?.value"
+                    class="inline-flex cursor-pointer items-center justify-center rounded-2xl border border-[#DDEED8] bg-white px-4 py-2 text-sm font-semibold text-[#1B5E20] transition-colors hover:bg-[#F7FBF3] disabled:cursor-not-allowed disabled:opacity-50">
+                    @if (isResolvingTargetAccount) {
+                      <svg class="h-4 w-4 animate-spin text-[#2E7D32]" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    } @else {
+                      Verificar
+                    }
+                  </button>
+                </div>
+                <p class="text-xs text-[#6B7D6C]">Escribe el número de cuenta del destinatario. No se muestran IDs técnicos.</p>
+              </div>
+
+              @if (resolvedTargetAccount) {
+                <div class="rounded-2xl border border-[#DDEED8] bg-[#F7FBF3] p-4">
+                  <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#6B7D6C]">Cuenta resuelta</p>
+                  <div class="mt-2 space-y-1">
+                    <p class="text-sm font-semibold text-[#1B5E20]">{{ resolvedTargetAccount.displayName }}</p>
+                    <p class="text-xs text-[#6B7D6C]">{{ resolvedTargetAccount.accountNumber }} · {{ resolvedTargetAccount.currency }} · {{ accountStatusLabel(resolvedTargetAccount.status) }}</p>
+                  </div>
+                </div>
+              } @else if (transferLookupError) {
+                <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                  {{ transferLookupError }}
+                </div>
+              }
             </div>
           }
 
@@ -239,9 +286,13 @@ export class TransactionSlideOverComponent implements OnInit, OnChanges {
   @Output() saved = new EventEmitter<TransactionSlideOverSaveEvent>();
 
   private readonly fb = inject(FormBuilder);
+  private readonly accountsService = inject(AccountsService);
 
   form!: FormGroup;
   isSubmitting = false;
+  isResolvingTargetAccount = false;
+  resolvedTargetAccount: AccountLookupResponse | null = null;
+  transferLookupError: string | null = null;
 
   get headerConfig(): HeaderConfig {
     switch (this.transactionType) {
@@ -285,10 +336,13 @@ export class TransactionSlideOverComponent implements OnInit, OnChanges {
 
   initForm(): void {
     const requiresAmount = this.requiresAmountAndCurrency();
+    this.resolvedTargetAccount = null;
+    this.transferLookupError = null;
 
     this.form = this.fb.group({
       sourceAccountId: [this.requiresSourceAccountSelection() ? '' : ''],
       targetAccountId: [this.requiresTargetAccountSelection() ? '' : ''],
+      targetAccountNumber: [this.requiresTransferDestinationInput() ? '' : ''],
       accountId: [this.requiresSingleAccountSelection() ? '' : ''],
       qrTransactionId: [this.requiresQrIntentId() ? '' : ''],
       amount: [requiresAmount ? '' : '', requiresAmount ? [Validators.required, Validators.min(0.01)] : []],
@@ -305,6 +359,9 @@ export class TransactionSlideOverComponent implements OnInit, OnChanges {
     }
     if (this.requiresTargetAccountSelection()) {
       this.form.get('targetAccountId')?.setValidators([Validators.required]);
+    }
+    if (this.requiresTransferDestinationInput()) {
+      this.form.get('targetAccountNumber')?.setValidators([Validators.required]);
     }
     if (this.requiresSingleAccountSelection()) {
       this.form.get('accountId')?.setValidators([Validators.required]);
@@ -324,7 +381,7 @@ export class TransactionSlideOverComponent implements OnInit, OnChanges {
     this.closed.emit();
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -332,19 +389,20 @@ export class TransactionSlideOverComponent implements OnInit, OnChanges {
 
     this.isSubmitting = true;
 
-    const payload = this.buildRequest();
-    this.saved.emit(payload);
-    this.isSubmitting = false;
-  }
-
-  setSubmitting(val: boolean): void {
-    this.isSubmitting = val;
-    if (!val) {
-      this.close();
+    try {
+      const payload = await this.buildRequest();
+      this.saved.emit(payload);
+    } catch (error: any) {
+      const message = error?.error?.message || error?.message || 'No se pudo procesar la solicitud';
+      if (this.requiresTransferDestinationInput()) {
+        this.transferLookupError = message;
+      }
+    } finally {
+      this.isSubmitting = false;
     }
   }
 
-  private buildRequest(): TransactionSlideOverSaveEvent {
+  private async buildRequest(): Promise<TransactionSlideOverSaveEvent> {
     const value = this.form.getRawValue();
     const baseIdempotencyKey = this.buildIdempotencyKey();
 
@@ -376,11 +434,23 @@ export class TransactionSlideOverComponent implements OnInit, OnChanges {
           })
         };
       case 'transfer':
+        if (!value.targetAccountId) {
+          await this.lookupTransferTargetAccount();
+        }
+
+        if (!this.resolvedTargetAccount?.id) {
+          throw new Error('Debes verificar un número de cuenta destino válido antes de transferir.');
+        }
+
+        if (!this.resolvedTargetAccount.active) {
+          throw new Error('La cuenta destino no está activa para recibir transferencias.');
+        }
+
         return {
           type: this.transactionType,
           request: this.cleanPayload({
             sourceAccountId: value.sourceAccountId,
-            targetAccountId: value.targetAccountId,
+            targetAccountId: this.resolvedTargetAccount.id,
             amount: Number(value.amount),
             currency: value.currency,
             description: value.description,
@@ -484,6 +554,76 @@ export class TransactionSlideOverComponent implements OnInit, OnChanges {
     return globalThis.crypto?.randomUUID?.() ?? `tx-${Date.now()}-${Math.random().toString(16).slice(2)}`;
   }
 
+  clearResolvedTargetAccount(): void {
+    if (!this.requiresTransferDestinationInput()) {
+      return;
+    }
+
+    this.resolvedTargetAccount = null;
+    this.transferLookupError = null;
+    this.form.get('targetAccountId')?.setValue('');
+  }
+
+  async lookupTransferTargetAccount(): Promise<boolean> {
+    if (!this.requiresTransferDestinationInput()) {
+      return false;
+    }
+
+    const accountNumber = String(this.form.get('targetAccountNumber')?.value || '').trim();
+    if (!accountNumber) {
+      this.transferLookupError = 'Ingresa un número de cuenta destino.';
+      this.resolvedTargetAccount = null;
+      this.form.get('targetAccountId')?.setValue('');
+      return false;
+    }
+
+    this.isResolvingTargetAccount = true;
+    this.transferLookupError = null;
+
+    try {
+      const response = await firstValueFrom(this.accountsService.resolveMyAccountByNumber(accountNumber));
+      if (!response.success || !response.data) {
+        throw new Error(response.message || 'No se pudo resolver la cuenta destino.');
+      }
+
+      this.resolvedTargetAccount = response.data;
+      this.form.get('targetAccountId')?.setValue(response.data.id);
+
+      if (!response.data.active) {
+        this.transferLookupError = 'La cuenta destino está inactiva y no debería usarse para transferencias.';
+      }
+      return true;
+    } catch (error: any) {
+      this.resolvedTargetAccount = null;
+      this.form.get('targetAccountId')?.setValue('');
+      this.transferLookupError = error?.error?.message || error?.message || 'No se pudo encontrar la cuenta destino.';
+      return false;
+    } finally {
+      this.isResolvingTargetAccount = false;
+    }
+  }
+
+  accountStatusLabel(status: string): string {
+    switch (status) {
+      case 'ACTIVE':
+        return 'Activa';
+      case 'PENDING_APPROVAL':
+        return 'Pendiente de aprobación';
+      case 'PENDING_VERIFICATION':
+        return 'Pendiente de verificación';
+      case 'FROZEN':
+        return 'Congelada';
+      case 'BLOCKED':
+        return 'Bloqueada';
+      case 'SUSPENDED':
+        return 'Suspendida';
+      case 'CLOSED':
+        return 'Cerrada';
+      default:
+        return status || 'Desconocida';
+    }
+  }
+
   requiresAccountSelection(): boolean {
     return this.requiresSourceAccountSelection() || this.requiresTargetAccountSelection() || this.requiresSingleAccountSelection();
   }
@@ -493,7 +633,11 @@ export class TransactionSlideOverComponent implements OnInit, OnChanges {
   }
 
   requiresTargetAccountSelection(): boolean {
-    return ['deposit', 'transfer', 'qr-intent'].includes(this.transactionType);
+    return ['deposit', 'qr-intent'].includes(this.transactionType);
+  }
+
+  requiresTransferDestinationInput(): boolean {
+    return this.transactionType === 'transfer';
   }
 
   requiresSingleAccountSelection(): boolean {

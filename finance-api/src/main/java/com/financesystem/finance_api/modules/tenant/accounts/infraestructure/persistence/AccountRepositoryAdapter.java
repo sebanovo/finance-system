@@ -44,6 +44,11 @@ public class AccountRepositoryAdapter implements AccountRepository {
     }
 
     @Override
+    public Optional<AccountOwnerView> findViewByAccountNumber(String accountNumber) {
+        return jpaRepository.findViewByAccountNumber(accountNumber).map(this::toView);
+    }
+
+    @Override
     public Optional<Account> findByAccountNumber(String accountNumber) {
         return jpaRepository.findByAccountNumber(accountNumber).map(this::toDomain);
     }

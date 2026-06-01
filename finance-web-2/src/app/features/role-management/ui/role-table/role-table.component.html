@@ -7,7 +7,9 @@
           <th scope="col" class="px-6 py-4 font-bold tracking-[0.12em]">Descripción</th>
           <th scope="col" class="px-6 py-4 font-bold tracking-[0.12em] text-center">Permisos</th>
           <th scope="col" class="px-6 py-4 font-bold tracking-[0.12em]">Estado</th>
-          <th scope="col" class="px-6 py-4 font-bold tracking-[0.12em] text-right">Acciones</th>
+          @if (showActions) {
+            <th scope="col" class="px-6 py-4 font-bold tracking-[0.12em] text-right">Acciones</th>
+          }
         </tr>
       </thead>
       <tbody>
@@ -35,31 +37,33 @@
                 </span>
               }
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-right space-x-2">
-              <button 
-                type="button"
-                (click)="onEdit(role)"
-                class="cursor-pointer rounded-md px-2 py-1 text-[#2E7D32] transition-colors hover:bg-[#F1F8E9] hover:text-[#256428]"
-                title="Editar Rol">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-              </button>
-              <button 
-                type="button"
-                (click)="onToggleStatus(role)"
-                [class]="role.active ? 'text-red-700 hover:text-red-800 hover:bg-red-50' : 'text-[#2E7D32] hover:text-[#256428] hover:bg-[#F1F8E9]'"
-                class="cursor-pointer rounded-md px-2 py-1 transition-colors"
-                [title]="role.active ? 'Desactivar Rol' : 'Activar Rol'">
-                @if (role.active) {
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-                } @else {
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                }
-              </button>
-            </td>
+            @if (showActions) {
+              <td class="px-6 py-4 whitespace-nowrap text-right space-x-2">
+                <button
+                  type="button"
+                  (click)="onEdit(role)"
+                  class="cursor-pointer rounded-md px-2 py-1 text-[#2E7D32] transition-colors hover:bg-[#F1F8E9] hover:text-[#256428]"
+                  title="Editar Rol">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                </button>
+                <button
+                  type="button"
+                  (click)="onToggleStatus(role)"
+                  [class]="role.active ? 'text-red-700 hover:text-red-800 hover:bg-red-50' : 'text-[#2E7D32] hover:text-[#256428] hover:bg-[#F1F8E9]'"
+                  class="cursor-pointer rounded-md px-2 py-1 transition-colors"
+                  [title]="role.active ? 'Desactivar Rol' : 'Activar Rol'">
+                  @if (role.active) {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                  } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  }
+                </button>
+              </td>
+            }
           </tr>
         } @empty {
           <tr class="border-b border-[#EEF5EA] transition-colors duration-200 last:border-0 hover:bg-[#F7FBF3]">
-            <td colspan="5" class="px-6 py-8 text-center text-[#6B7D6C]">
+            <td [attr.colspan]="showActions ? 5 : 4" class="px-6 py-8 text-center text-[#6B7D6C]">
               No se encontraron roles en esta organización.
             </td>
           </tr>

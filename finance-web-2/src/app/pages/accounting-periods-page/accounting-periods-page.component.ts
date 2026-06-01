@@ -5,11 +5,12 @@ import { LucideAngularModule } from 'lucide-angular';
 import { AccountingPeriodResponse, CreateAccountingPeriodRequest } from '../../entities/accounting';
 import { PeriodListUseCase } from '../../features/accounting';
 import { PlatformPaginationComponent } from '../../features/platform/ui/platform-pagination/platform-pagination.component';
+import { HasPermissionPipe } from '../../shared/api';
 
 @Component({
   selector: 'app-accounting-periods-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PlatformPaginationComponent, LucideAngularModule],
+  imports: [CommonModule, ReactiveFormsModule, PlatformPaginationComponent, LucideAngularModule, HasPermissionPipe],
   providers: [DatePipe],
   template: `
     <div class="space-y-6 relative">
@@ -39,6 +40,7 @@ import { PlatformPaginationComponent } from '../../features/platform/ui/platform
               Recargar
             </button>
             <button
+              *ngIf="'accounting.periods.create' | hasPermission"
               type="button"
               (click)="openCreateForm()"
               class="inline-flex cursor-pointer items-center gap-2 rounded-full bg-[#2E7D32] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#256428]">
@@ -141,7 +143,7 @@ import { PlatformPaginationComponent } from '../../features/platform/ui/platform
                     </td>
                     <td class="px-6 py-4 text-right">
                       <div class="flex justify-end gap-2">
-                        @if (period.status === 'OPEN') {
+                        @if (period.status === 'OPEN' && ('accounting.periods.close' | hasPermission)) {
                           <button
                             type="button"
                             (click)="openCloseModal(period)"

@@ -7,6 +7,7 @@ import {
   PageResponse,
   AccountOwnerResponse,
   AccountBalanceResponse,
+  AccountLookupResponse,
   CreateAccountRequest,
   UpdateAccountRequest
 } from '../model/accounts.model';
@@ -87,6 +88,10 @@ export class AccountsService {
 
   getMyAccountById(id: string): Observable<ApiResponse<AccountOwnerResponse>> {
     return this.http.get<ApiResponse<AccountOwnerResponse>>(`${this.MY_API_URL}/${id}`);
+  }
+
+  resolveMyAccountByNumber(accountNumber: string): Observable<ApiResponse<AccountLookupResponse>> {
+    return this.http.get<ApiResponse<AccountLookupResponse>>(`${this.MY_API_URL}/lookup/${encodeURIComponent(accountNumber)}`);
   }
 
   getMyAccountBalance(id: string): Observable<ApiResponse<AccountBalanceResponse>> {

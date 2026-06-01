@@ -539,7 +539,9 @@ type ScannedQrIntent = {
               </thead>
               <tbody class="divide-y divide-[#EEF5EA] bg-white">
                 @for (tx of visibleTransactions(); track tx.id) {
-                  <tr class="cursor-pointer transition-colors hover:bg-[#F7FBF3]" (click)="openDetail(tx)">
+                  <tr
+                    [ngClass]="canViewTransactionDetail ? 'cursor-pointer transition-colors hover:bg-[#F7FBF3]' : 'transition-colors'"
+                    (click)="canViewTransactionDetail && openDetail(tx)">
                     <td class="px-6 py-4">
                       <div class="font-semibold text-[#1B5E20]">{{ typeLabel(tx.type) }}</div>
                       <div class="text-xs text-[#6B7D6C]">{{ tx.channel }}</div>
@@ -579,9 +581,11 @@ type ScannedQrIntent = {
                       <div class="text-xs text-[#6B7D6C]">{{ formatTime(tx.processedAt || tx.createdAt) }}</div>
                     </td>
                     <td class="px-6 py-4 text-center">
-                      <button type="button" (click)="$event.stopPropagation(); openDetail(tx)" class="cursor-pointer rounded-md p-2 text-[#6B7D6C] transition-colors hover:bg-[#F1F8E9] hover:text-[#1B5E20]">
-                        <lucide-icon name="eye" [size]="16"></lucide-icon>
-                      </button>
+                      @if (canViewTransactionDetail) {
+                        <button type="button" (click)="$event.stopPropagation(); openDetail(tx)" class="cursor-pointer rounded-md p-2 text-[#6B7D6C] transition-colors hover:bg-[#F1F8E9] hover:text-[#1B5E20]">
+                          <lucide-icon name="eye" [size]="16"></lucide-icon>
+                        </button>
+                      }
                     </td>
                   </tr>
                 } @empty {
@@ -597,7 +601,9 @@ type ScannedQrIntent = {
 
           <div class="grid gap-3 md:hidden">
             @for (tx of visibleTransactions(); track tx.id) {
-              <article class="cursor-pointer rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] p-4 shadow-sm transition-colors hover:bg-[#F7FBF3]" (click)="openDetail(tx)">
+              <article
+                [ngClass]="canViewTransactionDetail ? 'cursor-pointer rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] p-4 shadow-sm transition-colors hover:bg-[#F7FBF3]' : 'rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] p-4 shadow-sm transition-colors'"
+                (click)="canViewTransactionDetail && openDetail(tx)">
                 <div class="flex items-start justify-between gap-3">
                   <div>
                     <p class="text-sm font-semibold text-[#1B5E20]">{{ typeLabel(tx.type) }}</p>
@@ -622,10 +628,12 @@ type ScannedQrIntent = {
                 </div>
 
                 <div class="mt-3 flex justify-end" (click)="$event.stopPropagation()">
-                  <button type="button" (click)="openDetail(tx)" class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#DDEED8] bg-white px-3 py-2 text-xs font-semibold text-[#1B5E20] transition-colors hover:bg-[#F7FBF3]">
-                    <lucide-icon name="eye" [size]="14"></lucide-icon>
-                    Ver detalle
-                  </button>
+                  @if (canViewTransactionDetail) {
+                    <button type="button" (click)="openDetail(tx)" class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#DDEED8] bg-white px-3 py-2 text-xs font-semibold text-[#1B5E20] transition-colors hover:bg-[#F7FBF3]">
+                      <lucide-icon name="eye" [size]="14"></lucide-icon>
+                      Ver detalle
+                    </button>
+                  }
                 </div>
               </article>
             } @empty {
@@ -857,6 +865,10 @@ export class MyTransactionsPageComponent implements OnInit, OnDestroy {
   readonly typeDistributionMax = computed(() => Math.max(1, ...this.typeDistribution().map((item) => item.total)));
   readonly recentTrendMax = computed(() => Math.max(1, ...this.recentTrend().map((item) => item.total)));
 
+  get canViewTransactionDetail(): boolean {
+    return this.permissionService.hasAnyPermission('me.transactions.detail', 'me.transactions.read');
+  }
+
   ngOnInit(): void {
     this.reload();
   }
@@ -917,6 +929,9 @@ export class MyTransactionsPageComponent implements OnInit, OnDestroy {
   }
 
   openDetail(transaction: TransactionResponse): void {
+    if (!this.canViewTransactionDetail) {
+      return;
+    }
     this.selectedTransaction.set(transaction);
   }
 
