@@ -43,7 +43,7 @@ export const routes: Routes = [
 
       {
         path: 'users',
-        canActivate: [permissionGuard('users.list', 'users.create', 'users.detail', 'users.update', 'users.activate', 'users.deactivate')],
+        canActivate: [permissionGuard('users.list')],
         loadComponent: () => import('./pages/users-page/users-page.component').then(m => m.UsersPageComponent)
       },
       {
@@ -58,30 +58,50 @@ export const routes: Routes = [
       },
       {
         path: 'accounts',
-        canActivate: [permissionGuard('accounts.list', 'accounts.view', 'accounts.balance.read', 'accounts.update', 'accounts.create')],
+        canActivate: [permissionGuard('accounts.list')],
         loadComponent: () => import('./pages/accounts-page/accounts-page.component').then(m => m.AccountsPageComponent)
       },
       {
         path: 'me/accounts',
-        canActivate: [permissionGuard('me.accounts.list', 'me.accounts.view', 'me.accounts.balance.read', 'me.accounts.update.alias', 'me.accounts.create')],
+        canActivate: [permissionGuard('me.accounts.list')],
         loadComponent: () => import('./pages/my-accounts-page/my-accounts-page.component').then(m => m.MyAccountsPageComponent)
       },
       {
         path: 'transactions',
-        canActivate: [permissionGuard('transactions.admin.read', 'transactions.detail', 'transactions.create.transfer', 'transactions.create.deposit', 'transactions.create.withdrawal', 'transactions.create.payment', 'transactions.reverse', 'transactions.refund', 'transactions.fee', 'transactions.hold', 'transactions.release', 'transactions.adjust', 'transactions.qr.create', 'transactions.qr.confirm')],
+        canActivate: [permissionGuard('transactions.read', 'transactions.admin.read')],
         loadComponent: () => import('./pages/transactions-page/transactions-page.component').then(m => m.TransactionsPageComponent)
       },
       {
         path: 'me/transactions',
-        canActivate: [permissionGuard('me.transactions.read', 'me.transactions.detail', 'me.transactions.transfer', 'me.transactions.deposit', 'me.transactions.withdrawal', 'me.transactions.payment', 'me.transactions.hold', 'me.transactions.release', 'me.transactions.qr.create', 'me.transactions.qr.read', 'me.transactions.qr.cancel', 'me.transactions.qr.confirm')],
+        canActivate: [permissionGuard('me.transactions.read', 'me.transactions.detail')],
         loadComponent: () => import('./pages/my-transactions-page/my-transactions-page.component').then(m => m.MyTransactionsPageComponent)
       },
-      { path: 'fx/rates', loadComponent: () => import('./pages/fx-rates-page/fx-rates-page.component').then(m => m.FxRatesPageComponent) },
-      { path: 'fx/fees', loadComponent: () => import('./pages/fx-fees-page/fx-fees-page.component').then(m => m.FxFeesPageComponent) },
-      { path: 'limits/rules', loadComponent: () => import('./pages/limits-rules-page/limits-rules-page.component').then(m => m.LimitsRulesPageComponent) },
+      {
+        path: 'fx/rates',
+        canActivate: [permissionGuard('fx.rates.read')],
+        loadComponent: () => import('./pages/fx-rates-page/fx-rates-page.component').then(m => m.FxRatesPageComponent)
+      },
+      {
+        path: 'fx/fees',
+        canActivate: [permissionGuard('fx.fees.read')],
+        loadComponent: () => import('./pages/fx-fees-page/fx-fees-page.component').then(m => m.FxFeesPageComponent)
+      },
+      {
+        path: 'limits/rules',
+        canActivate: [permissionGuard('limits.read')],
+        loadComponent: () => import('./pages/limits-rules-page/limits-rules-page.component').then(m => m.LimitsRulesPageComponent)
+      },
       { path: 'settings', loadComponent: () => import('./pages/settings-page/settings-page.component').then(m => m.SettingsPageComponent) },
-      { path: 'accounting/periods', loadComponent: () => import('./pages/accounting-periods-page/accounting-periods-page.component').then(m => m.AccountingPeriodsPageComponent) },
-      { path: 'accounting/journal-entries', loadComponent: () => import('./pages/accounting-journal-entries-page/accounting-journal-entries-page.component').then(m => m.AccountingJournalEntriesPageComponent) },
+      {
+        path: 'accounting/periods',
+        canActivate: [permissionGuard('accounting.periods.read')],
+        loadComponent: () => import('./pages/accounting-periods-page/accounting-periods-page.component').then(m => m.AccountingPeriodsPageComponent)
+      },
+      {
+        path: 'accounting/journal-entries',
+        canActivate: [permissionGuard('accounting.journal.read')],
+        loadComponent: () => import('./pages/accounting-journal-entries-page/accounting-journal-entries-page.component').then(m => m.AccountingJournalEntriesPageComponent)
+      },
       {
         path: 'reports/history',
         canActivate: [permissionGuard('reports.executions.read')],

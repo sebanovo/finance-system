@@ -27,6 +27,7 @@ public class MyAccountController {
     private final CreateMyAccountUseCase createMyAccountUseCase;
     private final ListMyAccountsUseCase listMyAccountsUseCase;
     private final GetMyAccountByIdUseCase getMyAccountByIdUseCase;
+    private final LookupMyAccountByNumberUseCase lookupMyAccountByNumberUseCase;
     private final GetMyAccountBalanceUseCase getMyAccountBalanceUseCase;
     private final UpdateMyAccountAliasUseCase updateMyAccountAliasUseCase;
 
@@ -34,12 +35,14 @@ public class MyAccountController {
             CreateMyAccountUseCase createMyAccountUseCase,
             ListMyAccountsUseCase listMyAccountsUseCase,
             GetMyAccountByIdUseCase getMyAccountByIdUseCase,
+            LookupMyAccountByNumberUseCase lookupMyAccountByNumberUseCase,
             GetMyAccountBalanceUseCase getMyAccountBalanceUseCase,
             UpdateMyAccountAliasUseCase updateMyAccountAliasUseCase
     ) {
         this.createMyAccountUseCase = createMyAccountUseCase;
         this.listMyAccountsUseCase = listMyAccountsUseCase;
         this.getMyAccountByIdUseCase = getMyAccountByIdUseCase;
+        this.lookupMyAccountByNumberUseCase = lookupMyAccountByNumberUseCase;
         this.getMyAccountBalanceUseCase = getMyAccountBalanceUseCase;
         this.updateMyAccountAliasUseCase = updateMyAccountAliasUseCase;
     }
@@ -72,6 +75,15 @@ public class MyAccountController {
         return ApiResponse.success(
                 "Account retrieved successfully",
                 getMyAccountByIdUseCase.execute(id)
+        );
+    }
+
+    @GetMapping("/lookup/{accountNumber}")
+    @PreAuthorize("hasAuthority('me.transactions.transfer')")
+    public ApiResponse<AccountLookupResponse> lookupMyAccountByNumber(@PathVariable String accountNumber) {
+        return ApiResponse.success(
+                "Account retrieved successfully",
+                lookupMyAccountByNumberUseCase.execute(accountNumber)
         );
     }
 

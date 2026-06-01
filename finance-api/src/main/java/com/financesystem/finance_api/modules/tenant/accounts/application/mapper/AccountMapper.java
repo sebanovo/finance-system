@@ -1,6 +1,7 @@
 package com.financesystem.finance_api.modules.tenant.accounts.application.mapper;
 
 import com.financesystem.finance_api.modules.tenant.accounts.application.dto.AccountBalanceResponse;
+import com.financesystem.finance_api.modules.tenant.accounts.application.dto.AccountLookupResponse;
 import com.financesystem.finance_api.modules.tenant.accounts.application.dto.AccountOwnerResponse;
 import com.financesystem.finance_api.modules.tenant.accounts.domain.model.Account;
 import com.financesystem.finance_api.modules.tenant.accounts.domain.model.AccountName;
@@ -54,6 +55,21 @@ public class AccountMapper {
                 safeAmount(account.availableBalance()),
                 safeAmount(account.heldBalance()),
                 calculateTotalBalance(account.availableBalance(), account.heldBalance()),
+                account.status().name(),
+                account.active()
+        );
+    }
+
+    public AccountLookupResponse toLookupResponse(AccountOwnerView account) {
+        return new AccountLookupResponse(
+                account.id(),
+                account.accountNumber(),
+                account.accountName().name(),
+                toAccountNameLabel(account.accountName()),
+                account.customAlias(),
+                resolveDisplayName(account.accountName(), account.customAlias()),
+                account.accountType().name(),
+                account.currency().name(),
                 account.status().name(),
                 account.active()
         );

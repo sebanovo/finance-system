@@ -62,6 +62,19 @@ export interface AccountBalanceResponse {
   active: boolean;
 }
 
+export interface AccountLookupResponse {
+  id: string;
+  accountNumber: string;
+  accountName: string;
+  accountNameLabel: string;
+  customAlias: string;
+  displayName: string;
+  accountType: string;
+  currency: string;
+  status: string;
+  active: boolean;
+}
+
 export interface CreateAccountRequest {
   userId: string;
   accountName: string;

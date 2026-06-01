@@ -15,6 +15,8 @@ public interface AccountRepository {
 
     Optional<AccountOwnerView> findViewById(UUID id);
 
+    Optional<AccountOwnerView> findViewByAccountNumber(String accountNumber);
+
     Optional<Account> findByAccountNumber(String accountNumber);
 
     List<Account> findAll();

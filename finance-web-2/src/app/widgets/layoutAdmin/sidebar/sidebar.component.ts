@@ -194,13 +194,13 @@ export class SidebarComponent {
           label: 'Mis cuentas',
             route: '/dashboard/me/accounts',
             icon: 'wallet',
-            permissions: ['me.accounts.list', 'me.accounts.view', 'me.accounts.balance.read', 'me.accounts.update.alias', 'me.accounts.create']
+            permissions: ['me.accounts.list', 'me.accounts.view', 'me.accounts.balance.read']
           },
           {
             label: 'Mis movimientos',
             route: '/dashboard/me/transactions',
             icon: 'arrow-right-left',
-            permissions: ['me.transactions.read', 'me.transactions.detail', 'me.transactions.transfer', 'me.transactions.deposit', 'me.transactions.withdrawal', 'me.transactions.payment', 'me.transactions.hold', 'me.transactions.release', 'me.transactions.qr.create', 'me.transactions.qr.read', 'me.transactions.qr.cancel', 'me.transactions.qr.confirm']
+            permissions: ['me.transactions.read', 'me.transactions.detail']
           }
         ]
       }
@@ -216,7 +216,7 @@ export class SidebarComponent {
           label: 'Usuarios',
           route: '/dashboard/users',
           icon: 'users',
-          permissions: ['users.list', 'users.create', 'users.detail', 'users.update', 'users.activate', 'users.deactivate']
+          permissions: ['users.list']
         },
         {
           label: 'Roles',
@@ -250,42 +250,13 @@ export class SidebarComponent {
           label: 'Cuentas Bancarias',
           route: '/dashboard/accounts',
           icon: 'credit-card',
-          permissions: [
-            'accounts.create',
-            'accounts.list',
-            'accounts.view',
-            'accounts.balance.read',
-            'accounts.update',
-            'accounts.approve',
-            'accounts.activate',
-            'accounts.block',
-            'accounts.freeze',
-            'accounts.close',
-            'accounts.transactions.read'
-          ]
+          permissions: ['accounts.list', 'accounts.view', 'accounts.balance.read']
         },
         {
           label: 'Transacciones',
           route: '/dashboard/transactions',
           icon: 'arrow-right-left',
-          permissions: [
-            'transactions.read',
-            'transactions.detail',
-            'transactions.create.transfer',
-            'transactions.create.deposit',
-            'transactions.create.withdrawal',
-            'transactions.create.payment',
-            'transactions.reverse',
-            'transactions.refund',
-            'transactions.fee',
-            'transactions.hold',
-            'transactions.release',
-            'transactions.adjust',
-            'transactions.admin.read',
-            'transactions.admin.export',
-            'transactions.qr.create',
-            'transactions.qr.confirm'
-          ]
+          permissions: ['transactions.read', 'transactions.admin.read']
         }
       ]
     },
@@ -298,13 +269,13 @@ export class SidebarComponent {
           label: 'Tipos de Cambio',
           route: '/dashboard/fx/rates',
           icon: 'refresh-ccw',
-          permissions: ['fx.rates.read', 'fx.rates.detail', 'fx.rates.create', 'fx.rates.update', 'fx.rates.delete']
+          permissions: ['fx.rates.read']
         },
         {
           label: 'Comisiones',
           route: '/dashboard/fx/fees',
           icon: 'percent',
-          permissions: ['fx.fees.read', 'fx.fees.detail', 'fx.fees.create', 'fx.fees.update', 'fx.fees.delete']
+          permissions: ['fx.fees.read']
         }
       ]
     },
@@ -322,7 +293,7 @@ export class SidebarComponent {
           label: 'Límites Operativos',
           route: '/dashboard/limits/rules',
           icon: 'shield-alert',
-          permissions: ['limits.read', 'limits.detail', 'limits.create', 'limits.update', 'limits.delete', 'limits.evaluate']
+          permissions: ['limits.read']
         }
       ]
     },
@@ -335,13 +306,13 @@ export class SidebarComponent {
           label: 'Períodos',
           route: '/dashboard/accounting/periods',
           icon: 'calendar',
-          permissions: ['accounting.periods.read', 'accounting.periods.create', 'accounting.periods.close']
+          permissions: ['accounting.periods.read']
         },
         {
           label: 'Asientos',
           route: '/dashboard/accounting/journal-entries',
           icon: 'file-text',
-          permissions: ['accounting.journal.read', 'accounting.journal.detail']
+          permissions: ['accounting.journal.read']
         }
       ]
     },

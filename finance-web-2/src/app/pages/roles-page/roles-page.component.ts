@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { PermissionListUseCase, RoleFormComponent, RoleFormUseCase, RoleListUseCase, RoleTableComponent } from '../../features/role-management';
 import { CreateTenantRoleRequest, TenantRoleResponse, UpdateTenantRoleRequest } from '../../entities/access';
+import { PermissionService } from '../../shared/lib/auth/permission.service';
 
 type RoleStatusFilter = 'all' | 'active' | 'inactive';
 
@@ -40,6 +41,7 @@ type RoleStatusFilter = 'all' | 'active' | 'inactive';
             </button>
 
             <button
+              *ngIf="canManageRoles"
               type="button"
               (click)="openRoleModal()"
               class="inline-flex cursor-pointer items-center gap-2 rounded-full bg-[#2E7D32] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#256428] shadow-sm">
@@ -117,7 +119,7 @@ type RoleStatusFilter = 'all' | 'active' | 'inactive';
             </p>
           </div>
           <div class="rounded-full border border-[#DDEED8] bg-[#FAFCF8] px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-[#6B7D6C]">
-            {{ permissionListUseCase.data().length }} permisos en catálogo
+            {{ canReadPermissionCatalog ? permissionListUseCase.data().length : 'Catálogo restringido' }}
           </div>
         </div>
 
@@ -149,6 +151,7 @@ type RoleStatusFilter = 'all' | 'active' | 'inactive';
         @if (roleListUseCase.status() === 'success' || (roleListUseCase.status() === 'loading' && roleListUseCase.data().length > 0)) {
           <app-role-table
             [roles]="filteredRoles()"
+            [showActions]="canManageRoles"
             (edit)="openRoleModal($event)"
             (toggleStatus)="handleToggleStatus($event.id, $event.currentStatus)">
           </app-role-table>
@@ -190,13 +193,17 @@ type RoleStatusFilter = 'all' | 'active' | 'inactive';
             </div>
 
             <div class="flex-1 overflow-hidden">
-              @if (permissionListUseCase.status() === 'loading') {
+              @if (canReadPermissionCatalog && permissionListUseCase.status() === 'loading') {
                 <div class="flex h-full items-center justify-center p-12 text-[#6B7D6C]">
                   Cargando permisos disponibles...
                 </div>
-              } @else if (permissionListUseCase.status() === 'error') {
+              } @else if (canReadPermissionCatalog && permissionListUseCase.status() === 'error') {
                 <div class="m-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
                   No se pudieron cargar los permisos: {{ permissionListUseCase.error() }}
+                </div>
+              } @else if (!canReadPermissionCatalog) {
+                <div class="m-6 rounded-2xl border border-dashed border-[#DDEED8] bg-[#FAFCF8] p-6 text-sm text-[#6B7D6C]">
+                  No tienes acceso al catálogo de permisos. Puedes ver los roles, pero no crear ni editar su asignación.
                 </div>
               } @else {
                 <app-role-form
@@ -220,12 +227,26 @@ export class RolesPageComponent implements OnInit {
   public readonly roleListUseCase = inject(RoleListUseCase);
   public readonly permissionListUseCase = inject(PermissionListUseCase);
   public readonly roleFormUseCase = inject(RoleFormUseCase);
+  private readonly permissionService = inject(PermissionService);
 
   public readonly searchQuery = signal('');
   public readonly statusFilter = signal<RoleStatusFilter>('all');
   public readonly isModalOpen = signal(false);
   public readonly roleToEdit = signal<TenantRoleResponse | null>(null);
   public readonly showSuccessToast = signal(false);
+
+  get canReadPermissionCatalog(): boolean {
+    return this.permissionService.hasPermission('access.permissions.read');
+  }
+
+  get canManageRoles(): boolean {
+    return this.canReadPermissionCatalog && this.permissionService.hasAnyPermission(
+      'access.roles.create',
+      'access.roles.update',
+      'access.roles.activate',
+      'access.roles.deactivate'
+    );
+  }
 
   readonly filteredRoles = computed(() => {
     const query = this.searchQuery().trim().toLowerCase();
@@ -280,13 +301,21 @@ export class RolesPageComponent implements OnInit {
 
   reload(): void {
     this.roleListUseCase.loadRoles();
-    this.permissionListUseCase.loadPermissions();
+    if (this.canReadPermissionCatalog) {
+      this.permissionListUseCase.loadPermissions();
+    }
   }
 
   openRoleModal(role: TenantRoleResponse | null = null): void {
+    if (!this.canManageRoles) {
+      return;
+    }
+
     this.roleFormUseCase.resetState();
     this.roleToEdit.set(role);
-    this.permissionListUseCase.loadPermissions();
+    if (this.canReadPermissionCatalog) {
+      this.permissionListUseCase.loadPermissions();
+    }
     this.isModalOpen.set(true);
   }
 

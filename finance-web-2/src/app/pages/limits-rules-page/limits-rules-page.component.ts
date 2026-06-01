@@ -188,13 +188,15 @@ import { ToastService } from '../../shared/ui/toast/toast.service';
                     </td>
                     <td class="px-6 py-4 text-right">
                       <div class="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          (click)="openDetail(rule)"
-                          class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#C8E6C9] px-3 py-1.5 text-xs font-semibold text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
-                          <lucide-icon name="eye" [size]="14"></lucide-icon>
-                          Ver
-                        </button>
+                        @if ('limits.detail' | hasPermission) {
+                          <button
+                            type="button"
+                            (click)="openDetail(rule)"
+                            class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#C8E6C9] px-3 py-1.5 text-xs font-semibold text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
+                            <lucide-icon name="eye" [size]="14"></lucide-icon>
+                            Ver
+                          </button>
+                        }
                         <button
                           *ngIf="'limits.update' | hasPermission"
                           (click)="openEditForm(rule)"
