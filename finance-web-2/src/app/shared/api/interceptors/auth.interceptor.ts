@@ -1,0 +1,141 @@
+import { HttpBackend, HttpClient, HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import { inject } from '@angular/core';
+import { catchError, of, switchMap, throwError } from 'rxjs';
+import { ApiResponse } from '../models/api-response.model';
+import { AuthStorageService } from '../../../shared/lib/storage/auth-storage.service';
+import { PlatformStorageService } from '../../../features/platform/lib/platform-storage.service';
+import { PlatformAuthTokenResponse } from '../../../entities/platform/api/platform.service';
+import { environment } from '../../../../environments/environment';
+
+const PLATFORM_REFRESH_HEADER = 'X-Platform-Refresh-Retry';
+
+export const authTokenInterceptor: HttpInterceptorFn = (req, next) => {
+  const authStorage = inject(AuthStorageService);
+  const platformStorage = inject(PlatformStorageService);
+  const httpBackend = inject(HttpBackend);
+  const refreshHttp = new HttpClient(httpBackend);
+
+  const clonedRequest = addAuthorizationHeaders(req, authStorage, platformStorage);
+
+  return next(clonedRequest).pipe(
+    catchError((error: unknown) => {
+      if (!shouldAttemptPlatformRefresh(req, error, platformStorage)) {
+        return throwError(() => error);
+      }
+
+      return refreshPlatformSession(refreshHttp, platformStorage).pipe(
+        switchMap((accessToken) => {
+          const retryRequest = req.clone({
+            setHeaders: {
+              Authorization: `Bearer ${accessToken}`,
+              [PLATFORM_REFRESH_HEADER]: '1'
+            }
+          });
+          return next(retryRequest);
+        }),
+        catchError((refreshError) => {
+          platformStorage.clearSession();
+          return throwError(() => refreshError);
+        })
+      );
+    })
+  );
+};
+
+function addAuthorizationHeaders(
+  req: Parameters<HttpInterceptorFn>[0],
+  authStorage: AuthStorageService,
+  platformStorage: PlatformStorageService
+) {
+  if (req.url.includes('/api/platform/auth/login') || req.url.includes('/api/platform/auth/refresh')) {
+    return req;
+  }
+
+  if (req.url.includes('/api/platform/')) {
+    const platformToken = platformStorage.getAccessToken();
+    if (!platformToken) {
+      return req;
+    }
+
+    return req.clone({
+      setHeaders: {
+        Authorization: `Bearer ${platformToken}`
+      }
+    });
+  }
+
+  if (req.url.includes('/api/')) {
+    const token = authStorage.getToken();
+    const tenantSlug = authStorage.getTenantSlug();
+    const headersConfig: Record<string, string> = {};
+
+    if (token) {
+      headersConfig['Authorization'] = `Bearer ${token}`;
+    }
+
+    if (tenantSlug) {
+      headersConfig['X-Tenant-Slug'] = tenantSlug;
+    }
+
+    if (Object.keys(headersConfig).length > 0) {
+      return req.clone({ setHeaders: headersConfig });
+    }
+  }
+
+  return req;
+}
+
+function shouldAttemptPlatformRefresh(
+  req: Parameters<HttpInterceptorFn>[0],
+  error: unknown,
+  platformStorage: PlatformStorageService
+): boolean {
+  if (!(error instanceof HttpErrorResponse)) {
+    return false;
+  }
+
+  if (error.status !== 401) {
+    return false;
+  }
+
+  if (!req.url.includes('/api/platform/')) {
+    return false;
+  }
+
+  if (req.url.includes('/api/platform/auth/login') || req.url.includes('/api/platform/auth/refresh')) {
+    return false;
+  }
+
+  if (req.headers.has(PLATFORM_REFRESH_HEADER)) {
+    return false;
+  }
+
+  return platformStorage.hasRefreshToken();
+}
+
+function refreshPlatformSession(
+  refreshHttp: HttpClient,
+  platformStorage: PlatformStorageService
+) {
+  const refreshToken = platformStorage.getRefreshToken();
+  if (!refreshToken) {
+    return throwError(() => new Error('Missing platform refresh token'));
+  }
+
+  return refreshHttp
+    .post<ApiResponse<PlatformAuthTokenResponse>>(`${environment.apiUrl}/api/platform/auth/refresh`, { refreshToken })
+    .pipe(
+      switchMap((response) => {
+        if (!response.success || !response.data?.accessToken) {
+          return throwError(() => new Error(response.message || 'Platform token refresh failed'));
+        }
+
+        platformStorage.saveAccessToken(response.data.accessToken);
+        if (response.data.refreshToken) {
+          platformStorage.saveRefreshToken(response.data.refreshToken);
+        }
+
+        return of(response.data.accessToken);
+      })
+    );
+}
