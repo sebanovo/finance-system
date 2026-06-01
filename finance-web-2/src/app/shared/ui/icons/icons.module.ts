@@ -1,12 +1,13 @@
 // shared/ui/icons/icons.module.ts
 import { NgModule } from '@angular/core';
-import { LucideAngularModule, 
-  LayoutDashboard, Settings, Shield, Users, Key, Briefcase, 
-  CreditCard, ArrowRightLeft, DollarSign, RefreshCcw, Percent, 
+import {
+  LucideAngularModule,
+  LayoutDashboard, Settings, Shield, Users, Key, Briefcase,
+  CreditCard, ArrowRightLeft, DollarSign, RefreshCcw, Percent,
   Lock, ShieldAlert, BookOpen, Calendar, FileText, LogOut,
   Building, Receipt, Plus, X, Eye, PlayCircle, PauseCircle,
   EyeOff, Wand2, Clock,
-  ClipboardList  , ArrowLeft, ArrowRight
+  ClipboardList, ArrowLeft, ArrowRight, Search, Archive, Database, DatabaseSearch 
 } from 'lucide-angular';
 
 @NgModule({
@@ -15,10 +16,10 @@ import { LucideAngularModule,
       LayoutDashboard, Settings, Shield, Users, Key, Briefcase,
       CreditCard, ArrowRightLeft, DollarSign, RefreshCcw, Percent,
       Lock, ShieldAlert, BookOpen, Calendar, FileText, LogOut,
-      Building, Receipt, Plus, X, Eye, PlayCircle, PauseCircle,
-      EyeOff, Wand2,  ArrowLeft, ArrowRight, Clock
+      Building, Receipt, Plus, X, Eye, PlayCircle, PauseCircle, ClipboardList,
+      EyeOff, Wand2, ArrowLeft, ArrowRight, Clock, Search, Archive, Database, DatabaseSearch
     })
   ],
   exports: [LucideAngularModule]
 })
-export class IconsModule {}
+export class IconsModule { }
