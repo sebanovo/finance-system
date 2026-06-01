@@ -2,15 +2,13 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { LucideAngularModule, Eye, PauseCircle, PlayCircle } from 'lucide-angular';
 import { PlatformTenant } from '../../../../entities/platform/api/platform.service';
-import {IconsModule} from '../../../../shared/ui/icons/icons.module';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-platform-tenant-table',
   standalone: true,
-  imports: [CommonModule, RouterModule, IconsModule],
-  // imports: [CommonModule, RouterModule, LucideAngularModule],
+  imports: [CommonModule, RouterModule, LucideAngularModule],
   template: `
     <div class="overflow-x-auto">
       @if (isLoading) {
