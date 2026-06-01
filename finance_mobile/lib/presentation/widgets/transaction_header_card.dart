@@ -39,7 +39,7 @@ class TransactionHeaderCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(30),
       ),
       child: Text(
-        transaction.status,
+        _friendlyStatus(transaction.status),
         style: TextStyle(
           fontWeight: FontWeight.w600,
           color: transaction.isCompleted
@@ -90,6 +90,33 @@ class TransactionHeaderCard extends StatelessWidget {
         return 'Pago';
       default:
         return type;
+    }
+  }
+
+  String _friendlyStatus(String status) {
+    switch (status) {
+      case 'COMPLETED':
+        return 'Completada';
+      case 'PENDING':
+        return 'Pendiente';
+      case 'PENDING_REVIEW':
+        return 'En revisión';
+      case 'PROCESSING':
+        return 'Procesando';
+      case 'AUTHORIZED':
+        return 'Autorizada';
+      case 'FAILED':
+        return 'Fallida';
+      case 'REVERSED':
+        return 'Revertida';
+      case 'PARTIALLY_REFUNDED':
+        return 'Reembolso parcial';
+      case 'CANCELLED':
+        return 'Cancelada';
+      case 'EXPIRED':
+        return 'Expirada';
+      default:
+        return status;
     }
   }
 }

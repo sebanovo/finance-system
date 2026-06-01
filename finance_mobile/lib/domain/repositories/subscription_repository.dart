@@ -1,5 +1,5 @@
 import '../entities/subscription.dart';
 
 abstract class SubscriptionRepository {
-  Future<Subscription> getCurrentSubscription();
+  Future<Subscription?> getCurrentSubscription();
 }

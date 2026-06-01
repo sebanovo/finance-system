@@ -32,26 +32,35 @@ class TransactionItem extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
+              _buildIcon(),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildIcon(),
-                  const SizedBox(width: 8),
-                  Text(
-                    _getTransactionTitle(),
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ],
+                    Text(
+                      _getTransactionTitle(),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _formatDateTime(transaction.processedAt),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 12),
               _buildAmountText(),
             ],
           ),
           const SizedBox(height: 4),
-          Text(
-            _formatDateTime(transaction.processedAt),
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
+          _buildAccountSummary(),
           if (transaction.description != null &&
               transaction.description!.isNotEmpty)
             Padding(
@@ -82,6 +91,8 @@ class TransactionItem extends StatelessWidget {
             _formatDateTime(transaction.processedAt),
             style: const TextStyle(fontSize: 12),
           ),
+          const SizedBox(height: 4),
+          _buildAccountSummary(),
           if (transaction.description != null &&
               transaction.description!.isNotEmpty)
             Text(
@@ -146,6 +157,41 @@ class TransactionItem extends StatelessWidget {
     );
   }
 
+  Widget _buildAccountSummary() {
+    final parts = <String>[];
+    if (transaction.sourceAccountNumber != null &&
+        transaction.sourceAccountNumber!.isNotEmpty) {
+      parts.add('Origen: ${_accountLabel(
+        transaction.sourceAccountDisplayName,
+        transaction.sourceAccountNumber,
+      )}');
+    }
+    if (transaction.targetAccountNumber != null &&
+        transaction.targetAccountNumber!.isNotEmpty) {
+      parts.add('Destino: ${_accountLabel(
+        transaction.targetAccountDisplayName,
+        transaction.targetAccountNumber,
+      )}');
+    }
+    if (parts.isEmpty) return const SizedBox.shrink();
+    return Text(
+      parts.join(' · '),
+      style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+
+  String _accountLabel(String? displayName, String? accountNumber) {
+    final name = displayName != null && displayName.isNotEmpty
+        ? displayName
+        : 'Cuenta';
+    if (accountNumber == null || accountNumber.isEmpty) {
+      return name;
+    }
+    return '$name ($accountNumber)';
+  }
+
   Widget _buildStatusBadge() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -158,7 +204,7 @@ class TransactionItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
-        transaction.status,
+        _friendlyStatus(transaction.status),
         style: TextStyle(
           fontSize: 10,
           color: transaction.isCompleted
@@ -179,6 +225,33 @@ class TransactionItem extends StatelessWidget {
     if (transaction.isRelease) return 'Liberación de fondos';
     if (transaction.isPayment) return 'Pago';
     return transaction.type;
+  }
+
+  String _friendlyStatus(String status) {
+    switch (status) {
+      case 'COMPLETED':
+        return 'Completada';
+      case 'PENDING':
+        return 'Pendiente';
+      case 'PENDING_REVIEW':
+        return 'En revisión';
+      case 'PROCESSING':
+        return 'Procesando';
+      case 'AUTHORIZED':
+        return 'Autorizada';
+      case 'FAILED':
+        return 'Fallida';
+      case 'REVERSED':
+        return 'Revertida';
+      case 'PARTIALLY_REFUNDED':
+        return 'Reembolso parcial';
+      case 'CANCELLED':
+        return 'Cancelada';
+      case 'EXPIRED':
+        return 'Expirada';
+      default:
+        return status;
+    }
   }
 
   String _formatDateTime(DateTime date) {

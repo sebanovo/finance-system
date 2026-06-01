@@ -1,7 +1,9 @@
 // lib/presentation/pages/devices_page.dart
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../viewmodels/devices_viewmodel.dart';
+import '../viewmodels/notifications_viewmodel.dart';
 import '../widgets/device_card.dart';
 import '../widgets/device_card_skeleton.dart';
 
@@ -14,12 +16,15 @@ class DevicesPage extends StatefulWidget {
 
 class _DevicesPageState extends State<DevicesPage> {
   late DevicesViewModel _viewModel;
+  late NotificationsViewModel _notifViewModel;
   static const int _skeletonItemCount = 1;
+  bool _registeringDevice = false;
 
   @override
   void initState() {
     super.initState();
     _viewModel = di.sl<DevicesViewModel>();
+    _notifViewModel = di.sl<NotificationsViewModel>();
     _viewModel.addListener(_onViewModelChanged);
     _viewModel.loadDevices();
   }
@@ -44,6 +49,33 @@ class _DevicesPageState extends State<DevicesPage> {
         backgroundColor: isError ? Colors.red.shade700 : Colors.green.shade700,
       ),
     );
+  }
+
+  Future<void> _registerCurrentDevice() async {
+    if (_registeringDevice) return;
+    setState(() => _registeringDevice = true);
+    try {
+      final success = await _notifViewModel.registerCurrentDevice();
+      if (!mounted) return;
+      if (success) {
+        _showSnackBar(
+          'Dispositivo registrado correctamente.',
+          isError: false,
+        );
+        await _viewModel.loadDevices();
+      } else {
+        _showSnackBar(
+          'No se pudo registrar el dispositivo. Revisa los permisos de notificación.',
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      _showSnackBar('No se pudo registrar el dispositivo: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _registeringDevice = false);
+      }
+    }
   }
 
   Future<void> _confirmDeactivate(device) async {
@@ -115,6 +147,23 @@ class _DevicesPageState extends State<DevicesPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: const Color(0xFF2E7D32),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_ic_call_outlined),
+            tooltip: 'Registrar dispositivo',
+            onPressed: _registeringDevice ? null : _registerCurrentDevice,
+          ),
+          IconButton(
+            icon: const Icon(Icons.notifications),
+            tooltip: 'Notificaciones',
+            onPressed: () => context.push('/notifications'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.tune),
+            tooltip: 'Preferencias',
+            onPressed: () => context.push('/notification-preferences'),
+          ),
+        ],
       ),
       body: _buildBody(),
     );

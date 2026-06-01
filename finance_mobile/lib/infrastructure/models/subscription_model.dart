@@ -41,27 +41,57 @@ class SubscriptionModel {
     required this.updatedAt,
   });
 
-  factory SubscriptionModel.fromJson(Map<String, dynamic> json) {
+  static SubscriptionModel? tryFromJson(Map<String, dynamic> json) {
+    final startedAt = _dateTime(json['startedAt']);
+    final expiresAt = _dateTime(json['expiresAt']);
+    final createdAt = _dateTime(json['createdAt']);
+    final updatedAt = _dateTime(json['updatedAt']);
+
+    if (startedAt == null ||
+        expiresAt == null ||
+        createdAt == null ||
+        updatedAt == null) {
+      return null;
+    }
+
     return SubscriptionModel(
-      id: json['id'] ?? '',
-      tenantId: json['tenantId'] ?? '',
-      tenantName: json['tenantName'] ?? '',
-      tenantSlug: json['tenantSlug'] ?? '',
-      planId: json['planId'] ?? '',
-      planCode: json['planCode'] ?? '',
-      planName: json['planName'] ?? '',
-      planType: json['planType'] ?? '',
-      maxUsers: json['maxUsers'] ?? 0,
-      maxRoles: json['maxRoles'] ?? 0,
-      status: json['status'] ?? '',
+      id: _string(json['id']),
+      tenantId: _string(json['tenantId']),
+      tenantName: _string(json['tenantName']),
+      tenantSlug: _string(json['tenantSlug']),
+      planId: _string(json['planId']),
+      planCode: _string(json['planCode']),
+      planName: _string(json['planName']),
+      planType: _string(json['planType']),
+      maxUsers: _int(json['maxUsers']),
+      maxRoles: _int(json['maxRoles']),
+      status: _string(json['status']),
       trial: json['trial'] ?? false,
       currentSubscription: json['currentSubscription'] ?? false,
-      startedAt: DateTime.parse(json['startedAt']),
-      expiresAt: DateTime.parse(json['expiresAt']),
-      remainingDays: json['remainingDays'] ?? 0,
-      createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: DateTime.parse(json['updatedAt']),
+      startedAt: startedAt,
+      expiresAt: expiresAt,
+      remainingDays: _int(json['remainingDays']),
+      createdAt: createdAt,
+      updatedAt: updatedAt,
     );
+  }
+
+  factory SubscriptionModel.fromJson(Map<String, dynamic> json) =>
+      tryFromJson(json)!;
+
+  static String _string(dynamic value) => value?.toString() ?? '';
+
+  static int _int(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static DateTime? _dateTime(dynamic value) {
+    if (value == null) return null;
+    final text = value.toString();
+    if (text.isEmpty) return null;
+    return DateTime.tryParse(text);
   }
 
   Subscription toEntity() {

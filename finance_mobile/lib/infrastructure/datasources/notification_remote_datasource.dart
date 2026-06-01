@@ -1,6 +1,8 @@
 import '../../../../core/network/api_client.dart';
 import '../models/notification_model.dart';
 import '../models/notification_device_model.dart';
+import '../models/notification_preference_model.dart';
+import '../models/upsert_notification_preference_request.dart';
 import '../models/register_device_request.dart';
 
 abstract class NotificationRemoteDataSource {
@@ -14,6 +16,10 @@ abstract class NotificationRemoteDataSource {
   Future<List<NotificationDeviceModel>> getDevices();
   Future<void> deactivateDevice(String deviceId);
   Future<NotificationDeviceModel> revokeDevice(String deviceId);
+  Future<List<NotificationPreferenceModel>> getPreferences();
+  Future<NotificationPreferenceModel> upsertPreference(
+    UpsertNotificationPreferenceRequest request,
+  );
 }
 
 class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
@@ -221,5 +227,51 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
     } else {
       throw Exception('Error ${response.statusCode}');
     }
+  }
+
+  @override
+  Future<List<NotificationPreferenceModel>> getPreferences() async {
+    final response = await apiClient.get('/api/me/notification-preferences');
+    if (response.statusCode == 200) {
+      final data = response.data as Map<String, dynamic>;
+      if (data['success'] == true) {
+        final list = data['data'] as List<dynamic>? ?? [];
+        return list
+            .map(
+              (json) => NotificationPreferenceModel.fromJson(
+                Map<String, dynamic>.from(json as Map),
+              ),
+            )
+            .toList();
+      }
+      throw Exception(data['message'] ?? 'Error al obtener preferencias');
+    }
+    if (response.statusCode == 401) {
+      throw Exception('Sesión expirada');
+    }
+    throw Exception('Error ${response.statusCode}');
+  }
+
+  @override
+  Future<NotificationPreferenceModel> upsertPreference(
+    UpsertNotificationPreferenceRequest request,
+  ) async {
+    final response = await apiClient.put(
+      '/api/me/notification-preferences',
+      request.toJson(),
+    );
+    if (response.statusCode == 200) {
+      final data = response.data as Map<String, dynamic>;
+      if (data['success'] == true) {
+        return NotificationPreferenceModel.fromJson(
+          Map<String, dynamic>.from(data['data'] as Map),
+        );
+      }
+      throw Exception(data['message'] ?? 'Error al actualizar preferencias');
+    }
+    if (response.statusCode == 401) {
+      throw Exception('Sesión expirada');
+    }
+    throw Exception('Error ${response.statusCode}');
   }
 }

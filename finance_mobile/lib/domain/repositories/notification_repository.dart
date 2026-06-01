@@ -1,5 +1,6 @@
 import '../entities/notification.dart';
 import '../entities/notification_device.dart';
+import '../entities/notification_preference.dart';
 
 abstract class NotificationRepository {
   // Notificaciones
@@ -25,4 +26,14 @@ abstract class NotificationRepository {
   Future<List<NotificationDevice>> getDevices();
   Future<void> deactivateDevice(String deviceId);
   Future<NotificationDevice> revokeDevice(String deviceId);
+
+  // Preferencias
+  Future<List<NotificationPreference>> getPreferences();
+  Future<NotificationPreference> upsertPreference({
+    required String category,
+    required bool pushEnabled,
+    required bool inAppEnabled,
+    required bool emailEnabled,
+    required bool smsEnabled,
+  });
 }

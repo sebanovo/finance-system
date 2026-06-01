@@ -8,8 +8,8 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   SubscriptionRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<Subscription> getCurrentSubscription() async {
+  Future<Subscription?> getCurrentSubscription() async {
     final model = await remoteDataSource.getCurrentSubscription();
-    return model.toEntity();
+    return model?.toEntity();
   }
 }

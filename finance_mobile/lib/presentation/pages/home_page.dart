@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../viewmodels/home_viewmodel.dart';
+import '../widgets/customer_dashboard_view.dart';
 import '../widgets/change_password_dialog.dart';
 import '../widgets/main_drawer.dart';
 import '../widgets/subscription_card.dart';
@@ -19,22 +20,31 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late HomeViewModel _viewModel;
   late NotificationsViewModel _notifViewModel;
+  late final VoidCallback _notificationCounterListener;
+  bool _deviceRegistrationRequested = false;
 
   @override
   void initState() {
     super.initState();
-    NotificationCounter().addListener(() {
-      setState(() {});
-    });
+    _notificationCounterListener = () {
+      if (mounted) {
+        setState(() {});
+      }
+    };
+    NotificationCounter().addListener(_notificationCounterListener);
     _viewModel = di.sl<HomeViewModel>();
     _viewModel.addListener(_onViewModelChanged);
+    _viewModel.addListener(_onUserInfoLoaded);
 
     _notifViewModel = di.sl<NotificationsViewModel>();
     _notifViewModel.addListener(_onNotifChanged);
-    _notifViewModel.loadUnreadCount();
-
-    _viewModel.addListener(_onUserInfoLoaded);
     _setupFcmListeners();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _viewModel.loadData();
+      _notifViewModel.loadUnreadCount();
+    });
   }
 
   // En HomePage, modifica el método _onNotifChanged
@@ -49,19 +59,28 @@ class _HomePageState extends State<HomePage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _notifViewModel.loadUnreadCount();
   }
 
   void _onUserInfoLoaded() {
     if (_viewModel.userInfo != null) {
-      final userRole = _viewModel.userInfo!.roles.firstWhere(
-        (r) => r == 'USER' || r == 'ADMIN' || r == 'OWNER_ADMIN',
-        orElse: () => 'UNKNOWN',
-      );
-      _notifViewModel.setCurrentUserRole(userRole);
+      _notifViewModel.setIsClient(_viewModel.isClient);
 
-      if (userRole == 'USER') {
-        _notifViewModel.registerCurrentDevice();
+      if (_viewModel.isClient && !_deviceRegistrationRequested) {
+        _deviceRegistrationRequested = true;
+        Future.microtask(() async {
+          final success = await _notifViewModel.registerCurrentDevice();
+          if (!mounted) return;
+          if (success) {
+            _showSnackBar(
+              'Dispositivo de notificaciones registrado correctamente.',
+              isError: false,
+            );
+          } else {
+            _showSnackBar(
+              'No se pudo registrar el dispositivo de notificaciones.',
+            );
+          }
+        });
       }
     }
   }
@@ -139,17 +158,41 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                "Bienvenido al Dashboard",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              // ✅ SubscriptionCard ya maneja skeleton cuando isLoading = true
-              SubscriptionCard(
-                subscription: _viewModel.subscription,
-                errorMessage: _viewModel.errorMessage,
-                isLoading: _viewModel.loadingSubscription,
-              ),
+              if (_viewModel.isClient) ...[
+                Text(
+                  "Bienvenido al Dashboard",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                CustomerDashboardView(
+                  dashboard: _viewModel.customerDashboard,
+                  isLoading: _viewModel.loadingDashboard,
+                  errorMessage: _viewModel.dashboardErrorMessage,
+                  onOpenAccounts: () => context.push('/accounts'),
+                  onOpenTransactions: () => context.push('/transactions'),
+                  onOpenLimits: _viewModel.hasAnyPermissionPrefix('limits.')
+                      ? () => context.push('/limits')
+                      : null,
+                  onOpenNotifications: () => context.push('/notifications'),
+                ),
+                const SizedBox(height: 16),
+                SubscriptionCard(
+                  subscription: _viewModel.subscription,
+                  errorMessage: _viewModel.errorMessage,
+                  isLoading: _viewModel.loadingSubscription,
+                ),
+              ] else ...[
+                Text(
+                  "Bienvenido al Dashboard",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                SubscriptionCard(
+                  subscription: _viewModel.subscription,
+                  errorMessage: _viewModel.errorMessage,
+                  isLoading: _viewModel.loadingSubscription,
+                ),
+              ],
             ],
           ),
         ),
@@ -158,7 +201,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildNotificationBadge() {
-    final unreadCount = _notifViewModel.unreadCount;
+    final unreadCount = NotificationCounter().count;
 
     return Stack(
       children: [
@@ -191,7 +234,9 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _viewModel.removeListener(_onViewModelChanged);
+    _viewModel.removeListener(_onUserInfoLoaded);
     _notifViewModel.removeListener(_onNotifChanged);
+    NotificationCounter().removeListener(_notificationCounterListener);
     super.dispose();
   }
 }

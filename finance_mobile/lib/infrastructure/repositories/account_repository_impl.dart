@@ -1,4 +1,5 @@
 import '../../../domain/entities/account.dart';
+import '../../../domain/entities/account_lookup.dart';
 import '../../../domain/entities/account_balance.dart';
 import '../../../domain/entities/transaction.dart';
 import '../../../domain/repositories/account_repository.dart';
@@ -19,6 +20,12 @@ class AccountRepositoryImpl implements AccountRepository {
   @override
   Future<Account> getAccountById(String accountId) async {
     final model = await remoteDataSource.getAccountById(accountId);
+    return model.toEntity();
+  }
+
+  @override
+  Future<AccountLookup> getAccountByNumber(String accountNumber) async {
+    final model = await remoteDataSource.getAccountByNumber(accountNumber);
     return model.toEntity();
   }
 

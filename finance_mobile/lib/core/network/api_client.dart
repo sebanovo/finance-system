@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../constants/env.dart';
@@ -10,6 +11,8 @@ class ApiClient extends ChangeNotifier {
   String? token;
   String? tenantSlug;
   String? refreshToken;
+  List<String> _roles = [];
+  List<String> _permissions = [];
   Future<bool>? _refreshing;
 
   ApiClient()
@@ -65,6 +68,7 @@ class ApiClient extends ChangeNotifier {
 
   void setToken(String token) {
     this.token = token;
+    _syncClaimsFromToken(token);
     notifyListeners();
   }
 
@@ -81,6 +85,7 @@ class ApiClient extends ChangeNotifier {
     this.token = token;
     this.tenantSlug = tenantSlug;
     this.refreshToken = refreshToken;
+    _syncClaimsFromToken(token);
     notifyListeners();
   }
 
@@ -94,7 +99,21 @@ class ApiClient extends ChangeNotifier {
     token = null;
     tenantSlug = null;
     refreshToken = null;
+    _roles = [];
+    _permissions = [];
     notifyListeners();
+  }
+
+  List<String> get roles => List.unmodifiable(_roles);
+
+  List<String> get permissions => List.unmodifiable(_permissions);
+
+  bool get isOwnerAdmin => _roles.contains('OWNER_ADMIN');
+
+  bool hasPermission(String code) => _permissions.contains(code);
+
+  bool hasAnyPermissionPrefix(String prefix) {
+    return _permissions.any((permission) => permission.startsWith(prefix));
   }
 
   Future<bool> _refreshSession() async {
@@ -159,6 +178,7 @@ class ApiClient extends ChangeNotifier {
       }
 
       token = newAccessToken;
+      _syncClaimsFromToken(newAccessToken);
       if (newRefreshToken != null && newRefreshToken.isNotEmpty) {
         refreshToken = newRefreshToken;
       }
@@ -183,6 +203,40 @@ class ApiClient extends ChangeNotifier {
     await prefs.remove('accessToken');
     await prefs.remove('refreshToken');
     await prefs.remove('tenantSlug');
+  }
+
+  void _syncClaimsFromToken(String jwt) {
+    try {
+      final parts = jwt.split('.');
+      if (parts.length < 2) {
+        _roles = [];
+        _permissions = [];
+        return;
+      }
+
+      final payload = parts[1];
+      final normalized = base64Url.normalize(payload);
+      final decoded = utf8.decode(base64Url.decode(normalized));
+      final Map<String, dynamic> claims = jsonDecode(decoded) as Map<String, dynamic>;
+
+      _roles = _readStringListClaim(claims, 'roles');
+      _permissions = _readStringListClaim(claims, 'permissions');
+    } catch (_) {
+      _roles = [];
+      _permissions = [];
+    }
+  }
+
+  List<String> _readStringListClaim(Map<String, dynamic> claims, String key) {
+    final value = claims[key];
+    if (value is List) {
+      return value
+          .whereType<String>()
+          .map((item) => item.trim())
+          .where((item) => item.isNotEmpty)
+          .toList();
+    }
+    return [];
   }
 
   bool _shouldAttemptRefresh(Response response) {

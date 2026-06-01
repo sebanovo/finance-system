@@ -2,6 +2,7 @@ import 'package:finance_mobile/core/routes/app_routes.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:finance_mobile/constants/env.dart';
+import 'package:finance_mobile/core/services/notification_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,11 +27,7 @@ Future<void> main() async {
   await _restorePersistedSession();
 
   await Firebase.initializeApp();
-
-  final fcm = FirebaseMessaging.instance;
-
-  // Solicitar permiso de notificaciones
-  await fcm.requestPermission(alert: true, badge: true, sound: true);
+  await NotificationService.initialize();
 
   // Registrar handler para notificaciones en segundo plano
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);

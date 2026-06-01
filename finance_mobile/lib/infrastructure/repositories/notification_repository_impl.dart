@@ -1,8 +1,10 @@
 import '../../../domain/entities/notification.dart';
 import '../../../domain/entities/notification_device.dart';
+import '../../../domain/entities/notification_preference.dart';
 import '../../../domain/repositories/notification_repository.dart';
 import '../datasources/notification_remote_datasource.dart';
 import '../models/register_device_request.dart';
+import '../models/upsert_notification_preference_request.dart';
 
 class NotificationRepositoryImpl implements NotificationRepository {
   final NotificationRemoteDataSource remoteDataSource;
@@ -85,6 +87,31 @@ class NotificationRepositoryImpl implements NotificationRepository {
   @override
   Future<NotificationDevice> revokeDevice(String deviceId) async {
     final model = await remoteDataSource.revokeDevice(deviceId);
+    return model.toEntity();
+  }
+
+  @override
+  Future<List<NotificationPreference>> getPreferences() async {
+    final models = await remoteDataSource.getPreferences();
+    return models.map((model) => model.toEntity()).toList();
+  }
+
+  @override
+  Future<NotificationPreference> upsertPreference({
+    required String category,
+    required bool pushEnabled,
+    required bool inAppEnabled,
+    required bool emailEnabled,
+    required bool smsEnabled,
+  }) async {
+    final request = UpsertNotificationPreferenceRequest(
+      category: category,
+      pushEnabled: pushEnabled,
+      inAppEnabled: inAppEnabled,
+      emailEnabled: emailEnabled,
+      smsEnabled: smsEnabled,
+    );
+    final model = await remoteDataSource.upsertPreference(request);
     return model.toEntity();
   }
 }

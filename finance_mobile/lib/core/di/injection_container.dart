@@ -2,6 +2,8 @@ import 'package:finance_mobile/core/network/api_client.dart';
 import 'package:finance_mobile/core/services/notification_service.dart';
 import 'package:finance_mobile/domain/repositories/account_repository.dart';
 import 'package:finance_mobile/domain/repositories/auth_repository.dart';
+import 'package:finance_mobile/domain/repositories/dashboard_repository.dart';
+import 'package:finance_mobile/domain/repositories/limit_repository.dart';
 import 'package:finance_mobile/domain/repositories/notification_repository.dart';
 import 'package:finance_mobile/domain/repositories/permission_repository.dart';
 import 'package:finance_mobile/domain/repositories/role_repository.dart';
@@ -14,6 +16,9 @@ import 'package:finance_mobile/domain/usecases/change_password_usecase.dart';
 import 'package:finance_mobile/domain/usecases/create_account_usecase.dart';
 import 'package:finance_mobile/domain/usecases/create_deposit_usecase.dart';
 import 'package:finance_mobile/domain/usecases/create_hold_usecase.dart';
+import 'package:finance_mobile/domain/usecases/create_qr_transaction_intent_usecase.dart';
+import 'package:finance_mobile/domain/usecases/cancel_qr_transaction_intent_usecase.dart';
+import 'package:finance_mobile/domain/usecases/confirm_qr_transaction_usecase.dart';
 import 'package:finance_mobile/domain/usecases/create_payment_usecase.dart';
 import 'package:finance_mobile/domain/usecases/create_release_usecase.dart';
 import 'package:finance_mobile/domain/usecases/create_transfer_usecase.dart';
@@ -23,12 +28,18 @@ import 'package:finance_mobile/domain/usecases/deactivate_device_usecase.dart';
 import 'package:finance_mobile/domain/usecases/forgot_password_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_account_balance_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_account_by_id_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_account_by_number_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_account_transactions_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_accounts_usecase.dart';
+import 'package:finance_mobile/domain/usecases/evaluate_limit_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_limit_rules_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_available_roles_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_customer_dashboard_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_devices_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_notifications_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_notification_preferences_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_permissions_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_qr_transaction_intent_usecase.dart';
 import 'package:finance_mobile/domain/usecases/create_role_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_roles_usecase.dart';
 import 'package:finance_mobile/domain/usecases/activate_role_usecase.dart';
@@ -41,6 +52,7 @@ import 'package:finance_mobile/domain/usecases/mark_all_notifications_as_read_us
 import 'package:finance_mobile/domain/usecases/mark_notification_as_read_usecase.dart';
 import 'package:finance_mobile/domain/usecases/open_notification_usecase.dart';
 import 'package:finance_mobile/domain/usecases/register_device_usecase.dart';
+import 'package:finance_mobile/domain/usecases/upsert_notification_preference_usecase.dart';
 import 'package:finance_mobile/domain/usecases/revoke_device_usecase.dart';
 import 'package:finance_mobile/domain/usecases/update_account_alias_usecase.dart';
 import 'package:finance_mobile/domain/usecases/update_role_usecase.dart';
@@ -54,6 +66,8 @@ import 'package:finance_mobile/domain/usecases/reset_password_usecase.dart';
 import 'package:finance_mobile/domain/usecases/signup_usecase.dart';
 import 'package:finance_mobile/infrastructure/datasources/account_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/auth_remote_datasource.dart';
+import 'package:finance_mobile/infrastructure/datasources/dashboard_remote_datasource.dart';
+import 'package:finance_mobile/infrastructure/datasources/limit_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/notification_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/permission_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/role_remote_datasource.dart';
@@ -62,6 +76,8 @@ import 'package:finance_mobile/infrastructure/datasources/transaction_remote_dat
 import 'package:finance_mobile/infrastructure/datasources/user_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/repositories/account_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/auth_repository_impl.dart';
+import 'package:finance_mobile/infrastructure/repositories/dashboard_repository_impl.dart';
+import 'package:finance_mobile/infrastructure/repositories/limit_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/notification_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/permission_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/role_repository_impl.dart';
@@ -72,8 +88,10 @@ import 'package:finance_mobile/presentation/viewmodels/accounts_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/devices_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/forgot_password_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/home_viewmodel.dart';
+import 'package:finance_mobile/presentation/viewmodels/limits_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/login_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/notifications_viewmodel.dart';
+import 'package:finance_mobile/presentation/viewmodels/notification_preferences_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/permissions_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/reset_password_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/roles_viewmodel.dart';
@@ -92,6 +110,8 @@ Future<void> init() async {
   initAuthModule();
   initUserModule();
   initSubscriptionModule();
+  initDashboardModule();
+  initLimitsModule();
   initHomeModule();
   initAccountsModule();
   initTransactionModule();
@@ -192,13 +212,45 @@ void initSubscriptionModule() {
   sl.registerLazySingleton(() => GetSubscriptionUseCase(sl()));
 }
 
+void initDashboardModule() {
+  sl.registerLazySingleton<DashboardRemoteDataSource>(
+    () => DashboardRemoteDataSourceImpl(sl()),
+  );
+  sl.registerLazySingleton<DashboardRepository>(
+    () => DashboardRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton(() => GetCustomerDashboardUseCase(sl()));
+}
+
+void initLimitsModule() {
+  sl.registerLazySingleton<LimitRemoteDataSource>(
+    () => LimitRemoteDataSourceImpl(sl()),
+  );
+  sl.registerLazySingleton<LimitRepository>(
+    () => LimitRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton(() => GetLimitRulesUseCase(sl()));
+  sl.registerLazySingleton(() => EvaluateLimitUseCase(sl()));
+  sl.registerFactory(
+    () => LimitsViewModel(
+      getLimitRulesUseCase: sl(),
+      evaluateLimitUseCase: sl(),
+      getAccountsUseCase: sl(),
+      getUserInfoUseCase: sl(),
+      getAccountByNumberUseCase: sl(),
+    ),
+  );
+}
+
 void initHomeModule() {
   sl.registerFactory(
     () => HomeViewModel(
       getSubscriptionUseCase: sl(),
+      getCustomerDashboardUseCase: sl(),
       getUserInfoUseCase: sl(),
       changePasswordUseCase: sl(),
       logoutUseCase: sl(),
+      apiClient: sl(),
     ),
   );
 }
@@ -213,6 +265,7 @@ void initAccountsModule() {
   );
   sl.registerLazySingleton(() => GetAccountsUseCase(sl()));
   sl.registerLazySingleton(() => GetAccountByIdUseCase(sl()));
+  sl.registerLazySingleton(() => GetAccountByNumberUseCase(sl()));
   sl.registerLazySingleton(() => GetAccountBalanceUseCase(sl()));
   sl.registerLazySingleton(() => UpdateAccountAliasUseCase(sl()));
   sl.registerLazySingleton(() => GetAccountTransactionsUseCase(sl()));
@@ -241,6 +294,10 @@ void initTransactionModule() {
   sl.registerLazySingleton(() => GetTransactionByIdUseCase(sl()));
   sl.registerLazySingleton(() => CreateDepositUseCase(sl()));
   sl.registerLazySingleton(() => CreateHoldUseCase(sl()));
+  sl.registerLazySingleton(() => CreateQrTransactionIntentUseCase(sl()));
+  sl.registerLazySingleton(() => GetQrTransactionIntentUseCase(sl()));
+  sl.registerLazySingleton(() => CancelQrTransactionIntentUseCase(sl()));
+  sl.registerLazySingleton(() => ConfirmQrTransactionUseCase(sl()));
   sl.registerLazySingleton(() => CreatePaymentUseCase(sl()));
   sl.registerLazySingleton(() => CreateReleaseUseCase(sl()));
   sl.registerLazySingleton(() => CreateTransferUseCase(sl()));
@@ -251,6 +308,10 @@ void initTransactionModule() {
       getTransactionByIdUseCase: sl(),
       createDepositUseCase: sl(),
       createHoldUseCase: sl(),
+      createQrTransactionIntentUseCase: sl(),
+      getQrTransactionIntentUseCase: sl(),
+      cancelQrTransactionIntentUseCase: sl(),
+      confirmQrTransactionUseCase: sl(),
       createPaymentUseCase: sl(),
       createReleaseUseCase: sl(),
       createTransferUseCase: sl(),
@@ -276,6 +337,8 @@ void initNotifationsModule() {
   sl.registerLazySingleton(() => RegisterDeviceUseCase(sl()));
   sl.registerLazySingleton(() => GetDevicesUseCase(sl()));
   sl.registerLazySingleton(() => DeactivateDeviceUseCase(sl()));
+  sl.registerLazySingleton(() => GetNotificationPreferencesUseCase(sl()));
+  sl.registerLazySingleton(() => UpsertNotificationPreferenceUseCase(sl()));
   sl.registerFactory(
     () => NotificationsViewModel(
       getNotificationsUseCase: sl(),
@@ -284,6 +347,12 @@ void initNotifationsModule() {
       markAllAsReadUseCase: sl(),
       archiveUseCase: sl(),
       registerDeviceUseCase: sl(),
+    ),
+  );
+  sl.registerFactory(
+    () => NotificationPreferencesViewModel(
+      getPreferencesUseCase: sl(),
+      upsertPreferenceUseCase: sl(),
     ),
   );
   sl.registerLazySingleton(() => NotificationService());

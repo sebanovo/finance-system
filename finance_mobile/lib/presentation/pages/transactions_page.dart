@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../../../../core/routes/app_route_observer.dart';
+import '../../../../core/network/api_client.dart';
 import '../viewmodels/transactions_viewmodel.dart';
 import '../widgets/transaction_item.dart';
 import '../widgets/transaction_item_skeleton.dart';
@@ -16,24 +17,72 @@ class TransactionsPage extends StatefulWidget {
 
 class _TransactionsPageState extends State<TransactionsPage> with RouteAware {
   late TransactionsViewModel _viewModel;
+  late ApiClient _apiClient;
   static const int _skeletonItemCount = 5;
 
   final List<Map<String, dynamic>> _menuItems = [
-    {'value': 'deposit', 'icon': Icons.arrow_downward, 'label': 'Depositar'},
-    {'value': 'transfer', 'icon': Icons.swap_horiz, 'label': 'Transferir'},
-    {'value': 'withdrawal', 'icon': Icons.arrow_upward, 'label': 'Retirar'},
-    {'value': 'payment', 'icon': Icons.payment, 'label': 'Pagar'},
-    {'value': 'hold', 'icon': Icons.block, 'label': 'Bloquear fondos'},
-    {'value': 'release', 'icon': Icons.check_circle, 'label': 'Liberar fondos'},
+    {
+      'value': 'deposit',
+      'icon': Icons.arrow_downward,
+      'label': 'Depositar',
+      'permission': 'me.transactions.deposit',
+    },
+    {
+      'value': 'transfer',
+      'icon': Icons.swap_horiz,
+      'label': 'Transferir',
+      'permission': 'me.transactions.transfer',
+    },
+    {
+      'value': 'withdrawal',
+      'icon': Icons.arrow_upward,
+      'label': 'Retirar',
+      'permission': 'me.transactions.withdrawal',
+    },
+    {
+      'value': 'payment',
+      'icon': Icons.payment,
+      'label': 'Pagar',
+      'permission': 'me.transactions.payment',
+    },
+    {
+      'value': 'qr-charge',
+      'icon': Icons.qr_code,
+      'label': 'Cobro por QR',
+      'permission': 'me.transactions.qr.create',
+    },
+    {
+      'value': 'qr-pay',
+      'icon': Icons.qr_code_scanner,
+      'label': 'Pago por QR',
+      'permission': 'me.transactions.qr.confirm',
+    },
+    {
+      'value': 'hold',
+      'icon': Icons.block,
+      'label': 'Bloquear fondos',
+      'permission': 'me.transactions.hold',
+    },
+    {
+      'value': 'release',
+      'icon': Icons.check_circle,
+      'label': 'Liberar fondos',
+      'permission': 'me.transactions.release',
+    },
   ];
 
   @override
   void initState() {
     super.initState();
     _viewModel = di.sl<TransactionsViewModel>();
+    _apiClient = di.sl<ApiClient>();
     _viewModel.addListener(_onViewModelChanged);
     _viewModel.loadTransactions();
   }
+
+  List<Map<String, dynamic>> get _visibleMenuItems => _menuItems
+      .where((item) => _apiClient.hasPermission(item['permission'] as String))
+      .toList();
 
   @override
   void didChangeDependencies() {
@@ -79,18 +128,36 @@ class _TransactionsPageState extends State<TransactionsPage> with RouteAware {
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: const Color(0xFF2E7D32),
-        actions: [_buildMenuButton()],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications),
+            tooltip: 'Notificaciones',
+            onPressed: () => context.push('/notifications'),
+          ),
+          _buildMenuButton(),
+        ],
       ),
       body: _buildBody(),
     );
   }
 
   Widget _buildMenuButton() {
+    final items = _visibleMenuItems;
+    if (items.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return PopupMenuButton<String>(
-      onSelected: (value) => context.push('/transactions/$value'),
-      itemBuilder: (context) => _menuItems.map((item) {
+      onSelected: (value) {
+        final route = switch (value) {
+          'qr-charge' => '/transactions/qr/charge',
+          'qr-pay' => '/transactions/qr/pay',
+          _ => '/transactions/$value',
+        };
+        context.push(route);
+      },
+      itemBuilder: (context) => items.map((item) {
         return PopupMenuItem<String>(
-          // ✅ Especificar tipo String
           value: item['value'] as String,
           child: Row(
             children: [
@@ -105,6 +172,13 @@ class _TransactionsPageState extends State<TransactionsPage> with RouteAware {
   }
 
   Widget _buildBody() {
+    if (!_apiClient.hasPermission('me.transactions.read')) {
+      return _buildPermissionDeniedWidget(
+        'No tienes permisos para ver movimientos',
+        'Tu perfil no tiene acceso al historial de transacciones.',
+      );
+    }
+
     if (_viewModel.loading) {
       return ListView.builder(
         padding: const EdgeInsets.all(16),
@@ -117,23 +191,166 @@ class _TransactionsPageState extends State<TransactionsPage> with RouteAware {
       return _buildErrorWidget();
     }
 
-    if (_viewModel.transactions.isEmpty) {
-      return const TransactionsEmptyWidget();
-    }
-
     return RefreshIndicator(
       onRefresh: () async => _viewModel.loadTransactions(),
       color: const Color(0xFF2E7D32),
-      child: ListView.builder(
+      child: ListView(
         padding: const EdgeInsets.all(16),
-        itemCount: _viewModel.transactions.length,
-        itemBuilder: (context, index) {
-          final tx = _viewModel.transactions[index];
-          return TransactionItem(
-            transaction: tx,
-            onTap: () => context.push('/transactions/${tx.id}'),
-          );
-        },
+        children: [
+          _buildTransactionsOverview(),
+          const SizedBox(height: 16),
+          if (_viewModel.transactions.isEmpty)
+            const TransactionsEmptyWidget()
+          else
+            ..._viewModel.transactions.map(
+              (tx) => TransactionItem(
+                transaction: tx,
+                onTap: () => context.push('/transactions/${tx.id}'),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTransactionsOverview() {
+    final pending = _viewModel.transactions.where((tx) => tx.isPending).length;
+    final completed = _viewModel.transactions.where((tx) => tx.isCompleted).length;
+    final failed = _viewModel.transactions.where((tx) => tx.isFailed).length;
+    final total = _viewModel.transactions.length;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF66BB6A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Movimientos',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Historial resumido y acciones disponibles según tus permisos.',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.9),
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildOverviewChip('Total', '$total'),
+              _buildOverviewChip('Pendientes', '$pending'),
+              _buildOverviewChip('Completadas', '$completed'),
+              _buildOverviewChip('Fallidas', '$failed'),
+            ],
+          ),
+          if (_visibleMenuItems.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _visibleMenuItems
+                  .take(4)
+                  .map(
+                    (item) => _buildActionChip(
+                      icon: item['icon'] as IconData,
+                      label: item['label'] as String,
+                      onTap: () {
+                        final value = item['value'] as String;
+                        final route = switch (value) {
+                          'qr-charge' => '/transactions/qr/charge',
+                          'qr-pay' => '/transactions/qr/pay',
+                          _ => '/transactions/$value',
+                        };
+                        context.push(route);
+                      },
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOverviewChip(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionChip({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 18, color: const Color(0xFF2E7D32)),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Color(0xFF2E7D32),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -177,5 +394,31 @@ class _TransactionsPageState extends State<TransactionsPage> with RouteAware {
     appRouteObserver.unsubscribe(this);
     _viewModel.removeListener(_onViewModelChanged);
     super.dispose();
+    }
   }
-}
+
+  Widget _buildPermissionDeniedWidget(String title, String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.lock_outline, size: 64, color: Colors.grey.shade400),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: const TextStyle(color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
