@@ -12,7 +12,7 @@ import {
   Plus, UserCircle2, Save, MoreHorizontal, Wallet, Pencil, CheckCircle, 
   Play, Ban, Snowflake, XCircle, ArrowDownToLine, ArrowUpFromLine, Send, 
   RotateCcw, Reply, ClipboardList, AlertCircle, AlertTriangle, BadgeCheck,
-  Building, Clock, Info, PauseCircle, PlayCircle, Sparkles, Wand2
+  Building, Clock, Info, PauseCircle, PlayCircle, Sparkles, Wand2 
 } from 'lucide-angular';
 
 

@@ -39,7 +39,7 @@ export interface PlatformLoginRequest {
                 <button 
                   type="button"
                   (click)="autoFillCredentials()"
-                  class="text-xs text-[#4CAF50] hover:text-[#2E7D32] transition-colors flex items-center gap-1"
+                  class="text-xs text-[#4CAF50] hover:text-[#2E7D32] transition-colors flex items-center gap-1 cursor-pointer"
                   title="Auto-llenar credenciales de superadmin">
                   <lucide-icon name="wand-2" class="h-3 w-3"></lucide-icon>
                   Auto-llenar

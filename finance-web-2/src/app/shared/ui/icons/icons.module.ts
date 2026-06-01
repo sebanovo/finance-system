@@ -5,8 +5,8 @@ import { LucideAngularModule,
   CreditCard, ArrowRightLeft, DollarSign, RefreshCcw, Percent, 
   Lock, ShieldAlert, BookOpen, Calendar, FileText, LogOut,
   Building, Receipt, Plus, X, Eye, PlayCircle, PauseCircle,
-  EyeOff, Wand2, 
-  ClipboardList  
+  EyeOff, Wand2, Clock,
+  ClipboardList  , ArrowLeft, ArrowRight
 } from 'lucide-angular';
 
 @NgModule({
@@ -16,7 +16,7 @@ import { LucideAngularModule,
       CreditCard, ArrowRightLeft, DollarSign, RefreshCcw, Percent,
       Lock, ShieldAlert, BookOpen, Calendar, FileText, LogOut,
       Building, Receipt, Plus, X, Eye, PlayCircle, PauseCircle,
-      EyeOff, Wand2
+      EyeOff, Wand2,  ArrowLeft, ArrowRight, Clock
     })
   ],
   exports: [LucideAngularModule]

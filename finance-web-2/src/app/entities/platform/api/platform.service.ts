@@ -98,6 +98,10 @@ export interface CreateTenantRequest {
   name: string;
   slug: string;
   planCode: string;
+  adminEmail: string;      // ✅ Nuevo campo
+  password: string;        // ✅ Nuevo campo
+  firstName: string;       // ✅ Nuevo campo
+  lastName: string;        // ✅ Nuevo campo
 }
 export interface PlatformSubscription {
   id: string;
