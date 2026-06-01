@@ -297,6 +297,7 @@ public class TransactionsReportExecutionService {
                                 artifact.fileName(),
                                 artifact.contentType(),
                                 artifact.bytes().length,
+                                artifact.bytes(),
                                 null
                         )
                 );

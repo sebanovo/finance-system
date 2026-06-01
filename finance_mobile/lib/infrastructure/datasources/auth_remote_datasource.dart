@@ -14,6 +14,7 @@ abstract class AuthRemoteDataSource {
   Future<void> signup(SignupRequest request);
   Future<void> forgotPassword(String email, String tenantSlug);
   Future<void> changePassword(String currentPassword, String newPassword);
+  Future<void> logout();
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -116,6 +117,18 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     final data = response.data as Map<String, dynamic>;
     if (data['success'] != true) {
       throw Exception(data['message'] ?? 'Error desconocido');
+    }
+  }
+
+  @override
+  Future<void> logout() async {
+    final response = await apiClient.post('/api/auth/logout', null);
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        throw Exception(data['message'] ?? 'Error al cerrar sesión');
+      }
+      throw Exception('Error al cerrar sesión');
     }
   }
 }

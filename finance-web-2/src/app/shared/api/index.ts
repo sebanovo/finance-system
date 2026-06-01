@@ -1,6 +1,7 @@
 // export guards
 export * from './guards/auth.guard';
 export * from './guards/permission.guard';
+export * from './guards/tenant-role.guard';
 
 // export interceptors
 export * from './interceptors/auth.interceptor';

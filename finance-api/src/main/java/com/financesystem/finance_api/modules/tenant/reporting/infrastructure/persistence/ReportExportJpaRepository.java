@@ -7,5 +7,7 @@ import java.util.UUID;
 
 public interface ReportExportJpaRepository extends JpaRepository<ReportExportEntity, UUID> {
 
+    java.util.Optional<ReportExportEntity> findById(UUID id);
+
     List<ReportExportEntity> findAllByExecutionIdOrderByCreatedAtDesc(UUID executionId);
 }

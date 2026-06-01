@@ -1,20 +1,41 @@
+export interface PageResponse<T> {
+  content: T[];
+  pageable: {
+    pageNumber: number;
+    pageSize: number;
+    sort?: unknown;
+    offset?: number;
+    unpaged?: boolean;
+    paged?: boolean;
+  };
+  totalPages: number;
+  totalElements: number;
+  last: boolean;
+  size: number;
+  number: number;
+  sort?: unknown;
+  numberOfElements: number;
+  first: boolean;
+  empty: boolean;
+}
+
 export interface LimitRuleResponse {
   id: string;
   code: string;
   name: string;
-  description: string;
+  description: string | null;
   limitType: string;
   scopeType: string;
   period: string;
-  transactionType: string;
-  accountType: string;
-  currency: string;
-  minAmount: number;
-  maxAmount: number;
-  maxCount: number;
+  transactionType: string | null;
+  accountType: string | null;
+  currency: string | null;
+  minAmount: number | null;
+  maxAmount: number | null;
+  maxCount: number | null;
   active: boolean;
   requireReviewExceed: boolean;
-  scopeDescription: string;
+  scopeDescription: string | null;
   createdAt: string;
   updatedAt: string;
 }

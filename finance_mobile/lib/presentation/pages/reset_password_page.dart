@@ -37,25 +37,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
 
   void _onViewModelChanged() {
     if (!mounted) return;
-    // Redirigir al login si el error es de autenticación
-    if (_viewModel.errorMessage != null &&
-        (_viewModel.errorMessage!.contains('Sesión expirada') ||
-            _viewModel.errorMessage!.contains('401') ||
-            _viewModel.errorMessage!.contains('No hay sesión activa'))) {
-      _showSnackBar(
-        'Tu sesión ha expirado. Por favor inicia sesión nuevamente.',
-      );
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) context.go('/login');
-      });
-    } else if (_viewModel.errorMessage != null) {
-      _showSnackBar('Contraseña restablecida. Inicia sesión.', isError: false);
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) context.go('/login');
-      });
-    } else {
-      setState(() {});
-    }
+    setState(() {});
   }
 
   void _showSnackBar(String msg, {bool isError = true}) {
@@ -69,11 +51,17 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
 
   Future<void> _resetPassword() async {
     if (_formKey.currentState!.validate()) {
-      await _viewModel.resetPassword(
+      final success = await _viewModel.resetPassword(
         tenantController.text.trim(),
         tokenController.text.trim(),
         newPasswordController.text,
       );
+      if (success && mounted) {
+        _showSnackBar('Contraseña restablecida. Inicia sesión.', isError: false);
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) context.go('/login');
+        });
+      }
     }
   }
 

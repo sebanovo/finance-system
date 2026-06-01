@@ -1,18 +1,28 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
-import { 
-  TransactionsService, 
-  TransactionResponse, 
+import {
+  TransactionsService,
+  TransactionResponse,
+  QrTransactionIntentResponse,
+  PageResponse,
   CreateDepositTransactionRequest,
   CreateWithdrawalTransactionRequest,
   CreateTransferTransactionRequest,
-  CreatePaymentTransactionRequest
+  CreatePaymentTransactionRequest,
+  CreateFeeTransactionRequest,
+  CreateHoldTransactionRequest,
+  CreateReleaseTransactionRequest,
+  CreateAdjustmentTransactionRequest,
+  CreateQrTransactionIntentRequest,
+  CreateReversalTransactionRequest,
+  CreateRefundTransactionRequest,
+  TransactionOperationType
 } from '../../../entities/transactions';
 
 export interface TransactionsListState {
   status: 'idle' | 'loading' | 'success' | 'error';
-  data: TransactionResponse[];
+  page: PageResponse<TransactionResponse> | null;
   error: string | null;
 }
 
@@ -24,51 +34,51 @@ export class TransactionsListUseCase {
 
   private readonly state = signal<TransactionsListState>({
     status: 'idle',
-    data: [],
+    page: null,
     error: null
   });
 
   readonly status = computed(() => this.state().status);
-  readonly data = computed(() => this.state().data);
+  readonly page = computed(() => this.state().page);
+  readonly data = computed(() => this.state().page?.content ?? []);
   readonly error = computed(() => this.state().error);
 
-  async loadTransactions(): Promise<void> {
-    this.state.set({ status: 'loading', data: [], error: null });
+  async loadTransactions(page = 0, size = 20): Promise<void> {
+    this.state.set({ status: 'loading', page: this.state().page, error: null });
 
     try {
-      const response = await firstValueFrom(this.transactionsService.listTransactions());
+      const response = await firstValueFrom(this.transactionsService.listTransactions(page, size));
 
       if (response.success && response.data) {
-        this.state.set({ 
-          status: 'success', 
-          data: response.data, 
-          error: null 
+        this.state.set({
+          status: 'success',
+          page: response.data,
+          error: null
         });
       } else {
-        this.state.set({ 
-          status: 'error', 
-          data: [], 
-          error: response.message || 'No se pudieron cargar las transacciones' 
+        this.state.set({
+          status: 'error',
+          page: null,
+          error: response.message || 'No se pudieron cargar las transacciones'
         });
       }
     } catch (err: any) {
       const errorMsg = err.error?.message || err.message || 'Error al conectar con el servidor';
-      this.state.set({ status: 'error', data: [], error: errorMsg });
+      this.state.set({ status: 'error', page: null, error: errorMsg });
     }
   }
 
-  async executeTransaction(
-    type: 'deposit' | 'withdrawal' | 'transfer' | 'payment',
-    request: any
-  ): Promise<void> {
+  async executeTransaction(type: TransactionOperationType, request: any, referenceId?: string): Promise<void> {
     try {
+      void referenceId;
+
       if (!request.idempotencyKey) {
-        request.idempotencyKey = uuidv4(); // ✅ Cambiado a uuidv4()
+        request.idempotencyKey = uuidv4();
       }
 
-      let response;
+      let response: any = null;
       switch (type) {
-        case 'deposit': 
+        case 'deposit':
           response = await firstValueFrom(this.transactionsService.createDeposit(request as CreateDepositTransactionRequest));
           break;
         case 'withdrawal':
@@ -80,10 +90,29 @@ export class TransactionsListUseCase {
         case 'payment':
           response = await firstValueFrom(this.transactionsService.createPayment(request as CreatePaymentTransactionRequest));
           break;
+        case 'fee':
+          response = await firstValueFrom(this.transactionsService.createFee(request as CreateFeeTransactionRequest));
+          break;
+        case 'hold':
+          response = await firstValueFrom(this.transactionsService.createHold(request as CreateHoldTransactionRequest));
+          break;
+        case 'release':
+          response = await firstValueFrom(this.transactionsService.createRelease(request as CreateReleaseTransactionRequest));
+          break;
+        case 'adjustment':
+          response = await firstValueFrom(this.transactionsService.createAdjustment(request as CreateAdjustmentTransactionRequest));
+          break;
+        case 'qr-intent':
+          response = await firstValueFrom(this.transactionsService.createQrIntent(request as CreateQrTransactionIntentRequest));
+          break;
+        case 'qr-confirm':
+          throw new Error('La confirmación QR se procesa desde la vista de cliente.');
+        default:
+          throw new Error(`Operación no soportada: ${type}`);
       }
-      
+
       if (response.success) {
-        await this.loadTransactions();
+        await this.loadTransactions(this.page()?.number ?? 0, this.page()?.size ?? 20);
       } else {
         throw new Error(response.message || `Error al ejecutar la transacción de tipo ${type}`);
       }
@@ -92,16 +121,33 @@ export class TransactionsListUseCase {
     }
   }
 
+  async createQrIntent(request: CreateQrTransactionIntentRequest): Promise<QrTransactionIntentResponse> {
+    try {
+      if (!request.idempotencyKey) {
+        request.idempotencyKey = uuidv4();
+      }
+
+      const response = await firstValueFrom(this.transactionsService.createQrIntent(request));
+      if (response.success && response.data) {
+        await this.loadTransactions(this.page()?.number ?? 0, this.page()?.size ?? 20);
+        return response.data;
+      }
+
+      throw new Error(response.message || 'Error al crear la intención QR');
+    } catch (err: any) {
+      throw new Error(err.error?.message || err.message || 'Error al conectar con el servidor');
+    }
+  }
+
   async reverseTransaction(id: string, reason: string): Promise<void> {
     try {
-      const request = { 
-        description: `Reversión: ${reason}`, 
+      const request: CreateReversalTransactionRequest = {
         reason,
-        idempotencyKey: uuidv4() // ✅ Cambiado a uuidv4()
+        idempotencyKey: uuidv4()
       };
       const response = await firstValueFrom(this.transactionsService.reverseTransaction(id, request));
       if (response.success) {
-        await this.loadTransactions();
+        await this.loadTransactions(this.page()?.number ?? 0, this.page()?.size ?? 20);
       } else {
         throw new Error(response.message || 'Error al revertir la transacción');
       }
@@ -112,15 +158,14 @@ export class TransactionsListUseCase {
 
   async refundTransaction(id: string, reason: string, amount: number): Promise<void> {
     try {
-      const request = { 
-        description: `Reembolso: ${reason}`, 
-        reason, 
+      const request: CreateRefundTransactionRequest = {
+        reason,
         amount,
-        idempotencyKey: uuidv4() // ✅ Cambiado a uuidv4()
+        idempotencyKey: uuidv4()
       };
       const response = await firstValueFrom(this.transactionsService.refundTransaction(id, request));
       if (response.success) {
-        await this.loadTransactions();
+        await this.loadTransactions(this.page()?.number ?? 0, this.page()?.size ?? 20);
       } else {
         throw new Error(response.message || 'Error al reembolsar la transacción');
       }

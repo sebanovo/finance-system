@@ -221,6 +221,9 @@ public class TenantBootstrapService {
             "me.transactions.payment",
             "me.transactions.hold",
             "me.transactions.release",
+            "me.transactions.qr.create",
+            "me.transactions.qr.read",
+            "me.transactions.qr.cancel",
             "me.transactions.qr.confirm"
     );
     private static final List<FxRateSeed> DEFAULT_FX_RATES = List.of(

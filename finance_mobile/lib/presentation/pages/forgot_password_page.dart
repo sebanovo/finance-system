@@ -26,18 +26,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   void _onViewModelChanged() {
     if (!mounted) return;
-    // Redirigir al login si el error es de autenticación
-    if (_viewModel.errorMessage != null &&
-        (_viewModel.errorMessage!.contains('Sesión expirada') ||
-            _viewModel.errorMessage!.contains('401') ||
-            _viewModel.errorMessage!.contains('No hay sesión activa'))) {
-      _showSnackBar(
-        'Tu sesión ha expirado. Por favor inicia sesión nuevamente.',
-      );
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) context.go('/login');
-      });
-    } else if (_viewModel.success) {
+    if (_viewModel.success) {
       _showSnackBar(
         'Correo enviado. Revisa tu bandeja de entrada.',
         isError: false,

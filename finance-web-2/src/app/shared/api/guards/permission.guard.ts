@@ -1,5 +1,5 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+import { ActivatedRouteSnapshot, CanActivateFn, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
 import { PermissionService } from '../../lib/auth/permission.service';
 
 /**
@@ -11,7 +11,10 @@ import { PermissionService } from '../../lib/auth/permission.service';
  *   { path: 'transactions', canActivate: [permissionGuard('transactions.admin.read')], ... }
  */
 export function permissionGuard(...requiredPermissions: string[]): CanActivateFn {
-  return (route, state) => {
+  return (
+    _route: ActivatedRouteSnapshot,
+    _state: RouterStateSnapshot
+  ): boolean | UrlTree => {
     const permissionService = inject(PermissionService);
     const router = inject(Router);
 

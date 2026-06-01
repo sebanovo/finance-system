@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiResponse } from '../../../shared/api';
 import { TenantSummaryResponse } from '../model/tenant-summary-response.model';
+import { CustomerSummaryResponse } from '../model/customer-summary-response.model';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
@@ -14,6 +15,10 @@ export class DashboardService {
 
   getTenantSummary(): Observable<ApiResponse<TenantSummaryResponse>> {
     // El interceptor ya se encarga de inyectar el token y el X-Tenant-Slug
-    return this.http.get<ApiResponse<TenantSummaryResponse>>(`${this.API_URL}/tenant/summary`);
+    return this.http.get<ApiResponse<TenantSummaryResponse>>(`${this.API_URL}/summary`);
+  }
+
+  getCustomerSummary(): Observable<ApiResponse<CustomerSummaryResponse>> {
+    return this.http.get<ApiResponse<CustomerSummaryResponse>>(`${environment.apiUrl}/api/me/dashboard/summary`);
   }
 }

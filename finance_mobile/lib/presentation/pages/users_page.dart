@@ -26,19 +26,7 @@ class _UsersPageState extends State<UsersPage> {
 
   void _onViewModelChanged() {
     if (!mounted) return;
-    if (_viewModel.errorMessage != null &&
-        (_viewModel.errorMessage!.contains('Sesión expirada') ||
-            _viewModel.errorMessage!.contains('401') ||
-            _viewModel.errorMessage!.contains('No hay sesión activa'))) {
-      _showSnackBar(
-        'Tu sesión ha expirado. Por favor inicia sesión nuevamente.',
-      );
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) context.go('/login');
-      });
-    } else {
-      setState(() {});
-    }
+    setState(() {});
   }
 
   void _showSnackBar(String message, {bool isError = true}) {

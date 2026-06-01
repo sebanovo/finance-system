@@ -47,6 +47,16 @@ public class QrTransactionIntentRepositoryAdapter implements QrTransactionIntent
         entity.setConfirmedTransactionId(intent.confirmedTransactionId());
         entity.setRequestedByUserId(intent.requestedByUserId());
         entity.setConfirmedAt(intent.confirmedAt());
+        entity.setExpiresAt(intent.expiresAt());
+        entity.setCancelledAt(intent.cancelledAt());
+        entity.setCancelledByUserId(intent.cancelledByUserId());
+        entity.setPayerAccountId(intent.payerAccountId());
+        entity.setPaidAmount(intent.paidAmount());
+        entity.setPaidCurrency(intent.paidCurrency());
+        entity.setQrPayload(intent.qrPayload());
+        entity.setQrSignature(intent.qrSignature());
+        entity.setCreatedAt(intent.createdAt());
+        entity.setUpdatedAt(intent.updatedAt());
         return entity;
     }
 
@@ -64,6 +74,14 @@ public class QrTransactionIntentRepositoryAdapter implements QrTransactionIntent
                 entity.getConfirmedTransactionId(),
                 entity.getRequestedByUserId(),
                 entity.getConfirmedAt(),
+                entity.getExpiresAt(),
+                entity.getCancelledAt(),
+                entity.getCancelledByUserId(),
+                entity.getPayerAccountId(),
+                entity.getPaidAmount(),
+                entity.getPaidCurrency(),
+                entity.getQrPayload(),
+                entity.getQrSignature(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );

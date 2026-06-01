@@ -101,7 +101,6 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _logout() async {
     await _viewModel.logout();
-    if (mounted) context.go('/login');
   }
 
   void _showChangePasswordDialog() {

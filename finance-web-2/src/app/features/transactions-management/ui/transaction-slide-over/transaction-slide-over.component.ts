@@ -1,151 +1,226 @@
-import { Component, EventEmitter, Input, Output, inject, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { LucideAngularModule, X, Send, ArrowRightLeft, ArrowDownToLine, ArrowUpFromLine, CreditCard } from 'lucide-angular';
-import { AccountListUseCase } from '../../../account-management';
+import { LucideAngularModule, AlertTriangle, ArrowDownToLine, ArrowRightLeft, ArrowUpFromLine, CheckCircle, CreditCard, RotateCcw, Send, X } from 'lucide-angular';
+import { AccountOwnerResponse } from '../../../../entities/accounts';
+import { TransactionOperationType } from '../../../../entities/transactions';
 
-export type TransactionActionType = 'deposit' | 'withdrawal' | 'transfer' | 'payment';
+export type TransactionActionType = TransactionOperationType;
+
+interface TransactionSlideOverSaveEvent {
+  type: TransactionActionType;
+  request: Record<string, unknown>;
+  referenceId?: string;
+}
+
+type HeaderConfig = {
+  title: string;
+  description: string;
+  icon: string;
+};
 
 @Component({
   selector: 'app-transaction-slide-over',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, LucideAngularModule],
   template: `
-    <!-- Overlay -->
-    <div 
-      *ngIf="isOpen" 
-      class="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 transition-opacity"
+    <div
+      *ngIf="isOpen"
+      class="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm transition-opacity"
       (click)="close()">
     </div>
 
-    <!-- Slide-over -->
-    <div 
-      class="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-card shadow-2xl border-l border-border transform transition-transform duration-300 ease-in-out flex flex-col"
+    <div
+      class="fixed inset-y-0 right-0 z-50 flex w-full max-w-md transform flex-col border-l border-[#C8E6C9] bg-white shadow-[0_18px_50px_rgba(27,94,32,0.12)] transition-transform duration-300 ease-in-out"
       [class.translate-x-0]="isOpen"
       [class.translate-x-full]="!isOpen">
-      
-      <!-- Header -->
-      <div class="flex items-center justify-between p-6 border-b border-border" [ngClass]="headerConfig.bgClass">
+
+      <div class="flex items-center justify-between border-b border-[#E8F2E2] bg-gradient-to-br from-white via-[#F7FBF3] to-[#EAF6EB] p-6">
         <div class="flex items-center gap-3">
-          <div class="p-2 rounded-lg bg-background/50">
-            <lucide-icon [name]="headerConfig.icon" [size]="24" [class]="headerConfig.textClass"></lucide-icon>
+          <div class="rounded-2xl border border-[#DDEED8] bg-white/90 p-2">
+            <lucide-icon [name]="headerConfig.icon" [size]="24" class="text-[#2E7D32]"></lucide-icon>
           </div>
           <div>
-            <h2 class="text-xl font-bold text-foreground">{{ headerConfig.title }}</h2>
-            <p class="text-sm text-muted-foreground">{{ headerConfig.description }}</p>
+            <h2 class="text-xl font-black text-[#1B5E20]">{{ headerConfig.title }}</h2>
+            <p class="text-sm text-[#5F6F5F]">{{ headerConfig.description }}</p>
           </div>
         </div>
-        <button 
+        <button
+          type="button"
           (click)="close()"
-          class="p-2 rounded-full hover:bg-background/50 text-muted-foreground hover:text-foreground transition-colors">
+          class="cursor-pointer rounded-full p-2 text-[#6B7D6C] transition-colors hover:bg-[#F1F8E9] hover:text-[#1B5E20]">
           <lucide-icon name="x" [size]="20"></lucide-icon>
         </button>
       </div>
 
-      <!-- Content -->
       <div class="flex-1 overflow-y-auto p-6">
+        @if (!accountsLoading && accounts.length === 0 && requiresAccountSelection()) {
+          <div class="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            No hay cuentas disponibles para esta operación.
+          </div>
+        }
+
+        @if (accountsLoading && requiresAccountSelection()) {
+          <div class="mb-4 rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] p-4 text-sm text-[#567157]">
+            Cargando cuentas disponibles...
+          </div>
+        }
+
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
-          
-          <!-- Cuenta de Origen -->
-          <div *ngIf="transactionType !== 'deposit'" class="space-y-2">
-            <label class="text-sm font-medium text-foreground">Cuenta Origen</label>
-            <select 
-              formControlName="sourceAccountId"
-              class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-              <option value="" disabled selected>Selecciona una cuenta</option>
-              <option *ngFor="let acc of accountListUseCase.data()" [value]="acc.id">
-                {{ acc.accountNumber }} - {{ acc.customAlias || acc.accountNameLabel }} ({{ acc.currency }})
-              </option>
-            </select>
-          </div>
-
-          <!-- Cuenta Destino -->
-          <div *ngIf="transactionType !== 'withdrawal'" class="space-y-2">
-            <label class="text-sm font-medium text-foreground">Cuenta Destino</label>
-            <!-- Si es transferencia o pago, asumo que puede seleccionar una cuenta del sistema, de lo contrario podría ser texto libre (ej targetAccountId). Por simplificación, mostramos el combo de cuentas del sistema -->
-            <select 
-              formControlName="targetAccountId"
-              class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-              <option value="" disabled selected>Selecciona una cuenta destino</option>
-              <option *ngFor="let acc of accountListUseCase.data()" [value]="acc.id">
-                {{ acc.accountNumber }} - {{ acc.customAlias || acc.accountNameLabel }} ({{ acc.currency }})
-              </option>
-            </select>
-          </div>
-
-          <!-- Monto y Moneda -->
-          <div class="grid grid-cols-3 gap-4">
-            <div class="col-span-2 space-y-2">
-              <label class="text-sm font-medium text-foreground">Monto</label>
-              <input 
-                type="number" 
-                formControlName="amount"
-                placeholder="0.00"
-                min="0.01" step="0.01"
-                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2" />
-            </div>
+          @if (requiresQrIntentId()) {
             <div class="space-y-2">
-              <label class="text-sm font-medium text-foreground">Moneda</label>
-              <select 
-                formControlName="currency"
-                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-                <option value="USD">USD</option>
-                <option value="BOB">BOB</option>
-                <option value="EUR">EUR</option>
+              <label class="text-sm font-semibold text-[#1B5E20]">QR escaneado, enlace o ID</label>
+              <input
+                type="text"
+                formControlName="qrTransactionId"
+                placeholder="Pega el payload QR o el identificador"
+                class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition focus:border-[#A5D6A7] focus:bg-white" />
+              <p class="text-xs text-[#6B7D6C]">Puedes pegar el texto del QR escaneado o el ID directo de la intención.</p>
+            </div>
+          }
+
+          @if (requiresSourceAccountSelection()) {
+            <div class="space-y-2">
+              <label class="text-sm font-semibold text-[#1B5E20]">Cuenta origen</label>
+              <select
+                formControlName="sourceAccountId"
+                [disabled]="accountsLoading || accounts.length === 0"
+                class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition focus:border-[#A5D6A7] focus:bg-white">
+                <option value="">Selecciona una cuenta</option>
+                <option *ngFor="let acc of accounts" [value]="acc.id">
+                  {{ acc.accountNumber }} - {{ acc.customAlias || acc.accountNameLabel }} ({{ acc.currency }})
+                </option>
               </select>
             </div>
-          </div>
+          }
 
-          <!-- Canal (Sólo para Depósitos y Retiros) -->
-          <div *ngIf="transactionType === 'deposit' || transactionType === 'withdrawal'" class="space-y-2">
-            <label class="text-sm font-medium text-foreground">Canal</label>
-            <select 
-              formControlName="channel"
-              class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-              <option value="BRANCH">Sucursal (Caja)</option>
-              <option value="ATM">Cajero Automático</option>
-              <option value="WEB">Web</option>
-            </select>
-          </div>
+          @if (requiresTargetAccountSelection()) {
+            <div class="space-y-2">
+              <label class="text-sm font-semibold text-[#1B5E20]">Cuenta destino</label>
+              <select
+                formControlName="targetAccountId"
+                [disabled]="accountsLoading || accounts.length === 0"
+                class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition focus:border-[#A5D6A7] focus:bg-white">
+                <option value="">Selecciona una cuenta destino</option>
+                <option *ngFor="let acc of accounts" [value]="acc.id">
+                  {{ acc.accountNumber }} - {{ acc.customAlias || acc.accountNameLabel }} ({{ acc.currency }})
+                </option>
+              </select>
+            </div>
+          }
 
-          <!-- Descripción -->
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-foreground">Descripción</label>
-            <textarea 
-              formControlName="description"
-              placeholder="Motivo o detalle de la transacción"
-              rows="3"
-              class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 resize-none"></textarea>
-          </div>
+          @if (requiresSingleAccountSelection()) {
+            <div class="space-y-2">
+              <label class="text-sm font-semibold text-[#1B5E20]">Cuenta</label>
+              <select
+                formControlName="accountId"
+                [disabled]="accountsLoading || accounts.length === 0"
+                class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition focus:border-[#A5D6A7] focus:bg-white">
+                <option value="">Selecciona una cuenta</option>
+                <option *ngFor="let acc of accounts" [value]="acc.id">
+                  {{ acc.accountNumber }} - {{ acc.customAlias || acc.accountNameLabel }} ({{ acc.currency }})
+                </option>
+              </select>
+            </div>
+          }
 
-          <!-- Referencia Externa -->
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-foreground">Referencia Externa (Opcional)</label>
-            <input 
-              type="text" 
-              formControlName="externalReference"
-              placeholder="Ej. ID de comprobante"
-              class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2" />
-          </div>
+          @if (requiresAmountAndCurrency()) {
+            <div class="grid grid-cols-3 gap-4">
+              <div class="col-span-2 space-y-2">
+                <label class="text-sm font-semibold text-[#1B5E20]">Monto</label>
+                <input
+                  type="number"
+                  formControlName="amount"
+                  placeholder="0.00"
+                  min="0.01"
+                  step="0.01"
+                  class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition focus:border-[#A5D6A7] focus:bg-white" />
+              </div>
+              <div class="space-y-2">
+                <label class="text-sm font-semibold text-[#1B5E20]">Moneda</label>
+                <select
+                  formControlName="currency"
+                  class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition focus:border-[#A5D6A7] focus:bg-white">
+                  <option value="USD">USD</option>
+                  <option value="BOB">BOB</option>
+                  <option value="EUR">EUR</option>
+                </select>
+              </div>
+            </div>
+          }
 
+          @if (requiresMethodSelection()) {
+            <div class="space-y-2">
+              <label class="text-sm font-semibold text-[#1B5E20]">Método</label>
+              <select
+                formControlName="method"
+                class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition focus:border-[#A5D6A7] focus:bg-white">
+                <option value="CASHBOX">Sucursal (Caja)</option>
+                <option value="MANUAL">Manual</option>
+                <option value="API">API</option>
+              </select>
+            </div>
+          }
+
+          @if (requiresDirectionSelection()) {
+            <div class="space-y-2">
+              <label class="text-sm font-semibold text-[#1B5E20]">Dirección</label>
+              <select
+                formControlName="direction"
+                class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition focus:border-[#A5D6A7] focus:bg-white">
+                <option value="CREDIT">Crédito</option>
+                <option value="DEBIT">Débito</option>
+              </select>
+            </div>
+          }
+
+          @if (requiresReasonField()) {
+            <div class="space-y-2">
+              <label class="text-sm font-semibold text-[#1B5E20]">Motivo</label>
+              <textarea
+                formControlName="reason"
+                rows="3"
+                placeholder="Describe por qué se realizará la operación"
+                class="flex w-full resize-none rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition focus:border-[#A5D6A7] focus:bg-white"></textarea>
+            </div>
+          } @else if (requiresDescriptionField()) {
+            <div class="space-y-2">
+              <label class="text-sm font-semibold text-[#1B5E20]">Descripción</label>
+              <textarea
+                formControlName="description"
+                rows="3"
+                placeholder="Motivo o detalle de la operación"
+                class="flex w-full resize-none rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition focus:border-[#A5D6A7] focus:bg-white"></textarea>
+            </div>
+          }
+
+          @if (requiresExternalReferenceField()) {
+            <div class="space-y-2">
+              <label class="text-sm font-semibold text-[#1B5E20]">Referencia externa (opcional)</label>
+              <input
+                type="text"
+                formControlName="externalReference"
+                placeholder="Ej. ID de comprobante"
+                class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition focus:border-[#A5D6A7] focus:bg-white" />
+            </div>
+          }
         </form>
       </div>
 
-      <!-- Footer -->
-      <div class="p-6 border-t border-border bg-muted/10 flex justify-end gap-3">
-        <button 
-          type="button" 
+      <div class="flex justify-end gap-3 border-t border-[#E8F2E2] bg-[#FAFCF8] p-6">
+        <button
+          type="button"
           (click)="close()"
-          class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 transition-colors">
+          class="inline-flex cursor-pointer items-center justify-center rounded-full border border-[#DDEED8] bg-white px-4 py-2 text-sm font-semibold text-[#1B5E20] transition-colors hover:bg-[#F7FBF3]">
           Cancelar
         </button>
-        <button 
-          type="button" 
+        <button
+          type="button"
           (click)="onSubmit()"
           [disabled]="form.invalid || isSubmitting"
-          class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 gap-2 shadow-sm transition-colors disabled:opacity-50">
+          class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-[#2E7D32] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#256428] disabled:opacity-50">
           <lucide-icon *ngIf="!isSubmitting" name="send" [size]="16"></lucide-icon>
-          <svg *ngIf="isSubmitting" class="animate-spin h-4 w-4 text-primary-foreground" viewBox="0 0 24 24">
+          <svg *ngIf="isSubmitting" class="h-4 w-4 animate-spin text-white" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
@@ -158,33 +233,48 @@ export type TransactionActionType = 'deposit' | 'withdrawal' | 'transfer' | 'pay
 export class TransactionSlideOverComponent implements OnInit, OnChanges {
   @Input() isOpen = false;
   @Input() transactionType: TransactionActionType = 'deposit';
+  @Input() accounts: AccountOwnerResponse[] = [];
+  @Input() accountsLoading = false;
   @Output() closed = new EventEmitter<void>();
-  @Output() saved = new EventEmitter<{ type: TransactionActionType, request: any }>();
+  @Output() saved = new EventEmitter<TransactionSlideOverSaveEvent>();
 
-  public readonly accountListUseCase = inject(AccountListUseCase);
-  private fb = inject(FormBuilder);
-  
+  private readonly fb = inject(FormBuilder);
+
   form!: FormGroup;
   isSubmitting = false;
 
-  get headerConfig() {
+  get headerConfig(): HeaderConfig {
     switch (this.transactionType) {
-      case 'deposit': return { title: 'Depósito', description: 'Abonar fondos a una cuenta', icon: 'arrow-down-to-line', bgClass: 'bg-green-500/10', textClass: 'text-green-600' };
-      case 'withdrawal': return { title: 'Retiro', description: 'Debitar fondos de una cuenta', icon: 'arrow-up-from-line', bgClass: 'bg-orange-500/10', textClass: 'text-orange-600' };
-      case 'transfer': return { title: 'Transferencia', description: 'Mover fondos entre cuentas', icon: 'arrow-right-left', bgClass: 'bg-blue-500/10', textClass: 'text-blue-600' };
-      case 'payment': return { title: 'Pago', description: 'Registrar un pago', icon: 'credit-card', bgClass: 'bg-purple-500/10', textClass: 'text-purple-600' };
-      default: return { title: 'Transacción', description: '', icon: 'send', bgClass: 'bg-muted', textClass: 'text-foreground' };
+      case 'deposit':
+        return { title: 'Depósito', description: 'Abonar fondos a una cuenta', icon: 'arrow-down-to-line' };
+      case 'withdrawal':
+        return { title: 'Retiro', description: 'Debitar fondos de una cuenta', icon: 'arrow-up-from-line' };
+      case 'transfer':
+        return { title: 'Transferencia', description: 'Mover fondos entre cuentas', icon: 'arrow-right-left' };
+      case 'payment':
+        return { title: 'Pago', description: 'Registrar un pago', icon: 'send' };
+      case 'fee':
+        return { title: 'Comisión', description: 'Registrar un cobro por comisión', icon: 'credit-card' };
+      case 'hold':
+        return { title: 'Retención', description: 'Bloquear fondos temporalmente', icon: 'alert-triangle' };
+      case 'release':
+        return { title: 'Liberación', description: 'Liberar fondos retenidos', icon: 'rotate-ccw' };
+      case 'adjustment':
+        return { title: 'Ajuste', description: 'Ajustar el saldo con una dirección explícita', icon: 'arrow-right-left' };
+      case 'qr-intent':
+        return { title: 'Cobro por QR', description: 'Generar un QR para cobrar a otro usuario', icon: 'send' };
+      case 'qr-confirm':
+        return { title: 'Pago por QR', description: 'Escanear o pegar un QR para confirmar el pago', icon: 'check-circle' };
+      default:
+        return { title: 'Transacción', description: '', icon: 'send' };
     }
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.initForm();
-    if (this.accountListUseCase.data().length === 0) {
-      this.accountListUseCase.loadAccounts();
-    }
   }
 
-  ngOnChanges(changes: SimpleChanges) {
+  ngOnChanges(changes: SimpleChanges): void {
     if (changes['transactionType'] || changes['isOpen']) {
       if (this.isOpen) {
         this.initForm();
@@ -193,49 +283,280 @@ export class TransactionSlideOverComponent implements OnInit, OnChanges {
     }
   }
 
-  initForm() {
+  initForm(): void {
+    const requiresAmount = this.requiresAmountAndCurrency();
+
     this.form = this.fb.group({
-      amount: ['', [Validators.required, Validators.min(0.01)]],
-      currency: ['USD', Validators.required],
-      description: ['', Validators.required],
+      sourceAccountId: [this.requiresSourceAccountSelection() ? '' : ''],
+      targetAccountId: [this.requiresTargetAccountSelection() ? '' : ''],
+      accountId: [this.requiresSingleAccountSelection() ? '' : ''],
+      qrTransactionId: [this.requiresQrIntentId() ? '' : ''],
+      amount: [requiresAmount ? '' : '', requiresAmount ? [Validators.required, Validators.min(0.01)] : []],
+      currency: [requiresAmount ? 'USD' : 'USD', requiresAmount ? [Validators.required] : []],
+      method: [this.requiresMethodSelection() ? 'CASHBOX' : 'CASHBOX', this.requiresMethodSelection() ? [Validators.required] : []],
+      direction: [this.requiresDirectionSelection() ? 'CREDIT' : 'CREDIT', this.requiresDirectionSelection() ? [Validators.required] : []],
+      reason: [this.requiresReasonField() ? '' : ''],
+      description: [this.requiresDescriptionField() ? '' : ''],
       externalReference: ['']
     });
 
-    if (this.transactionType !== 'deposit') {
-      this.form.addControl('sourceAccountId', this.fb.control('', Validators.required));
+    if (this.requiresSourceAccountSelection()) {
+      this.form.get('sourceAccountId')?.setValidators([Validators.required]);
     }
-    
-    if (this.transactionType !== 'withdrawal') {
-      this.form.addControl('targetAccountId', this.fb.control('', Validators.required));
+    if (this.requiresTargetAccountSelection()) {
+      this.form.get('targetAccountId')?.setValidators([Validators.required]);
+    }
+    if (this.requiresSingleAccountSelection()) {
+      this.form.get('accountId')?.setValidators([Validators.required]);
+    }
+    if (this.requiresQrIntentId()) {
+      this.form.get('qrTransactionId')?.setValidators([Validators.required]);
+    }
+    if (this.requiresReasonField()) {
+      this.form.get('reason')?.setValidators([Validators.required]);
     }
 
-    if (this.transactionType === 'deposit' || this.transactionType === 'withdrawal') {
-      this.form.addControl('channel', this.fb.control('BRANCH', Validators.required));
-    }
+    Object.values(this.form.controls).forEach((control) => control.updateValueAndValidity({ emitEvent: false }));
   }
 
-  close() {
+  close(): void {
     this.isOpen = false;
     this.closed.emit();
   }
 
-  onSubmit() {
+  onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
     this.isSubmitting = true;
-    this.saved.emit({
-      type: this.transactionType,
-      request: this.form.value
-    });
+
+    const payload = this.buildRequest();
+    this.saved.emit(payload);
+    this.isSubmitting = false;
   }
 
-  setSubmitting(val: boolean) {
+  setSubmitting(val: boolean): void {
     this.isSubmitting = val;
     if (!val) {
       this.close();
     }
+  }
+
+  private buildRequest(): TransactionSlideOverSaveEvent {
+    const value = this.form.getRawValue();
+    const baseIdempotencyKey = this.buildIdempotencyKey();
+
+    switch (this.transactionType) {
+      case 'deposit':
+        return {
+          type: this.transactionType,
+          request: this.cleanPayload({
+            targetAccountId: value.targetAccountId,
+            amount: Number(value.amount),
+            currency: value.currency,
+            method: value.method,
+            description: value.description,
+            externalReference: value.externalReference,
+            idempotencyKey: baseIdempotencyKey
+          })
+        };
+      case 'withdrawal':
+        return {
+          type: this.transactionType,
+          request: this.cleanPayload({
+            sourceAccountId: value.sourceAccountId,
+            amount: Number(value.amount),
+            currency: value.currency,
+            method: value.method,
+            description: value.description,
+            externalReference: value.externalReference,
+            idempotencyKey: baseIdempotencyKey
+          })
+        };
+      case 'transfer':
+        return {
+          type: this.transactionType,
+          request: this.cleanPayload({
+            sourceAccountId: value.sourceAccountId,
+            targetAccountId: value.targetAccountId,
+            amount: Number(value.amount),
+            currency: value.currency,
+            description: value.description,
+            externalReference: value.externalReference,
+            idempotencyKey: baseIdempotencyKey
+          })
+        };
+      case 'payment':
+        return {
+          type: this.transactionType,
+          request: this.cleanPayload({
+            sourceAccountId: value.sourceAccountId,
+            amount: Number(value.amount),
+            currency: value.currency,
+            method: value.method,
+            description: value.description,
+            externalReference: value.externalReference,
+            idempotencyKey: baseIdempotencyKey
+          })
+        };
+      case 'fee':
+        return {
+          type: this.transactionType,
+          request: this.cleanPayload({
+            accountId: value.accountId,
+            amount: Number(value.amount),
+            currency: value.currency,
+            description: value.description,
+            externalReference: value.externalReference,
+            idempotencyKey: baseIdempotencyKey
+          })
+        };
+      case 'hold':
+      case 'release':
+        return {
+          type: this.transactionType,
+          request: this.cleanPayload({
+            accountId: value.accountId,
+            amount: Number(value.amount),
+            currency: value.currency,
+            description: value.description,
+            idempotencyKey: baseIdempotencyKey
+          })
+        };
+      case 'adjustment':
+        return {
+          type: this.transactionType,
+          request: this.cleanPayload({
+            accountId: value.accountId,
+            amount: Number(value.amount),
+            currency: value.currency,
+            direction: value.direction,
+            reason: value.reason,
+            externalReference: value.externalReference,
+            idempotencyKey: baseIdempotencyKey
+          })
+        };
+      case 'qr-intent':
+        return {
+          type: this.transactionType,
+          request: this.cleanPayload({
+            targetAccountId: value.targetAccountId,
+            amount: Number(value.amount),
+            currency: value.currency,
+            description: value.description,
+            externalReference: value.externalReference,
+            idempotencyKey: baseIdempotencyKey
+          })
+        };
+      case 'qr-confirm':
+        {
+          const qrId = this.extractQrIntentId(value.qrTransactionId);
+          if (!qrId) {
+            throw new Error('Falta el identificador o payload de la intención QR');
+          }
+
+        return {
+          type: this.transactionType,
+          referenceId: qrId,
+          request: this.cleanPayload({
+            sourceAccountId: value.sourceAccountId,
+            idempotencyKey: baseIdempotencyKey
+          })
+        };
+        }
+      default:
+        return { type: this.transactionType, request: { idempotencyKey: baseIdempotencyKey } };
+    }
+  }
+
+  private cleanPayload<T extends Record<string, unknown>>(payload: T): T {
+    return Object.entries(payload).reduce((acc, [key, value]) => {
+      if (value !== '' && value !== null && value !== undefined) {
+        acc[key as keyof T] = value as T[keyof T];
+      }
+      return acc;
+    }, {} as T);
+  }
+
+  private buildIdempotencyKey(): string {
+    return globalThis.crypto?.randomUUID?.() ?? `tx-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  }
+
+  requiresAccountSelection(): boolean {
+    return this.requiresSourceAccountSelection() || this.requiresTargetAccountSelection() || this.requiresSingleAccountSelection();
+  }
+
+  requiresSourceAccountSelection(): boolean {
+    return ['withdrawal', 'transfer', 'payment', 'qr-confirm'].includes(this.transactionType);
+  }
+
+  requiresTargetAccountSelection(): boolean {
+    return ['deposit', 'transfer', 'qr-intent'].includes(this.transactionType);
+  }
+
+  requiresSingleAccountSelection(): boolean {
+    return ['fee', 'hold', 'release', 'adjustment'].includes(this.transactionType);
+  }
+
+  requiresAmountAndCurrency(): boolean {
+    return this.transactionType !== 'qr-confirm';
+  }
+
+  requiresMethodSelection(): boolean {
+    return ['deposit', 'withdrawal', 'payment'].includes(this.transactionType);
+  }
+
+  requiresDirectionSelection(): boolean {
+    return this.transactionType === 'adjustment';
+  }
+
+  requiresReasonField(): boolean {
+    return this.transactionType === 'adjustment';
+  }
+
+  requiresDescriptionField(): boolean {
+    return this.transactionType !== 'qr-confirm' && this.transactionType !== 'adjustment';
+  }
+
+  requiresExternalReferenceField(): boolean {
+    return ['deposit', 'withdrawal', 'transfer', 'payment', 'fee', 'adjustment', 'qr-intent'].includes(this.transactionType);
+  }
+
+  requiresQrIntentId(): boolean {
+    return this.transactionType === 'qr-confirm';
+  }
+
+  private extractQrIntentId(value: unknown): string {
+    if (typeof value !== 'string') {
+      return '';
+    }
+
+    const raw = value.trim();
+    if (!raw) {
+      return '';
+    }
+
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(raw)) {
+      return raw;
+    }
+
+    try {
+      const url = new URL(raw);
+      const fromUrl = url.searchParams.get('intentId') || url.searchParams.get('id');
+      if (fromUrl) {
+        return fromUrl.trim();
+      }
+    } catch {
+      // Fallback below.
+    }
+
+    const match = raw.match(/(?:[?&]intentId=)([^&]+)/i);
+    if (match?.[1]) {
+      return decodeURIComponent(match[1]).trim();
+    }
+
+    return raw;
   }
 }

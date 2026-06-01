@@ -10,6 +10,9 @@ import 'package:finance_mobile/presentation/pages/devices_page.dart';
 import 'package:finance_mobile/presentation/pages/notifications_page.dart';
 import 'package:finance_mobile/presentation/pages/transaction_detail_page.dart';
 import 'package:finance_mobile/presentation/pages/transactions_page.dart';
+import 'package:finance_mobile/core/routes/app_route_observer.dart';
+import 'package:finance_mobile/core/di/injection_container.dart' as di;
+import 'package:finance_mobile/core/network/api_client.dart';
 import 'package:go_router/go_router.dart';
 import 'package:finance_mobile/presentation/pages/home_page.dart';
 import 'package:finance_mobile/presentation/pages/permissions_pages.dart';
@@ -20,8 +23,25 @@ import 'package:finance_mobile/presentation/pages/signup_page.dart';
 import 'package:finance_mobile/presentation/pages/forgot_password_page.dart';
 import 'package:finance_mobile/presentation/pages/users_page.dart';
 
-final appRouter = GoRouter(
-  initialLocation: '/login',
+late final GoRouter appRouter = GoRouter(
+  initialLocation: _initialLocation(),
+  observers: [appRouteObserver],
+  refreshListenable: di.sl<ApiClient>(),
+  redirect: (context, state) {
+    final apiClient = di.sl<ApiClient>();
+    final loggedIn = apiClient.hasSession;
+    final onPublicRoute = _publicRoutes.contains(state.matchedLocation);
+
+    if (!loggedIn && !onPublicRoute) {
+      return '/login';
+    }
+
+    if (loggedIn && onPublicRoute) {
+      return '/home';
+    }
+
+    return null;
+  },
   routes: [
     GoRoute(path: '/login', builder: (context, _) => const LoginPage()),
     GoRoute(path: '/signup', builder: (context, _) => const SignupPage()),
@@ -93,3 +113,15 @@ final appRouter = GoRouter(
     GoRoute(path: '/devices', builder: (context, _) => const DevicesPage()),
   ],
 );
+
+const Set<String> _publicRoutes = {
+  '/login',
+  '/signup',
+  '/forgot-password',
+  '/reset-password',
+};
+
+String _initialLocation() {
+  final apiClient = di.sl<ApiClient>();
+  return apiClient.hasSession ? '/home' : '/login';
+}

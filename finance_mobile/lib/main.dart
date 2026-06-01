@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:finance_mobile/constants/env.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/di/injection_container.dart' as di;
+import 'core/network/api_client.dart';
 
 // Para manejar notificaciones en primer plano
 @pragma('vm:entry-point')
@@ -21,6 +23,7 @@ Future<void> main() async {
 
   await dotenv.load(fileName: ".env");
   await di.init();
+  await _restorePersistedSession();
 
   await Firebase.initializeApp();
 
@@ -33,6 +36,28 @@ Future<void> main() async {
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   runApp(const MyApp());
+}
+
+Future<void> _restorePersistedSession() async {
+  final prefs = await SharedPreferences.getInstance();
+  final accessToken = prefs.getString('accessToken');
+  final tenantSlug = prefs.getString('tenantSlug');
+  final refreshToken = prefs.getString('refreshToken');
+
+  if (accessToken == null ||
+      accessToken.isEmpty ||
+      tenantSlug == null ||
+      tenantSlug.isEmpty) {
+    di.sl<ApiClient>().clearSession();
+    return;
+  }
+
+  final apiClient = di.sl<ApiClient>();
+  apiClient.setSession(
+    token: accessToken,
+    tenantSlug: tenantSlug,
+    refreshToken: refreshToken?.isNotEmpty == true ? refreshToken : null,
+  );
 }
 
 class MyApp extends StatelessWidget {

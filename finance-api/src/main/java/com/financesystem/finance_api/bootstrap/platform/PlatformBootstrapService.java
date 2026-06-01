@@ -182,6 +182,9 @@ public class PlatformBootstrapService {
                 new PermissionSeed("me.transactions.payment", "transactions", "Create own payment transactions"),
                 new PermissionSeed("me.transactions.hold", "transactions", "Hold own account funds"),
                 new PermissionSeed("me.transactions.release", "transactions", "Release own held funds"),
+                new PermissionSeed("me.transactions.qr.create", "transactions", "Create own QR transaction intents"),
+                new PermissionSeed("me.transactions.qr.read", "transactions", "Read own QR transaction intents"),
+                new PermissionSeed("me.transactions.qr.cancel", "transactions", "Cancel own QR transaction intents"),
                 new PermissionSeed("me.transactions.qr.confirm", "transactions", "Confirm own QR transaction intents")
         );
 

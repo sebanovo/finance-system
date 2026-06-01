@@ -65,6 +65,14 @@ public final class TenantTransactionAuditPayloads {
                 "confirmedTransactionId", intent.confirmedTransactionId(),
                 "requestedByUserId", intent.requestedByUserId(),
                 "confirmedAt", intent.confirmedAt(),
+                "expiresAt", intent.expiresAt(),
+                "cancelledAt", intent.cancelledAt(),
+                "cancelledByUserId", intent.cancelledByUserId(),
+                "payerAccountId", intent.payerAccountId(),
+                "paidAmount", intent.paidAmount(),
+                "paidCurrency", intent.paidCurrency(),
+                "qrPayload", intent.qrPayload(),
+                "qrSignature", intent.qrSignature(),
                 "createdAt", intent.createdAt(),
                 "updatedAt", intent.updatedAt()
         );

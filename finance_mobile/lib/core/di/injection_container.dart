@@ -139,7 +139,7 @@ void initAuthModule() {
   sl.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(sl()),
   );
-  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl()));
+  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl(), sl()));
   sl.registerLazySingleton(() => LoginUseCase(sl()));
   sl.registerFactory(() => LoginViewModel(loginUseCase: sl()));
   // Reset Features
@@ -152,7 +152,7 @@ void initAuthModule() {
   sl.registerLazySingleton(() => ForgotPasswordUseCase(sl()));
 
   sl.registerLazySingleton(() => ChangePasswordUseCase(sl()));
-  sl.registerLazySingleton(() => LogoutUseCase());
+  sl.registerLazySingleton(() => LogoutUseCase(sl()));
 
   sl.registerFactory(
     () => ForgotPasswordViewModel(forgotPasswordUseCase: sl()),

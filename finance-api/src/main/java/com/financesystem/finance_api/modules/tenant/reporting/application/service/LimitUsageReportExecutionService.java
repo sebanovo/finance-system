@@ -263,7 +263,7 @@ public class LimitUsageReportExecutionService {
         if (artifacts != null) {
             for (ReportExportArtifact artifact : artifacts) {
                 reportExecutionRepository.saveExport(
-                        new ReportExport(null, savedExecution.id(), artifact.output().name(), artifact.fileName(), artifact.contentType(), artifact.bytes().length, null)
+                        new ReportExport(null, savedExecution.id(), artifact.output().name(), artifact.fileName(), artifact.contentType(), artifact.bytes().length, artifact.bytes(), null)
                 );
             }
         }

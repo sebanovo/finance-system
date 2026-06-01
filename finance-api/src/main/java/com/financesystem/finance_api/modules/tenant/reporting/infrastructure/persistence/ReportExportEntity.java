@@ -1,6 +1,8 @@
 package com.financesystem.finance_api.modules.tenant.reporting.infrastructure.persistence;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -27,6 +29,10 @@ public class ReportExportEntity {
 
     @Column(name = "file_size_bytes", nullable = false)
     private long fileSizeBytes;
+
+    @JdbcTypeCode(SqlTypes.BINARY)
+    @Column(name = "file_content", columnDefinition = "bytea")
+    private byte[] fileContent;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -84,6 +90,14 @@ public class ReportExportEntity {
 
     public void setFileSizeBytes(long fileSizeBytes) {
         this.fileSizeBytes = fileSizeBytes;
+    }
+
+    public byte[] getFileContent() {
+        return fileContent;
+    }
+
+    public void setFileContent(byte[] fileContent) {
+        this.fileContent = fileContent;
     }
 
     public Instant getCreatedAt() {

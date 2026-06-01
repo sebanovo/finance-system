@@ -1,46 +1,76 @@
-<div *ngIf="data" class="space-y-4">
-  <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-    <div class="rounded-2xl border border-[#C8E6C9] bg-white p-5 shadow-sm">
-      <div class="flex items-center justify-between">
-        <p class="text-sm font-semibold text-[#567157]">Plan actual</p>
-        <lucide-icon name="badge-check" class="h-5 w-5 text-[#2E7D32]"></lucide-icon>
-      </div>
-      <p class="mt-4 text-3xl font-black capitalize text-[#1B5E20]">{{ data.activePlan }}</p>
-      <p class="mt-2 text-xs text-[#6B7D6C]">Plan asignado al tenant</p>
+<div *ngIf="data" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+  <div class="min-w-0 h-full rounded-2xl border border-[#C8E6C9] bg-white p-5 shadow-sm">
+    <div class="flex items-center justify-between">
+      <p class="min-w-0 break-words text-sm font-semibold text-[#567157]">Usuarios</p>
+      <lucide-icon name="users" class="h-5 w-5 text-[#2E7D32]"></lucide-icon>
     </div>
+    <p class="mt-4 text-3xl font-black text-[#1B5E20]">{{ data.summary.users.total }}</p>
+    <p class="mt-2 text-xs text-[#6B7D6C]">Activos {{ data.summary.users.active }} | Inactivos {{ data.summary.users.inactive }}</p>
+  </div>
 
-    <div class="rounded-2xl border border-[#C8E6C9] bg-white p-5 shadow-sm">
-      <div class="flex items-center justify-between">
-        <p class="text-sm font-semibold text-[#567157]">Usuarios registrados</p>
-        <lucide-icon name="users" class="h-5 w-5 text-[#2E7D32]"></lucide-icon>
-      </div>
-      <p class="mt-4 text-3xl font-black text-[#1B5E20]">
-        {{ data.totalUsers }} <span class="text-lg font-normal text-[#6B7D6C]">/ {{ data.maxUsers }}</span>
-      </p>
-      <p class="mt-2 text-xs text-[#6B7D6C]">Usuarios activos frente al máximo permitido</p>
+  <div class="min-w-0 h-full rounded-2xl border border-[#C8E6C9] bg-white p-5 shadow-sm">
+    <div class="flex items-center justify-between">
+      <p class="min-w-0 break-words text-sm font-semibold text-[#567157]">Cuentas</p>
+      <lucide-icon name="credit-card" class="h-5 w-5 text-[#2E7D32]"></lucide-icon>
     </div>
+    <p class="mt-4 text-3xl font-black text-[#1B5E20]">{{ data.summary.accounts.total }}</p>
+    <p class="mt-2 text-xs text-[#6B7D6C]">Activas {{ data.summary.accounts.active }} | Pendientes {{ data.summary.accounts.pendingApproval }}</p>
+  </div>
 
-    <div class="rounded-2xl border border-[#C8E6C9] bg-white p-5 shadow-sm">
-      <div class="flex items-center justify-between">
-        <p class="text-sm font-semibold text-[#567157]">Días restantes</p>
-        <lucide-icon name="clock" class="h-5 w-5 text-[#2E7D32]"></lucide-icon>
-      </div>
-      <p class="mt-4 text-3xl font-black text-[#1B5E20]">
-        {{ data.trialDaysLeft }} <span class="text-sm font-normal text-[#6B7D6C]">días</span>
-      </p>
-      <p class="mt-2 text-xs text-[#6B7D6C]">Tiempo disponible del periodo actual</p>
+  <div class="min-w-0 h-full rounded-2xl border border-[#C8E6C9] bg-white p-5 shadow-sm">
+    <div class="flex items-center justify-between">
+      <p class="min-w-0 break-words text-sm font-semibold text-[#567157]">Transacciones</p>
+      <lucide-icon name="arrow-right-left" class="h-5 w-5 text-[#2E7D32]"></lucide-icon>
     </div>
+    <p class="mt-4 text-3xl font-black text-[#1B5E20]">{{ data.summary.transactions.total }}</p>
+    <p class="mt-2 text-xs text-[#6B7D6C]">Completadas {{ data.summary.transactions.completed }} | Fallidas {{ data.summary.transactions.failed }}</p>
+  </div>
 
-    <div class="rounded-2xl border border-[#C8E6C9] bg-white p-5 shadow-sm">
-      <div class="flex items-center justify-between">
-        <p class="text-sm font-semibold text-[#567157]">Uso de capacidad</p>
-        <lucide-icon name="sparkles" class="h-5 w-5 text-[#2E7D32]"></lucide-icon>
-      </div>
-      <p class="mt-4 text-3xl font-black text-[#1B5E20]">{{ usagePercent }}%</p>
-      <div class="mt-3 h-2 overflow-hidden rounded-full bg-[#E8F5E9]">
-        <div class="h-full rounded-full bg-[#2E7D32]" [style.width.%]="usagePercent"></div>
-      </div>
-      <p class="mt-2 text-xs text-[#6B7D6C]">Capacidad consumida por los usuarios</p>
+  <div class="min-w-0 h-full rounded-2xl border border-[#C8E6C9] bg-white p-5 shadow-sm">
+    <div class="flex items-center justify-between">
+      <p class="min-w-0 break-words text-sm font-semibold text-[#567157]">Límites</p>
+      <lucide-icon name="shield-alert" class="h-5 w-5 text-[#2E7D32]"></lucide-icon>
     </div>
+    <p class="mt-4 text-3xl font-black text-[#1B5E20]">{{ data.summary.limits.total }}</p>
+    <p class="mt-2 text-xs text-[#6B7D6C]">Activos {{ data.summary.limits.active }} | En revisión {{ data.summary.limits.reviewRequired }}</p>
+  </div>
+
+  <div class="min-w-0 h-full rounded-2xl border border-[#C8E6C9] bg-white p-5 shadow-sm">
+    <div class="flex items-center justify-between">
+      <p class="min-w-0 break-words text-sm font-semibold text-[#567157]">Contabilidad</p>
+      <lucide-icon name="book-open" class="h-5 w-5 text-[#2E7D32]"></lucide-icon>
+    </div>
+    <p class="mt-4 text-3xl font-black text-[#1B5E20]">{{ data.summary.accounting.journalEntries }}</p>
+    <p class="mt-2 text-xs text-[#6B7D6C]">Períodos abiertos {{ data.summary.accounting.openPeriods }}</p>
+  </div>
+
+  <div class="min-w-0 h-full rounded-2xl border border-[#C8E6C9] bg-white p-5 shadow-sm">
+    <div class="flex items-center justify-between">
+      <p class="min-w-0 break-words text-sm font-semibold text-[#567157]">Notificaciones</p>
+      <lucide-icon name="bell" class="h-5 w-5 text-[#2E7D32]"></lucide-icon>
+    </div>
+    <p class="mt-4 text-3xl font-black text-[#1B5E20]">{{ data.summary.notifications.unread }}</p>
+    <p class="mt-2 text-xs text-[#6B7D6C]">Pendientes por revisar</p>
+  </div>
+
+  <div class="min-w-0 h-full rounded-2xl border border-[#C8E6C9] bg-white p-5 shadow-sm">
+    <div class="flex items-center justify-between">
+      <p class="min-w-0 break-words text-sm font-semibold text-[#567157]">Auditoría</p>
+      <lucide-icon name="clipboard-list" class="h-5 w-5 text-[#2E7D32]"></lucide-icon>
+    </div>
+    <p class="mt-4 text-3xl font-black text-[#1B5E20]">{{ data.summary.audit.events }}</p>
+    <p class="mt-2 text-xs text-[#6B7D6C]">Eventos auditados</p>
+  </div>
+
+  <div class="min-w-0 h-full rounded-2xl border border-[#C8E6C9] bg-white p-5 shadow-sm">
+    <div class="flex items-center justify-between">
+      <p class="min-w-0 break-words text-sm font-semibold text-[#567157]">Uso de usuarios</p>
+      <lucide-icon name="sparkles" class="h-5 w-5 text-[#2E7D32]"></lucide-icon>
+    </div>
+    <p class="mt-4 text-3xl font-black text-[#1B5E20]">{{ usagePercent }}%</p>
+    <div class="mt-3 h-2 overflow-hidden rounded-full bg-[#E8F5E9]">
+      <div class="h-full rounded-full bg-[#2E7D32]" [style.width.%]="usagePercent"></div>
+    </div>
+    <p class="mt-2 text-xs text-[#6B7D6C]">Capacidad de usuarios utilizados</p>
   </div>
 </div>

@@ -36,7 +36,7 @@ export class UserRoleUseCase {
       // Cargamos en paralelo los roles del usuario y todos los roles del tenant para mostrar opciones
       const [userRolesRes, allRolesRes] = await Promise.all([
         firstValueFrom(this.accessService.getUserRoles(userId)),
-        firstValueFrom(this.accessService.getRoles())
+        firstValueFrom(this.accessService.getRoles(0, 500))
       ]);
 
       if (userRolesRes.success && allRolesRes.success) {
@@ -44,7 +44,7 @@ export class UserRoleUseCase {
           status: 'idle', // Lo dejamos ready pero idle para asignación
           userId,
           userRoles: userRolesRes.data.roles,
-          availableRoles: allRolesRes.data.filter(r => r.active), // solo asignamos roles activos
+          availableRoles: allRolesRes.data.content.filter(r => r.active), // solo asignamos roles activos
           error: null 
         });
       } else {

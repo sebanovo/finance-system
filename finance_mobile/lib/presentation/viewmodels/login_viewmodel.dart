@@ -63,8 +63,11 @@ class LoginViewModel extends ChangeNotifier {
       );
 
       // Guardar en ApiClient (para peticiones futuras)
-      apiClient.setToken(accessToken);
-      apiClient.setTenant(tenantSlug);
+      apiClient.setSession(
+        token: accessToken,
+        tenantSlug: tenantSlug,
+        refreshToken: refreshToken,
+      );
 
       // Persistir en SharedPreferences para futuras sesiones
       final prefs = await SharedPreferences.getInstance();
@@ -72,9 +75,11 @@ class LoginViewModel extends ChangeNotifier {
       await prefs.setString('refreshToken', refreshToken);
       await prefs.setString('tenantSlug', tenantSlug);
 
-      // ✅ Registrar dispositivo en el backend
-      final notifViewModel = di.sl<NotificationsViewModel>();
-      await notifViewModel.registerCurrentDevice();
+      // El registro de dispositivo no debe bloquear el login.
+      try {
+        final notifViewModel = di.sl<NotificationsViewModel>();
+        await notifViewModel.registerCurrentDevice();
+      } catch (_) {}
 
       return true;
     } catch (e) {

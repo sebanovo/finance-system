@@ -85,6 +85,11 @@ public class ReportExecutionRepositoryAdapter implements ReportExecutionReposito
     }
 
     @Override
+    public Optional<ReportExport> findExportById(UUID id) {
+        return exportJpaRepository.findById(id).map(this::toDomain);
+    }
+
+    @Override
     public List<ReportExport> findExportsByExecutionId(UUID executionId) {
         return exportJpaRepository.findAllByExecutionIdOrderByCreatedAtDesc(executionId)
                 .stream().map(this::toDomain).toList();
@@ -155,6 +160,7 @@ public class ReportExecutionRepositoryAdapter implements ReportExecutionReposito
         entity.setFileName(export.fileName());
         entity.setContentType(export.contentType());
         entity.setFileSizeBytes(export.fileSizeBytes());
+        entity.setFileContent(export.fileContent());
         return entity;
     }
 
@@ -166,6 +172,7 @@ public class ReportExecutionRepositoryAdapter implements ReportExecutionReposito
                 entity.getFileName(),
                 entity.getContentType(),
                 entity.getFileSizeBytes(),
+                entity.getFileContent(),
                 entity.getCreatedAt()
         );
     }

@@ -6,6 +6,41 @@ export interface TransactionFxDetailResponse {
   convertedAmount: number;
 }
 
+export type TransactionMethod = 'MANUAL' | 'QR' | 'API' | 'ADMIN' | 'CASHBOX' | 'SCHEDULED' | 'EXTERNAL_BANK' | 'SYSTEM' | string;
+export type AdjustmentDirection = 'CREDIT' | 'DEBIT' | string;
+export type TransactionOperationType =
+  | 'deposit'
+  | 'withdrawal'
+  | 'transfer'
+  | 'payment'
+  | 'fee'
+  | 'hold'
+  | 'release'
+  | 'adjustment'
+  | 'qr-intent'
+  | 'qr-confirm';
+
+export interface PageResponse<T> {
+  content: T[];
+  pageable: {
+    pageNumber: number;
+    pageSize: number;
+    sort?: unknown;
+    offset?: number;
+    unpaged?: boolean;
+    paged?: boolean;
+  };
+  totalPages: number;
+  totalElements: number;
+  last: boolean;
+  size: number;
+  number: number;
+  sort?: unknown;
+  numberOfElements: number;
+  first: boolean;
+  empty: boolean;
+}
+
 export interface TransactionMovementResponse {
   accountId: string;
   accountNumber: string;
@@ -44,39 +79,54 @@ export interface TransactionResponse {
 
 export interface QrTransactionIntentResponse {
   id: string;
+  status: string;
+  channel: string;
   targetAccountId: string;
   amount: number;
   currency: string;
+  externalReference: string;
   description: string;
+  idempotencyKey: string;
+  confirmedTransactionId: string | null;
+  expiresAt: string | null;
+  confirmedAt: string | null;
+  cancelledAt: string | null;
+  cancelledByUserId: string | null;
+  payerAccountId: string | null;
+  paidAmount: number | null;
+  paidCurrency: string | null;
   qrPayload: string;
-  expiresAt: string;
+  qrSignature: string | null;
+  requestedByUserId: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateDepositTransactionRequest {
   targetAccountId: string;
   amount: number;
   currency: string;
-  description: string;
-  channel: string;
+  method: TransactionMethod;
+  description?: string;
   idempotencyKey: string;
   externalReference?: string;
 }
 
 export interface CreateFeeTransactionRequest {
-  sourceAccountId: string;
+  accountId: string;
   amount: number;
   currency: string;
-  description: string;
-  feeType: string;
+  description?: string;
+  idempotencyKey: string;
   externalReference?: string;
 }
 
 export interface CreateHoldTransactionRequest {
-  sourceAccountId: string;
+  accountId: string;
   amount: number;
   currency: string;
-  description: string;
-  expiresAt?: string;
+  description?: string;
+  idempotencyKey: string;
   externalReference?: string;
 }
 
@@ -84,18 +134,27 @@ export interface CreateQrTransactionIntentRequest {
   targetAccountId: string;
   amount: number;
   currency: string;
-  description: string;
-  expiresInMinutes?: number;
+  description?: string;
+  idempotencyKey: string;
+  externalReference?: string;
+}
+
+export interface CancelQrTransactionIntentRequest {
+  idempotencyKey?: string;
+}
+
+export interface ConfirmQrTransactionRequest {
+  sourceAccountId: string;
+  idempotencyKey: string;
 }
 
 export interface CreatePaymentTransactionRequest {
   sourceAccountId: string;
-  targetAccountId: string;
   amount: number;
   currency: string;
-  description: string;
+  method: TransactionMethod;
+  description?: string;
   idempotencyKey: string;
-  paymentReference?: string;
   externalReference?: string;
 }
 
@@ -103,25 +162,28 @@ export interface CreateAdjustmentTransactionRequest {
   accountId: string;
   amount: number;
   currency: string;
-  description: string;
-  adjustmentType: string; // CREDIT or DEBIT
+  direction: AdjustmentDirection;
+  reason: string;
   externalReference?: string;
+  idempotencyKey: string;
 }
 
 export interface CreateWithdrawalTransactionRequest {
   sourceAccountId: string;
   amount: number;
   currency: string;
-  description: string;
-  channel: string;
+  method: TransactionMethod;
+  description?: string;
   idempotencyKey: string;
   externalReference?: string;
 }
 
 export interface CreateReleaseTransactionRequest {
-  sourceAccountId: string;
-  holdTransactionId: string;
-  description: string;
+  accountId: string;
+  amount: number;
+  currency: string;
+  description?: string;
+  idempotencyKey: string;
   externalReference?: string;
 }
 
@@ -130,20 +192,18 @@ export interface CreateTransferTransactionRequest {
   targetAccountId: string;
   amount: number;
   currency: string;
-  description: string;
+  description?: string;
   idempotencyKey: string;
   externalReference?: string;
 }
 
 export interface CreateReversalTransactionRequest {
-  description: string;
   reason: string;
   idempotencyKey: string;
 }
 
 export interface CreateRefundTransactionRequest {
   amount: number;
-  description: string;
   reason: string;
   idempotencyKey: string;
 }

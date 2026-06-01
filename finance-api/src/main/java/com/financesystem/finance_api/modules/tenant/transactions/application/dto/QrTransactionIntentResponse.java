@@ -15,6 +15,15 @@ public record QrTransactionIntentResponse(
         String description,
         String idempotencyKey,
         UUID confirmedTransactionId,
+        Instant expiresAt,
+        Instant confirmedAt,
+        Instant cancelledAt,
+        UUID cancelledByUserId,
+        UUID payerAccountId,
+        BigDecimal paidAmount,
+        String paidCurrency,
+        String qrPayload,
+        String qrSignature,
         Instant createdAt,
         Instant updatedAt
 ) {
