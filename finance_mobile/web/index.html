@@ -152,7 +152,13 @@
     const analytics = getAnalytics(app);
     const messaging = getMessaging(app);
 
-    navigator.serviceWorker.register('/flutter/firebase-messaging-sw.js')
+    const base = document.querySelector('base')?.getAttribute('href') || '/';
+    const baseUrl = base.endsWith('/') ? base : base + '/';
+    const swPath = baseUrl + 'firebase-messaging-sw.js';
+
+    console.log('Service Worker path:', swPath);
+
+    navigator.serviceWorker.register(swPath)
       .then(registration => getToken(messaging, {
         vapidKey: 'BLyCPhPXXBLVzUkTyMDb2nxuhQuo8Wyj3TEvlrL6A9QONY5qqFhc4vmAGO3LS6tbNW9YDD_T_Ue28sw10G09000',
         serviceWorkerRegistration: registration
