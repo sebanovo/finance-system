@@ -33,18 +33,7 @@ class _RolesPageState extends State<RolesPage> {
 
   void _onViewModelChanged() {
     if (!mounted) return;
-
-    if (_viewModel.errorMessage != null &&
-        (_viewModel.errorMessage!.contains('Sesión expirada') ||
-            _viewModel.errorMessage!.contains('401') ||
-            _viewModel.errorMessage!.contains('No hay sesión activa'))) {
-      _showSnackBar(
-        'Tu sesión ha expirado. Por favor inicia sesión nuevamente.',
-      );
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) context.go('/login');
-      });
-    } else if (_viewModel.roleCreated) {
+    if (_viewModel.roleCreated) {
       _viewModel.clearRoleCreated();
       _showSnackBar('Rol creado exitosamente', isError: false);
     } else {

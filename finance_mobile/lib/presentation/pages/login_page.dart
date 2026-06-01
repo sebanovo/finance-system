@@ -16,6 +16,7 @@ class _LoginPageState extends State<LoginPage> {
   final passwordController = TextEditingController();
   final tenantController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _obscurePassword = true;
 
   late LoginViewModel _viewModel;
 
@@ -85,7 +86,9 @@ class _LoginPageState extends State<LoginPage> {
                           children: [
                             TextFormField(
                               controller: tenantController,
+                              textInputAction: TextInputAction.next,
                               validator: _viewModel.validateTenant,
+                              onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
                               decoration: _buildInputDecoration(
                                 label: 'Nombre del tenant',
                                 hint: 'Ej: miempresa',
@@ -96,7 +99,10 @@ class _LoginPageState extends State<LoginPage> {
                             TextFormField(
                               controller: emailController,
                               keyboardType: TextInputType.emailAddress,
+                              textInputAction: TextInputAction.next,
+                              autofillHints: const [AutofillHints.email],
                               validator: _viewModel.validateEmail,
+                              onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
                               decoration: _buildInputDecoration(
                                 label: 'Correo electrónico',
                                 hint: 'usuario@ejemplo.com',
@@ -106,12 +112,29 @@ class _LoginPageState extends State<LoginPage> {
                             const SizedBox(height: 16),
                             TextFormField(
                               controller: passwordController,
-                              obscureText: true,
+                              obscureText: _obscurePassword,
+                              autocorrect: false,
+                              enableSuggestions: false,
+                              textInputAction: TextInputAction.done,
+                              autofillHints: const [AutofillHints.password],
+                              onFieldSubmitted: (_) => _viewModel.isLoading ? null : _login(),
                               validator: _viewModel.validatePassword,
                               decoration: _buildInputDecoration(
                                 label: 'Contraseña',
                                 hint: '',
                                 icon: Icons.lock,
+                                suffixIcon: IconButton(
+                                  tooltip: _obscurePassword ? 'Mostrar contraseña' : 'Ocultar contraseña',
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
+                                  icon: Icon(
+                                    _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                    color: const Color(0xFF4CAF50),
+                                  ),
+                                ),
                               ),
                             ),
                             const SizedBox(height: 28),
@@ -205,11 +228,13 @@ class _LoginPageState extends State<LoginPage> {
     required String label,
     required String hint,
     required IconData icon,
+    Widget? suffixIcon,
   }) {
     return InputDecoration(
       labelText: label,
       hintText: hint.isEmpty ? null : hint,
       prefixIcon: Icon(icon, color: const Color(0xFF4CAF50)),
+      suffixIcon: suffixIcon,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(30),
         borderSide: BorderSide.none,

@@ -47,7 +47,12 @@ function addAuthorizationHeaders(
   authStorage: AuthStorageService,
   platformStorage: PlatformStorageService
 ) {
-  if (req.url.includes('/api/platform/auth/login') || req.url.includes('/api/platform/auth/refresh')) {
+  if (
+    req.url.includes('/api/platform/auth/login') ||
+    req.url.includes('/api/platform/auth/refresh') ||
+    req.url.includes('/api/auth/login') ||
+    req.url.includes('/api/auth/refresh')
+  ) {
     return req;
   }
 
@@ -69,11 +74,11 @@ function addAuthorizationHeaders(
     const tenantSlug = authStorage.getTenantSlug();
     const headersConfig: Record<string, string> = {};
 
-    if (token) {
+    if (token && !req.headers.has('Authorization')) {
       headersConfig['Authorization'] = `Bearer ${token}`;
     }
 
-    if (tenantSlug) {
+    if (tenantSlug && !req.headers.has('X-Tenant-Slug')) {
       headersConfig['X-Tenant-Slug'] = tenantSlug;
     }
 

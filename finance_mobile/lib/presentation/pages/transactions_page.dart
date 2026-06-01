@@ -1,7 +1,7 @@
-// lib/presentation/pages/transactions_page.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart' as di;
+import '../../../../core/routes/app_route_observer.dart';
 import '../viewmodels/transactions_viewmodel.dart';
 import '../widgets/transaction_item.dart';
 import '../widgets/transaction_item_skeleton.dart';
@@ -14,7 +14,7 @@ class TransactionsPage extends StatefulWidget {
   State<TransactionsPage> createState() => _TransactionsPageState();
 }
 
-class _TransactionsPageState extends State<TransactionsPage> {
+class _TransactionsPageState extends State<TransactionsPage> with RouteAware {
   late TransactionsViewModel _viewModel;
   static const int _skeletonItemCount = 5;
 
@@ -32,6 +32,20 @@ class _TransactionsPageState extends State<TransactionsPage> {
     super.initState();
     _viewModel = di.sl<TransactionsViewModel>();
     _viewModel.addListener(_onViewModelChanged);
+    _viewModel.loadTransactions();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      appRouteObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void didPopNext() {
     _viewModel.loadTransactions();
   }
 
@@ -160,6 +174,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
 
   @override
   void dispose() {
+    appRouteObserver.unsubscribe(this);
     _viewModel.removeListener(_onViewModelChanged);
     super.dispose();
   }

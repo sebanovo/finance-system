@@ -55,6 +55,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -85,6 +86,7 @@ public class TransactionProcessorService {
     private static final EnumSet<AccountType> ADJUSTMENT_ACCOUNT_TYPES = TRANSACTIONAL_ACCOUNT_TYPES;
     private static final EnumSet<AccountType> QR_SOURCE_ACCOUNT_TYPES = TRANSACTIONAL_ACCOUNT_TYPES;
     private static final EnumSet<AccountType> QR_TARGET_ACCOUNT_TYPES = TRANSACTIONAL_ACCOUNT_TYPES;
+    private static final Duration QR_INTENT_TTL = Duration.ofMinutes(15);
 
     private final TransactionRepository transactionRepository;
     private final TransactionMovementRepository transactionMovementRepository;
@@ -1572,6 +1574,7 @@ public class TransactionProcessorService {
     public QrTransactionIntentResponse createQrIntent(CreateQrTransactionIntentRequest request) {
         UUID requestedByUserId = resolveRequestedByUserId();
         String idempotencyKey = normalizeText(request.idempotencyKey());
+        Instant now = Instant.now();
 
         QrTransactionIntent existing = qrTransactionIntentRepository
                 .findByRequestedByUserIdAndIdempotencyKey(requestedByUserId, idempotencyKey)
@@ -1639,28 +1642,71 @@ public class TransactionProcessorService {
                 null,
                 requestedByUserId,
                 null,
+                now.plus(QR_INTENT_TTL),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 null,
                 null
         );
 
         QrTransactionIntent savedIntent = qrTransactionIntentRepository.save(intent);
+        QrTransactionIntent savedWithPayload = qrTransactionIntentRepository.save(new QrTransactionIntent(
+                savedIntent.id(),
+                savedIntent.status(),
+                savedIntent.channel(),
+                savedIntent.amount(),
+                savedIntent.currency(),
+                savedIntent.targetAccountId(),
+                savedIntent.externalReference(),
+                savedIntent.description(),
+                savedIntent.idempotencyKey(),
+                savedIntent.confirmedTransactionId(),
+                savedIntent.requestedByUserId(),
+                savedIntent.confirmedAt(),
+                savedIntent.expiresAt(),
+                savedIntent.cancelledAt(),
+                savedIntent.cancelledByUserId(),
+                savedIntent.payerAccountId(),
+                savedIntent.paidAmount(),
+                savedIntent.paidCurrency(),
+                buildQrPayload(savedIntent.id()),
+                savedIntent.qrSignature(),
+                savedIntent.createdAt(),
+                savedIntent.updatedAt()
+        ));
 
         auditTrailService.recordTenantEvent(
                 AuditEventTypes.TRANSACTION_CREATED,
                 "QR_TRANSACTION_INTENT",
-                savedIntent.id().toString(),
+                savedWithPayload.id().toString(),
                 TenantTransactionAuditPayloads.details(
                         "operation", "CREATE_QR_INTENT",
                         "type", TransactionType.PAYMENT.name(),
-                        "status", savedIntent.status().name(),
-                        "channel", savedIntent.channel().name(),
+                        "status", savedWithPayload.status().name(),
+                        "channel", savedWithPayload.channel().name(),
                         "account", targetAccount.accountNumber()
                 ),
                 null,
-                TenantTransactionAuditPayloads.intentState(savedIntent)
+                TenantTransactionAuditPayloads.intentState(savedWithPayload)
         );
 
-        return toQrTransactionIntentResponse(savedIntent);
+        return toQrTransactionIntentResponse(savedWithPayload);
+    }
+
+    @Transactional
+    public QrTransactionIntentResponse createMyQrIntent(CreateQrTransactionIntentRequest request) {
+        UUID requestedByUserId = resolveRequestedByUserId();
+        Account targetAccount = getAccountOrThrow(request.targetAccountId(), "Target");
+        if (targetAccount.userId() == null || !targetAccount.userId().equals(requestedByUserId)) {
+            throw new BusinessException("Target account does not belong to the authenticated user");
+        }
+
+        return createQrIntent(request);
     }
 
     @Transactional
@@ -1888,6 +1934,7 @@ public class TransactionProcessorService {
     public TransactionResponse confirmQrIntent(UUID transactionId, ConfirmQrTransactionRequest request) {
         UUID requestedByUserId = resolveRequestedByUserId();
         String idempotencyKey = normalizeText(request.idempotencyKey());
+        Instant now = Instant.now();
 
         Transaction existing = transactionRepository
                 .findByRequestedByUserIdAndIdempotencyKey(requestedByUserId, idempotencyKey)
@@ -1904,6 +1951,35 @@ public class TransactionProcessorService {
             throw new BusinessException("QR intent is not pending confirmation");
         }
 
+        if (intent.expiresAt() != null && intent.expiresAt().isBefore(now)) {
+            QrTransactionIntent expiredIntent = new QrTransactionIntent(
+                    intent.id(),
+                    QrTransactionIntentStatus.EXPIRED,
+                    intent.channel(),
+                    intent.amount(),
+                    intent.currency(),
+                    intent.targetAccountId(),
+                    intent.externalReference(),
+                    intent.description(),
+                    intent.idempotencyKey(),
+                    intent.confirmedTransactionId(),
+                    intent.requestedByUserId(),
+                    intent.confirmedAt(),
+                    intent.expiresAt(),
+                    intent.cancelledAt(),
+                    intent.cancelledByUserId(),
+                    intent.payerAccountId(),
+                    intent.paidAmount(),
+                    intent.paidCurrency(),
+                    intent.qrPayload(),
+                    intent.qrSignature(),
+                    intent.createdAt(),
+                    intent.updatedAt()
+            );
+            qrTransactionIntentRepository.save(expiredIntent);
+            throw new BusinessException("QR intent has expired");
+        }
+
         if (intent.targetAccountId() == null) {
             throw new BusinessException("QR intent does not have a target account");
         }
@@ -1913,6 +1989,18 @@ public class TransactionProcessorService {
 
         if (sourceAccount.userId() == null || !sourceAccount.userId().equals(requestedByUserId)) {
             throw new BusinessException("Source account does not belong to the authenticated user");
+        }
+
+        if (sourceAccount.id().equals(targetAccount.id())) {
+            throw new BusinessException("Source and target accounts must be different");
+        }
+
+        if (sourceAccount.status() == AccountStatus.CLOSED || targetAccount.status() == AccountStatus.CLOSED) {
+            throw new BusinessException("Closed accounts cannot participate in QR payments");
+        }
+
+        if (!sourceAccount.active() || !targetAccount.active()) {
+            throw new BusinessException("Both accounts must be active for QR payments");
         }
 
         CurrencyCode intentCurrency = parseCurrencyCode(intent.currency(), "QR currency is invalid");
@@ -2063,9 +2151,17 @@ public class TransactionProcessorService {
                 intent.idempotencyKey(),
                 persistedCompleted.id(),
                 intent.requestedByUserId(),
-                Instant.now(),
+                now,
+                intent.expiresAt(),
+                intent.cancelledAt(),
+                intent.cancelledByUserId(),
+                sourceAccount.id(),
+                sourceAmount,
+                sourceAccount.currency().name(),
+                intent.qrPayload(),
+                intent.qrSignature(),
                 intent.createdAt(),
-                Instant.now()
+                now
         );
         qrTransactionIntentRepository.save(updatedIntent);
 
@@ -2113,6 +2209,69 @@ public class TransactionProcessorService {
         publishTransactionNotifications(persistedCompleted, movements);
 
         return transactionMapper.toResponse(persistedCompleted, movements);
+    }
+
+    @Transactional
+    public QrTransactionIntentResponse getMyQrIntent(UUID transactionId) {
+        UUID requestedByUserId = resolveRequestedByUserId();
+        QrTransactionIntent intent = getQrIntentOrThrow(transactionId);
+        ensureQrIntentBelongsToUser(intent, requestedByUserId);
+        QrTransactionIntent refreshed = refreshQrIntentStatusIfExpired(intent);
+        return toQrTransactionIntentResponse(refreshed);
+    }
+
+    @Transactional
+    public QrTransactionIntentResponse cancelMyQrIntent(UUID transactionId) {
+        UUID requestedByUserId = resolveRequestedByUserId();
+        QrTransactionIntent intent = getQrIntentOrThrow(transactionId);
+        ensureQrIntentBelongsToUser(intent, requestedByUserId);
+
+        QrTransactionIntent current = refreshQrIntentStatusIfExpired(intent);
+        if (current.status() != QrTransactionIntentStatus.PENDING) {
+            throw new BusinessException("QR intent cannot be cancelled in its current state");
+        }
+
+        Instant now = Instant.now();
+        QrTransactionIntent cancelled = new QrTransactionIntent(
+                current.id(),
+                QrTransactionIntentStatus.CANCELLED,
+                current.channel(),
+                current.amount(),
+                current.currency(),
+                current.targetAccountId(),
+                current.externalReference(),
+                current.description(),
+                current.idempotencyKey(),
+                current.confirmedTransactionId(),
+                current.requestedByUserId(),
+                current.confirmedAt(),
+                current.expiresAt(),
+                now,
+                requestedByUserId,
+                current.payerAccountId(),
+                current.paidAmount(),
+                current.paidCurrency(),
+                current.qrPayload(),
+                current.qrSignature(),
+                current.createdAt(),
+                now
+        );
+
+        QrTransactionIntent saved = qrTransactionIntentRepository.save(cancelled);
+        auditTrailService.recordTenantEvent(
+                AuditEventTypes.TRANSACTION_UPDATED,
+                "QR_TRANSACTION_INTENT",
+                saved.id().toString(),
+                TenantTransactionAuditPayloads.details(
+                        "operation", "CANCEL_QR_INTENT",
+                        "status", saved.status().name(),
+                        "channel", saved.channel().name()
+                ),
+                TenantTransactionAuditPayloads.intentState(intent),
+                TenantTransactionAuditPayloads.intentState(saved)
+        );
+
+        return toQrTransactionIntentResponse(saved);
     }
 
     private void validateTransferAccounts(Account sourceAccount, Account targetAccount, CurrencyCode currency) {
@@ -2635,6 +2794,15 @@ public class TransactionProcessorService {
                 intent.description(),
                 intent.idempotencyKey(),
                 intent.confirmedTransactionId(),
+                intent.expiresAt(),
+                intent.confirmedAt(),
+                intent.cancelledAt(),
+                intent.cancelledByUserId(),
+                intent.payerAccountId(),
+                intent.paidAmount(),
+                intent.paidCurrency(),
+                intent.qrPayload(),
+                intent.qrSignature(),
                 intent.createdAt(),
                 intent.updatedAt()
         );
@@ -2932,6 +3100,62 @@ public class TransactionProcessorService {
 
         return transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found with id: " + transactionId));
+    }
+
+    private QrTransactionIntent getQrIntentOrThrow(UUID intentId) {
+        if (intentId == null) {
+            throw new BusinessException("QR intent id is required");
+        }
+
+        return qrTransactionIntentRepository.findById(intentId)
+                .orElseThrow(() -> new ResourceNotFoundException("QR intent not found with id: " + intentId));
+    }
+
+    private void ensureQrIntentBelongsToUser(QrTransactionIntent intent, UUID userId) {
+        if (intent.requestedByUserId() == null || !intent.requestedByUserId().equals(userId)) {
+            throw new ResourceNotFoundException("QR intent not found with id: " + intent.id());
+        }
+    }
+
+    private QrTransactionIntent refreshQrIntentStatusIfExpired(QrTransactionIntent intent) {
+        if (intent.status() != QrTransactionIntentStatus.PENDING) {
+            return intent;
+        }
+
+        Instant expiresAt = intent.expiresAt();
+        if (expiresAt == null || !expiresAt.isBefore(Instant.now())) {
+            return intent;
+        }
+
+        QrTransactionIntent expired = new QrTransactionIntent(
+                intent.id(),
+                QrTransactionIntentStatus.EXPIRED,
+                intent.channel(),
+                intent.amount(),
+                intent.currency(),
+                intent.targetAccountId(),
+                intent.externalReference(),
+                intent.description(),
+                intent.idempotencyKey(),
+                intent.confirmedTransactionId(),
+                intent.requestedByUserId(),
+                intent.confirmedAt(),
+                intent.expiresAt(),
+                intent.cancelledAt(),
+                intent.cancelledByUserId(),
+                intent.payerAccountId(),
+                intent.paidAmount(),
+                intent.paidCurrency(),
+                intent.qrPayload(),
+                intent.qrSignature(),
+                intent.createdAt(),
+                Instant.now()
+        );
+        return qrTransactionIntentRepository.save(expired);
+    }
+
+    private String buildQrPayload(UUID intentId) {
+        return "finance://pay?intentId=" + intentId;
     }
 
     private String buildInsufficientBalanceMessage(

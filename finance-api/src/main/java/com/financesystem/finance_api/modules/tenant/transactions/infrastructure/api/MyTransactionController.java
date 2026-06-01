@@ -4,19 +4,24 @@ import com.financesystem.finance_api.common.response.ApiResponse;
 import com.financesystem.finance_api.common.pagination.PaginationSupport;
 import com.financesystem.finance_api.modules.tenant.transactions.application.dto.CreateDepositTransactionRequest;
 import com.financesystem.finance_api.modules.tenant.transactions.application.dto.ConfirmQrTransactionRequest;
+import com.financesystem.finance_api.modules.tenant.transactions.application.dto.CreateQrTransactionIntentRequest;
 import com.financesystem.finance_api.modules.tenant.transactions.application.dto.CreateHoldTransactionRequest;
 import com.financesystem.finance_api.modules.tenant.transactions.application.dto.CreatePaymentTransactionRequest;
 import com.financesystem.finance_api.modules.tenant.transactions.application.dto.CreateWithdrawalTransactionRequest;
 import com.financesystem.finance_api.modules.tenant.transactions.application.dto.CreateReleaseTransactionRequest;
 import com.financesystem.finance_api.modules.tenant.transactions.application.dto.CreateTransferTransactionRequest;
+import com.financesystem.finance_api.modules.tenant.transactions.application.dto.QrTransactionIntentResponse;
 import com.financesystem.finance_api.modules.tenant.transactions.application.dto.TransactionResponse;
 import com.financesystem.finance_api.modules.tenant.transactions.application.usecase.create.CreateMyDepositTransactionUseCase;
 import com.financesystem.finance_api.modules.tenant.transactions.application.usecase.create.CreateMyHoldTransactionUseCase;
+import com.financesystem.finance_api.modules.tenant.transactions.application.usecase.create.CreateMyQrTransactionIntentUseCase;
+import com.financesystem.finance_api.modules.tenant.transactions.application.usecase.create.CancelMyQrTransactionIntentUseCase;
 import com.financesystem.finance_api.modules.tenant.transactions.application.usecase.create.ConfirmMyQrTransactionUseCase;
 import com.financesystem.finance_api.modules.tenant.transactions.application.usecase.create.CreateMyPaymentTransactionUseCase;
 import com.financesystem.finance_api.modules.tenant.transactions.application.usecase.create.CreateMyTransferTransactionUseCase;
 import com.financesystem.finance_api.modules.tenant.transactions.application.usecase.create.CreateMyWithdrawalTransactionUseCase;
 import com.financesystem.finance_api.modules.tenant.transactions.application.usecase.create.CreateMyReleaseTransactionUseCase;
+import com.financesystem.finance_api.modules.tenant.transactions.application.usecase.query.GetMyQrTransactionIntentUseCase;
 import com.financesystem.finance_api.modules.tenant.transactions.application.usecase.query.GetMyTransactionByIdUseCase;
 import com.financesystem.finance_api.modules.tenant.transactions.application.usecase.query.ListMyTransactionsUseCase;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -39,7 +44,10 @@ public class MyTransactionController {
 
     private final CreateMyDepositTransactionUseCase createMyDepositTransactionUseCase;
     private final CreateMyHoldTransactionUseCase createMyHoldTransactionUseCase;
+    private final CreateMyQrTransactionIntentUseCase createMyQrTransactionIntentUseCase;
     private final ConfirmMyQrTransactionUseCase confirmMyQrTransactionUseCase;
+    private final GetMyQrTransactionIntentUseCase getMyQrTransactionIntentUseCase;
+    private final CancelMyQrTransactionIntentUseCase cancelMyQrTransactionIntentUseCase;
     private final CreateMyPaymentTransactionUseCase createMyPaymentTransactionUseCase;
     private final CreateMyWithdrawalTransactionUseCase createMyWithdrawalTransactionUseCase;
     private final CreateMyReleaseTransactionUseCase createMyReleaseTransactionUseCase;
@@ -50,7 +58,10 @@ public class MyTransactionController {
     public MyTransactionController(
             CreateMyDepositTransactionUseCase createMyDepositTransactionUseCase,
             CreateMyHoldTransactionUseCase createMyHoldTransactionUseCase,
+            CreateMyQrTransactionIntentUseCase createMyQrTransactionIntentUseCase,
             ConfirmMyQrTransactionUseCase confirmMyQrTransactionUseCase,
+            GetMyQrTransactionIntentUseCase getMyQrTransactionIntentUseCase,
+            CancelMyQrTransactionIntentUseCase cancelMyQrTransactionIntentUseCase,
             CreateMyPaymentTransactionUseCase createMyPaymentTransactionUseCase,
             CreateMyWithdrawalTransactionUseCase createMyWithdrawalTransactionUseCase,
             CreateMyReleaseTransactionUseCase createMyReleaseTransactionUseCase,
@@ -60,7 +71,10 @@ public class MyTransactionController {
     ) {
         this.createMyDepositTransactionUseCase = createMyDepositTransactionUseCase;
         this.createMyHoldTransactionUseCase = createMyHoldTransactionUseCase;
+        this.createMyQrTransactionIntentUseCase = createMyQrTransactionIntentUseCase;
         this.confirmMyQrTransactionUseCase = confirmMyQrTransactionUseCase;
+        this.getMyQrTransactionIntentUseCase = getMyQrTransactionIntentUseCase;
+        this.cancelMyQrTransactionIntentUseCase = cancelMyQrTransactionIntentUseCase;
         this.createMyPaymentTransactionUseCase = createMyPaymentTransactionUseCase;
         this.createMyWithdrawalTransactionUseCase = createMyWithdrawalTransactionUseCase;
         this.createMyReleaseTransactionUseCase = createMyReleaseTransactionUseCase;
@@ -79,6 +93,24 @@ public class MyTransactionController {
     @PreAuthorize("hasAuthority('me.transactions.hold')")
     public ApiResponse<TransactionResponse> createHold(@Valid @RequestBody CreateHoldTransactionRequest request) {
         return ApiResponse.success("Hold created successfully", createMyHoldTransactionUseCase.execute(request));
+    }
+
+    @PostMapping("/qr/intents")
+    @PreAuthorize("hasAuthority('me.transactions.qr.create')")
+    public ApiResponse<QrTransactionIntentResponse> createQrIntent(@Valid @RequestBody CreateQrTransactionIntentRequest request) {
+        return ApiResponse.success("QR intent created successfully", createMyQrTransactionIntentUseCase.execute(request));
+    }
+
+    @GetMapping("/qr/intents/{id}")
+    @PreAuthorize("hasAuthority('me.transactions.qr.read')")
+    public ApiResponse<QrTransactionIntentResponse> getQrIntent(@PathVariable UUID id) {
+        return ApiResponse.success("QR intent retrieved successfully", getMyQrTransactionIntentUseCase.execute(id));
+    }
+
+    @PostMapping("/qr/intents/{id}/cancel")
+    @PreAuthorize("hasAuthority('me.transactions.qr.cancel')")
+    public ApiResponse<QrTransactionIntentResponse> cancelQrIntent(@PathVariable UUID id) {
+        return ApiResponse.success("QR intent cancelled successfully", cancelMyQrTransactionIntentUseCase.execute(id));
     }
 
     @PostMapping("/qr/{id}/confirm")

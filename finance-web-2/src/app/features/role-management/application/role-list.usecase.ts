@@ -1,10 +1,10 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { AccessService, TenantRoleResponse } from '../../../entities/access';
+import { AccessService, PageResponse, TenantRoleResponse } from '../../../entities/access';
 
 export interface RoleListState {
   status: 'idle' | 'loading' | 'success' | 'error';
-  data: TenantRoleResponse[];
+  page: PageResponse<TenantRoleResponse> | null;
   error: string | null;
 }
 
@@ -16,62 +16,63 @@ export class RoleListUseCase {
 
   private readonly state = signal<RoleListState>({
     status: 'idle',
-    data: [],
+    page: null,
     error: null
   });
 
   readonly status = computed(() => this.state().status);
-  readonly data = computed(() => this.state().data);
+  readonly page = computed(() => this.state().page);
+  readonly data = computed(() => this.state().page?.content ?? []);
   readonly error = computed(() => this.state().error);
 
-  async loadRoles(): Promise<void> {
-    this.state.set({ status: 'loading', data: [], error: null });
+  async loadRoles(page = 0, size = 500): Promise<void> {
+    this.state.set({ status: 'loading', page: this.state().page, error: null });
 
     try {
-      const response = await firstValueFrom(this.accessService.getRoles());
+      const response = await firstValueFrom(this.accessService.getRoles(page, size));
 
       if (response.success && response.data) {
         this.state.set({ 
           status: 'success', 
-          data: response.data, 
+          page: response.data, 
           error: null 
         });
       } else {
         this.state.set({ 
           status: 'error', 
-          data: [], 
+          page: null, 
           error: response.message || 'No se pudieron cargar los roles' 
         });
       }
     } catch (err: any) {
       const errorMsg = err.error?.message || err.message || 'Error al conectar con el servidor';
-      this.state.set({ status: 'error', data: [], error: errorMsg });
+      this.state.set({ status: 'error', page: null, error: errorMsg });
     }
   }
 
   async reloadRoles(): Promise<void> {
-    const currentData = this.state().data;
-    this.state.set({ status: 'loading', data: currentData, error: null });
+    const currentPage = this.state().page;
+    this.state.set({ status: 'loading', page: currentPage, error: null });
 
     try {
-      const response = await firstValueFrom(this.accessService.getRoles());
+      const response = await firstValueFrom(this.accessService.getRoles(currentPage?.number ?? 0, currentPage?.size ?? 500));
 
       if (response.success && response.data) {
         this.state.set({ 
           status: 'success', 
-          data: response.data, 
+          page: response.data, 
           error: null 
         });
       } else {
         this.state.set({ 
           status: 'error', 
-          data: currentData,
+          page: currentPage,
           error: response.message || 'No se pudieron recargar los roles' 
         });
       }
     } catch (err: any) {
       const errorMsg = err.error?.message || err.message || 'Error al conectar con el servidor';
-      this.state.set({ status: 'error', data: currentData, error: errorMsg });
+      this.state.set({ status: 'error', page: currentPage, error: errorMsg });
     }
   }
 

@@ -50,6 +50,7 @@ public final class AuditEventTypes {
     public static final String TRANSACTION_CREATED = "TRANSACTION_CREATED";
     public static final String TRANSACTION_COMPLETED = "TRANSACTION_COMPLETED";
     public static final String TRANSACTION_FAILED = "TRANSACTION_FAILED";
+    public static final String TRANSACTION_UPDATED = "TRANSACTION_UPDATED";
 
     public static final String REPORT_EXECUTED = "REPORT_EXECUTED";
     public static final String REPORT_EXPORTED = "REPORT_EXPORTED";

@@ -189,7 +189,7 @@ public class NotificationDeliveriesReportExecutionService {
         ReportExecution savedExecution = reportExecutionRepository.save(new ReportExecution(null, template.reportType().name(), template.title(), executionName, mode.name(), requestedBySubject, requestPayload, outputsJson, rows.size(), sourceExecutionId, ReportExecutionStatus.COMPLETED, null, null));
         if (artifacts != null) {
             for (ReportExportArtifact artifact : artifacts) {
-                reportExecutionRepository.saveExport(new ReportExport(null, savedExecution.id(), artifact.output().name(), artifact.fileName(), artifact.contentType(), artifact.bytes().length, null));
+                reportExecutionRepository.saveExport(new ReportExport(null, savedExecution.id(), artifact.output().name(), artifact.fileName(), artifact.contentType(), artifact.bytes().length, artifact.bytes(), null));
             }
         }
         auditTrailService.recordTenantEvent(AuditEventTypes.REPORT_EXECUTED, "report", template.reportType().name(), Map.of("mode", mode.name(), "outputs", extractOutputs(request), "rowCount", rows.size()));

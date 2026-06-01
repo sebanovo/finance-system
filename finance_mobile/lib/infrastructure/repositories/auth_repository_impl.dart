@@ -1,5 +1,6 @@
 import 'package:finance_mobile/infrastructure/models/signup_request.dart';
 
+import 'package:finance_mobile/core/network/api_client.dart';
 import '../../../domain/entities/user.dart';
 import '../../../domain/repositories/auth_repository.dart';
 import '../../../domain/entities/tenant_signup.dart';
@@ -7,8 +8,9 @@ import '../datasources/auth_remote_datasource.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
+  final ApiClient apiClient;
 
-  AuthRepositoryImpl(this.remoteDataSource);
+  AuthRepositoryImpl(this.remoteDataSource, this.apiClient);
 
   @override
   Future<(User, String, String)> login(
@@ -64,5 +66,14 @@ class AuthRepositoryImpl implements AuthRepository {
     String newPassword,
   ) async {
     await remoteDataSource.changePassword(currentPassword, newPassword);
+  }
+
+  @override
+  Future<void> logout() async {
+    try {
+      await remoteDataSource.logout();
+    } finally {
+      apiClient.clearSession();
+    }
   }
 }

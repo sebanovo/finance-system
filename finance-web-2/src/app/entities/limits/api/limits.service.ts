@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../shared/api';
 import {
+  PageResponse,
   LimitRuleResponse,
   CreateLimitRuleRequest,
   UpdateLimitRuleRequest,
@@ -18,8 +19,10 @@ export class LimitsService {
   private http = inject(HttpClient);
   private readonly API_URL = `${environment.apiUrl}/api/limits`;
 
-  listRules(): Observable<ApiResponse<LimitRuleResponse[]>> {
-    return this.http.get<ApiResponse<LimitRuleResponse[]>>(`${this.API_URL}/rules`);
+  listRules(page = 0, size = 20): Observable<ApiResponse<PageResponse<LimitRuleResponse>>> {
+    return this.http.get<ApiResponse<PageResponse<LimitRuleResponse>>>(`${this.API_URL}/rules`, {
+      params: { page, size }
+    });
   }
 
   getRule(id: string): Observable<ApiResponse<LimitRuleResponse>> {

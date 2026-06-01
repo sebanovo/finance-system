@@ -49,6 +49,30 @@ public class QrTransactionIntentEntity {
     @Column(name = "confirmed_at")
     private Instant confirmedAt;
 
+    @Column(name = "expires_at")
+    private Instant expiresAt;
+
+    @Column(name = "cancelled_at")
+    private Instant cancelledAt;
+
+    @Column(name = "cancelled_by_user_id")
+    private UUID cancelledByUserId;
+
+    @Column(name = "payer_account_id")
+    private UUID payerAccountId;
+
+    @Column(name = "paid_amount", precision = 19, scale = 4)
+    private BigDecimal paidAmount;
+
+    @Column(name = "paid_currency", length = 10)
+    private String paidCurrency;
+
+    @Column(name = "qr_payload", columnDefinition = "TEXT")
+    private String qrPayload;
+
+    @Column(name = "qr_signature", length = 255)
+    private String qrSignature;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -167,11 +191,83 @@ public class QrTransactionIntentEntity {
         this.confirmedAt = confirmedAt;
     }
 
+    public Instant getExpiresAt() {
+        return expiresAt;
+    }
+
+    public void setExpiresAt(Instant expiresAt) {
+        this.expiresAt = expiresAt;
+    }
+
+    public Instant getCancelledAt() {
+        return cancelledAt;
+    }
+
+    public void setCancelledAt(Instant cancelledAt) {
+        this.cancelledAt = cancelledAt;
+    }
+
+    public UUID getCancelledByUserId() {
+        return cancelledByUserId;
+    }
+
+    public void setCancelledByUserId(UUID cancelledByUserId) {
+        this.cancelledByUserId = cancelledByUserId;
+    }
+
+    public UUID getPayerAccountId() {
+        return payerAccountId;
+    }
+
+    public void setPayerAccountId(UUID payerAccountId) {
+        this.payerAccountId = payerAccountId;
+    }
+
+    public BigDecimal getPaidAmount() {
+        return paidAmount;
+    }
+
+    public void setPaidAmount(BigDecimal paidAmount) {
+        this.paidAmount = paidAmount;
+    }
+
+    public String getPaidCurrency() {
+        return paidCurrency;
+    }
+
+    public void setPaidCurrency(String paidCurrency) {
+        this.paidCurrency = paidCurrency;
+    }
+
+    public String getQrPayload() {
+        return qrPayload;
+    }
+
+    public void setQrPayload(String qrPayload) {
+        this.qrPayload = qrPayload;
+    }
+
+    public String getQrSignature() {
+        return qrSignature;
+    }
+
+    public void setQrSignature(String qrSignature) {
+        this.qrSignature = qrSignature;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
 
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

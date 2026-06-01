@@ -17,6 +17,14 @@ public record QrTransactionIntent(
         UUID confirmedTransactionId,
         UUID requestedByUserId,
         Instant confirmedAt,
+        Instant expiresAt,
+        Instant cancelledAt,
+        UUID cancelledByUserId,
+        UUID payerAccountId,
+        BigDecimal paidAmount,
+        String paidCurrency,
+        String qrPayload,
+        String qrSignature,
         Instant createdAt,
         Instant updatedAt
 ) {

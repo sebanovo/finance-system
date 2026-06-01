@@ -36,11 +36,13 @@ export class LoginUseCase {
         if (response.data.refreshToken) {
           this.authStorage.saveRefreshToken(response.data.refreshToken);
         }
-        if (request.tenantSlug) {
-          this.authStorage.saveTenantSlug(request.tenantSlug);
+        const tenantSlug = request.tenantSlug?.trim();
+        if (tenantSlug) {
+          this.authStorage.saveTenantSlug(tenantSlug);
         }
 
         this.state.set({ status: 'success', error: null });
+        console.log("login success!!!")
       } else {
         this.state.set({ status: 'error', error: response.message || 'Error desconocido al iniciar sesión' });
       }

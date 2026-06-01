@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { LucideAngularModule } from 'lucide-angular';
+import { PermissionService } from '../../../shared/lib/auth/permission.service';
 
 interface MenuItem {
   label: string;
   route: string;
   icon: string;
+  permissions?: string[];
 }
 
 interface MenuGroup {
@@ -20,7 +22,7 @@ interface MenuGroup {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule, LucideAngularModule, ],
+  imports: [CommonModule, RouterModule, LucideAngularModule],
   animations: [
     trigger('accordion', [
       state('open', style({ height: '*', opacity: 1, visibility: 'visible', margin: '4px 0' })),
@@ -43,7 +45,6 @@ interface MenuGroup {
     ])
   ],
   template: `
-    <!-- Mobile Hamburger Button (Floating top-left when sidebar is closed) -->
     <button 
       *ngIf="!isMobileOpen"
       (click)="toggleMobileMenu()"
@@ -52,7 +53,6 @@ interface MenuGroup {
       <lucide-icon name="menu" class="h-5 w-5"></lucide-icon>
     </button>
 
-    <!-- Mobile Overlay Backdrop -->
     <div 
       *ngIf="isMobileOpen" 
       @fadeOverlay
@@ -60,13 +60,11 @@ interface MenuGroup {
       class="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
     ></div>
 
-    <!-- Sidebar Container -->
     <aside 
       class="fixed inset-y-0 left-0 z-50 flex h-full w-64 flex-col border-r border-[#C8E6C9] bg-white shadow-xl transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:shadow-none"
       [class.-translate-x-full]="!isMobileOpen"
       [class.translate-x-0]="isMobileOpen"
     >
-      <!-- Logo / Brand Area -->
       <div class="flex h-16 shrink-0 items-center justify-between border-b border-[#C8E6C9] px-6">
         <div class="flex items-center gap-3">
           <div class="flex h-8 w-8 items-center justify-center rounded-md bg-[#2E7D32] font-bold text-white shadow-sm">
@@ -74,19 +72,12 @@ interface MenuGroup {
           </div>
           <span class="font-bold text-lg tracking-tight text-[#2E7D32]">Finance System</span>
         </div>
-        
-        <!-- Mobile Close Button -->
         <button (click)="closeMobileMenu()" class="md:hidden p-1.5 text-[#666666] hover:text-[#2E7D32] rounded-md hover:bg-[#F1F8E9] transition-colors">
           <lucide-icon name="x" class="h-5 w-5"></lucide-icon>
         </button>
       </div>
 
-      <!-- Navigation -->
       <nav class="custom-scrollbar flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        
-        <!-- ============================================================ -->
-        <!-- MENÚ PARA PLATFORM (SuperAdmin) -->
-        <!-- ============================================================ -->
         <ng-container *ngIf="isPlatformRoute">
           <a *ngFor="let item of platformMenuItems" 
              [routerLink]="item.route" 
@@ -99,16 +90,11 @@ interface MenuGroup {
           </a>
         </ng-container>
 
-        <!-- ============================================================ -->
-        <!-- MENÚ PARA TENANT (Usuario normal) -->
-        <!-- ============================================================ -->
         <ng-container *ngIf="!isPlatformRoute">
-          
-          <!-- Elementos Generales (Sin Acordeón) -->
-          <a *ngFor="let item of generalItems" 
-             [routerLink]="item.route" 
+          <a *ngFor="let item of generalItems"
+             [routerLink]="item.route"
              routerLinkActive="bg-[#2E7D32] text-white font-semibold shadow-sm" 
-             [routerLinkActiveOptions]="{exact: item.route === '/dashboard'}"
+             [routerLinkActiveOptions]="{exact: true}"
              (click)="closeMobileMenu()"
              class="group flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-[#333333] transition-all duration-200 hover:bg-[#F1F8E9] hover:text-[#2E7D32]">
             <lucide-icon [name]="item.icon" class="h-4 w-4 opacity-70 group-hover:opacity-100 transition-opacity"></lucide-icon>
@@ -117,10 +103,7 @@ interface MenuGroup {
 
           <div class="h-4"></div>
 
-          <!-- Grupos Acordeón -->
           <div *ngFor="let group of menuGroups" class="mb-2">
-            
-            <!-- Header del Grupo -->
             <button 
               (click)="toggleGroup(group.id)"
               class="group flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium text-[#333333] transition-colors hover:bg-[#F1F8E9] hover:text-[#2E7D32]"
@@ -136,12 +119,11 @@ interface MenuGroup {
               ></lucide-icon>
             </button>
 
-            <!-- Contenido del Grupo -->
             <div [@accordion]="expandedGroups[group.id] ? 'open' : 'closed'" class="overflow-hidden px-2">
               <div class="ml-2 flex flex-col space-y-1 border-l border-[#C8E6C9] py-1 pl-4">
                 <a *ngFor="let item of group.items" 
                    [routerLink]="item.route" 
-                   routerLinkActive="text-[#2E7D32] font-semibold bg-[#E8F5E9]"
+                   routerLinkActive="bg-[#2E7D32] text-white font-semibold shadow-sm"
                    (click)="closeMobileMenu()"
                    class="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-[#666666] transition-all duration-200 hover:bg-[#F1F8E9] hover:text-[#2E7D32]">
                   <lucide-icon [name]="item.icon" class="h-3.5 w-3.5 opacity-60"></lucide-icon>
@@ -149,13 +131,10 @@ interface MenuGroup {
                 </a>
               </div>
             </div>
-            
           </div>
         </ng-container>
-
       </nav>
 
-      <!-- Sidebar Footer / Logout -->
       <div class="shrink-0 border-t border-[#C8E6C9] p-4">
         <button 
           (click)="onLogout()" 
@@ -182,36 +161,84 @@ interface MenuGroup {
 })
 export class SidebarComponent {
   @Output() logoutAction = new EventEmitter<void>();
-  
   private router = inject(Router);
+  private readonly permissionService = inject(PermissionService);
 
   isMobileOpen = false;
 
-  // Estado de los acordeones (por defecto Operaciones abierto)
+  readonly isOwnerAdmin = this.permissionService.hasRole('OWNER_ADMIN');
+
+  readonly dashboardRoute: string = this.isOwnerAdmin ? '/dashboard/summary' : '/dashboard/me';
+
   expandedGroups: Record<string, boolean> = {
     accesos: false,
     operaciones: true,
     divisas: false,
     seguridad: false,
-    contabilidad: false
+    contabilidad: false,
+    reportes: true
   };
 
-  // ============================================================
-  // MENÚ PARA TENANT
-  // ============================================================
   generalItems: MenuItem[] = [
-    { label: 'Panel de Resumen', route: '/dashboard', icon: 'layout-dashboard' },
-    { label: 'Configuración', route: '/dashboard/settings', icon: 'settings' }
+    { label: 'Dashboard', route: this.dashboardRoute, icon: 'layout-dashboard' },
+    { label: 'Notificaciones', route: '/dashboard/notifications', icon: 'bell' }
   ];
 
-  menuGroups: MenuGroup[] = [
+  customerMenuGroups: MenuGroup[] = [
+      {
+        id: 'mis-cuentas',
+        label: 'Mi banca',
+        icon: 'wallet',
+        items: [
+        {
+          label: 'Mis cuentas',
+            route: '/dashboard/me/accounts',
+            icon: 'wallet',
+            permissions: ['me.accounts.list', 'me.accounts.view', 'me.accounts.balance.read', 'me.accounts.update.alias', 'me.accounts.create']
+          },
+          {
+            label: 'Mis movimientos',
+            route: '/dashboard/me/transactions',
+            icon: 'arrow-right-left',
+            permissions: ['me.transactions.read', 'me.transactions.detail', 'me.transactions.transfer', 'me.transactions.deposit', 'me.transactions.withdrawal', 'me.transactions.payment', 'me.transactions.hold', 'me.transactions.release', 'me.transactions.qr.create', 'me.transactions.qr.read', 'me.transactions.qr.cancel', 'me.transactions.qr.confirm']
+          }
+        ]
+      }
+    ];
+
+  tenantOwnerMenuGroups: MenuGroup[] = [
     {
       id: 'accesos',
       label: 'Accesos y Control',
       icon: 'shield',
       items: [
-        { label: 'Usuarios', route: '/dashboard/users', icon: 'users' },
-        { label: 'Roles y Permisos', route: '/dashboard/roles', icon: 'key' }
+        {
+          label: 'Usuarios',
+          route: '/dashboard/users',
+          icon: 'users',
+          permissions: ['users.list', 'users.create', 'users.detail', 'users.update', 'users.activate', 'users.deactivate']
+        },
+        {
+          label: 'Roles',
+          route: '/dashboard/roles',
+          icon: 'key',
+          permissions: [
+            'access.roles.read',
+            'access.roles.create',
+            'access.roles.detail',
+            'access.roles.update',
+            'access.roles.activate',
+            'access.roles.deactivate',
+            'access.users.roles.read',
+            'access.users.roles.assign'
+          ]
+        },
+        {
+          label: 'Permisos',
+          route: '/dashboard/permissions',
+          icon: 'badge-check',
+          permissions: ['access.permissions.read']
+        }
       ]
     },
     {
@@ -219,8 +246,47 @@ export class SidebarComponent {
       label: 'Operaciones',
       icon: 'briefcase',
       items: [
-        { label: 'Cuentas Bancarias', route: '/dashboard/accounts', icon: 'credit-card' },
-        { label: 'Transacciones', route: '/dashboard/transactions', icon: 'arrow-right-left' }
+        {
+          label: 'Cuentas Bancarias',
+          route: '/dashboard/accounts',
+          icon: 'credit-card',
+          permissions: [
+            'accounts.create',
+            'accounts.list',
+            'accounts.view',
+            'accounts.balance.read',
+            'accounts.update',
+            'accounts.approve',
+            'accounts.activate',
+            'accounts.block',
+            'accounts.freeze',
+            'accounts.close',
+            'accounts.transactions.read'
+          ]
+        },
+        {
+          label: 'Transacciones',
+          route: '/dashboard/transactions',
+          icon: 'arrow-right-left',
+          permissions: [
+            'transactions.read',
+            'transactions.detail',
+            'transactions.create.transfer',
+            'transactions.create.deposit',
+            'transactions.create.withdrawal',
+            'transactions.create.payment',
+            'transactions.reverse',
+            'transactions.refund',
+            'transactions.fee',
+            'transactions.hold',
+            'transactions.release',
+            'transactions.adjust',
+            'transactions.admin.read',
+            'transactions.admin.export',
+            'transactions.qr.create',
+            'transactions.qr.confirm'
+          ]
+        }
       ]
     },
     {
@@ -228,8 +294,18 @@ export class SidebarComponent {
       label: 'Divisas y Tarifas',
       icon: 'dollar-sign',
       items: [
-        { label: 'Tipos de Cambio', route: '/dashboard/fx/rates', icon: 'refresh-ccw' },
-        { label: 'Comisiones', route: '/dashboard/fx/fees', icon: 'percent' }
+        {
+          label: 'Tipos de Cambio',
+          route: '/dashboard/fx/rates',
+          icon: 'refresh-ccw',
+          permissions: ['fx.rates.read', 'fx.rates.detail', 'fx.rates.create', 'fx.rates.update', 'fx.rates.delete']
+        },
+        {
+          label: 'Comisiones',
+          route: '/dashboard/fx/fees',
+          icon: 'percent',
+          permissions: ['fx.fees.read', 'fx.fees.detail', 'fx.fees.create', 'fx.fees.update', 'fx.fees.delete']
+        }
       ]
     },
     {
@@ -237,7 +313,17 @@ export class SidebarComponent {
       label: 'Seguridad',
       icon: 'lock',
       items: [
-        { label: 'Límites Operativos', route: '/dashboard/limits/rules', icon: 'shield-alert' }
+        {
+          label: 'Configuraciones',
+          route: '/dashboard/settings',
+          icon: 'settings'
+        },
+        {
+          label: 'Límites Operativos',
+          route: '/dashboard/limits/rules',
+          icon: 'shield-alert',
+          permissions: ['limits.read', 'limits.detail', 'limits.create', 'limits.update', 'limits.delete', 'limits.evaluate']
+        }
       ]
     },
     {
@@ -245,19 +331,46 @@ export class SidebarComponent {
       label: 'Contabilidad',
       icon: 'book-open',
       items: [
-        { label: 'Períodos', route: '/dashboard/accounting/periods', icon: 'calendar' },
-        { label: 'Asientos', route: '/dashboard/accounting/journal-entries', icon: 'file-text' }
+        {
+          label: 'Períodos',
+          route: '/dashboard/accounting/periods',
+          icon: 'calendar',
+          permissions: ['accounting.periods.read', 'accounting.periods.create', 'accounting.periods.close']
+        },
+        {
+          label: 'Asientos',
+          route: '/dashboard/accounting/journal-entries',
+          icon: 'file-text',
+          permissions: ['accounting.journal.read', 'accounting.journal.detail']
+        }
+      ]
+    },
+    {
+      id: 'reportes',
+      label: 'Reportes',
+      icon: 'bar-chart-3',
+      items: [
+        {
+          label: 'Explorador de reportes',
+          route: '/dashboard/reports',
+          icon: 'file-chart-column',
+          permissions: ['reports.analytic.read', 'reports.managerial.read', 'reports.executions.read']
+        },
+        {
+          label: 'Historial',
+          route: '/dashboard/reports/history',
+          icon: 'clock',
+          permissions: ['reports.executions.read']
+        }
       ]
     }
   ];
 
-  // ============================================================
-  // MENÚ PARA PLATFORM (SuperAdmin)
-  // ============================================================
   platformMenuItems: MenuItem[] = [
     { label: 'Dashboard', route: '/platform/dashboard', icon: 'layout-dashboard' },
     { label: 'Mi perfil', route: '/platform/profile', icon: 'user-circle-2' },
     { label: 'Seguridad', route: '/platform/security', icon: 'lock' },
+    { label: 'Configuraciones', route: '/platform/settings', icon: 'settings' },
     { label: 'Respaldos', route: '/platform/backups', icon: 'arrow-down-to-line' },
     { label: 'Planes', route: '/platform/plans', icon: 'credit-card' },
     { label: 'Tenants', route: '/platform/tenants', icon: 'building-2' },
@@ -265,16 +378,27 @@ export class SidebarComponent {
     { label: 'Auditoría', route: '/platform/audit', icon: 'clipboard-list' }
   ];
 
-  // ============================================================
-  // DETECCIÓN DE RUTA
-  // ============================================================
+  readonly menuGroups: MenuGroup[] = this.isOwnerAdmin
+    ? this.tenantOwnerMenuGroups
+    : [...this.customerMenuGroups, ...this.tenantOwnerMenuGroups]
+        .map(group => ({
+          ...group,
+          items: group.items.filter(item => this.hasMenuItemAccess(item))
+        }))
+        .filter(group => group.items.length > 0);
+
   get isPlatformRoute(): boolean {
     return this.router.url.startsWith('/platform');
   }
 
-  // ============================================================
-  // MÉTODOS
-  // ============================================================
+  private hasMenuItemAccess(item: MenuItem): boolean {
+    if (!item.permissions || item.permissions.length === 0) {
+      return true;
+    }
+
+    return this.permissionService.hasAnyPermission(...item.permissions);
+  }
+
   toggleGroup(id: string): void {
     this.expandedGroups[id] = !this.expandedGroups[id];
   }

@@ -29,7 +29,15 @@ export class LoginFormComponent {
 
   onSubmit(): void {
     if (this.loginForm.valid && this.status !== 'loading') {
-      this.loginSubmit.emit(this.loginForm.value);
+      const tenantSlug = typeof this.loginForm.value.tenantSlug === 'string'
+        ? this.loginForm.value.tenantSlug.trim()
+        : '';
+
+      this.loginSubmit.emit({
+        email: this.loginForm.value.email,
+        password: this.loginForm.value.password,
+        tenantSlug
+      });
     } else {
       this.loginForm.markAllAsTouched();
     }

@@ -57,6 +57,7 @@ public class GetReportExecutionByIdUseCase {
 
     private ReportExportSummaryResponse toExportResponse(ReportExport export) {
         return new ReportExportSummaryResponse(
+                export.id(),
                 export.output(),
                 export.fileName(),
                 export.contentType(),

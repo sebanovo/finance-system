@@ -1,10 +1,10 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { AccountsService, AccountOwnerResponse, CreateAccountRequest, UpdateAccountRequest } from '../../../entities/accounts';
+import { AccountsService, AccountOwnerResponse, CreateAccountRequest, PageResponse, UpdateAccountRequest } from '../../../entities/accounts';
 
 export interface AccountListState {
   status: 'idle' | 'loading' | 'success' | 'error';
-  data: AccountOwnerResponse[];
+  page: PageResponse<AccountOwnerResponse> | null;
   error: string | null;
 }
 
@@ -16,36 +16,37 @@ export class AccountListUseCase {
 
   private readonly state = signal<AccountListState>({
     status: 'idle',
-    data: [],
+    page: null,
     error: null
   });
 
   readonly status = computed(() => this.state().status);
-  readonly data = computed(() => this.state().data);
+  readonly page = computed(() => this.state().page);
+  readonly data = computed(() => this.state().page?.content ?? []);
   readonly error = computed(() => this.state().error);
 
-  async loadAccounts(): Promise<void> {
-    this.state.set({ status: 'loading', data: [], error: null });
+  async loadAccounts(page = 0, size = 20): Promise<void> {
+    this.state.set({ status: 'loading', page: this.state().page, error: null });
 
     try {
-      const response = await firstValueFrom(this.accountsService.listAccounts());
+      const response = await firstValueFrom(this.accountsService.listAccounts(page, size));
 
       if (response.success && response.data) {
         this.state.set({ 
           status: 'success', 
-          data: response.data, 
+          page: response.data, 
           error: null 
         });
       } else {
         this.state.set({ 
           status: 'error', 
-          data: [], 
+          page: null, 
           error: response.message || 'No se pudieron cargar las cuentas bancarias' 
         });
       }
     } catch (err: any) {
       const errorMsg = err.error?.message || err.message || 'Error al conectar con el servidor';
-      this.state.set({ status: 'error', data: [], error: errorMsg });
+      this.state.set({ status: 'error', page: null, error: errorMsg });
     }
   }
 
@@ -54,7 +55,7 @@ export class AccountListUseCase {
     try {
       const response = await firstValueFrom(this.accountsService.createAccount(request));
       if (response.success) {
-        await this.loadAccounts(); // reload the list
+        await this.loadAccounts(this.page()?.number ?? 0, this.page()?.size ?? 20);
       } else {
         throw new Error(response.message || 'Error al crear la cuenta');
       }
@@ -67,7 +68,7 @@ export class AccountListUseCase {
     try {
       const response = await firstValueFrom(this.accountsService.updateAccount(id, request));
       if (response.success) {
-        await this.loadAccounts();
+        await this.loadAccounts(this.page()?.number ?? 0, this.page()?.size ?? 20);
       } else {
         throw new Error(response.message || 'Error al actualizar la cuenta');
       }
@@ -92,7 +93,7 @@ export class AccountListUseCase {
       }
       
       if (response.success) {
-        await this.loadAccounts(); // Recargar la lista después de cambiar el estado
+        await this.loadAccounts(this.page()?.number ?? 0, this.page()?.size ?? 20);
       } else {
         throw new Error(response.message || 'Error al cambiar el estado de la cuenta');
       }

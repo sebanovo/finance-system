@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, RouterOutlet } from '@angular/router';
 import { AuthFacade } from '../../shared/lib/auth/auth.facade';
@@ -8,6 +8,7 @@ import { SidebarComponent, HeaderComponent } from '../../widgets/layoutAdmin';
   selector: 'app-dashboard-page',
   standalone: true,
   imports: [CommonModule, RouterModule, RouterOutlet, SidebarComponent, HeaderComponent],
+
   template: `
     <div class="flex h-screen w-full overflow-hidden bg-[#F1F8E9]">
       <app-sidebar class="w-0 md:w-64 shrink-0 transition-all duration-300 relative z-50" (logoutAction)="logout()"></app-sidebar>
@@ -22,12 +23,8 @@ import { SidebarComponent, HeaderComponent } from '../../widgets/layoutAdmin';
     </div>
   `
 })
-export class DashboardPageComponent implements OnInit {
+export class DashboardPageComponent {
   private readonly authFacade = inject(AuthFacade);
-
-  ngOnInit(): void {
-    void this.authFacade.bootstrapCurrentUser();
-  }
 
   logout(): void {
     this.authFacade.logout();

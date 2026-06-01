@@ -1,121 +1,219 @@
-import { Component, effect, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { LucideAngularModule } from 'lucide-angular';
 import { PermissionListUseCase, RoleFormComponent, RoleFormUseCase, RoleListUseCase, RoleTableComponent } from '../../features/role-management';
 import { CreateTenantRoleRequest, TenantRoleResponse, UpdateTenantRoleRequest } from '../../entities/access';
+
+type RoleStatusFilter = 'all' | 'active' | 'inactive';
 
 @Component({
   selector: 'app-roles-page',
   standalone: true,
-  imports: [CommonModule, RoleTableComponent, RoleFormComponent],
+  imports: [CommonModule, FormsModule, LucideAngularModule, RoleTableComponent, RoleFormComponent],
   template: `
-    <div class="space-y-6 relative">
-      <div class="flex items-center justify-between">
-        <div>
-          <h2 class="text-2xl font-bold tracking-tight text-foreground">Roles y Permisos</h2>
-          <p class="text-muted-foreground">Define los niveles de acceso para tu equipo.</p>
-        </div>
-        
-        <button 
-          type="button"
-          (click)="openRoleModal()"
-          class="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-          Nuevo Rol
-        </button>
-      </div>
+    <div class="space-y-6 p-4 sm:p-6 lg:p-8 relative">
+      <section class="rounded-[28px] border border-[#C8E6C9] bg-gradient-to-br from-white via-[#F7FBF3] to-[#EAF6EB] p-6 shadow-[0_18px_50px_rgba(27,94,32,0.08)]">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div class="space-y-3">
+            <div class="inline-flex items-center gap-2 rounded-full border border-[#C8E6C9] bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#2E7D32]">
+              <span class="h-2 w-2 rounded-full bg-[#4CAF50]"></span>
+              Accesos y control
+            </div>
+            <div>
+              <h1 class="text-3xl font-black tracking-tight text-[#1B5E20] sm:text-4xl">
+                Roles del tenant
+              </h1>
+              <p class="mt-2 max-w-3xl text-sm leading-6 text-[#5F6F5F]">
+                Define qué permisos agrupan tus colaboradores y cómo se distribuyen dentro del tenant.
+              </p>
+            </div>
+          </div>
 
-      <!-- Estado: Error Lista -->
-      @if (roleListUseCase.status() === 'error') {
-        <div class="p-6 bg-destructive/10 border border-destructive/20 rounded-xl flex items-start gap-4">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-destructive mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
-          <div>
-            <h3 class="font-semibold text-destructive">Error al cargar roles</h3>
-            <p class="text-sm text-destructive/80 mt-1">{{ roleListUseCase.error() }}</p>
-            <button (click)="retry()" class="mt-3 text-sm font-medium text-destructive hover:underline">Intentar nuevamente</button>
+          <div class="flex flex-wrap gap-3">
+            <button
+              type="button"
+              (click)="reload()"
+              class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#C8E6C9] bg-white px-4 py-2 text-sm font-semibold text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
+              <lucide-icon name="refresh-ccw" [size]="16"></lucide-icon>
+              Recargar
+            </button>
+
+            <button
+              type="button"
+              (click)="openRoleModal()"
+              class="inline-flex cursor-pointer items-center gap-2 rounded-full bg-[#2E7D32] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#256428] shadow-sm">
+              <lucide-icon name="plus" [size]="16"></lucide-icon>
+              Nuevo rol
+            </button>
           </div>
         </div>
-      }
+      </section>
 
-      <!-- Estado: Cargando Inicial -->
-      @if (roleListUseCase.status() === 'loading' && roleListUseCase.data().length === 0) {
-        <div class="flex flex-col items-center justify-center p-12 text-muted-foreground gap-4">
-          <svg class="animate-spin h-8 w-8 text-primary" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <p>Cargando roles...</p>
+      <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <div class="rounded-2xl border border-[#C8E6C9] bg-white p-5 shadow-sm">
+          <p class="text-sm font-semibold text-[#567157]">Roles</p>
+          <p class="mt-4 text-3xl font-black text-[#1B5E20]">{{ stats().total }}</p>
+          <p class="mt-2 text-xs text-[#6B7D6C]">Cargados en la página</p>
         </div>
-      }
+        <div class="rounded-2xl border border-[#C8E6C9] bg-white p-5 shadow-sm">
+          <p class="text-sm font-semibold text-[#567157]">Activos</p>
+          <p class="mt-4 text-3xl font-black text-[#1B5E20]">{{ stats().active }}</p>
+          <p class="mt-2 text-xs text-[#6B7D6C]">Disponibles para asignar</p>
+        </div>
+        <div class="rounded-2xl border border-[#C8E6C9] bg-white p-5 shadow-sm">
+          <p class="text-sm font-semibold text-[#567157]">Inactivos</p>
+          <p class="mt-4 text-3xl font-black text-[#1B5E20]">{{ stats().inactive }}</p>
+          <p class="mt-2 text-xs text-[#6B7D6C]">Suspendidos o deshabilitados</p>
+        </div>
+        <div class="rounded-2xl border border-[#C8E6C9] bg-white p-5 shadow-sm">
+          <p class="text-sm font-semibold text-[#567157]">Permisos asignados</p>
+          <p class="mt-4 text-3xl font-black text-[#1B5E20]">{{ stats().permissionLinks }}</p>
+          <p class="mt-2 text-xs text-[#6B7D6C]">Suma total por rol</p>
+        </div>
+        <div class="rounded-2xl border border-[#C8E6C9] bg-white p-5 shadow-sm">
+          <p class="text-sm font-semibold text-[#567157]">Filtrados</p>
+          <p class="mt-4 text-3xl font-black text-[#1B5E20]">{{ stats().filtered }}</p>
+          <p class="mt-2 text-xs text-[#6B7D6C]">Resultados visibles</p>
+        </div>
+      </section>
 
-      <!-- Estado: Éxito o Recargando -->
-      @if (roleListUseCase.status() === 'success' || (roleListUseCase.status() === 'loading' && roleListUseCase.data().length > 0)) {
-        @if (roleListUseCase.status() === 'loading') {
-          <div class="absolute top-0 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-b-md text-xs shadow-md animate-pulse z-10">Actualizando...</div>
+      <section class="rounded-[24px] border border-[#C8E6C9] bg-white p-4 sm:p-6 shadow-sm">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div class="space-y-1">
+            <h2 class="text-lg font-bold text-[#1B5E20]">Filtros</h2>
+            <p class="text-sm text-[#6B7D6C]">Filtra por nombre, descripción o estado.</p>
+          </div>
+
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label class="flex min-w-[260px] items-center gap-3 rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-4 py-3">
+              <span class="text-xs font-bold uppercase tracking-[0.12em] text-[#6B7D6C]">Buscar</span>
+              <input
+                type="text"
+                [ngModel]="searchQuery()"
+                (ngModelChange)="searchQuery.set($event)"
+                placeholder="Nombre, descripción o permiso"
+                class="w-full border-0 bg-transparent text-sm text-[#1B5E20] outline-none placeholder:text-[#9AA99A]" />
+            </label>
+
+            <select
+              [ngModel]="statusFilter()"
+              (ngModelChange)="statusFilter.set($event)"
+              class="h-12 rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-4 text-sm text-[#1B5E20] outline-none transition-colors focus:border-[#2E7D32] focus:bg-white">
+              <option value="all">Todos los estados</option>
+              <option value="active">Activos</option>
+              <option value="inactive">Inactivos</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <section class="rounded-[24px] border border-[#C8E6C9] bg-white p-4 sm:p-6 shadow-sm">
+        <div class="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-bold text-[#1B5E20]">Listado de roles</h2>
+            <p class="text-sm text-[#6B7D6C]">
+              {{ filteredRoles().length }} resultado(s) de {{ roleListUseCase.data().length }} rol(es)
+            </p>
+          </div>
+          <div class="rounded-full border border-[#DDEED8] bg-[#FAFCF8] px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-[#6B7D6C]">
+            {{ permissionListUseCase.data().length }} permisos en catálogo
+          </div>
+        </div>
+
+        @if (roleListUseCase.status() === 'loading' && roleListUseCase.data().length === 0) {
+          <div class="flex flex-col items-center justify-center gap-4 p-12 text-[#6B7D6C]">
+            <svg class="h-8 w-8 animate-spin text-[#2E7D32]" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p>Cargando roles...</p>
+          </div>
         }
-        
-        <app-role-table 
-          [roles]="roleListUseCase.data()"
-          (edit)="openRoleModal($event)"
-          (toggleStatus)="handleToggleStatus($event.id, $event.currentStatus)">
-        </app-role-table>
-      }
 
-      <!-- Toast Éxito -->
+        @if (roleListUseCase.status() === 'error') {
+          <div class="rounded-2xl border border-red-200 bg-red-50 p-6 flex items-start gap-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 text-red-700">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" x2="12" y1="8" y2="12"></line>
+              <line x1="12" x2="12.01" y1="16" y2="16"></line>
+            </svg>
+            <div>
+              <h3 class="font-semibold text-red-700">Error al cargar roles</h3>
+              <p class="mt-1 text-sm text-red-700/80">{{ roleListUseCase.error() }}</p>
+              <button (click)="reload()" class="mt-3 cursor-pointer text-sm font-semibold text-red-700 hover:underline">Intentar nuevamente</button>
+            </div>
+          </div>
+        }
+
+        @if (roleListUseCase.status() === 'success' || (roleListUseCase.status() === 'loading' && roleListUseCase.data().length > 0)) {
+          <app-role-table
+            [roles]="filteredRoles()"
+            (edit)="openRoleModal($event)"
+            (toggleStatus)="handleToggleStatus($event.id, $event.currentStatus)">
+          </app-role-table>
+        }
+
+        @if (roleListUseCase.status() !== 'loading' && filteredRoles().length === 0) {
+          <div class="rounded-2xl border border-dashed border-[#C8E6C9] bg-[#FAFCF8] px-4 py-8 text-sm text-[#6B7D6C]">
+            No hay roles que coincidan con los filtros actuales.
+          </div>
+        }
+      </section>
+
       @if (showSuccessToast()) {
-        <div class="fixed bottom-4 right-4 bg-primary text-primary-foreground px-4 py-3 rounded-md shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4 z-50">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <div class="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full bg-[#2E7D32] px-4 py-3 text-sm font-semibold text-white shadow-lg">
+          <lucide-icon name="check-circle" [size]="16"></lucide-icon>
           Operación exitosa
         </div>
       }
-    </div>
 
-    <!-- Modal Formulario de Rol -->
-    @if (isModalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-end">
-        <!-- Backdrop -->
-        <div class="absolute inset-0 bg-background/80 backdrop-blur-sm animate-in fade-in" (click)="closeRoleModal()"></div>
-        
-        <!-- Slide-over panel -->
-        <div class="relative bg-card w-full max-w-2xl h-full shadow-2xl border-l border-border flex flex-col animate-in slide-in-from-right duration-300">
-          
-          <!-- Header -->
-          <div class="flex items-center justify-between px-6 py-4 border-b border-border bg-card">
-            <h3 class="text-lg font-semibold text-foreground">
-              {{ roleToEdit() ? 'Editar Rol' : 'Crear Nuevo Rol' }}
-            </h3>
-            <button (click)="closeRoleModal()" class="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted" [disabled]="roleFormUseCase.status() === 'loading'">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
-            </button>
-          </div>
-
-          <!-- Body -->
-          <div class="flex-1 overflow-hidden">
-            @if (roleFormUseCase.error()) {
-              <div class="m-6 p-4 bg-destructive/10 text-destructive border border-destructive/20 rounded-lg text-sm">
-                {{ roleFormUseCase.error() }}
+      @if (isModalOpen()) {
+        <div class="app-modal-overlay">
+          <div class="w-full max-w-5xl rounded-[28px] border border-[#C8E6C9] bg-white shadow-2xl overflow-hidden flex h-[calc(100vh-2rem)] flex-col">
+            <div class="app-modal-header border-b border-[#E8F2E2] px-6 py-5">
+              <div>
+                <h2 class="app-modal-title">
+                  {{ roleToEdit() ? 'Editar rol' : 'Nuevo rol' }}
+                </h2>
+                <p class="app-modal-subtitle">
+                  {{ roleToEdit() ? 'Ajusta nombre y permisos del rol.' : 'Crea un rol y define su alcance desde el inicio.' }}
+                </p>
               </div>
-            }
+              <button
+                type="button"
+                (click)="closeRoleModal()"
+                class="cursor-pointer rounded-full border border-[#DDEED8] p-2 text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]"
+                [disabled]="roleFormUseCase.status() === 'loading'">
+                <lucide-icon name="x" [size]="20"></lucide-icon>
+              </button>
+            </div>
 
-            @if (permissionListUseCase.status() === 'loading') {
-              <div class="flex justify-center p-12 text-muted-foreground">Cargando permisos disponibles...</div>
-            } @else if (permissionListUseCase.status() === 'error') {
-              <div class="m-6 p-4 bg-destructive/10 text-destructive rounded-lg text-sm">
-                No se pudieron cargar los permisos: {{ permissionListUseCase.error() }}
-              </div>
-            } @else {
-              <app-role-form
-                [status]="roleFormUseCase.status()"
-                [roleToEdit]="roleToEdit()"
-                [permissions]="permissionListUseCase.data()"
-                (submitCreate)="handleCreateRole($event)"
-                (submitUpdate)="handleUpdateRole($event.id, $event.request)"
-                (cancel)="closeRoleModal()">
-              </app-role-form>
-            }
+            <div class="flex-1 overflow-hidden">
+              @if (permissionListUseCase.status() === 'loading') {
+                <div class="flex h-full items-center justify-center p-12 text-[#6B7D6C]">
+                  Cargando permisos disponibles...
+                </div>
+              } @else if (permissionListUseCase.status() === 'error') {
+                <div class="m-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                  No se pudieron cargar los permisos: {{ permissionListUseCase.error() }}
+                </div>
+              } @else {
+                <app-role-form
+                  class="h-full"
+                  [status]="roleFormUseCase.status()"
+                  [roleToEdit]="roleToEdit()"
+                  [permissions]="permissionListUseCase.data()"
+                  (submitCreate)="handleCreateRole($event)"
+                  (submitUpdate)="handleUpdateRole($event.id, $event.request)"
+                  (cancel)="closeRoleModal()">
+                </app-role-form>
+              }
+            </div>
           </div>
         </div>
-      </div>
-    }
+      }
+    </div>
   `
 })
 export class RolesPageComponent implements OnInit {
@@ -123,9 +221,47 @@ export class RolesPageComponent implements OnInit {
   public readonly permissionListUseCase = inject(PermissionListUseCase);
   public readonly roleFormUseCase = inject(RoleFormUseCase);
 
+  public readonly searchQuery = signal('');
+  public readonly statusFilter = signal<RoleStatusFilter>('all');
   public readonly isModalOpen = signal(false);
   public readonly roleToEdit = signal<TenantRoleResponse | null>(null);
   public readonly showSuccessToast = signal(false);
+
+  readonly filteredRoles = computed(() => {
+    const query = this.searchQuery().trim().toLowerCase();
+    const statusFilter = this.statusFilter();
+
+    return this.roleListUseCase.data().filter(role => {
+      const statusMatches =
+        statusFilter === 'all' ||
+        (statusFilter === 'active' && role.active) ||
+        (statusFilter === 'inactive' && !role.active);
+
+      const searchableText = [
+        role.name,
+        role.description,
+        role.permissionCodes.join(' ')
+      ].join(' ').toLowerCase();
+
+      const queryMatches = query.length === 0 || searchableText.includes(query);
+
+      return statusMatches && queryMatches;
+    });
+  });
+
+  readonly stats = computed(() => {
+    const roles = this.roleListUseCase.data();
+    const active = roles.filter(role => role.active).length;
+    const permissionLinks = roles.reduce((acc, role) => acc + role.permissionCodes.length, 0);
+
+    return {
+      total: roles.length,
+      active,
+      inactive: roles.length - active,
+      permissionLinks,
+      filtered: this.filteredRoles().length
+    };
+  });
 
   constructor() {
     effect(() => {
@@ -139,25 +275,25 @@ export class RolesPageComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.roleListUseCase.loadRoles();
-    this.permissionListUseCase.loadPermissions(); // Pre-cargar permisos
+    this.reload();
   }
 
-  retry(): void {
+  reload(): void {
     this.roleListUseCase.loadRoles();
+    this.permissionListUseCase.loadPermissions();
   }
 
   openRoleModal(role: TenantRoleResponse | null = null): void {
     this.roleFormUseCase.resetState();
     this.roleToEdit.set(role);
-    this.permissionListUseCase.loadPermissions(); // Asegurar que estén cargados
+    this.permissionListUseCase.loadPermissions();
     this.isModalOpen.set(true);
   }
 
   closeRoleModal(): void {
     if (this.roleFormUseCase.status() === 'loading') return;
     this.isModalOpen.set(false);
-    setTimeout(() => this.roleToEdit.set(null), 300); // Esperar animación
+    setTimeout(() => this.roleToEdit.set(null), 300);
   }
 
   handleCreateRole(request: CreateTenantRoleRequest): void {

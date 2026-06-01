@@ -11,67 +11,55 @@ import { UserListUseCase } from '../../../user-management';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, LucideAngularModule],
   template: `
-    <!-- Overlay -->
-    <div 
-      *ngIf="isOpen" 
-      class="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 transition-opacity"
-      (click)="close()">
-    </div>
-
-    <!-- Slide-over -->
-    <div 
-      class="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-card shadow-2xl border-l border-border transform transition-transform duration-300 ease-in-out flex flex-col"
-      [class.translate-x-0]="isOpen"
-      [class.translate-x-full]="!isOpen">
-      
-      <!-- Header -->
-      <div class="flex items-center justify-between p-6 border-b border-border bg-muted/30">
-        <div>
-          <h2 class="text-xl font-bold text-foreground">
-            {{ isEditing ? 'Editar Cuenta' : 'Nueva Cuenta' }}
-          </h2>
-          <p class="text-sm text-muted-foreground mt-1">
-            {{ isEditing ? 'Modifica los detalles de la cuenta.' : 'Crea una nueva cuenta bancaria para un cliente.' }}
-          </p>
+    <div *ngIf="isOpen" class="app-modal-overlay" (click)="close()">
+      <div class="app-modal-panel app-modal-panel-sm" (click)="$event.stopPropagation()">
+        <div class="app-modal-header border-b border-[#E8F2E2] pb-5">
+          <div>
+            <h2 class="app-modal-title">
+              {{ isEditing ? 'Editar cuenta' : 'Nueva cuenta' }}
+            </h2>
+            <p class="app-modal-subtitle">
+              {{ isEditing ? 'Modifica los detalles de la cuenta.' : 'Crea una nueva cuenta bancaria para un cliente.' }}
+            </p>
+          </div>
+          <button 
+            (click)="close()"
+            class="cursor-pointer rounded-full border border-[#DDEED8] p-2 text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
+            <lucide-icon name="x" [size]="20"></lucide-icon>
+          </button>
         </div>
-        <button 
-          (click)="close()"
-          class="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
-          <lucide-icon name="x" [size]="20"></lucide-icon>
-        </button>
-      </div>
 
-      <!-- Content -->
-      <div class="flex-1 overflow-y-auto p-6">
+        <div class="max-h-[70vh] overflow-y-auto pt-6">
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
           
           <!-- Usuario (Sólo creación) -->
           <div *ngIf="!isEditing" class="space-y-2">
-            <label class="text-sm font-medium text-foreground">Cliente (Usuario)</label>
+            <label class="text-sm font-semibold text-[#567157]">Cliente (usuario)</label>
             <div class="relative">
-              <lucide-icon name="user-circle-2" class="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground"></lucide-icon>
+              <lucide-icon name="user-circle-2" class="absolute left-3 top-3 h-4 w-4 text-[#6B7D6C]"></lucide-icon>
               <select 
                 formControlName="userId"
-                class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pl-10">
+                class="flex h-11 w-full items-center justify-between rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 pl-10 text-sm text-[#1B5E20] outline-none transition-colors focus:border-[#2E7D32] focus:bg-white">
                 <option value="" disabled selected>Selecciona un cliente</option>
                 <option *ngFor="let user of userListUseCase.data()" [value]="user.id">
                   {{ user.firstName }} {{ user.lastName }} ({{ user.email }})
                 </option>
               </select>
             </div>
-            <p *ngIf="form.get('userId')?.invalid && form.get('userId')?.touched" class="text-xs text-destructive">
+            <p *ngIf="form.get('userId')?.invalid && form.get('userId')?.touched" class="text-xs text-red-600">
               El cliente es obligatorio.
             </p>
           </div>
 
           <!-- Tipo de Cuenta (Sólo creación) -->
           <div *ngIf="!isEditing" class="space-y-2">
-            <label class="text-sm font-medium text-foreground">Tipo de Cuenta</label>
+            <label class="text-sm font-semibold text-[#567157]">Tipo de cuenta</label>
             <div class="relative">
-              <lucide-icon name="building-2" class="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground"></lucide-icon>
+              <lucide-icon name="building-2" class="absolute left-3 top-3 h-4 w-4 text-[#6B7D6C]"></lucide-icon>
               <select 
                 formControlName="accountType"
-                class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 pl-10">
+                class="flex h-11 w-full items-center justify-between rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 pl-10 text-sm text-[#1B5E20] outline-none transition-colors focus:border-[#2E7D32] focus:bg-white">
+                <option value="WALLET">Billetera (WALLET)</option>
                 <option value="SAVINGS">Ahorros (SAVINGS)</option>
                 <option value="CHECKING">Corriente (CHECKING)</option>
               </select>
@@ -80,10 +68,10 @@ import { UserListUseCase } from '../../../user-management';
 
           <!-- Nombre de Cuenta -->
           <div class="space-y-2">
-            <label class="text-sm font-medium text-foreground">Nombre de la Cuenta</label>
+            <label class="text-sm font-semibold text-[#567157]">Nombre de la cuenta</label>
             <select 
               formControlName="accountName"
-              class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+              class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition-colors focus:border-[#2E7D32] focus:bg-white">
               <option value="" disabled selected>Selecciona un nombre</option>
               <option value="MAIN_WALLET">Billetera Principal</option>
               <option value="SAVINGS_ACCOUNT">Cuenta de Ahorros</option>
@@ -101,10 +89,10 @@ import { UserListUseCase } from '../../../user-management';
 
           <!-- Moneda (Sólo creación) -->
           <div *ngIf="!isEditing" class="space-y-2">
-            <label class="text-sm font-medium text-foreground">Moneda</label>
+            <label class="text-sm font-semibold text-[#567157]">Moneda</label>
             <select 
               formControlName="currency"
-              class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+              class="flex h-11 w-full items-center justify-between rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition-colors focus:border-[#2E7D32] focus:bg-white">
               <option value="USD">Dólar Estadounidense (USD)</option>
               <option value="BOB">Boliviano (BOB)</option>
               <option value="EUR">Euro (EUR)</option>
@@ -113,12 +101,12 @@ import { UserListUseCase } from '../../../user-management';
 
           <!-- Alias Personalizado -->
           <div class="space-y-2">
-            <label class="text-sm font-medium text-foreground">Alias Personalizado (Opcional)</label>
+            <label class="text-sm font-semibold text-[#567157]">Alias personalizado (opcional)</label>
             <input 
               type="text" 
               formControlName="customAlias"
               placeholder="Ej. Ahorros Viaje"
-              class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
+              class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition-colors placeholder:text-[#9AA99A] focus:border-[#2E7D32] focus:bg-white" />
           </div>
 
           <!-- Cuenta Principal -->
@@ -127,34 +115,33 @@ import { UserListUseCase } from '../../../user-management';
               type="checkbox" 
               formControlName="primary"
               id="primaryAccount"
-              class="peer h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground" />
-            <label for="primaryAccount" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-foreground">
+              class="peer h-4 w-4 shrink-0 rounded-sm border border-[#2E7D32] ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E7D32] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-[#2E7D32] data-[state=checked]:text-white" />
+            <label for="primaryAccount" class="text-sm font-medium leading-none text-[#1B5E20] peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               Establecer como cuenta principal
             </label>
           </div>
         </form>
-      </div>
-
-      <!-- Footer -->
-      <div class="p-6 border-t border-border bg-muted/10 flex justify-end gap-3">
-        <button 
-          type="button" 
-          (click)="close()"
-          class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
-          Cancelar
-        </button>
-        <button 
-          type="button" 
-          (click)="onSubmit()"
-          [disabled]="form.invalid || isSubmitting"
-          class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 gap-2 shadow-sm">
-          <lucide-icon *ngIf="!isSubmitting" name="save" [size]="16"></lucide-icon>
-          <svg *ngIf="isSubmitting" class="animate-spin h-4 w-4 text-primary-foreground" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          {{ isEditing ? 'Actualizar' : 'Crear Cuenta' }}
-        </button>
+        <div class="app-modal-footer mt-6 border-t border-[#E8F2E2] pt-5">
+          <button 
+            type="button" 
+            (click)="close()"
+            class="cursor-pointer rounded-full border border-[#DDEED8] bg-white px-5 py-2.5 text-sm font-semibold text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
+            Cancelar
+          </button>
+          <button 
+            type="button" 
+            (click)="onSubmit()"
+            [disabled]="form.invalid || isSubmitting"
+            class="cursor-pointer inline-flex items-center justify-center gap-2 rounded-full bg-[#2E7D32] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#256428] disabled:cursor-not-allowed disabled:opacity-50">
+            <lucide-icon *ngIf="!isSubmitting" name="save" [size]="16"></lucide-icon>
+            <svg *ngIf="isSubmitting" class="h-4 w-4 animate-spin text-white" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ isEditing ? 'Actualizar' : 'Crear cuenta' }}
+          </button>
+        </div>
+        </div>
       </div>
     </div>
   `

@@ -17,7 +17,7 @@ import { LucideAngularModule } from 'lucide-angular';
           <h3 class="text-lg font-semibold text-foreground">
             {{ isEditing ? 'Editar' : 'Nueva' }} Comisión
           </h3>
-          <button type="button" (click)="close()" class="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted" [disabled]="loading">
+          <button type="button" (click)="close()" class="cursor-pointer text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted" [disabled]="loading">
             <lucide-icon name="x" [size]="20"></lucide-icon>
           </button>
         </div>
@@ -127,14 +127,14 @@ import { LucideAngularModule } from 'lucide-angular';
               <button 
                 type="button" 
                 (click)="close()"
-                class="px-4 py-2 border border-border bg-background hover:bg-muted text-foreground rounded-md text-sm font-medium transition-colors"
+                class="cursor-pointer px-4 py-2 border border-border bg-background hover:bg-muted text-foreground rounded-md text-sm font-medium transition-colors"
                 [disabled]="loading">
                 Cancelar
               </button>
               
               <button 
                 type="submit" 
-                class="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
+                class="cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
                 [disabled]="form.invalid || loading">
                 @if (loading) {
                   <svg class="animate-spin h-4 w-4 text-primary-foreground" viewBox="0 0 24 24">

@@ -3,8 +3,11 @@ package com.financesystem.finance_api.common.config;
 import com.financesystem.finance_api.common.tenancy.interceptor.TenantContextInterceptor;
 import com.financesystem.finance_api.common.tenancy.maintenance.TenantMaintenanceInterceptor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.util.List;
 
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
@@ -40,5 +43,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/actuator/**"
                 )
                 .order(1);
+    }
+
+    @Override
+    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+        resolvers.add(0, new com.financesystem.finance_api.common.pagination.LegacyPageableArgumentResolver());
     }
 }

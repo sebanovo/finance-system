@@ -12,10 +12,15 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,6 +38,7 @@ public class ReportController {
     private final RunReportUseCase runReportUseCase;
     private final ListReportExecutionsUseCase listReportExecutionsUseCase;
     private final GetReportExecutionByIdUseCase getReportExecutionByIdUseCase;
+    private final DownloadReportExportUseCase downloadReportExportUseCase;
     private final RerunReportExecutionUseCase rerunReportExecutionUseCase;
 
     public ReportController(
@@ -43,6 +49,7 @@ public class ReportController {
             RunReportUseCase runReportUseCase,
             ListReportExecutionsUseCase listReportExecutionsUseCase,
             GetReportExecutionByIdUseCase getReportExecutionByIdUseCase,
+            DownloadReportExportUseCase downloadReportExportUseCase,
             RerunReportExecutionUseCase rerunReportExecutionUseCase
     ) {
         this.listAnalyticReportsUseCase = listAnalyticReportsUseCase;
@@ -52,6 +59,7 @@ public class ReportController {
         this.runReportUseCase = runReportUseCase;
         this.listReportExecutionsUseCase = listReportExecutionsUseCase;
         this.getReportExecutionByIdUseCase = getReportExecutionByIdUseCase;
+        this.downloadReportExportUseCase = downloadReportExportUseCase;
         this.rerunReportExecutionUseCase = rerunReportExecutionUseCase;
     }
 
@@ -117,6 +125,19 @@ public class ReportController {
                 "Report execution retrieved successfully",
                 getReportExecutionByIdUseCase.execute(executionId)
         );
+    }
+
+    @GetMapping("/exports/{exportId}/download")
+    @PreAuthorize("hasAuthority('reports.executions.read')")
+    public ResponseEntity<byte[]> downloadExport(@PathVariable UUID exportId) {
+        var export = downloadReportExportUseCase.execute(exportId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(export.contentType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
+                        .filename(export.fileName(), StandardCharsets.UTF_8)
+                        .build()
+                        .toString())
+                .body(export.fileContent());
     }
 
     @PostMapping("/executions/{executionId}/rerun")

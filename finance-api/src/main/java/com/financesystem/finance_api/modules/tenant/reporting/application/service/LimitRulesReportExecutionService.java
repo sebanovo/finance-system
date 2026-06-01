@@ -302,6 +302,7 @@ public class LimitRulesReportExecutionService {
                                 artifact.fileName(),
                                 artifact.contentType(),
                                 artifact.bytes().length,
+                                artifact.bytes(),
                                 null
                         )
                 );

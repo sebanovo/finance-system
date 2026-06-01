@@ -20,6 +20,8 @@ public interface ReportExecutionRepository {
 
     ReportExport saveExport(ReportExport export);
 
+    Optional<ReportExport> findExportById(UUID id);
+
     List<ReportExport> findExportsByExecutionId(UUID executionId);
 
     List<ReportExecution> findRerunsBySourceExecutionId(UUID sourceExecutionId);

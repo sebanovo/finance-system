@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../shared/api';
 import {
+  PageResponse,
   FxExchangeRateResponse,
   OperationFeeResponse,
   CreateFxExchangeRateRequest,
@@ -20,8 +21,8 @@ export class FxService {
   private readonly API_URL = `${environment.apiUrl}/api/fx`;
 
   // Rates
-  listRates(): Observable<ApiResponse<FxExchangeRateResponse[]>> {
-    return this.http.get<ApiResponse<FxExchangeRateResponse[]>>(`${this.API_URL}/rates`);
+  listRates(page = 0, size = 20): Observable<ApiResponse<PageResponse<FxExchangeRateResponse>>> {
+    return this.http.get<ApiResponse<PageResponse<FxExchangeRateResponse>>>(`${this.API_URL}/rates?page=${page}&size=${size}`);
   }
 
   getRate(id: string): Observable<ApiResponse<FxExchangeRateResponse>> {
@@ -41,8 +42,8 @@ export class FxService {
   }
 
   // Fees
-  listFees(): Observable<ApiResponse<OperationFeeResponse[]>> {
-    return this.http.get<ApiResponse<OperationFeeResponse[]>>(`${this.API_URL}/fees`);
+  listFees(page = 0, size = 20): Observable<ApiResponse<PageResponse<OperationFeeResponse>>> {
+    return this.http.get<ApiResponse<PageResponse<OperationFeeResponse>>>(`${this.API_URL}/fees?page=${page}&size=${size}`);
   }
 
   getFee(id: string): Observable<ApiResponse<OperationFeeResponse>> {

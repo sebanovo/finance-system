@@ -14,10 +14,10 @@ export class SummaryCardsComponent {
   @Input() data: TenantSummaryResponse | null = null;
 
   get usagePercent(): number {
-    if (!this.data || this.data.maxUsers <= 0) {
+    if (!this.data || this.data.summary.users.total <= 0) {
       return 0;
     }
 
-    return Math.min(100, Math.round((this.data.totalUsers / this.data.maxUsers) * 100));
+    return Math.min(100, Math.round((this.data.summary.users.active / this.data.summary.users.total) * 100));
   }
 }

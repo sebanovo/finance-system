@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiResponse } from '../../../shared/api';
-import { TenantUserResponse } from '../model/tenant-user-response.model';
+import { PageResponse, TenantUserResponse } from '../model/tenant-user-response.model';
 import { CreateTenantUserRequest } from '../model/create-tenant-user-request.model';
 import { environment } from '../../../../environments/environment';
 
@@ -13,8 +14,17 @@ export class UserService {
   private http = inject(HttpClient);
   private readonly API_URL = `${environment.apiUrl}/api/users`;
 
-  getUsers(): Observable<ApiResponse<TenantUserResponse[]>> {
-    return this.http.get<ApiResponse<TenantUserResponse[]>>(this.API_URL);
+  private buildPageParams(page = 0, size = 20): HttpParams {
+    return new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+  }
+
+  getUsers(page = 0, size = 20): Observable<ApiResponse<PageResponse<TenantUserResponse>>> {
+    return this.http.get<ApiResponse<PageResponse<TenantUserResponse>>>(
+      this.API_URL,
+      { params: this.buildPageParams(page, size) }
+    );
   }
 
   getUserById(id: string): Observable<ApiResponse<TenantUserResponse>> {

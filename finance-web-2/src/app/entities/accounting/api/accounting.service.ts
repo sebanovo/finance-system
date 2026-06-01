@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../shared/api';
 import {
+  PageResponse,
   AccountingPeriodResponse,
   CloseAccountingPeriodRequest,
   CreateAccountingPeriodRequest,
@@ -18,8 +19,10 @@ export class AccountingService {
   private readonly API_URL = `${environment.apiUrl}/api/accounting`;
 
   // --- Periods ---
-  listPeriods(): Observable<ApiResponse<AccountingPeriodResponse[]>> {
-    return this.http.get<ApiResponse<AccountingPeriodResponse[]>>(`${this.API_URL}/periods`);
+  listPeriods(page = 0, size = 20): Observable<ApiResponse<PageResponse<AccountingPeriodResponse>>> {
+    return this.http.get<ApiResponse<PageResponse<AccountingPeriodResponse>>>(`${this.API_URL}/periods`, {
+      params: { page, size }
+    });
   }
 
   createPeriod(request: CreateAccountingPeriodRequest): Observable<ApiResponse<AccountingPeriodResponse>> {
@@ -31,8 +34,10 @@ export class AccountingService {
   }
 
   // --- Journal Entries ---
-  listJournalEntries(): Observable<ApiResponse<JournalEntryResponse[]>> {
-    return this.http.get<ApiResponse<JournalEntryResponse[]>>(`${this.API_URL}/journal-entries`);
+  listJournalEntries(page = 0, size = 20): Observable<ApiResponse<PageResponse<JournalEntryResponse>>> {
+    return this.http.get<ApiResponse<PageResponse<JournalEntryResponse>>>(`${this.API_URL}/journal-entries`, {
+      params: { page, size }
+    });
   }
 
   getJournalEntryById(id: string): Observable<ApiResponse<JournalEntryResponse>> {

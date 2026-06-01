@@ -1,10 +1,10 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { FxService, OperationFeeResponse } from '../../../entities/fx';
+import { FxService, OperationFeeResponse, PageResponse } from '../../../entities/fx';
 
 export interface FxFeesListState {
   status: 'idle' | 'loading' | 'success' | 'error';
-  data: OperationFeeResponse[];
+  page: PageResponse<OperationFeeResponse> | null;
   error: string | null;
 }
 
@@ -16,43 +16,44 @@ export class FxFeesListUseCase {
 
   private readonly state = signal<FxFeesListState>({
     status: 'idle',
-    data: [],
+    page: null,
     error: null
   });
 
   readonly status = computed(() => this.state().status);
-  readonly data = computed(() => this.state().data);
+  readonly page = computed(() => this.state().page);
+  readonly data = computed(() => this.state().page?.content ?? []);
   readonly error = computed(() => this.state().error);
+  private currentPage = 0;
+  private currentSize = 20;
 
-  async loadFees(): Promise<void> {
-    this.state.set({ status: 'loading', data: [], error: null });
+  async loadFees(page = this.currentPage, size = this.currentSize): Promise<void> {
+    this.currentPage = page;
+    this.currentSize = size;
+    this.state.set({ status: 'loading', page: this.state().page, error: null });
 
     try {
-      const response = await firstValueFrom(this.fxService.listFees());
+      const response = await firstValueFrom(this.fxService.listFees(page, size));
 
       if (response.success && response.data) {
-        this.state.set({ 
-          status: 'success', 
-          data: response.data, 
-          error: null 
-        });
+        this.state.set({ status: 'success', page: response.data, error: null });
       } else {
-        this.state.set({ 
-          status: 'error', 
-          data: [], 
-          error: response.message || 'No se pudieron cargar las comisiones operativas' 
+        this.state.set({
+          status: 'error',
+          page: null,
+          error: response.message || 'No se pudieron cargar las comisiones operativas'
         });
       }
     } catch (err: any) {
       const errorMsg = err.error?.message || err.message || 'Error al conectar con el servidor';
-      this.state.set({ status: 'error', data: [], error: errorMsg });
+      this.state.set({ status: 'error', page: null, error: errorMsg });
     }
   }
 
   async deleteFee(id: string): Promise<boolean> {
     try {
       await firstValueFrom(this.fxService.deleteFee(id));
-      await this.loadFees();
+      await this.loadFees(this.currentPage, this.currentSize);
       return true;
     } catch (err) {
       return false;
@@ -63,7 +64,7 @@ export class FxFeesListUseCase {
     this.state.set({ ...this.state(), status: 'loading', error: null });
     try {
       await firstValueFrom(this.fxService.createFee(request));
-      await this.loadFees();
+      await this.loadFees(this.currentPage, this.currentSize);
     } catch (err: any) {
       const errorMsg = err.error?.message || err.message || 'Error al crear la comisión';
       this.state.set({ ...this.state(), status: 'error', error: errorMsg });
@@ -75,7 +76,7 @@ export class FxFeesListUseCase {
     this.state.set({ ...this.state(), status: 'loading', error: null });
     try {
       await firstValueFrom(this.fxService.updateFee(id, request));
-      await this.loadFees();
+      await this.loadFees(this.currentPage, this.currentSize);
     } catch (err: any) {
       const errorMsg = err.error?.message || err.message || 'Error al actualizar la comisión';
       this.state.set({ ...this.state(), status: 'error', error: errorMsg });

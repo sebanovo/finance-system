@@ -1,10 +1,16 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { LimitsService, LimitRuleResponse, CreateLimitRuleRequest, UpdateLimitRuleRequest } from '../../../entities/limits';
+import {
+  LimitsService,
+  LimitRuleResponse,
+  CreateLimitRuleRequest,
+  UpdateLimitRuleRequest,
+  PageResponse
+} from '../../../entities/limits';
 
 export interface LimitRulesListState {
   status: 'idle' | 'loading' | 'success' | 'error';
-  data: LimitRuleResponse[];
+  page: PageResponse<LimitRuleResponse> | null;
   error: string | null;
 }
 
@@ -16,36 +22,37 @@ export class LimitRulesListUseCase {
 
   private readonly state = signal<LimitRulesListState>({
     status: 'idle',
-    data: [],
+    page: null,
     error: null
   });
 
   readonly status = computed(() => this.state().status);
-  readonly data = computed(() => this.state().data);
+  readonly page = computed(() => this.state().page);
+  readonly data = computed(() => this.state().page?.content ?? []);
   readonly error = computed(() => this.state().error);
 
-  async loadRules(): Promise<void> {
-    this.state.set({ status: 'loading', data: [], error: null });
+  async loadRules(page = 0, size = 20): Promise<void> {
+    this.state.set({ status: 'loading', page: this.state().page, error: null });
 
     try {
-      const response = await firstValueFrom(this.limitsService.listRules());
+      const response = await firstValueFrom(this.limitsService.listRules(page, size));
 
       if (response.success && response.data) {
         this.state.set({ 
           status: 'success', 
-          data: response.data, 
+          page: response.data, 
           error: null 
         });
       } else {
         this.state.set({ 
           status: 'error', 
-          data: [], 
+          page: null, 
           error: response.message || 'No se pudieron cargar las reglas de límite' 
         });
       }
     } catch (err: any) {
       const errorMsg = err.error?.message || err.message || 'Error al conectar con el servidor';
-      this.state.set({ status: 'error', data: [], error: errorMsg });
+      this.state.set({ status: 'error', page: null, error: errorMsg });
     }
   }
 

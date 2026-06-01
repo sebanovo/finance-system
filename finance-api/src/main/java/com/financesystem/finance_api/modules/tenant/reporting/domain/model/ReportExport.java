@@ -10,6 +10,7 @@ public record ReportExport(
         String fileName,
         String contentType,
         long fileSizeBytes,
+        byte[] fileContent,
         Instant createdAt
 ) {
 }

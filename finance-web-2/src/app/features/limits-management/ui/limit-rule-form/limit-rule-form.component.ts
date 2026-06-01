@@ -1,8 +1,9 @@
-import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LimitRuleResponse, CreateLimitRuleRequest, UpdateLimitRuleRequest } from '../../../../entities/limits';
 import { LucideAngularModule } from 'lucide-angular';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-limit-rule-form',
@@ -115,17 +116,15 @@ import { LucideAngularModule } from 'lucide-angular';
                 <!-- Periodo -->
                 <div>
                   <label class="block text-sm font-medium mb-1 text-foreground">Periodo de Evaluación</label>
-                  <select 
-                    formControlName="period"
-                    class="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground transition-shadow disabled:opacity-50"
-                    [attr.disabled]="isEditing ? true : null">
-                    <option value="">Seleccione...</option>
-                    <option value="TRANSACTION">Por Transacción</option>
-                    <option value="DAILY">Diario</option>
-                    <option value="MONTHLY">Mensual</option>
-                  </select>
-                  @if (form.get('period')?.invalid && form.get('period')?.touched) {
-                    <span class="text-xs text-destructive mt-1 block">Requerido.</span>
+                  @if (isEditing) {
+                    <div class="w-full rounded-md border border-border bg-muted/30 px-3 py-2 text-sm text-foreground">
+                      {{ periodLabel(form.get('period')?.value || '') }}
+                    </div>
+                  } @else {
+                    <div class="w-full rounded-md border border-border bg-muted/30 px-3 py-2 text-sm text-foreground">
+                      {{ periodLabel(form.get('period')?.value || '') || 'Se define automáticamente' }}
+                    </div>
+                    <input type="hidden" formControlName="period">
                   }
                 </div>
 
@@ -146,32 +145,57 @@ import { LucideAngularModule } from 'lucide-angular';
 
                 <!-- Tipo Transacción (Opcional) -->
                 <div>
-                  <label class="block text-sm font-medium mb-1 text-foreground">Tipo de Transacción (Opcional)</label>
+                  <label class="block text-sm font-medium mb-1 text-foreground">
+                    Tipo de Transacción
+                    @if (requiresTransactionType()) {
+                      <span class="text-destructive">*</span>
+                    }
+                  </label>
                   <select 
                     formControlName="transactionType"
                     class="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground transition-shadow disabled:opacity-50"
-                    [attr.disabled]="isEditing ? true : null">
+                    [attr.disabled]="isEditing || !requiresTransactionType() ? true : null">
                     <option value="">Cualquiera</option>
                     <option value="DEPOSIT">Depósito</option>
                     <option value="WITHDRAWAL">Retiro</option>
                     <option value="TRANSFER">Transferencia</option>
                     <option value="PAYMENT">Pago</option>
-                    <option value="CONVERSION">Conversión</option>
+                    <option value="REVERSAL">Reversión</option>
+                    <option value="REFUND">Reembolso</option>
+                    <option value="FEE">Comisión</option>
+                    <option value="ADJUSTMENT">Ajuste</option>
+                    <option value="HOLD">Retención</option>
+                    <option value="RELEASE">Liberación</option>
+                    <option value="SETTLEMENT">Liquidación</option>
                   </select>
+                  @if (requiresTransactionType() && form.get('transactionType')?.invalid && form.get('transactionType')?.touched) {
+                    <span class="text-xs text-destructive mt-1 block">Requerido para este alcance.</span>
+                  }
                 </div>
 
                 <!-- Tipo de Cuenta (Opcional) -->
                 <div>
-                  <label class="block text-sm font-medium mb-1 text-foreground">Tipo de Cuenta (Opcional)</label>
+                  <label class="block text-sm font-medium mb-1 text-foreground">
+                    Tipo de Cuenta
+                    @if (requiresAccountType()) {
+                      <span class="text-destructive">*</span>
+                    }
+                  </label>
                   <select 
                     formControlName="accountType"
                     class="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground transition-shadow disabled:opacity-50"
-                    [attr.disabled]="isEditing ? true : null">
+                    [attr.disabled]="isEditing || !requiresAccountType() ? true : null">
                     <option value="">Cualquiera</option>
+                    <option value="WALLET">Billetera</option>
                     <option value="SAVINGS">Ahorros</option>
                     <option value="CHECKING">Corriente</option>
-                    <option value="INVESTMENT">Inversión</option>
+                    <option value="CREDIT_CARD">Tarjeta de crédito</option>
+                    <option value="PREPAID_CARD">Tarjeta prepago</option>
+                    <option value="LOAN">Préstamo</option>
                   </select>
+                  @if (requiresAccountType() && form.get('accountType')?.invalid && form.get('accountType')?.touched) {
+                    <span class="text-xs text-destructive mt-1 block">Requerido para este alcance.</span>
+                  }
                 </div>
               </div>
 
@@ -277,7 +301,7 @@ import { LucideAngularModule } from 'lucide-angular';
     </div>
   `
 })
-export class LimitRuleFormComponent implements OnInit {
+export class LimitRuleFormComponent implements OnInit, OnDestroy {
   @Input() rule: LimitRuleResponse | null = null;
   @Input() loading = false;
   
@@ -285,9 +309,13 @@ export class LimitRuleFormComponent implements OnInit {
   @Output() cancel = new EventEmitter<void>();
 
   private fb = inject(FormBuilder);
+  private limitTypeSubscription?: Subscription;
+  private scopeTypeSubscription?: Subscription;
   
   form!: FormGroup;
   isEditing = false;
+  readonly requiresTransactionType = signal(false);
+  readonly requiresAccountType = signal(false);
 
   ngOnInit() {
     this.isEditing = !!this.rule;
@@ -308,6 +336,26 @@ export class LimitRuleFormComponent implements OnInit {
       active: [this.rule?.active ?? true],
       requireReviewExceed: [this.rule?.requireReviewExceed ?? false]
     }, { validators: this.rangeValidator });
+
+    if (!this.isEditing) {
+      this.limitTypeSubscription = this.form.get('limitType')?.valueChanges.subscribe((limitType: string) => {
+        const period = this.periodForLimitType(limitType);
+        if (period) {
+          this.form.patchValue({ period }, { emitEvent: false });
+        }
+      });
+
+      const initialPeriod = this.periodForLimitType(this.form.get('limitType')?.value);
+      if (initialPeriod) {
+        this.form.patchValue({ period: initialPeriod }, { emitEvent: false });
+      }
+
+      this.scopeTypeSubscription = this.form.get('scopeType')?.valueChanges.subscribe((scopeType: string) => {
+        this.syncScopeRequirements(scopeType);
+      });
+
+      this.syncScopeRequirements(this.form.get('scopeType')?.value);
+    }
   }
 
   private rangeValidator(group: FormGroup) {
@@ -342,7 +390,7 @@ export class LimitRuleFormComponent implements OnInit {
         description: formValues.description,
         limitType: formValues.limitType,
         scopeType: formValues.scopeType,
-        period: formValues.period,
+        period: this.periodForLimitType(formValues.limitType),
         transactionType: formValues.transactionType || undefined,
         accountType: formValues.accountType || undefined,
         currency: formValues.currency || undefined,
@@ -360,5 +408,69 @@ export class LimitRuleFormComponent implements OnInit {
     if (!this.loading) {
       this.cancel.emit();
     }
+  }
+
+  ngOnDestroy(): void {
+    this.limitTypeSubscription?.unsubscribe();
+    this.scopeTypeSubscription?.unsubscribe();
+  }
+
+  periodLabel(value: string): string {
+    const labels: Record<string, string> = {
+      TRANSACTION: 'Por transacción',
+      DAILY: 'Diario',
+      MONTHLY: 'Mensual'
+    };
+
+    return labels[value] ?? value;
+  }
+
+  periodForLimitType(limitType: string): string {
+    const mapping: Record<string, string> = {
+      PER_TRANSACTION_AMOUNT: 'TRANSACTION',
+      MIN_AMOUNT: 'TRANSACTION',
+      MAX_BALANCE: 'TRANSACTION',
+      DAILY_AMOUNT: 'DAILY',
+      DAILY_COUNT: 'DAILY',
+      MONTHLY_AMOUNT: 'MONTHLY',
+      MONTHLY_COUNT: 'MONTHLY'
+    };
+
+    return mapping[limitType] || '';
+  }
+
+  private syncScopeRequirements(scopeType: string): void {
+    const needsTransaction = scopeType === 'TRANSACTION_TYPE';
+    const needsAccount = scopeType === 'ACCOUNT_TYPE';
+
+    this.requiresTransactionType.set(needsTransaction);
+    this.requiresAccountType.set(needsAccount);
+
+    const transactionControl = this.form.get('transactionType');
+    const accountControl = this.form.get('accountType');
+
+    if (needsTransaction) {
+      transactionControl?.setValidators([Validators.required]);
+      transactionControl?.enable({ emitEvent: false });
+    } else {
+      transactionControl?.clearValidators();
+      transactionControl?.setValue('', { emitEvent: false });
+      if (!this.isEditing) {
+        transactionControl?.disable({ emitEvent: false });
+      }
+    }
+    transactionControl?.updateValueAndValidity({ emitEvent: false });
+
+    if (needsAccount) {
+      accountControl?.setValidators([Validators.required]);
+      accountControl?.enable({ emitEvent: false });
+    } else {
+      accountControl?.clearValidators();
+      accountControl?.setValue('', { emitEvent: false });
+      if (!this.isEditing) {
+        accountControl?.disable({ emitEvent: false });
+      }
+    }
+    accountControl?.updateValueAndValidity({ emitEvent: false });
   }
 }

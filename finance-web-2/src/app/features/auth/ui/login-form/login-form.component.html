@@ -19,6 +19,9 @@
       <input 
         id="tenantSlug" 
         type="text" 
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
         formControlName="tenantSlug"
         class="w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-4 py-3 text-sm text-[#1B5E20] outline-none transition-colors focus:border-[#2E7D32] focus:bg-white"
         [class.border-red-300]="isFieldInvalid('tenantSlug')"

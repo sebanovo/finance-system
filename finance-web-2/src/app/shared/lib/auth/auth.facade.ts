@@ -2,6 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AuthStorageService } from '../storage/auth-storage.service';
+import { PermissionService } from '../auth/permission.service';
 import { AuthService } from '../../../entities/auth/api/auth.service';
 import { AuthenticatedTenantUserResponse } from '../../../entities/auth/model/authenticated-tenant-user-response.model';
 
@@ -12,6 +13,7 @@ export class AuthFacade {
   private readonly authStorage = inject(AuthStorageService);
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
+  private readonly permissionService = inject(PermissionService);
   readonly currentUser = signal<AuthenticatedTenantUserResponse | null>(null);
   readonly status = signal<'idle' | 'loading' | 'ready' | 'error'>('idle');
 
@@ -30,6 +32,7 @@ export class AuthFacade {
       if (res.success && res.data) {
         this.currentUser.set(res.data);
         this.status.set('ready');
+        console.log("current user loaded!!!!")
         return;
       }
 
@@ -42,13 +45,10 @@ export class AuthFacade {
     }
   }
 
-  async bootstrapCurrentUser(): Promise<void> {
-    if (this.currentUser()) {
-      this.status.set('ready');
-      return;
-    }
-
-    await this.loadCurrentUser();
+  getTenantLandingRoute(): string {
+    return this.permissionService.hasRole('OWNER_ADMIN')
+      ? '/dashboard/summary'
+      : '/dashboard/me';
   }
 
   /** Cierra la sesión del usuario actual limpiando el almacenamiento y redirigiendo a la vista de login. */

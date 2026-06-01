@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 import { authGuard, permissionGuard } from './shared/api';
+import { reportRunGuard } from './shared/api/guards/report-run.guard';
 import { platformAuthGuard } from './shared/api/guards/platform-auth.guard';
+import { tenantRoleGuard } from './shared/api/guards/tenant-role.guard';
 import { LandingPageComponent } from './features/landing/ui/landing-page/landing-page.component';
 import { PlatformLayoutComponent } from './shared/ui/layouts/platform-layout.component';
 
@@ -29,24 +31,76 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./pages/dashboard-page/dashboard-page.component').then(m => m.DashboardPageComponent),
     children: [
-      { path: 'summary', loadComponent: () => import('./pages/summary-page/summary-page.component').then(m => m.SummaryPageComponent) },
-      { path: 'users', loadComponent: () => import('./pages/users-page/users-page.component').then(m => m.UsersPageComponent) },
-      { path: 'roles', loadComponent: () => import('./pages/roles-page/roles-page.component').then(m => m.RolesPageComponent) },
-      { 
-        path: 'accounts', 
-        canActivate: [permissionGuard('accounts.admin.read', 'accounts.create')], 
-        loadComponent: () => import('./pages/accounts-page/accounts-page.component').then(m => m.AccountsPageComponent) 
+      { path: 'summary',
+        canActivate: [tenantRoleGuard('OWNER_ADMIN', '/dashboard/me')],
+        loadComponent: () => import('./pages/summary-page/summary-page.component').then(m => m.SummaryPageComponent)
       },
-      { 
-        path: 'transactions', 
-        canActivate: [permissionGuard('transactions.admin.read')], 
-        loadComponent: () => import('./pages/transactions-page/transactions-page.component').then(m => m.TransactionsPageComponent) 
+
+      { path: 'me',
+        canActivate: [tenantRoleGuard('NON_OWNER', '/dashboard/summary')],
+        loadComponent: () => import('./pages/customer-summary-page/customer-summary-page.component').then(m => m.CustomerSummaryPageComponent)
+      },
+
+      {
+        path: 'users',
+        canActivate: [permissionGuard('users.list', 'users.create', 'users.detail', 'users.update', 'users.activate', 'users.deactivate')],
+        loadComponent: () => import('./pages/users-page/users-page.component').then(m => m.UsersPageComponent)
+      },
+      {
+        path: 'roles',
+        canActivate: [permissionGuard('access.roles.read')],
+        loadComponent: () => import('./pages/roles-page/roles-page.component').then(m => m.RolesPageComponent)
+      },
+      {
+        path: 'permissions',
+        canActivate: [permissionGuard('access.permissions.read')],
+        loadComponent: () => import('./pages/permissions-page/permissions-page.component').then(m => m.PermissionsPageComponent)
+      },
+      {
+        path: 'accounts',
+        canActivate: [permissionGuard('accounts.list', 'accounts.view', 'accounts.balance.read', 'accounts.update', 'accounts.create')],
+        loadComponent: () => import('./pages/accounts-page/accounts-page.component').then(m => m.AccountsPageComponent)
+      },
+      {
+        path: 'me/accounts',
+        canActivate: [permissionGuard('me.accounts.list', 'me.accounts.view', 'me.accounts.balance.read', 'me.accounts.update.alias', 'me.accounts.create')],
+        loadComponent: () => import('./pages/my-accounts-page/my-accounts-page.component').then(m => m.MyAccountsPageComponent)
+      },
+      {
+        path: 'transactions',
+        canActivate: [permissionGuard('transactions.admin.read', 'transactions.detail', 'transactions.create.transfer', 'transactions.create.deposit', 'transactions.create.withdrawal', 'transactions.create.payment', 'transactions.reverse', 'transactions.refund', 'transactions.fee', 'transactions.hold', 'transactions.release', 'transactions.adjust', 'transactions.qr.create', 'transactions.qr.confirm')],
+        loadComponent: () => import('./pages/transactions-page/transactions-page.component').then(m => m.TransactionsPageComponent)
+      },
+      {
+        path: 'me/transactions',
+        canActivate: [permissionGuard('me.transactions.read', 'me.transactions.detail', 'me.transactions.transfer', 'me.transactions.deposit', 'me.transactions.withdrawal', 'me.transactions.payment', 'me.transactions.hold', 'me.transactions.release', 'me.transactions.qr.create', 'me.transactions.qr.read', 'me.transactions.qr.cancel', 'me.transactions.qr.confirm')],
+        loadComponent: () => import('./pages/my-transactions-page/my-transactions-page.component').then(m => m.MyTransactionsPageComponent)
       },
       { path: 'fx/rates', loadComponent: () => import('./pages/fx-rates-page/fx-rates-page.component').then(m => m.FxRatesPageComponent) },
       { path: 'fx/fees', loadComponent: () => import('./pages/fx-fees-page/fx-fees-page.component').then(m => m.FxFeesPageComponent) },
       { path: 'limits/rules', loadComponent: () => import('./pages/limits-rules-page/limits-rules-page.component').then(m => m.LimitsRulesPageComponent) },
+      { path: 'settings', loadComponent: () => import('./pages/settings-page/settings-page.component').then(m => m.SettingsPageComponent) },
       { path: 'accounting/periods', loadComponent: () => import('./pages/accounting-periods-page/accounting-periods-page.component').then(m => m.AccountingPeriodsPageComponent) },
       { path: 'accounting/journal-entries', loadComponent: () => import('./pages/accounting-journal-entries-page/accounting-journal-entries-page.component').then(m => m.AccountingJournalEntriesPageComponent) },
+      {
+        path: 'reports/history',
+        canActivate: [permissionGuard('reports.executions.read')],
+        loadComponent: () => import('./pages/reports-history-page/reports-history-page.component').then(m => m.ReportsHistoryPageComponent)
+      },
+      {
+        path: 'reports/run/:mode/:reportType',
+        canActivate: [reportRunGuard()],
+        loadComponent: () => import('./pages/reports-run-page/reports-run-page.component').then(m => m.ReportsRunPageComponent)
+      },
+      {
+        path: 'reports',
+        canActivate: [permissionGuard('reports.analytic.read', 'reports.managerial.read')],
+        loadComponent: () => import('./pages/reports-explorer-page/reports-explorer-page.component').then(m => m.ReportsExplorerPageComponent)
+      },
+      {
+        path: 'notifications',
+        loadComponent: () => import('./pages/notifications-page/notifications-page.component').then(m => m.NotificationsPageComponent)
+      },
       { path: '', redirectTo: 'summary', pathMatch: 'full' }
     ]
   },
@@ -68,6 +122,10 @@ export const routes: Routes = [
       {
         path: 'security',
         loadComponent: () => import('./pages/platform-security-page/platform-security-page.component').then(m => m.PlatformSecurityPageComponent)
+      },
+      {
+        path: 'settings',
+        loadComponent: () => import('./pages/settings-page/settings-page.component').then(m => m.SettingsPageComponent)
       },
       {
         path: 'backups',
