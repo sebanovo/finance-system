@@ -1,6 +1,7 @@
 package com.financesystem.finance_api.modules.tenant.transactions.infrastructure.api;
 
 import com.financesystem.finance_api.common.response.ApiResponse;
+import com.financesystem.finance_api.common.pagination.PaginationSupport;
 import com.financesystem.finance_api.modules.tenant.transactions.application.dto.CreateAdjustmentTransactionRequest;
 import com.financesystem.finance_api.modules.tenant.transactions.application.dto.CreateDepositTransactionRequest;
 import com.financesystem.finance_api.modules.tenant.transactions.application.dto.CreateFeeTransactionRequest;
@@ -29,6 +30,10 @@ import com.financesystem.finance_api.modules.tenant.transactions.application.use
 import com.financesystem.finance_api.modules.tenant.transactions.application.usecase.query.ListTransactionsUseCase;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -159,8 +164,8 @@ public class TransactionController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('transactions.admin.read')")
-    public ApiResponse<List<TransactionResponse>> listTransactions() {
-        return ApiResponse.success("Transactions retrieved successfully", listTransactionsUseCase.execute());
+    public ApiResponse<Page<TransactionResponse>> listTransactions(@ParameterObject @PageableDefault(size = 50) Pageable pageable) {
+        return ApiResponse.success("Transactions retrieved successfully", PaginationSupport.page(listTransactionsUseCase.execute(), pageable));
     }
 
     @GetMapping("/{id}")

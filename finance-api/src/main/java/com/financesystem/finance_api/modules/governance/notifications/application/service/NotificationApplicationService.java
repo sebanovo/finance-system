@@ -174,6 +174,14 @@ public class NotificationApplicationService implements NotificationPublisherPort
     }
 
     @Transactional(readOnly = true)
+    public List<Notification> listNotifications(UUID userId) {
+        requireUserId(userId);
+        return notificationRepository.findInboxByUserIdOrderByCreatedAtDesc(userId)
+                .stream()
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<Notification> listNotifications(UUID userId, int limit) {
         requireUserId(userId);
         int effectiveLimit = Math.min(Math.max(1, limit), MAX_INBOX_LIMIT);

@@ -1,10 +1,15 @@
 package com.financesystem.finance_api.modules.tenant.fx.infrastructure.api;
 
 import com.financesystem.finance_api.common.response.ApiResponse;
+import com.financesystem.finance_api.common.pagination.PaginationSupport;
 import com.financesystem.finance_api.modules.tenant.fx.application.dto.*;
 import com.financesystem.finance_api.modules.tenant.fx.application.service.FxAdministrationService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,10 +29,10 @@ public class FxAdministrationController {
     }
 
     @GetMapping("/rates")
-    public ApiResponse<List<FxExchangeRateResponse>> listRates() {
+    public ApiResponse<Page<FxExchangeRateResponse>> listRates(@ParameterObject @PageableDefault(size = 50) Pageable pageable) {
         return ApiResponse.success(
                 "FX rates retrieved successfully",
-                fxAdministrationService.listRates()
+                PaginationSupport.page(fxAdministrationService.listRates(), pageable)
         );
     }
 
@@ -66,10 +71,10 @@ public class FxAdministrationController {
     }
 
     @GetMapping("/fees")
-    public ApiResponse<List<OperationFeeResponse>> listFees() {
+    public ApiResponse<Page<OperationFeeResponse>> listFees(@ParameterObject @PageableDefault(size = 50) Pageable pageable) {
         return ApiResponse.success(
                 "FX fees retrieved successfully",
-                fxAdministrationService.listFees()
+                PaginationSupport.page(fxAdministrationService.listFees(), pageable)
         );
     }
 

@@ -1,6 +1,7 @@
 package com.financesystem.finance_api.modules.governance.backups.infrastructure.api;
 
 import com.financesystem.finance_api.common.response.ApiResponse;
+import com.financesystem.finance_api.common.pagination.PaginationSupport;
 import com.financesystem.finance_api.modules.governance.backups.application.dto.*;
 import com.financesystem.finance_api.modules.governance.backups.application.service.BackupApplicationService;
 import com.financesystem.finance_api.modules.governance.backups.application.usecase.*;
@@ -11,6 +12,10 @@ import jakarta.validation.Valid;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -46,8 +51,8 @@ public class TenantBackupController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('backups.list')")
-    public ApiResponse<List<BackupJobResponse>> listBackups() {
-        return ApiResponse.success("Tenant backups retrieved successfully", list.execute());
+    public ApiResponse<Page<BackupJobResponse>> listBackups(@ParameterObject @PageableDefault(size = 50) Pageable pageable) {
+        return ApiResponse.success("Tenant backups retrieved successfully", PaginationSupport.page(list.execute(), pageable));
     }
 
     @GetMapping("/{id}")

@@ -52,7 +52,7 @@ services:
 
   serv-finance-web:
     build:
-      context: ./finance-elkin #./finance-web
+      context: ./finance-web-2 #./finance-web
       dockerfile: Dockerfile.dev
 
     restart: unless-stopped
@@ -65,7 +65,7 @@ services:
       - "${FRONTEND_PORT}:4200"
     volumes:
       # - ./finance-web:/app
-      - ./finance-elkin:/app
+      - ./finance-web-2:/app
       - node_modules:/app/node_modules
     working_dir: /app
     networks:

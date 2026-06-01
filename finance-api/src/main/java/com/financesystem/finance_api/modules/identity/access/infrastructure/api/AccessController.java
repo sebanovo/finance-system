@@ -1,10 +1,15 @@
 package com.financesystem.finance_api.modules.identity.access.infrastructure.api;
 
 import com.financesystem.finance_api.common.response.ApiResponse;
+import com.financesystem.finance_api.common.pagination.PaginationSupport;
 import com.financesystem.finance_api.modules.identity.access.application.dto.*;
 import com.financesystem.finance_api.modules.identity.access.application.usecase.*;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -52,10 +57,10 @@ public class AccessController {
     // @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/permissions")
     @PreAuthorize("hasAuthority('access.permissions.read')")
-    public ApiResponse<List<SystemPermissionResponse>> listPermissions() {
+    public ApiResponse<Page<SystemPermissionResponse>> listPermissions(@ParameterObject @PageableDefault(size = 50) Pageable pageable) {
         return ApiResponse.success(
                 "System permissions retrieved successfully",
-                listSystemPermissionsUseCase.execute()
+                PaginationSupport.page(listSystemPermissionsUseCase.execute(), pageable)
         );
     }
 
@@ -63,10 +68,10 @@ public class AccessController {
     // @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/roles")
     @PreAuthorize("hasAuthority('access.roles.read')")
-    public ApiResponse<List<TenantRoleResponse>> listRoles() {
+    public ApiResponse<Page<TenantRoleResponse>> listRoles(@ParameterObject @PageableDefault(size = 50) Pageable pageable) {
         return ApiResponse.success(
                 "Tenant roles retrieved successfully",
-                listTenantRolesUseCase.execute()
+                PaginationSupport.page(listTenantRolesUseCase.execute(), pageable)
         );
     }
 

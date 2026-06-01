@@ -1,12 +1,17 @@
 package com.financesystem.finance_api.modules.governance.notifications.infrastructure.api;
 
 import com.financesystem.finance_api.common.response.ApiResponse;
+import com.financesystem.finance_api.common.pagination.PaginationSupport;
 import com.financesystem.finance_api.modules.governance.notifications.application.dto.*;
 import com.financesystem.finance_api.modules.governance.notifications.application.mapper.NotificationMapper;
 import com.financesystem.finance_api.modules.governance.notifications.application.service.NotificationApplicationService;
 import com.financesystem.finance_api.modules.identity.auth.application.usecase.GetCurrentAuthenticatedTenantUserUseCase;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,13 +50,16 @@ public class MyNotificationController {
     }
 
     @GetMapping("/notification-devices")
-    public ApiResponse<List<NotificationDeviceResponse>> listNotificationDevices() {
+    public ApiResponse<Page<NotificationDeviceResponse>> listNotificationDevices(@ParameterObject @PageableDefault(size = 50) Pageable pageable) {
         UUID currentUserId = getCurrentAuthenticatedTenantUserUseCase.execute().id();
         return ApiResponse.success(
                 "Notification devices retrieved successfully",
-                notificationApplicationService.listDevices(currentUserId).stream()
-                        .map(notificationMapper::toResponse)
-                        .toList()
+                PaginationSupport.page(
+                        notificationApplicationService.listDevices(currentUserId).stream()
+                                .map(notificationMapper::toResponse)
+                                .toList(),
+                        pageable
+                )
         );
     }
 
@@ -78,15 +86,18 @@ public class MyNotificationController {
     }
 
     @GetMapping("/notifications")
-    public ApiResponse<List<NotificationResponse>> listNotifications(
-            @RequestParam(defaultValue = "50") int limit
+    public ApiResponse<Page<NotificationResponse>> listNotifications(
+            @ParameterObject @PageableDefault(size = 50) Pageable pageable
     ) {
         UUID currentUserId = getCurrentAuthenticatedTenantUserUseCase.execute().id();
         return ApiResponse.success(
                 "Notifications retrieved successfully",
-                notificationApplicationService.listNotifications(currentUserId, limit).stream()
-                        .map(notificationMapper::toResponse)
-                        .toList()
+                PaginationSupport.page(
+                        notificationApplicationService.listNotifications(currentUserId).stream()
+                                .map(notificationMapper::toResponse)
+                                .toList(),
+                        pageable
+                )
         );
     }
 
@@ -155,13 +166,16 @@ public class MyNotificationController {
     }
 
     @GetMapping("/notification-preferences")
-    public ApiResponse<List<NotificationPreferenceResponse>> listNotificationPreferences() {
+    public ApiResponse<Page<NotificationPreferenceResponse>> listNotificationPreferences(@ParameterObject @PageableDefault(size = 50) Pageable pageable) {
         UUID currentUserId = getCurrentAuthenticatedTenantUserUseCase.execute().id();
         return ApiResponse.success(
                 "Notification preferences retrieved successfully",
-                notificationApplicationService.listPreferences(currentUserId).stream()
-                        .map(notificationMapper::toResponse)
-                        .toList()
+                PaginationSupport.page(
+                        notificationApplicationService.listPreferences(currentUserId).stream()
+                                .map(notificationMapper::toResponse)
+                                .toList(),
+                        pageable
+                )
         );
     }
 

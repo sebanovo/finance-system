@@ -1,9 +1,14 @@
 package com.financesystem.finance_api.modules.tenant.accounts.infraestructure.api;
 
 import com.financesystem.finance_api.common.response.ApiResponse;
+import com.financesystem.finance_api.common.pagination.PaginationSupport;
 import com.financesystem.finance_api.modules.tenant.transactions.application.dto.TransactionResponse;
 import com.financesystem.finance_api.modules.tenant.transactions.application.usecase.query.ListAccountTransactionsUseCase;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,10 +32,13 @@ public class AccountTransactionController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('accounts.transactions.read')")
-    public ApiResponse<List<TransactionResponse>> listAccountTransactions(@PathVariable UUID accountId) {
+    public ApiResponse<Page<TransactionResponse>> listAccountTransactions(
+            @PathVariable UUID accountId,
+            @ParameterObject @PageableDefault(size = 50) Pageable pageable
+    ) {
         return ApiResponse.success(
                 "Account transactions retrieved successfully",
-                listAccountTransactionsUseCase.execute(accountId)
+                PaginationSupport.page(listAccountTransactionsUseCase.execute(accountId), pageable)
         );
     }
 }

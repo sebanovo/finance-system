@@ -8,6 +8,8 @@ public interface TenantAuditEventRepository {
 
     TenantAuditEvent save(TenantAuditEvent event);
 
+    List<TenantAuditEvent> findAll();
+
     List<TenantAuditEvent> findRecent(int limit);
 
     long count();

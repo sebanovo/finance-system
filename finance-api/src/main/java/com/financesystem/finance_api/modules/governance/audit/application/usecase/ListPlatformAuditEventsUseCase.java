@@ -21,6 +21,13 @@ public class ListPlatformAuditEventsUseCase {
         this.auditEventMapper = auditEventMapper;
     }
 
+    public List<AuditEventResponse> execute() {
+        return platformAuditEventRepository.findAll()
+                .stream()
+                .map(auditEventMapper::toResponse)
+                .toList();
+    }
+
     public List<AuditEventResponse> execute(int limit) {
         int safeLimit = Math.min(Math.max(limit, 1), 200);
 

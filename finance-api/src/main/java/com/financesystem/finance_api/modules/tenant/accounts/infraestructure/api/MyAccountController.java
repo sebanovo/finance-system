@@ -1,12 +1,17 @@
 package com.financesystem.finance_api.modules.tenant.accounts.infraestructure.api;
 
 import com.financesystem.finance_api.common.response.ApiResponse;
+import com.financesystem.finance_api.common.pagination.PaginationSupport;
 import com.financesystem.finance_api.modules.tenant.accounts.application.dto.*;
 import com.financesystem.finance_api.modules.tenant.accounts.application.usecase.create.*;
 import com.financesystem.finance_api.modules.tenant.accounts.application.usecase.query.*;
 import com.financesystem.finance_api.modules.tenant.accounts.application.usecase.update.*;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -52,10 +57,10 @@ public class MyAccountController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('me.accounts.list')")
-    public ApiResponse<List<AccountOwnerResponse>> listMyAccounts() {
+    public ApiResponse<Page<AccountOwnerResponse>> listMyAccounts(@ParameterObject @PageableDefault(size = 50) Pageable pageable) {
         return ApiResponse.success(
                 "Accounts retrieved successfully",
-                listMyAccountsUseCase.execute()
+                PaginationSupport.page(listMyAccountsUseCase.execute(), pageable)
         );
     }
 
