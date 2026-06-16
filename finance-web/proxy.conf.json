@@ -1,8 +1,0 @@
-{
-  "/api": {
-    "target": "http://serv-finance-api:8080",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "debug"
-  }
-}
