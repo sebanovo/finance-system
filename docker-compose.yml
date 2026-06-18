@@ -50,6 +50,24 @@ services:
     networks:
       - finance-net
 
+  reports-ai:
+    build:
+      context: ./reports-ai
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      INTERNAL_TOKEN: ${REPORTS_AI_INTERNAL_TOKEN:-}
+      AI_PROVIDER: ${AI_PROVIDER:-mock}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.0-flash}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-google/gemini-2.0-flash-001}
+      STT_PROVIDER: ${STT_PROVIDER:-mock}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-whisper-large-v3}
+    networks:
+      - finance-net
+
   serv-finance-web:
     build:
       context: ./finance-web-2 #./finance-web

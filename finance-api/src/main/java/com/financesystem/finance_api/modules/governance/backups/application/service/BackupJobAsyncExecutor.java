@@ -1,6 +1,7 @@
 package com.financesystem.finance_api.modules.governance.backups.application.service;
 
 import com.financesystem.finance_api.common.tenancy.maintenance.TenantMaintenanceService;
+import com.financesystem.finance_api.common.tenancy.reporting.ReportingSecurityService;
 import com.financesystem.finance_api.common.tenancy.context.TenantContext;
 import com.financesystem.finance_api.common.tenancy.context.TenantContextHolder;
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
@@ -27,13 +28,15 @@ public class BackupJobAsyncExecutor {
     private final BackupStorage storage;
     private final AuditTrailService audit;
     private final TenantMaintenanceService maintenance;
+    private final ReportingSecurityService reportingSecurityService;
 
-    public BackupJobAsyncExecutor(BackupJobRepository repo, BackupEngine engine, BackupStorage storage, AuditTrailService audit, TenantMaintenanceService maintenance) {
+    public BackupJobAsyncExecutor(BackupJobRepository repo, BackupEngine engine, BackupStorage storage, AuditTrailService audit, TenantMaintenanceService maintenance, ReportingSecurityService reportingSecurityService) {
         this.repo = repo;
         this.engine = engine;
         this.storage = storage;
         this.audit = audit;
         this.maintenance = maintenance;
+        this.reportingSecurityService = reportingSecurityService;
     }
 
     @Async("backupTaskExecutor")
@@ -67,9 +70,14 @@ public class BackupJobAsyncExecutor {
             if (running.scope() == BackupScope.TENANT_SCHEMA) {
                 maintenance.enableMaintenance(running.tenantSlug(), "Restoring backup " + source.id());
                 engine.restoreSchema(running.schemaName(), src);
+                // Re-apply reporting grants (the restored schema may have lost them)
+                // and refresh the cross-tenant views with the restored data.
+                reportingSecurityService.applyTenantSecurity(running.schemaName());
                 maintenance.disableMaintenance(running.tenantSlug());
             } else {
                 engine.restoreFullDatabase(src);
+                // Full restore: re-grant every tenant and regenerate platform views.
+                reportingSecurityService.backfillRegisteredTenants();
             }
             BackupJob done = status(get(id), BackupStatus.RESTORED, null, null, Instant.now());
             record(done, BackupAuditEventTypes.RESTORE_COMPLETED, null);

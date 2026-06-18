@@ -266,6 +266,59 @@ public class PlatformBootstrapService {
         logger.info("Base backup permissions seeded successfully.");
     }
 
+    public void seedBaseReportingPermissions() {
+        logger.info("Seeding base reporting permissions...");
+
+        List<PermissionSeed> permissions = List.of(
+                new PermissionSeed("reports.tenant.read", "reports", "Read tenant report catalog"),
+                new PermissionSeed("reports.tenant.run", "reports", "Run tenant reports"),
+                new PermissionSeed("reports.tenant.export", "reports", "Export tenant reports"),
+                new PermissionSeed("reports.tenant.ai", "reports", "Run AI tenant reports"),
+                new PermissionSeed("reports.tenant.history", "reports", "Read tenant report history"),
+                new PermissionSeed("reports.platform.read", "reports", "Read platform report catalog"),
+                new PermissionSeed("reports.platform.run", "reports", "Run platform reports"),
+                new PermissionSeed("reports.platform.export", "reports", "Export platform reports"),
+                new PermissionSeed("reports.platform.ai", "reports", "Run AI platform reports"),
+                new PermissionSeed("reports.platform.history", "reports", "Read platform report history")
+        );
+
+        seedPermissions(permissions);
+
+        logger.info("Base reporting permissions seeded successfully.");
+    }
+
+    public void seedReportingPermissionsForRegisteredTenants() {
+        logger.info("Assigning reporting permissions to registered tenant roles...");
+
+        List<TenantSchemaSeed> tenants = jdbcTemplate.query(
+                """
+                SELECT slug, schema_name
+                FROM public.platform_tenants
+                WHERE active = true
+                  AND schema_name IS NOT NULL
+                  AND schema_name <> ''
+                ORDER BY slug ASC
+                """,
+                (rs, rowNum) -> new TenantSchemaSeed(rs.getString("slug"), rs.getString("schema_name"))
+        );
+
+        List<String> reportingCodes = List.of(
+                "reports.tenant.read",
+                "reports.tenant.run",
+                "reports.tenant.export",
+                "reports.tenant.ai",
+                "reports.tenant.history"
+        );
+
+        for (TenantSchemaSeed tenant : tenants) {
+            validateSchemaName(tenant.schemaName());
+            seedTenantRolePermissions(tenant.schemaName(), "OWNER_ADMIN", reportingCodes);
+            seedTenantRolePermissions(tenant.schemaName(), "ADMIN", reportingCodes);
+        }
+
+        logger.info("Reporting permissions assigned to registered tenants successfully.");
+    }
+
     public void seedInitialPlatformSuperadmin() {
         logger.info("Seeding initial platform superadmin...");
 

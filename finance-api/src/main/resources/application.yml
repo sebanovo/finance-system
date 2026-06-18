@@ -20,6 +20,25 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+reports:
+  schema: ${REPORTING_SCHEMA:reporting}
+  ai:
+    mode: ${REPORTS_AI_MODE:mock}
+    base-url: ${REPORTS_AI_BASE_URL:http://reports-ai:8000}
+    internal-token: ${REPORTS_AI_INTERNAL_TOKEN:}
+    timeout-ms: ${REPORTS_AI_TIMEOUT_MS:15000}
+    rate-limit-per-minute: ${REPORTS_AI_RATE_LIMIT:20}
+    audio-max-bytes: ${REPORTS_AI_AUDIO_MAX_BYTES:10485760}
+  sql:
+    max-rows: ${AI_SQL_MAX_ROWS:500}
+    statement-timeout-ms: ${AI_SQL_TIMEOUT_MS:5000}
+  snapshot:
+    max-rows: ${REPORT_SNAPSHOT_MAX_ROWS:500}
+    max-bytes: ${REPORT_SNAPSHOT_MAX_BYTES:5242880}
+  export:
+    max-rows: ${REPORT_EXPORT_MAX_ROWS:10000}
+    storage-path: ${REPORT_EXPORT_STORAGE_PATH:/app/generated-reports}
+
 app:
   tenancy:
     header-name: ${TENANT_HEADER_NAME:X-Tenant-Slug}

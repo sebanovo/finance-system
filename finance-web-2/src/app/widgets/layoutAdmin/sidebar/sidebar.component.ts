@@ -322,16 +322,10 @@ export class SidebarComponent {
       icon: 'bar-chart-3',
       items: [
         {
-          label: 'Explorador de reportes',
-          route: '/dashboard/reports',
+          label: 'Reportes',
+          route: '/dashboard/reporting',
           icon: 'file-chart-column',
-          permissions: ['reports.analytic.read', 'reports.managerial.read', 'reports.executions.read']
-        },
-        {
-          label: 'Historial',
-          route: '/dashboard/reports/history',
-          icon: 'clock',
-          permissions: ['reports.executions.read']
+          permissions: ['reports.tenant.read']
         }
       ]
     }
@@ -346,6 +340,7 @@ export class SidebarComponent {
     { label: 'Planes', route: '/platform/plans', icon: 'credit-card' },
     { label: 'Tenants', route: '/platform/tenants', icon: 'building-2' },
     { label: 'Suscripciones', route: '/platform/subscriptions', icon: 'dollar-sign' },
+    { label: 'Reportes', route: '/platform/reporting', icon: 'bar-chart-3' },
     { label: 'Auditoría', route: '/platform/audit', icon: 'clipboard-list' }
   ];
 

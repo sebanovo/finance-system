@@ -105,6 +105,12 @@ public class TenantBootstrapService {
             "reports.executions.read",
             "reports.executions.rerun",
 
+            "reports.tenant.read",
+            "reports.tenant.run",
+            "reports.tenant.export",
+            "reports.tenant.ai",
+            "reports.tenant.history",
+
             "fx.rates.read",
             "fx.rates.detail",
             "fx.rates.create",
@@ -194,6 +200,12 @@ public class TenantBootstrapService {
             "reports.export",
             "reports.executions.read",
             "reports.executions.rerun",
+
+            "reports.tenant.read",
+            "reports.tenant.run",
+            "reports.tenant.export",
+            "reports.tenant.ai",
+            "reports.tenant.history",
 
             "fx.rates.read",
             "fx.rates.detail",

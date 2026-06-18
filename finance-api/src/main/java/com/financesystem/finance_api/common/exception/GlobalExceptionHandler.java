@@ -3,7 +3,6 @@ package com.financesystem.finance_api.common.exception;
 import com.financesystem.finance_api.common.response.ApiErrorResponse;
 import com.financesystem.finance_api.common.tenancy.exception.TenantResolutionException;
 import com.financesystem.finance_api.modules.identity.auth.domain.exception.AuthenticationFailedException;
-import com.financesystem.finance_api.modules.tenant.reporting.domain.exception.ReportException;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -144,16 +143,6 @@ public class GlobalExceptionHandler {
         String reason = extractDataIntegrityReason(exception);
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ApiErrorResponse.of("Database constraint violation", List.of(reason)));
-    }
-
-    @ExceptionHandler(ReportException.class)
-    public ResponseEntity<ApiErrorResponse> handleReportException(ReportException exception) {
-        String message = exception.getMessage();
-        if (message == null || message.isBlank()) {
-            message = "Report processing failed";
-        }
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiErrorResponse.of("Report processing failed", List.of(message)));
     }
 
     @ExceptionHandler(Exception.class)

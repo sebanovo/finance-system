@@ -238,7 +238,7 @@ export class SettingsPageComponent implements OnInit {
         { label: 'Dashboard', route: this.dashboardRoute, icon: 'layout-dashboard', description: 'Resumen principal del tenant' },
         { label: 'Mis cuentas', route: '/dashboard/me/accounts', icon: 'wallet', description: 'Cuentas disponibles del usuario' },
         { label: 'Mis movimientos', route: '/dashboard/me/transactions', icon: 'arrow-right-left', description: 'Historial y actividad reciente' },
-        { label: 'Reportes', route: '/dashboard/reports', icon: 'clipboard-list', description: 'Explorador de reportes operativos' }
+        { label: 'Reportes', route: '/dashboard/reporting', icon: 'clipboard-list', description: 'Reportes controlados y por IA' }
       ];
 
   readonly form = this.fb.nonNullable.group(DEFAULT_SETTINGS);

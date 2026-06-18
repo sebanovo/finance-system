@@ -4,6 +4,7 @@ import com.financesystem.finance_api.bootstrap.tenant.TenantBootstrapService;
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
 import com.financesystem.finance_api.modules.governance.audit.domain.model.AuditEventTypes;
 import com.financesystem.finance_api.common.tenancy.migration.TenantSchemaMigrationService;
+import com.financesystem.finance_api.common.tenancy.reporting.ReportingSecurityService;
 import com.financesystem.finance_api.common.tenancy.schema.TenantSchemaNamingStrategy;
 import com.financesystem.finance_api.modules.platform.audit.PlatformAuditPayloads;
 import com.financesystem.finance_api.modules.platform.subscriptions.application.service.PlatformSubscriptionProvisioningService;
@@ -26,6 +27,7 @@ public class CreateTenantUseCase {
     private final TenantBootstrapService tenantBootstrapService;
     private final PlatformTenantMapper platformTenantMapper;
     private final PlatformSubscriptionProvisioningService platformSubscriptionProvisioningService;
+    private final ReportingSecurityService reportingSecurityService;
     private final AuditTrailService auditTrailService;
 
     public CreateTenantUseCase(
@@ -35,6 +37,7 @@ public class CreateTenantUseCase {
             TenantBootstrapService tenantBootstrapService,
             PlatformTenantMapper platformTenantMapper,
             PlatformSubscriptionProvisioningService platformSubscriptionProvisioningService,
+            ReportingSecurityService reportingSecurityService,
             AuditTrailService auditTrailService
     ) {
         this.platformTenantRepository = platformTenantRepository;
@@ -43,6 +46,7 @@ public class CreateTenantUseCase {
         this.tenantBootstrapService = tenantBootstrapService;
         this.platformTenantMapper = platformTenantMapper;
         this.platformSubscriptionProvisioningService = platformSubscriptionProvisioningService;
+        this.reportingSecurityService = reportingSecurityService;
         this.auditTrailService = auditTrailService;
     }
 
@@ -75,6 +79,10 @@ public class CreateTenantUseCase {
 
         tenantSchemaMigrationService.migrateSchema(createdTenant.schemaName());
         tenantBootstrapService.initializeTenantData(createdTenant.schemaName(), createdTenant.name());
+
+        // Reporting security: grant the read-only role SELECT on this tenant's
+        // reporting_* views and refresh the cross-tenant platform views.
+        reportingSecurityService.applyTenantSecurity(createdTenant.schemaName());
 
         platformSubscriptionProvisioningService.assignCurrentSubscription(
                 createdTenant.id(),

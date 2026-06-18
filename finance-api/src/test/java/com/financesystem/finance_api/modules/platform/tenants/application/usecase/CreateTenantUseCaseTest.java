@@ -2,6 +2,7 @@ package com.financesystem.finance_api.modules.platform.tenants.application.useca
 
 import com.financesystem.finance_api.bootstrap.tenant.TenantBootstrapService;
 import com.financesystem.finance_api.common.tenancy.migration.TenantSchemaMigrationService;
+import com.financesystem.finance_api.common.tenancy.reporting.ReportingSecurityService;
 import com.financesystem.finance_api.common.tenancy.schema.TenantSchemaNamingStrategy;
 import com.financesystem.finance_api.modules.platform.subscriptions.application.service.PlatformSubscriptionProvisioningService;
 import com.financesystem.finance_api.modules.platform.tenants.application.dto.CreateTenantRequest;
@@ -32,6 +33,8 @@ class CreateTenantUseCaseTest {
         PlatformTenantMapper mapper = mock(PlatformTenantMapper.class);
         PlatformSubscriptionProvisioningService subscriptionProvisioningService = mock(PlatformSubscriptionProvisioningService.class);
 
+        ReportingSecurityService reportingSecurityService = mock(ReportingSecurityService.class);
+
         CreateTenantUseCase useCase = new CreateTenantUseCase(
                 tenantRepository,
                 namingStrategy,
@@ -39,6 +42,7 @@ class CreateTenantUseCaseTest {
                 bootstrapService,
                 mapper,
                 subscriptionProvisioningService,
+                reportingSecurityService,
                 mock(com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService.class)
         );
 

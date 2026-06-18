@@ -127,6 +127,13 @@
             <version>5.2.5</version>
         </dependency>
 
+        <!-- SQL parsing for the AI report guard -->
+        <dependency>
+            <groupId>com.github.jsqlparser</groupId>
+            <artifactId>jsqlparser</artifactId>
+            <version>4.9</version>
+        </dependency>
+
         <!-- Config metadata -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

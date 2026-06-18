@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 import { authGuard, permissionGuard } from './shared/api';
-import { reportRunGuard } from './shared/api/guards/report-run.guard';
 import { platformAuthGuard } from './shared/api/guards/platform-auth.guard';
 import { tenantRoleGuard } from './shared/api/guards/tenant-role.guard';
 import { LandingPageComponent } from './features/landing/ui/landing-page/landing-page.component';
@@ -103,19 +102,9 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/accounting-journal-entries-page/accounting-journal-entries-page.component').then(m => m.AccountingJournalEntriesPageComponent)
       },
       {
-        path: 'reports/history',
-        canActivate: [permissionGuard('reports.executions.read')],
-        loadComponent: () => import('./pages/reports-history-page/reports-history-page.component').then(m => m.ReportsHistoryPageComponent)
-      },
-      {
-        path: 'reports/run/:mode/:reportType',
-        canActivate: [reportRunGuard()],
-        loadComponent: () => import('./pages/reports-run-page/reports-run-page.component').then(m => m.ReportsRunPageComponent)
-      },
-      {
-        path: 'reports',
-        canActivate: [permissionGuard('reports.analytic.read', 'reports.managerial.read')],
-        loadComponent: () => import('./pages/reports-explorer-page/reports-explorer-page.component').then(m => m.ReportsExplorerPageComponent)
+        path: 'reporting',
+        canActivate: [permissionGuard('reports.tenant.read')],
+        loadComponent: () => import('./pages/reporting-page/reporting-page.component').then(m => m.ReportingPageComponent)
       },
       {
         path: 'notifications',
@@ -161,6 +150,7 @@ export const routes: Routes = [
       },
       { path: 'tenants', loadComponent: () => import('./pages/platform-tenants-page/platform-tenants-page.component').then(m => m.PlatformTenantsPageComponent) },
       { path: 'subscriptions', loadComponent: () => import('./pages/platform-subscriptions-page/platform-subscriptions-page.component').then(m => m.PlatformSubscriptionsPageComponent) },
+      { path: 'reporting', loadComponent: () => import('./pages/platform-reporting-page/platform-reporting-page.component').then(m => m.PlatformReportingPageComponent) },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       // app.routes.ts - agregar dentro del children de platform
     ]
