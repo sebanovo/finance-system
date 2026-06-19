@@ -58,10 +58,7 @@ class _DevicesPageState extends State<DevicesPage> {
       final success = await _notifViewModel.registerCurrentDevice();
       if (!mounted) return;
       if (success) {
-        _showSnackBar(
-          'Dispositivo registrado correctamente.',
-          isError: false,
-        );
+        _showSnackBar('Dispositivo registrado correctamente.', isError: false);
         await _viewModel.loadDevices();
       } else {
         _showSnackBar(
@@ -78,7 +75,7 @@ class _DevicesPageState extends State<DevicesPage> {
     }
   }
 
-  Future<void> _confirmDeactivate(device) async {
+  Future<void> _confirmDeactivate(dynamic device) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -108,7 +105,7 @@ class _DevicesPageState extends State<DevicesPage> {
     }
   }
 
-  Future<void> _confirmRevoke(device) async {
+  Future<void> _confirmRevoke(dynamic device) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(

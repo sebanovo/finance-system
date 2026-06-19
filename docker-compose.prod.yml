@@ -71,7 +71,7 @@ services:
       # - ./nginx/ssl:/etc/nginx/ssl:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
     ports:
-      - "80:80"
+      - "80:80" # HTTP
       - "443:443" # HTTPS
     networks:
       - finance-net

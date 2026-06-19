@@ -28,12 +28,6 @@ class _PermissionsPageState extends State<PermissionsPage> {
     setState(() {});
   }
 
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red.shade700),
-    );
-  }
-
   @override
   void dispose() {
     _viewModel.removeListener(_onViewModelChanged);

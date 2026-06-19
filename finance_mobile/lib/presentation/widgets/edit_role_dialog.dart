@@ -53,7 +53,7 @@ class _EditRoleDialogState extends State<EditRoleDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       content: DropdownButtonFormField<String>(
         decoration: const InputDecoration(labelText: 'Selecciona un rol'),
-        value: _selectedRoleId,
+        initialValue: _selectedRoleId,
         items: widget.availableRoles.map((role) {
           return DropdownMenuItem<String>(
             value: role.id,

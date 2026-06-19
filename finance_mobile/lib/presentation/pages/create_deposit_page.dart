@@ -90,7 +90,7 @@ class _CreateDepositPageState extends State<CreateDepositPage> {
     return 'deposit_${DateTime.now().millisecondsSinceEpoch}_${DateTime.now().microsecond}';
   }
 
-  String _getAccountDisplayText(account) {
+  String _getAccountDisplayText(dynamic account) {
     final name = account.customAlias?.isNotEmpty == true
         ? account.customAlias!
         : account.accountNameLabel;
