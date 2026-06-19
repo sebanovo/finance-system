@@ -1,4 +1,5 @@
 import 'package:finance_mobile/core/network/api_client.dart';
+import 'package:finance_mobile/core/services/biometric_auth_service.dart';
 import 'package:finance_mobile/core/services/notification_service.dart';
 import 'package:finance_mobile/domain/repositories/account_repository.dart';
 import 'package:finance_mobile/domain/repositories/auth_repository.dart';
@@ -105,6 +106,7 @@ final sl = GetIt.instance;
 
 Future<void> init() async {
   sl.registerLazySingleton(() => ApiClient());
+  sl.registerLazySingleton(() => BiometricAuthService());
   initPermissionModule();
   initRoleModule();
   initAuthModule();

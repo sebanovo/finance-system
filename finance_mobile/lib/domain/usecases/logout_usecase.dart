@@ -14,7 +14,9 @@ class LogoutUseCase {
       // Si el backend no responde, igual limpiamos la sesión local.
     } finally {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
+      await prefs.remove('accessToken');
+      await prefs.remove('refreshToken');
+      await prefs.remove('tenantSlug');
     }
   }
 }

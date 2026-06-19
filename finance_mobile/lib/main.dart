@@ -1,6 +1,8 @@
 import 'package:finance_mobile/core/routes/app_routes.dart';
+import 'package:finance_mobile/core/services/biometric_auth_service.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:finance_mobile/constants/env.dart';
 import 'package:finance_mobile/core/services/notification_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -36,6 +38,13 @@ Future<void> main() async {
 }
 
 Future<void> _restorePersistedSession() async {
+  final biometricService = di.sl<BiometricAuthService>();
+  final biometricEnabled = await biometricService.isBiometricEnabled();
+  if (biometricEnabled && !kIsWeb) {
+    di.sl<ApiClient>().clearSession();
+    return;
+  }
+
   final prefs = await SharedPreferences.getInstance();
   final accessToken = prefs.getString('accessToken');
   final tenantSlug = prefs.getString('tenantSlug');
