@@ -165,10 +165,12 @@ class NotificationsViewModel extends ChangeNotifier {
   Future<void> archive(String id) async {
     try {
       await archiveUseCase(id);
-        _notifications.removeWhere((n) => n.id == id);
+      _notifications.removeWhere((n) => n.id == id);
       loadUnreadCount();
       notifyListeners();
-    } catch (e) {}
+    } catch (e) {
+      // nada
+    }
   }
 
   // Métodos auxiliares
@@ -188,9 +190,7 @@ class NotificationsViewModel extends ChangeNotifier {
   // ✅ Registro de dispositivo (funciona en Web y Móvil)
   Future<bool> registerCurrentDevice() async {
     if (!canRegisterDevice) {
-      debugPrint(
-        '❌ Usuario cliente no puede registrar dispositivos',
-      );
+      debugPrint('❌ Usuario cliente no puede registrar dispositivos');
       return false;
     }
     try {
@@ -294,8 +294,9 @@ class NotificationsViewModel extends ChangeNotifier {
       if (userAgent.contains('Mac')) return 'macOS';
       if (userAgent.contains('Linux')) return 'Linux';
       if (userAgent.contains('Android')) return 'Android';
-      if (userAgent.contains('iPhone') || userAgent.contains('iPad'))
+      if (userAgent.contains('iPhone') || userAgent.contains('iPad')) {
         return 'iOS';
+      }
       return 'Unknown';
     } catch (e) {
       return 'Unknown';

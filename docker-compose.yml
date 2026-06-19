@@ -55,6 +55,8 @@ services:
       context: ./reports-ai
       dockerfile: Dockerfile
     restart: unless-stopped
+    ports:
+      - "8000:8000"
     environment:
       INTERNAL_TOKEN: ${REPORTS_AI_INTERNAL_TOKEN:-}
       AI_PROVIDER: ${AI_PROVIDER:-mock}
