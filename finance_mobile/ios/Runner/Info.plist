@@ -71,6 +71,8 @@
 	<string>Necesitamos reconocer tu voz para llenar el reporte técnico automáticamente.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>El micrófono se usará para capturar el diagnóstico del mecánico.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Usamos Face ID o Touch ID para iniciar sesión más rápido y de forma segura.</string>
 
 	<!-- Permisos para image_picker -->
 	<key>NSPhotoLibraryUsageDescription</key>

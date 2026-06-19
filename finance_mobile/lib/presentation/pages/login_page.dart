@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart' as di;
+import '../../../../core/services/biometric_auth_service.dart';
 import '../viewmodels/login_viewmodel.dart';
 
 class LoginPage extends StatefulWidget {
@@ -19,12 +20,23 @@ class _LoginPageState extends State<LoginPage> {
   bool _obscurePassword = true;
 
   late LoginViewModel _viewModel;
+  late BiometricAuthService _biometricAuthService;
+  bool _biometricSupported = false;
+  bool _biometricEnabled = false;
 
   @override
   void initState() {
     super.initState();
     _viewModel = di.sl<LoginViewModel>();
+    _biometricAuthService = di.sl<BiometricAuthService>();
     _viewModel.addListener(_onViewModelChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _biometricSupported = await _biometricAuthService.isBiometricAvailable();
+      _biometricEnabled = await _biometricAuthService.isBiometricEnabled();
+      if (mounted) {
+        setState(() {});
+      }
+    });
   }
 
   void _onViewModelChanged() {
@@ -39,9 +51,157 @@ class _LoginPageState extends State<LoginPage> {
       passwordController.text,
       tenantController.text.trim(),
     );
-    if (success && mounted) {
+    if (!success || !mounted) {
+      return;
+    }
+
+    await _biometricAuthService.saveCredentials(
+      tenantSlug: tenantController.text.trim(),
+      email: emailController.text.trim(),
+      password: passwordController.text,
+    );
+
+    await _offerBiometricSetupIfNeeded();
+
+    if (mounted) {
       context.go('/home');
     }
+  }
+
+  Future<void> _tryBiometricLogin() async {
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final available = await _biometricAuthService.isBiometricAvailable();
+    if (!available) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('No hay biometría disponible en este dispositivo.'),
+        ),
+      );
+      return;
+    }
+
+    final storedCredentials = await _biometricAuthService.hasStoredCredentials();
+    if (!storedCredentials) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Primero iniciá sesión con correo y contraseña.'),
+        ),
+      );
+      return;
+    }
+
+    final biometricEnabled = await _biometricAuthService.isBiometricEnabled();
+    if (!biometricEnabled) {
+      if (!mounted) return;
+      // ignore: use_build_context_synchronously
+      final enable = await _showBiometricDialog(
+        title: 'Activar huella',
+        message: '¿Querés activar huella digital para este dispositivo?',
+        confirmLabel: 'Sí, activar',
+      );
+
+      if (enable != true) {
+        return;
+      }
+
+      await _biometricAuthService.setBiometricEnabled(true);
+      if (mounted) {
+        setState(() {
+          _biometricEnabled = true;
+        });
+      }
+    }
+
+    final success = await _biometricAuthService.authenticateUser();
+    if (!success || !mounted) {
+      return;
+    }
+
+    final creds = await _biometricAuthService.readCredentials();
+    if (creds == null) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Primero iniciá sesión con correo y contraseña.'),
+        ),
+      );
+      return;
+    }
+
+    final loggedIn = await _viewModel.login(
+      creds.email,
+      creds.password,
+      creds.tenantSlug,
+    );
+    if (loggedIn && mounted) {
+      context.go('/home');
+    }
+  }
+
+  Future<void> _offerBiometricSetupIfNeeded() async {
+    final storedCredentials = await _biometricAuthService.hasStoredCredentials();
+    if (!storedCredentials) {
+      return;
+    }
+
+    final alreadyEnabled = await _biometricAuthService.isBiometricEnabled();
+    if (alreadyEnabled) {
+      return;
+    }
+
+    final alreadyAsked = await _biometricAuthService.hasSeenBiometricPrompt();
+    if (alreadyAsked) {
+      await _biometricAuthService.markBiometricPromptSeen();
+      return;
+    }
+
+    final supported = await _biometricAuthService.isBiometricAvailable();
+    if (!supported || !mounted) {
+      await _biometricAuthService.markBiometricPromptSeen();
+      return;
+    }
+
+    final enableBiometrics = await _showBiometricDialog(
+      title: 'Activar huella',
+      message: '¿Querés usar huella digital para iniciar sesión más rápido en este dispositivo?',
+      confirmLabel: 'Sí, activar',
+    );
+
+    await _biometricAuthService.markBiometricPromptSeen();
+    if (enableBiometrics == true) {
+      await _biometricAuthService.setBiometricEnabled(true);
+      if (mounted) {
+        setState(() {
+          _biometricEnabled = true;
+        });
+      }
+    }
+  }
+
+  Future<bool?> _showBiometricDialog({
+    required String title,
+    required String message,
+    required String confirmLabel,
+  }) {
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('No, gracias'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(confirmLabel),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -141,6 +301,42 @@ class _LoginPageState extends State<LoginPage> {
                             SizedBox(
                               width: double.infinity,
                               child: _buildLoginButton(),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 14),
+                              child: Center(
+                                child: SizedBox(
+                                  width: 66,
+                                  height: 66,
+                                  child: ElevatedButton(
+                                    onPressed: _viewModel.isLoading ? null : _tryBiometricLogin,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: _biometricEnabled
+                                          ? const Color(0xFF2E7D32)
+                                          : (_biometricSupported
+                                              ? Colors.white
+                                              : Colors.grey.shade100),
+                                      foregroundColor: _biometricEnabled
+                                          ? Colors.white
+                                          : (_biometricSupported
+                                              ? const Color(0xFF2E7D32)
+                                              : Colors.grey.shade500),
+                                      shape: const CircleBorder(),
+                                      padding: EdgeInsets.zero,
+                                      elevation: 0,
+                                      side: BorderSide(
+                                        color: _biometricEnabled
+                                            ? const Color(0xFF2E7D32)
+                                            : (_biometricSupported
+                                                ? const Color(0xFFC8E6C9)
+                                                : Colors.grey.shade300),
+                                        width: 1.6,
+                                      ),
+                                    ),
+                                    child: const Icon(Icons.fingerprint, size: 32),
+                                  ),
+                                ),
+                              ),
                             ),
                             if (_viewModel.errorMessage != null)
                               Padding(
