@@ -40,6 +40,7 @@ export interface ReportResult {
   rowCount: number;
   truncated: boolean;
   explanation: string | null;
+  transcript: string | null;
   schemaUsed: string;
   limitKind: 'USER' | 'SYSTEM';
 }

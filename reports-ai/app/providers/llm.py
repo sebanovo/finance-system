@@ -18,6 +18,19 @@ class LlmError(RuntimeError):
     pass
 
 
+def _raise_clean(provider: str, response: httpx.Response) -> None:
+    """Raise a sanitized LlmError (no URL/api-key) from an upstream HTTP error."""
+    status = response.status_code
+    if status < 400:
+        return
+    if status == 429:
+        raise LlmError(f"{provider}: límite de solicitudes alcanzado (429). "
+                       "Esperá un momento o usá otro modelo/clave.") from None
+    if status in (401, 403):
+        raise LlmError(f"{provider}: credencial inválida o sin permisos ({status}).") from None
+    raise LlmError(f"{provider} devolvió HTTP {status}.") from None
+
+
 def _canned_sql(scope: str) -> str:
     if (scope or "").lower() == "global":
         return ("SELECT tenant_slug, transaction_count, total_amount "
@@ -64,10 +77,13 @@ async def _generate_gemini(prompt: str, schema_description: str, scope: str) -> 
         "contents": [{"parts": [{"text": full_prompt}]}],
         "generationConfig": {"response_mime_type": "application/json", "temperature": 0.1},
     }
-    async with httpx.AsyncClient(timeout=settings.llm_timeout_seconds) as client:
-        response = await client.post(url, json=body)
-        response.raise_for_status()
-        data = response.json()
+    try:
+        async with httpx.AsyncClient(timeout=settings.llm_timeout_seconds) as client:
+            response = await client.post(url, json=body)
+    except httpx.RequestError:
+        raise LlmError("No se pudo contactar a Gemini.") from None
+    _raise_clean("Gemini", response)
+    data = response.json()
     try:
         text = data["candidates"][0]["content"]["parts"][0]["text"]
     except (KeyError, IndexError) as exc:
@@ -86,11 +102,14 @@ async def _generate_openrouter(prompt: str, schema_description: str, scope: str)
         "response_format": {"type": "json_object"},
         "temperature": 0.1,
     }
-    async with httpx.AsyncClient(timeout=settings.llm_timeout_seconds) as client:
-        response = await client.post("https://openrouter.ai/api/v1/chat/completions",
-                                     headers=headers, json=body)
-        response.raise_for_status()
-        data = response.json()
+    try:
+        async with httpx.AsyncClient(timeout=settings.llm_timeout_seconds) as client:
+            response = await client.post("https://openrouter.ai/api/v1/chat/completions",
+                                         headers=headers, json=body)
+    except httpx.RequestError:
+        raise LlmError("No se pudo contactar a OpenRouter.") from None
+    _raise_clean("OpenRouter", response)
+    data = response.json()
     try:
         text = data["choices"][0]["message"]["content"]
     except (KeyError, IndexError) as exc:

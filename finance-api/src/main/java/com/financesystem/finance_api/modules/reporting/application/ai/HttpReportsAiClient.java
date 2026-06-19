@@ -62,13 +62,21 @@ public class HttpReportsAiClient implements ReportsAiGateway {
     public AiSqlResponse transcribeAndGenerate(byte[] audio, String mimeType, ReportScope scope,
                                                String schemaDescription) {
         try {
-            MultiValueMap<String, Object> form = new LinkedMultiValueMap<>();
-            form.add("audio", new ByteArrayResource(audio) {
+            // Forward the real audio content type (the part defaults to
+            // application/octet-stream otherwise, which the microservice rejects).
+            MediaType audioType = parseAudioType(mimeType);
+            String filename = "audio." + subtypeExtension(audioType.getSubtype());
+            ByteArrayResource resource = new ByteArrayResource(audio) {
                 @Override
                 public String getFilename() {
-                    return "audio";
+                    return filename;
                 }
-            });
+            };
+            HttpHeaders audioHeaders = new HttpHeaders();
+            audioHeaders.setContentType(audioType);
+
+            MultiValueMap<String, Object> form = new LinkedMultiValueMap<>();
+            form.add("audio", new org.springframework.http.HttpEntity<>(resource, audioHeaders));
             form.add("schema_description", schemaDescription);
             form.add("scope", scope.name().toLowerCase(Locale.ROOT));
 
@@ -83,6 +91,28 @@ public class HttpReportsAiClient implements ReportsAiGateway {
         } catch (Exception e) {
             throw new ReportsAiUnavailableException("El servicio de IA no está disponible.", e);
         }
+    }
+
+    /** Parse the incoming MIME, dropping parameters (e.g. {@code ;codecs=opus}); default to audio/webm. */
+    private MediaType parseAudioType(String mimeType) {
+        if (mimeType == null || mimeType.isBlank()) {
+            return MediaType.parseMediaType("audio/webm");
+        }
+        try {
+            MediaType parsed = MediaType.parseMediaType(mimeType);
+            return new MediaType(parsed.getType(), parsed.getSubtype());
+        } catch (RuntimeException e) {
+            return MediaType.parseMediaType("audio/webm");
+        }
+    }
+
+    private String subtypeExtension(String subtype) {
+        return switch (subtype) {
+            case "mpeg", "mp3" -> "mp3";
+            case "wav", "x-wav" -> "wav";
+            case "mp4", "m4a", "x-m4a" -> "m4a";
+            default -> "webm";
+        };
     }
 
     private AiSqlResponse toResponse(AiHttpResponse response) {

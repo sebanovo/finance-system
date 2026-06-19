@@ -48,6 +48,7 @@ public class ReportResponseMapper {
                 result.rowCount(),
                 result.truncated(),
                 outcome.explanation(),
+                execution.getTranscript(),
                 result.metadata().schemaUsed(),
                 result.metadata().limitKind().name()
         );

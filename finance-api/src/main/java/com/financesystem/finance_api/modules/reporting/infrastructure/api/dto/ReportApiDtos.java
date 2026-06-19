@@ -54,6 +54,7 @@ public final class ReportApiDtos {
             int rowCount,
             boolean truncated,
             String explanation,
+            String transcript,
             String schemaUsed,
             String limitKind
     ) {

@@ -227,6 +227,11 @@ type Tab = 'controlled' | 'ai' | 'history';
         <div class="space-y-4 rounded-2xl border border-[#E8F2E2] bg-white p-5">
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
+              @if (res.transcript) {
+                <p class="mb-2 rounded-xl bg-[#F1F8E9] px-3 py-2 text-xs text-[#2E7D32]">
+                  🎤 Transcripción: "{{ res.transcript }}"
+                </p>
+              }
               <p class="text-sm font-bold text-[#1B5E20]">{{ res.rowCount }} fila(s)
                 @if (res.truncated) { <span class="text-xs font-semibold text-amber-600">· resultado truncado</span> }
               </p>

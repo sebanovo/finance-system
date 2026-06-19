@@ -26,7 +26,7 @@ class Settings(BaseSettings):
 
     # Audio limits
     audio_max_bytes: int = 10 * 1024 * 1024  # 10 MB
-    audio_allowed_mimes: str = "audio/webm,audio/wav,audio/x-wav,audio/mpeg,audio/mp3,audio/mp4,audio/m4a,audio/x-m4a"
+    audio_allowed_mimes: str = "audio/webm,audio/wav,audio/x-wav,audio/mpeg,audio/mp3,audio/mp4,audio/m4a,audio/x-m4a,application/octet-stream"
 
     def allowed_mimes(self) -> set[str]:
         return {m.strip() for m in self.audio_allowed_mimes.split(",") if m.strip()}
