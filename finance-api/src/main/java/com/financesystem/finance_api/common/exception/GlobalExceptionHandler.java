@@ -2,6 +2,7 @@ package com.financesystem.finance_api.common.exception;
 
 import com.financesystem.finance_api.common.response.ApiErrorResponse;
 import com.financesystem.finance_api.common.tenancy.exception.TenantResolutionException;
+import com.financesystem.finance_api.modules.identity.auth.application.exception.FaceRecognitionUnavailableException;
 import com.financesystem.finance_api.modules.identity.auth.domain.exception.AuthenticationFailedException;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -10,6 +11,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
@@ -41,6 +43,20 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleAuthenticationFailed(AuthenticationFailedException exception) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiErrorResponse.of(exception.getMessage(), List.of(exception.getMessage())));
+    }
+
+    @ExceptionHandler(FaceRecognitionUnavailableException.class)
+    public ResponseEntity<ApiErrorResponse> handleFaceRecognitionUnavailable(FaceRecognitionUnavailableException exception) {
+        String reason = exception.getMessage();
+        if (reason == null || reason.isBlank()) {
+            reason = "Face recognition service is unavailable";
+        }
+
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(ApiErrorResponse.of(
+                        "Face recognition service is unavailable",
+                        List.of(reason)
+                ));
     }
 
     @ExceptionHandler(TenantResolutionException.class)
@@ -123,6 +139,19 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiErrorResponse.of("Invalid request body", List.of(reason)));
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiErrorResponse> handleMaxUploadSizeExceeded(MaxUploadSizeExceededException exception) {
+        String reason = exception.getMessage() != null && !exception.getMessage().isBlank()
+                ? exception.getMessage()
+                : "The uploaded file exceeds the maximum allowed size";
+
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(ApiErrorResponse.of(
+                        "Uploaded file too large",
+                        List.of(reason, "Reduce the photo size and try again")
+                ));
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)

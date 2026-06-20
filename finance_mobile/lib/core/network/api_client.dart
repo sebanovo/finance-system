@@ -246,6 +246,7 @@ class ApiClient extends ChangeNotifier {
 
     final path = response.requestOptions.path;
     if (path.contains('/api/auth/login') ||
+        path.contains('/api/auth/face/login') ||
         path.contains('/api/auth/refresh') ||
         path.contains('/api/auth/logout') ||
         path.contains('/api/public/signup')) {
@@ -295,17 +296,26 @@ class ApiClient extends ChangeNotifier {
 
   // POST
   Future<Response> post(String path, dynamic data) {
-    return dio.post(path, data: data);
+    final options = data is FormData
+        ? Options(contentType: 'multipart/form-data')
+        : null;
+    return dio.post(path, data: data, options: options);
   }
 
   // PUT
   Future<Response> put(String path, dynamic data) {
-    return dio.put(path, data: data);
+    final options = data is FormData
+        ? Options(contentType: 'multipart/form-data')
+        : null;
+    return dio.put(path, data: data, options: options);
   }
 
   // PATCH
   Future<Response> patch(String path, dynamic data) {
-    return dio.patch(path, data: data);
+    final options = data is FormData
+        ? Options(contentType: 'multipart/form-data')
+        : null;
+    return dio.patch(path, data: data, options: options);
   }
 
   // DELETE

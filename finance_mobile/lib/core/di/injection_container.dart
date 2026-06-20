@@ -26,6 +26,7 @@ import 'package:finance_mobile/domain/usecases/create_transfer_usecase.dart';
 import 'package:finance_mobile/domain/usecases/create_user_usecase.dart';
 import 'package:finance_mobile/domain/usecases/create_withdrawal_usecase.dart';
 import 'package:finance_mobile/domain/usecases/deactivate_device_usecase.dart';
+import 'package:finance_mobile/domain/usecases/face_login_usecase.dart';
 import 'package:finance_mobile/domain/usecases/forgot_password_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_account_balance_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_account_by_id_usecase.dart';
@@ -58,13 +59,16 @@ import 'package:finance_mobile/domain/usecases/revoke_device_usecase.dart';
 import 'package:finance_mobile/domain/usecases/update_account_alias_usecase.dart';
 import 'package:finance_mobile/domain/usecases/update_role_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_subscription_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_profile_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_user_info_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_user_roles_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_users_usecase.dart';
 import 'package:finance_mobile/domain/usecases/login_usecase.dart';
 import 'package:finance_mobile/domain/usecases/logout_usecase.dart';
+import 'package:finance_mobile/domain/usecases/remove_profile_photo_usecase.dart';
 import 'package:finance_mobile/domain/usecases/reset_password_usecase.dart';
 import 'package:finance_mobile/domain/usecases/signup_usecase.dart';
+import 'package:finance_mobile/domain/usecases/update_profile_usecase.dart';
 import 'package:finance_mobile/infrastructure/datasources/account_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/auth_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/dashboard_remote_datasource.dart';
@@ -94,6 +98,7 @@ import 'package:finance_mobile/presentation/viewmodels/login_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/notifications_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/notification_preferences_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/permissions_viewmodel.dart';
+import 'package:finance_mobile/presentation/viewmodels/profile_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/reset_password_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/roles_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/signup_viewmodel.dart';
@@ -163,7 +168,10 @@ void initAuthModule() {
   );
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl(), sl()));
   sl.registerLazySingleton(() => LoginUseCase(sl()));
-  sl.registerFactory(() => LoginViewModel(loginUseCase: sl()));
+  sl.registerLazySingleton(() => FaceLoginUseCase(sl()));
+  sl.registerFactory(
+    () => LoginViewModel(loginUseCase: sl(), faceLoginUseCase: sl()),
+  );
   // Reset Features
   sl.registerLazySingleton(() => ResetPasswordUseCase(sl()));
   sl.registerFactory(() => ResetPasswordViewModel(resetPasswordUseCase: sl()));
@@ -175,9 +183,21 @@ void initAuthModule() {
 
   sl.registerLazySingleton(() => ChangePasswordUseCase(sl()));
   sl.registerLazySingleton(() => LogoutUseCase(sl()));
+  sl.registerLazySingleton(() => GetProfileUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateProfileUseCase(sl()));
+  sl.registerLazySingleton(() => RemoveProfilePhotoUseCase(sl()));
 
   sl.registerFactory(
     () => ForgotPasswordViewModel(forgotPasswordUseCase: sl()),
+  );
+  sl.registerFactory(
+    () => ProfileViewModel(
+      getProfileUseCase: sl(),
+      updateProfileUseCase: sl(),
+      removeProfilePhotoUseCase: sl(),
+      logoutUseCase: sl(),
+      apiClient: sl(),
+    ),
   );
 }
 
@@ -245,7 +265,7 @@ void initLimitsModule() {
 }
 
 void initHomeModule() {
-  sl.registerFactory(
+  sl.registerLazySingleton(
     () => HomeViewModel(
       getSubscriptionUseCase: sl(),
       getCustomerDashboardUseCase: sl(),

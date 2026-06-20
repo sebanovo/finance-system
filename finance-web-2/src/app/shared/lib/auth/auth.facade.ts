@@ -17,6 +17,12 @@ export class AuthFacade {
   readonly currentUser = signal<AuthenticatedTenantUserResponse | null>(null);
   readonly status = signal<'idle' | 'loading' | 'ready' | 'error'>('idle');
 
+  constructor() {
+    if (this.authStorage.hasValidTenantSession()) {
+      void this.loadCurrentUser();
+    }
+  }
+
   /** Carga la información del usuario actual autenticado. */
   async loadCurrentUser(): Promise<void> {
     if (!this.authStorage.hasValidTenantSession()) {
@@ -28,11 +34,21 @@ export class AuthFacade {
     this.status.set('loading');
 
     try {
-      const res = await firstValueFrom(this.authService.getMe());
-      if (res.success && res.data) {
-        this.currentUser.set(res.data);
+      const [meResult, profileResult] = await Promise.allSettled([
+        firstValueFrom(this.authService.getMe()),
+        firstValueFrom(this.authService.getProfile())
+      ]);
+
+      if (meResult.status === 'fulfilled' && meResult.value.success && meResult.value.data) {
+        const currentUser = meResult.value.data;
+        const profile = profileResult.status === 'fulfilled' && profileResult.value.success ? profileResult.value.data : null;
+
+        this.currentUser.set({
+          ...currentUser,
+          profilePhotoUrl: profile?.profilePhotoUrl ?? currentUser.profilePhotoUrl ?? null,
+          profilePhotoContentType: profile?.profilePhotoContentType ?? currentUser.profilePhotoContentType ?? null
+        });
         this.status.set('ready');
-        console.log("current user loaded!!!!")
         return;
       }
 

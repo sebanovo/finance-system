@@ -91,6 +91,7 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/limits-rules-page/limits-rules-page.component').then(m => m.LimitsRulesPageComponent)
       },
       { path: 'settings', loadComponent: () => import('./pages/settings-page/settings-page.component').then(m => m.SettingsPageComponent) },
+      { path: 'profile', loadComponent: () => import('./pages/profile-page/profile-page.component').then(m => m.ProfilePageComponent) },
       {
         path: 'accounting/periods',
         canActivate: [permissionGuard('accounting.periods.read')],

@@ -5,7 +5,11 @@ import com.financesystem.finance_api.modules.identity.auth.application.dto.*;
 import com.financesystem.finance_api.modules.identity.auth.application.usecase.*;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -20,6 +24,10 @@ public class AuthController {
     private final GetCurrentAuthenticatedTenantUserUseCase getCurrentAuthenticatedTenantUserUseCase;
     private final ChangePasswordUseCase changePasswordUseCase;
     private final LogoutTenantUserUseCase logoutTenantUserUseCase;
+    private final LoginTenantUserWithFaceUseCase loginTenantUserWithFaceUseCase;
+    private final GetCurrentTenantProfileUseCase getCurrentTenantProfileUseCase;
+    private final UpdateCurrentTenantProfileUseCase updateCurrentTenantProfileUseCase;
+    private final GetCurrentTenantProfilePhotoUseCase getCurrentTenantProfilePhotoUseCase;
 
     public AuthController(
             LoginTenantUserUseCase loginTenantUserUseCase,
@@ -28,7 +36,11 @@ public class AuthController {
             ResetPasswordUseCase resetPasswordUseCase,
             GetCurrentAuthenticatedTenantUserUseCase getCurrentAuthenticatedTenantUserUseCase,
             ChangePasswordUseCase changePasswordUseCase,
-            LogoutTenantUserUseCase logoutTenantUserUseCase
+            LogoutTenantUserUseCase logoutTenantUserUseCase,
+            LoginTenantUserWithFaceUseCase loginTenantUserWithFaceUseCase,
+            GetCurrentTenantProfileUseCase getCurrentTenantProfileUseCase,
+            UpdateCurrentTenantProfileUseCase updateCurrentTenantProfileUseCase,
+            GetCurrentTenantProfilePhotoUseCase getCurrentTenantProfilePhotoUseCase
     ) {
         this.loginTenantUserUseCase = loginTenantUserUseCase;
         this.refreshTenantTokenUseCase = refreshTenantTokenUseCase;
@@ -37,6 +49,10 @@ public class AuthController {
         this.getCurrentAuthenticatedTenantUserUseCase = getCurrentAuthenticatedTenantUserUseCase;
         this.changePasswordUseCase = changePasswordUseCase;
         this.logoutTenantUserUseCase = logoutTenantUserUseCase;
+        this.loginTenantUserWithFaceUseCase = loginTenantUserWithFaceUseCase;
+        this.getCurrentTenantProfileUseCase = getCurrentTenantProfileUseCase;
+        this.updateCurrentTenantProfileUseCase = updateCurrentTenantProfileUseCase;
+        this.getCurrentTenantProfilePhotoUseCase = getCurrentTenantProfilePhotoUseCase;
     }
 
     @PostMapping("/login")
@@ -92,6 +108,75 @@ public class AuthController {
         return ApiResponse.success(
                 "Authenticated user retrieved successfully",
                 getCurrentAuthenticatedTenantUserUseCase.execute()
+        );
+    }
+
+    @GetMapping("/profile")
+    @SecurityRequirement(name = "bearerAuth")
+    public ApiResponse<CurrentTenantProfileResponse> profile() {
+        return ApiResponse.success(
+                "Current profile retrieved successfully",
+                getCurrentTenantProfileUseCase.execute()
+        );
+    }
+
+    @PutMapping(value = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @SecurityRequirement(name = "bearerAuth")
+    public ApiResponse<CurrentTenantProfileResponse> updateProfile(
+            @RequestParam(value = "firstName", required = false) String firstName,
+            @RequestParam(value = "lastName", required = false) String lastName,
+            @RequestPart(value = "photo", required = false) MultipartFile photo
+    ) {
+        UpdateCurrentTenantProfileRequest request = new UpdateCurrentTenantProfileRequest(firstName, lastName);
+        return ApiResponse.success(
+                "Profile updated successfully",
+                updateCurrentTenantProfileUseCase.execute(request, photo)
+        );
+    }
+
+    @PutMapping(value = "/profile/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @SecurityRequirement(name = "bearerAuth")
+    public ApiResponse<CurrentTenantProfileResponse> updateProfilePhoto(
+            @RequestPart("photo") MultipartFile photo
+    ) {
+        return ApiResponse.success(
+                "Profile photo updated successfully",
+                updateCurrentTenantProfileUseCase.updatePhoto(photo)
+        );
+    }
+
+    @GetMapping("/profile/photo")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<byte[]> profilePhoto() {
+        CurrentTenantProfilePhotoResponse photo = getCurrentTenantProfilePhotoUseCase.execute();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=\"" + (photo.filename() == null ? "profile-photo" : photo.filename()) + "\"")
+                .contentType(MediaType.parseMediaType(
+                        photo.contentType() == null || photo.contentType().isBlank()
+                                ? MediaType.APPLICATION_OCTET_STREAM_VALUE
+                                : photo.contentType()
+                ))
+                .body(photo.bytes());
+    }
+
+    @DeleteMapping("/profile/photo")
+    @SecurityRequirement(name = "bearerAuth")
+    public ApiResponse<CurrentTenantProfileResponse> removeProfilePhoto() {
+        return ApiResponse.success(
+                "Profile photo removed successfully",
+                updateCurrentTenantProfileUseCase.removePhoto()
+        );
+    }
+
+    @PostMapping(value = "/face/login", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<AuthTokenResponse> faceLogin(
+            @RequestParam("email") String email,
+            @RequestPart("image") MultipartFile image
+    ) {
+        return ApiResponse.success(
+                "Face login successful",
+                loginTenantUserWithFaceUseCase.execute(email, image)
         );
     }
 

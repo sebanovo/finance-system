@@ -7,4 +7,6 @@ export interface AuthenticatedTenantUserResponse {
   status: string;
   tenantSlug: string;
   roles: string[];
+  profilePhotoUrl?: string | null;
+  profilePhotoContentType?: string | null;
 }

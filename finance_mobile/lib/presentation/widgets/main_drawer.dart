@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:finance_mobile/constants/env.dart';
 import 'package:go_router/go_router.dart';
 import '../viewmodels/home_viewmodel.dart';
 import '../viewmodels/notifications_viewmodel.dart';
@@ -140,6 +141,12 @@ class MainDrawer extends StatelessWidget {
       );
     }
     if (viewModel.userInfo != null) {
+      final profilePhotoUrl = viewModel.userInfo!.profilePhotoUrl;
+      final photoImage = profilePhotoUrl == null || profilePhotoUrl.isEmpty
+          ? null
+          : NetworkImage(
+              Uri.parse(Env.baseUrl).resolve(profilePhotoUrl).toString(),
+            );
       return UserAccountsDrawerHeader(
         decoration: const BoxDecoration(color: Color(0xFF2E7D32)),
         accountName: Text(
@@ -149,10 +156,13 @@ class MainDrawer extends StatelessWidget {
         accountEmail: Text(viewModel.userInfo!.email),
         currentAccountPicture: CircleAvatar(
           backgroundColor: Colors.white,
-          child: Text(
-            viewModel.userInfo!.initial,
-            style: const TextStyle(fontSize: 24, color: Color(0xFF2E7D32)),
-          ),
+          backgroundImage: photoImage,
+          child: photoImage == null
+              ? Text(
+                  viewModel.userInfo!.initial,
+                  style: const TextStyle(fontSize: 24, color: Color(0xFF2E7D32)),
+                )
+              : null,
         ),
         otherAccountsPictures: [
           Tooltip(

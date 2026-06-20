@@ -1,10 +1,10 @@
-import 'package:finance_mobile/infrastructure/models/signup_request.dart';
-
 import 'package:finance_mobile/core/network/api_client.dart';
-import '../../../domain/entities/user.dart';
-import '../../../domain/repositories/auth_repository.dart';
-import '../../../domain/entities/tenant_signup.dart';
-import '../datasources/auth_remote_datasource.dart';
+import 'package:finance_mobile/domain/entities/tenant_signup.dart';
+import 'package:finance_mobile/domain/entities/user.dart';
+import 'package:finance_mobile/domain/entities/user_info.dart';
+import 'package:finance_mobile/domain/repositories/auth_repository.dart';
+import 'package:finance_mobile/infrastructure/datasources/auth_remote_datasource.dart';
+import 'package:finance_mobile/infrastructure/models/signup_request.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -22,6 +22,27 @@ class AuthRepositoryImpl implements AuthRepository {
     if (response.success && response.data != null) {
       final user = User(
         id: '', // borrar esto luego
+        email: email,
+        firstName: '',
+        lastName: '',
+        active: true,
+      );
+      return (user, response.data!.accessToken, response.data!.refreshToken);
+    } else {
+      throw Exception(response.message);
+    }
+  }
+
+  @override
+  Future<(User, String, String)> faceLogin(
+    String email,
+    String tenantSlug,
+    String imagePath,
+  ) async {
+    final response = await remoteDataSource.faceLogin(email, tenantSlug, imagePath);
+    if (response.success && response.data != null) {
+      final user = User(
+        id: '',
         email: email,
         firstName: '',
         lastName: '',
@@ -75,5 +96,31 @@ class AuthRepositoryImpl implements AuthRepository {
     } finally {
       apiClient.clearSession();
     }
+  }
+
+  @override
+  Future<UserInfo> getProfile() async {
+    return (await remoteDataSource.getProfile()).toEntity();
+  }
+
+  @override
+  Future<UserInfo> updateProfile({
+    String? firstName,
+    String? lastName,
+    String? photoPath,
+    String? photoName,
+  }) async {
+    return (await remoteDataSource.updateProfile(
+      firstName: firstName,
+      lastName: lastName,
+      photoPath: photoPath,
+      photoName: photoName,
+    ))
+        .toEntity();
+  }
+
+  @override
+  Future<UserInfo> removeProfilePhoto() async {
+    return (await remoteDataSource.removeProfilePhoto()).toEntity();
   }
 }

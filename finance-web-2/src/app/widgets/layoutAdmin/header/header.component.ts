@@ -8,6 +8,7 @@ import { AuthFacade } from '../../../shared/lib/auth/auth.facade';
 import { PlatformFacade } from '../../../features/platform/lib/platform.facade';
 import { PermissionService } from '../../../shared/lib/auth/permission.service';
 import { NotificationsService, NotificationResponse } from '../../../entities/notifications';
+import { environment } from '../../../../environments/environment';
 
 interface MenuItem {
   label: string;
@@ -132,8 +133,17 @@ interface MenuItem {
             class="flex cursor-pointer items-center gap-2 rounded-full p-1.5 transition-colors hover:bg-[#F1F8E9] focus:outline-none md:gap-3 md:rounded-md"
             [class.bg-[#F1F8E9]]="isProfileOpen"
           >
-            <div class="flex h-8 w-8 items-center justify-center rounded-full border border-[#2E7D32]/20 bg-[#2E7D32]/10 text-sm font-bold uppercase text-[#2E7D32]">
-              {{ getInitials() }}
+            <div class="flex h-8 w-8 overflow-hidden rounded-full border border-[#2E7D32]/20 bg-[#2E7D32]/10 text-sm font-bold uppercase text-[#2E7D32]">
+              @if (getProfilePhotoUrl()) {
+                <img
+                  [src]="getProfilePhotoUrl()"
+                  [alt]="getDisplayName() || 'Usuario'"
+                  class="h-full w-full object-cover">
+              } @else {
+                <div class="flex h-full w-full items-center justify-center">
+                  {{ getInitials() }}
+                </div>
+              }
             </div>
             <div class="hidden flex-col items-start text-left md:flex">
               <span class="text-sm font-semibold leading-none text-[#2E7D32]">
@@ -231,6 +241,7 @@ export class HeaderComponent implements OnInit {
   get tenantMenuOptions(): MenuItem[] {
     return [
       { label: 'Dashboard', route: this.dashboardRoute, icon: 'layout-dashboard' },
+      { label: 'Mi perfil', route: '/dashboard/profile', icon: 'user-circle-2' },
       { label: 'Notificaciones', route: '/dashboard/notifications', icon: 'bell' }
     ];
   }
@@ -265,18 +276,27 @@ export class HeaderComponent implements OnInit {
       return 'SuperAdmin';
     }
 
+    if (this.authFacade.status() === 'loading' && !this.tenantUser()) {
+      return 'Cargando...';
+    }
+
     const user = this.tenantUser();
     if (user) {
       return `${user.firstName} ${user.lastName}`;
     }
-    return 'Cargando...';
+    return 'Usuario';
   }
 
   getEmail(): string {
     if (this.isPlatformRoute) {
       return this.platformSuperadmin()?.email || 'superadmin@finance.local';
     }
-    return this.tenantUser()?.email || 'cargando...';
+
+    if (this.authFacade.status() === 'loading' && !this.tenantUser()) {
+      return 'Cargando...';
+    }
+
+    return this.tenantUser()?.email || '';
   }
 
   getInitials(): string {
@@ -290,9 +310,23 @@ export class HeaderComponent implements OnInit {
 
     const user = this.tenantUser();
     if (user) {
-      return (user.firstName.charAt(0) + user.lastName.charAt(0)).toUpperCase();
+      return `${user.firstName?.charAt(0) ?? ''}${user.lastName?.charAt(0) ?? ''}`.toUpperCase() || 'US';
     }
     return 'US';
+  }
+
+  getProfilePhotoUrl(): string | null {
+    if (this.isPlatformRoute) {
+      return null;
+    }
+
+    const user = this.tenantUser();
+    const profilePhotoUrl = user?.profilePhotoUrl;
+    if (!profilePhotoUrl) {
+      return null;
+    }
+
+    return `${environment.apiUrl}${profilePhotoUrl}`;
   }
 
   getRole(): string {

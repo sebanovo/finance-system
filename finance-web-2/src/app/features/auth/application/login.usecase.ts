@@ -29,6 +29,7 @@ export class LoginUseCase {
 
     try {
       const response = await firstValueFrom(this.authService.login(request));
+      console.log('login response', response);
 
       if (response.success && response.data) {
         // Almacenar token, refresh y tenant slug en persistencia local centralizada

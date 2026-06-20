@@ -9,6 +9,8 @@ class UserInfoModel {
   final String status;
   final String tenantSlug;
   final List<String> roles;
+  final String? profilePhotoUrl;
+  final String? profilePhotoContentType;
 
   UserInfoModel({
     required this.id,
@@ -19,6 +21,8 @@ class UserInfoModel {
     required this.status,
     required this.tenantSlug,
     required this.roles,
+    this.profilePhotoUrl,
+    this.profilePhotoContentType,
   });
 
   factory UserInfoModel.fromJson(Map<String, dynamic> json) {
@@ -32,6 +36,23 @@ class UserInfoModel {
       status: data['status'] ?? '',
       tenantSlug: data['tenantSlug'] ?? '',
       roles: List<String>.from(data['roles'] ?? []),
+      profilePhotoUrl: data['profilePhotoUrl'],
+      profilePhotoContentType: data['profilePhotoContentType'],
+    );
+  }
+
+  factory UserInfoModel.fromMergedJson(Map<String, dynamic> data) {
+    return UserInfoModel(
+      id: data['id'] ?? '',
+      email: data['email'] ?? '',
+      firstName: data['firstName'],
+      lastName: data['lastName'],
+      active: data['active'] ?? false,
+      status: data['status'] ?? '',
+      tenantSlug: data['tenantSlug'] ?? '',
+      roles: List<String>.from(data['roles'] ?? []),
+      profilePhotoUrl: data['profilePhotoUrl'],
+      profilePhotoContentType: data['profilePhotoContentType'],
     );
   }
 
@@ -45,6 +66,8 @@ class UserInfoModel {
       status: status,
       tenantSlug: tenantSlug,
       roles: roles,
+      profilePhotoUrl: profilePhotoUrl,
+      profilePhotoContentType: profilePhotoContentType,
     );
   }
 }

@@ -1,9 +1,13 @@
-// lib/presentation/pages/login_page.dart
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:finance_mobile/core/di/injection_container.dart' as di;
+import 'package:finance_mobile/core/services/biometric_auth_service.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/di/injection_container.dart' as di;
-import '../../../../core/services/biometric_auth_service.dart';
+import 'package:image_picker/image_picker.dart';
 import '../viewmodels/login_viewmodel.dart';
+
+enum _LoginMode { password, face }
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,16 +17,21 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
-  final tenantController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  bool _obscurePassword = true;
+  final _imagePicker = ImagePicker();
+  final _tenantController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
-  late LoginViewModel _viewModel;
-  late BiometricAuthService _biometricAuthService;
-  bool _biometricSupported = false;
+  late final LoginViewModel _viewModel;
+  late final BiometricAuthService _biometricAuthService;
+
+  _LoginMode _mode = _LoginMode.password;
+  bool _obscurePassword = true;
+  bool _biometricAvailable = false;
   bool _biometricEnabled = false;
+  XFile? _faceImage;
+  String? _faceImageLabel;
 
   @override
   void initState() {
@@ -30,8 +39,9 @@ class _LoginPageState extends State<LoginPage> {
     _viewModel = di.sl<LoginViewModel>();
     _biometricAuthService = di.sl<BiometricAuthService>();
     _viewModel.addListener(_onViewModelChanged);
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      _biometricSupported = await _biometricAuthService.isBiometricAvailable();
+      _biometricAvailable = await _biometricAuthService.isBiometricAvailable();
       _biometricEnabled = await _biometricAuthService.isBiometricEnabled();
       if (mounted) {
         setState(() {});
@@ -41,30 +51,91 @@ class _LoginPageState extends State<LoginPage> {
 
   void _onViewModelChanged() {
     if (!mounted) return;
+    if (_viewModel.errorMessage != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_viewModel.errorMessage!)));
+      _viewModel.clearError();
+    }
     setState(() {});
   }
 
-  Future<void> _login() async {
+  @override
+  void dispose() {
+    _tenantController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _viewModel.removeListener(_onViewModelChanged);
+    super.dispose();
+  }
+
+  Future<void> _submitPasswordLogin() async {
     if (!_formKey.currentState!.validate()) return;
     final success = await _viewModel.login(
-      emailController.text.trim(),
-      passwordController.text,
-      tenantController.text.trim(),
+      _emailController.text.trim(),
+      _passwordController.text,
+      _tenantController.text.trim(),
     );
-    if (!success || !mounted) {
-      return;
-    }
+    if (!success || !mounted) return;
 
     await _biometricAuthService.saveCredentials(
-      tenantSlug: tenantController.text.trim(),
-      email: emailController.text.trim(),
-      password: passwordController.text,
+      tenantSlug: _tenantController.text.trim(),
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
     );
 
     await _offerBiometricSetupIfNeeded();
 
     if (mounted) {
       context.go('/home');
+    }
+  }
+
+  Future<void> _submitFaceLogin() async {
+    final tenant = _tenantController.text.trim();
+    final email = _emailController.text.trim();
+    if (tenant.isEmpty || email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Completá tenant y correo para usar login facial.'),
+        ),
+      );
+      return;
+    }
+    if (_faceImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tomá una selfie o elegí una foto primero.'),
+        ),
+      );
+      return;
+    }
+
+    final success = await _viewModel.faceLogin(email, tenant, _faceImage!.path);
+    if (success && mounted) {
+      context.go('/home');
+    }
+  }
+
+  Future<void> _pickFaceImage(ImageSource source) async {
+    try {
+      final picked = await _imagePicker.pickImage(
+        source: source,
+        preferredCameraDevice: CameraDevice.front,
+        imageQuality: 85,
+      );
+      if (picked == null || !mounted) return;
+      setState(() {
+        _faceImage = picked;
+        _faceImageLabel = source == ImageSource.camera
+            ? 'Selfie capturada'
+            : 'Foto seleccionada';
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo obtener la imagen: $e')),
+      );
     }
   }
 
@@ -81,7 +152,8 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    final storedCredentials = await _biometricAuthService.hasStoredCredentials();
+    final storedCredentials = await _biometricAuthService
+        .hasStoredCredentials();
     if (!storedCredentials) {
       messenger.showSnackBar(
         const SnackBar(
@@ -93,30 +165,21 @@ class _LoginPageState extends State<LoginPage> {
 
     final biometricEnabled = await _biometricAuthService.isBiometricEnabled();
     if (!biometricEnabled) {
-      if (!mounted) return;
-      // ignore: use_build_context_synchronously
       final enable = await _showBiometricDialog(
         title: 'Activar huella',
         message: '¿Querés activar huella digital para este dispositivo?',
         confirmLabel: 'Sí, activar',
       );
-
       if (enable != true) {
         return;
       }
-
       await _biometricAuthService.setBiometricEnabled(true);
-      if (mounted) {
-        setState(() {
-          _biometricEnabled = true;
-        });
-      }
+      _biometricEnabled = true;
+      if (mounted) setState(() {});
     }
 
     final success = await _biometricAuthService.authenticateUser();
-    if (!success || !mounted) {
-      return;
-    }
+    if (!success || !mounted) return;
 
     final creds = await _biometricAuthService.readCredentials();
     if (creds == null) {
@@ -139,21 +202,15 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _offerBiometricSetupIfNeeded() async {
-    final storedCredentials = await _biometricAuthService.hasStoredCredentials();
-    if (!storedCredentials) {
-      return;
-    }
+    final storedCredentials = await _biometricAuthService
+        .hasStoredCredentials();
+    if (!storedCredentials) return;
 
     final alreadyEnabled = await _biometricAuthService.isBiometricEnabled();
-    if (alreadyEnabled) {
-      return;
-    }
+    if (alreadyEnabled) return;
 
     final alreadyAsked = await _biometricAuthService.hasSeenBiometricPrompt();
-    if (alreadyAsked) {
-      await _biometricAuthService.markBiometricPromptSeen();
-      return;
-    }
+    if (alreadyAsked) return;
 
     final supported = await _biometricAuthService.isBiometricAvailable();
     if (!supported || !mounted) {
@@ -163,18 +220,16 @@ class _LoginPageState extends State<LoginPage> {
 
     final enableBiometrics = await _showBiometricDialog(
       title: 'Activar huella',
-      message: '¿Querés usar huella digital para iniciar sesión más rápido en este dispositivo?',
+      message:
+          '¿Querés usar huella digital para iniciar sesión más rápido en este dispositivo?',
       confirmLabel: 'Sí, activar',
     );
 
     await _biometricAuthService.markBiometricPromptSeen();
     if (enableBiometrics == true) {
       await _biometricAuthService.setBiometricEnabled(true);
-      if (mounted) {
-        setState(() {
-          _biometricEnabled = true;
-        });
-      }
+      _biometricEnabled = true;
+      if (mounted) setState(() {});
     }
   }
 
@@ -204,223 +259,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  @override
-  void dispose() {
-    emailController.dispose();
-    passwordController.dispose();
-    tenantController.dispose();
-    _viewModel.removeListener(_onViewModelChanged);
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Iniciar Sesión'),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        foregroundColor: const Color(0xFF2E7D32),
-      ),
-      body: Container(
-        color: Colors.white,
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset("assets/logo.png", width: 200),
-                    Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(32),
-                      ),
-                      color: Colors.white,
-                      child: Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Column(
-                          children: [
-                            TextFormField(
-                              controller: tenantController,
-                              textInputAction: TextInputAction.next,
-                              validator: _viewModel.validateTenant,
-                              onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
-                              decoration: _buildInputDecoration(
-                                label: 'Nombre del tenant',
-                                hint: 'Ej: miempresa',
-                                icon: Icons.business,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: emailController,
-                              keyboardType: TextInputType.emailAddress,
-                              textInputAction: TextInputAction.next,
-                              autofillHints: const [AutofillHints.email],
-                              validator: _viewModel.validateEmail,
-                              onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
-                              decoration: _buildInputDecoration(
-                                label: 'Correo electrónico',
-                                hint: 'usuario@ejemplo.com',
-                                icon: Icons.email,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: passwordController,
-                              obscureText: _obscurePassword,
-                              autocorrect: false,
-                              enableSuggestions: false,
-                              textInputAction: TextInputAction.done,
-                              autofillHints: const [AutofillHints.password],
-                              onFieldSubmitted: (_) => _viewModel.isLoading ? null : _login(),
-                              validator: _viewModel.validatePassword,
-                              decoration: _buildInputDecoration(
-                                label: 'Contraseña',
-                                hint: '',
-                                icon: Icons.lock,
-                                suffixIcon: IconButton(
-                                  tooltip: _obscurePassword ? 'Mostrar contraseña' : 'Ocultar contraseña',
-                                  onPressed: () {
-                                    setState(() {
-                                      _obscurePassword = !_obscurePassword;
-                                    });
-                                  },
-                                  icon: Icon(
-                                    _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                                    color: const Color(0xFF4CAF50),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 28),
-                            SizedBox(
-                              width: double.infinity,
-                              child: _buildLoginButton(),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 14),
-                              child: Center(
-                                child: SizedBox(
-                                  width: 66,
-                                  height: 66,
-                                  child: ElevatedButton(
-                                    onPressed: _viewModel.isLoading ? null : _tryBiometricLogin,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: _biometricEnabled
-                                          ? const Color(0xFF2E7D32)
-                                          : (_biometricSupported
-                                              ? Colors.white
-                                              : Colors.grey.shade100),
-                                      foregroundColor: _biometricEnabled
-                                          ? Colors.white
-                                          : (_biometricSupported
-                                              ? const Color(0xFF2E7D32)
-                                              : Colors.grey.shade500),
-                                      shape: const CircleBorder(),
-                                      padding: EdgeInsets.zero,
-                                      elevation: 0,
-                                      side: BorderSide(
-                                        color: _biometricEnabled
-                                            ? const Color(0xFF2E7D32)
-                                            : (_biometricSupported
-                                                ? const Color(0xFFC8E6C9)
-                                                : Colors.grey.shade300),
-                                        width: 1.6,
-                                      ),
-                                    ),
-                                    child: const Icon(Icons.fingerprint, size: 32),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            if (_viewModel.errorMessage != null)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 12),
-                                child: Text(
-                                  _viewModel.errorMessage!,
-                                  style: TextStyle(
-                                    color: Colors.red.shade700,
-                                    fontSize: 14,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    TextButton(
-                      onPressed: () => context.push('/forgot-password'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: const Color(0xFF2E7D32),
-                        textStyle: const TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                      child: const Text('¿Olvidaste tu contraseña?'),
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: () => context.push('/signup'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: const Color(0xFF2E7D32),
-                        textStyle: const TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                      child: const Text(
-                        '¿No tienes cuenta? Registra tu empresa',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLoginButton() {
-    return ElevatedButton(
-      onPressed: _viewModel.isLoading ? null : _login,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.transparent,
-        shadowColor: Colors.transparent,
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),
-      ),
-      child: Ink(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF2E7D32), Color(0xFF66BB6A)],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
-          borderRadius: BorderRadius.circular(40),
-        ),
-        child: Container(
-          height: 40,
-          alignment: Alignment.center,
-          child: _viewModel.isLoading
-              ? const CircularProgressIndicator(color: Colors.white)
-              : const Text(
-                  'Iniciar sesión',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-        ),
-      ),
-    );
-  }
-
-  InputDecoration _buildInputDecoration({
+  InputDecoration _inputDecoration({
     required String label,
     required String hint,
     required IconData icon,
@@ -428,26 +267,433 @@ class _LoginPageState extends State<LoginPage> {
   }) {
     return InputDecoration(
       labelText: label,
-      hintText: hint.isEmpty ? null : hint,
-      prefixIcon: Icon(icon, color: const Color(0xFF4CAF50)),
+      hintText: hint,
+      prefixIcon: Icon(icon),
       suffixIcon: suffixIcon,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(30),
-        borderSide: BorderSide.none,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Iniciar sesión'),
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF2E7D32),
+        elevation: 0,
       ),
-      filled: true,
-      fillColor: Colors.grey.shade50,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      labelStyle: TextStyle(color: Colors.grey.shade700),
-      errorStyle: const TextStyle(color: Colors.red, fontSize: 12, height: 1.2),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(30),
-        borderSide: BorderSide(color: Colors.red.shade300, width: 1),
+      body: Container(
+        color: Colors.white,
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 8),
+                Center(child: Image.asset('assets/logo.png', width: 180)),
+                const SizedBox(height: 20),
+                _buildModeSelector(),
+                const SizedBox(height: 16),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: _mode == _LoginMode.password
+                      ? _buildPasswordSection()
+                      : _buildFaceSection(),
+                ),
+                const SizedBox(height: 16),
+                _buildAuthLinks(context),
+              ],
+            ),
+          ),
+        ),
       ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(30),
-        borderSide: BorderSide(color: Colors.red.shade300, width: 1),
+    );
+  }
+
+  Widget _buildModeSelector() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8F5E9),
+        borderRadius: BorderRadius.circular(999),
       ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _ModeChip(
+              label: 'Contraseña',
+              selected: _mode == _LoginMode.password,
+              onTap: () => setState(() => _mode = _LoginMode.password),
+            ),
+          ),
+          Expanded(
+            child: _ModeChip(
+              label: 'Rostro',
+              selected: _mode == _LoginMode.face,
+              onTap: () => setState(() => _mode = _LoginMode.face),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPasswordSection() {
+    return Card(
+      key: const ValueKey('password-section'),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      color: const Color(0xFFF1F8E9),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Acceso tradicional',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _tenantController,
+                textInputAction: TextInputAction.next,
+                validator: _viewModel.validateTenant,
+                decoration: _inputDecoration(
+                  label: 'Tenant',
+                  hint: 'Ej: miempresa',
+                  icon: Icons.business,
+                ),
+              ),
+              const SizedBox(height: 14),
+              TextFormField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.email],
+                validator: _viewModel.validateEmail,
+                decoration: _inputDecoration(
+                  label: 'Correo electrónico',
+                  hint: 'usuario@ejemplo.com',
+                  icon: Icons.email_outlined,
+                ),
+              ),
+              const SizedBox(height: 14),
+              TextFormField(
+                controller: _passwordController,
+                obscureText: _obscurePassword,
+                autocorrect: false,
+                enableSuggestions: false,
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.password],
+                validator: _viewModel.validatePassword,
+                onFieldSubmitted: (_) {
+                  if (!_viewModel.isLoading) {
+                    _submitPasswordLogin();
+                  }
+                },
+                decoration: _inputDecoration(
+                  label: 'Contraseña',
+                  hint: '••••••••',
+                  icon: Icons.lock_outline,
+                  suffixIcon: IconButton(
+                    tooltip: _obscurePassword
+                        ? 'Mostrar contraseña'
+                        : 'Ocultar contraseña',
+                    onPressed: () {
+                      setState(() => _obscurePassword = !_obscurePassword);
+                    },
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              ElevatedButton(
+                onPressed: _viewModel.isLoading ? null : _submitPasswordLogin,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2E7D32),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+                child: _viewModel.isLoading && _mode == _LoginMode.password
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Entrar'),
+              ),
+              const SizedBox(height: 12),
+              if (_biometricAvailable)
+                OutlinedButton.icon(
+                  onPressed: _viewModel.isLoading ? null : _tryBiometricLogin,
+                  icon: Icon(
+                    _biometricEnabled ? Icons.fingerprint : Icons.fingerprint,
+                  ),
+                  label: Text(
+                    _biometricEnabled ? 'Entrar con huella' : 'Activar huella',
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF2E7D32),
+                    side: const BorderSide(color: Color(0xFF2E7D32)),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFaceSection() {
+    return Card(
+      key: const ValueKey('face-section'),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      color: const Color(0xFFF1F8E9),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Acceso con rostro',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Necesitás tenant, correo e imagen.',
+              style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _tenantController,
+              decoration: _inputDecoration(
+                label: 'Tenant',
+                hint: 'Ej: miempresa',
+                icon: Icons.business,
+              ),
+            ),
+            const SizedBox(height: 14),
+            TextFormField(
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              autofillHints: const [AutofillHints.email],
+              decoration: _inputDecoration(
+                label: 'Correo electrónico',
+                hint: 'usuario@ejemplo.com',
+                icon: Icons.email_outlined,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _FacePreviewCard(image: _faceImage, label: _faceImageLabel),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _viewModel.isLoading
+                        ? null
+                        : () => _pickFaceImage(ImageSource.camera),
+                    icon: const Icon(Icons.photo_camera_outlined),
+                    label: const Text('Tomar selfie'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF2E7D32),
+                      side: const BorderSide(color: Color(0xFF2E7D32)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _viewModel.isLoading
+                        ? null
+                        : () => _pickFaceImage(ImageSource.gallery),
+                    icon: const Icon(Icons.photo_library_outlined),
+                    label: const Text('Usar foto'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF2E7D32),
+                      side: const BorderSide(color: Color(0xFF2E7D32)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            ElevatedButton.icon(
+              onPressed: _viewModel.isLoading ? null : _submitFaceLogin,
+              icon: _viewModel.isLoading
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.face_retouching_natural),
+              label: Text(
+                _viewModel.isLoading ? 'Validando...' : 'Entrar con rostro',
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2E7D32),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAuthLinks(BuildContext context) {
+    return Column(
+      children: [
+        TextButton(
+          onPressed: () => context.push('/forgot-password'),
+          child: const Text(
+            'Olvidé mi contraseña',
+            style: TextStyle(color: Color(0xFF2E7D32)),
+          ),
+        ),
+        TextButton(
+          onPressed: () => context.push('/signup'),
+          child: const Text(
+            'Crear tenant nuevo',
+            style: TextStyle(color: Color(0xFF2E7D32)),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ModeChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ModeChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: selected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(999),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF2E7D32).withOpacity(0.14),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: selected ? const Color(0xFF2E7D32) : Colors.grey.shade700,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FacePreviewCard extends StatelessWidget {
+  final XFile? image;
+  final String? label;
+
+  const _FacePreviewCard({required this.image, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 170,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: image == null
+          ? Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.face_4_outlined,
+                  size: 54,
+                  color: Colors.grey.shade500,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Tomá una selfie o elegí una foto',
+                  style: TextStyle(color: Colors.grey.shade700),
+                ),
+              ],
+            )
+          : Stack(
+              fit: StackFit.expand,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Image.file(File(image!.path), fit: BoxFit.cover),
+                ),
+                Positioned(
+                  left: 12,
+                  bottom: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.55),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      label ?? 'Imagen lista',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }

@@ -16,7 +16,10 @@ import {
   BarChart3, FileChartColumn,
   Database,
   Search,
-  Archive
+  Archive,
+  Camera,
+  Trash2,
+  ShieldCheck
 } from 'lucide-angular';
 
 
@@ -39,6 +42,7 @@ export const appConfig: ApplicationConfig = {
       RotateCcw, Reply, ClipboardList, AlertCircle, AlertTriangle, BadgeCheck,
       Building, Clock, Info, PauseCircle, PlayCircle, Sparkles, Wand2,
       BarChart3, FileChartColumn, Database, Search, Archive,
+      Camera, Trash2, ShieldCheck,
     }))
 
   ]

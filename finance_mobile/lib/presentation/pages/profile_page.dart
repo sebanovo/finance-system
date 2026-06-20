@@ -1,7 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:finance_mobile/constants/env.dart';
+import 'package:finance_mobile/core/di/injection_container.dart' as di;
 import 'package:go_router/go_router.dart';
-import '../../../../core/di/injection_container.dart' as di;
+import 'package:image_picker/image_picker.dart';
 import '../viewmodels/home_viewmodel.dart';
+import '../viewmodels/profile_viewmodel.dart';
 import '../widgets/change_password_dialog.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -12,43 +17,114 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  late HomeViewModel _viewModel;
+  late final ProfileViewModel _viewModel;
+  final _imagePicker = ImagePicker();
+  final _formKey = GlobalKey<FormState>();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  XFile? _selectedPhoto;
+  String? _selectedPhotoLabel;
 
   @override
   void initState() {
     super.initState();
-    _viewModel = di.sl<HomeViewModel>();
+    _viewModel = di.sl<ProfileViewModel>();
     _viewModel.addListener(_onChanged);
-    if (_viewModel.userInfo == null) {
-      _viewModel.loadUserInfo();
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _viewModel.loadProfile();
+    });
   }
 
   void _onChanged() {
     if (!mounted) return;
     if (_viewModel.errorMessage != null) {
-      _showSnackBar(_viewModel.errorMessage!);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_viewModel.errorMessage!)),
+      );
       _viewModel.clearError();
+    }
+    final profile = _viewModel.profile;
+    if (profile != null) {
+      _firstNameController.text = profile.firstName ?? '';
+      _lastNameController.text = profile.lastName ?? '';
     }
     setState(() {});
   }
 
-  void _showSnackBar(String message, {bool isError = true}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Colors.red.shade700 : Colors.green.shade700,
-      ),
-    );
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _viewModel.removeListener(_onChanged);
+    super.dispose();
   }
 
-  void _showChangePasswordDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => ChangePasswordDialog(
-        onChangePassword: (current, newPwd) async {
-          await _viewModel.changePassword(current, newPwd);
-        },
+  Future<void> _pickPhoto(ImageSource source) async {
+    try {
+      final picked = await _imagePicker.pickImage(
+        source: source,
+        preferredCameraDevice: CameraDevice.front,
+        imageQuality: 85,
+      );
+      if (picked == null || !mounted) return;
+      setState(() {
+        _selectedPhoto = picked;
+        _selectedPhotoLabel =
+            source == ImageSource.camera ? 'Foto capturada' : 'Foto seleccionada';
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo obtener la foto: $e')),
+      );
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    if (_formKey.currentState == null || !_formKey.currentState!.validate()) {
+      return;
+    }
+
+    final success = await _viewModel.updateProfile(
+      firstName: _firstNameController.text.trim().isEmpty
+          ? null
+          : _firstNameController.text.trim(),
+      lastName: _lastNameController.text.trim().isEmpty
+          ? null
+          : _lastNameController.text.trim(),
+      photoPath: _selectedPhoto?.path,
+      photoName: _selectedPhoto?.name,
+    );
+
+    if (!success || !mounted) return;
+
+    await di.sl<HomeViewModel>().loadUserInfo();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Perfil actualizado'),
+        backgroundColor: Colors.green,
+      ),
+    );
+    setState(() {
+      _selectedPhoto = null;
+      _selectedPhotoLabel = null;
+    });
+  }
+
+  Future<void> _removePhoto() async {
+    final success = await _viewModel.removeProfilePhoto();
+    if (!success || !mounted) return;
+    await di.sl<HomeViewModel>().loadUserInfo();
+    if (!mounted) return;
+    setState(() {
+      _selectedPhoto = null;
+      _selectedPhotoLabel = null;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Foto eliminada'),
+        backgroundColor: Colors.green,
       ),
     );
   }
@@ -59,80 +135,254 @@ class _ProfilePageState extends State<ProfilePage> {
     context.go('/login');
   }
 
+  void _showChangePasswordDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => ChangePasswordDialog(
+        onChangePassword: (current, newPwd) async {
+          await di.sl<HomeViewModel>().changePassword(current, newPwd);
+        },
+      ),
+    );
+  }
+
+  String _profileImageUrl() {
+    final profile = _viewModel.profile;
+    if (profile == null || profile.profilePhotoUrl == null) return '';
+    return Uri.parse(Env.baseUrl).resolve(profile.profilePhotoUrl!).toString();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final user = _viewModel.userInfo;
-    final isLoading = _viewModel.loadingUserInfo && user == null;
+    final profile = _viewModel.profile;
+    final isLoading = _viewModel.loading && profile == null;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mi perfil'),
         backgroundColor: Colors.white,
-        elevation: 0,
         foregroundColor: const Color(0xFF2E7D32),
+        elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications),
-            tooltip: 'Notificaciones',
+            icon: const Icon(Icons.notifications_outlined),
             onPressed: () => context.push('/notifications'),
           ),
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => _viewModel.loadUserInfo(),
+        onRefresh: () => _viewModel.loadProfile(),
         color: const Color(0xFF2E7D32),
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            _buildHero(user),
+            _buildHeader(profile),
             const SizedBox(height: 16),
             if (isLoading)
               const Center(child: CircularProgressIndicator())
-            else if (user != null) ...[
-              _buildSectionCard(
-                title: 'Datos de acceso',
-                children: [
-                  _infoRow('Nombre', user.displayName),
-                  _infoRow('Correo', user.email),
-                  _infoRow('Estado', user.active ? 'Activo' : user.status),
-                  _infoRow(
-                    'Contexto',
-                    _viewModel.isOwnerAdmin
-                        ? 'Administrador'
-                        : 'Cliente con permisos',
+            else if (profile != null) ...[
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text(
+                          'Editar perfil',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _firstNameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Nombre',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _lastNameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Apellido',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          initialValue: profile.email,
+                          enabled: false,
+                          decoration: const InputDecoration(
+                            labelText: 'Correo',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
+                ),
               ),
               const SizedBox(height: 12),
-              _buildSectionCard(
-                title: 'Seguridad',
-                children: [
-                  _infoRow('Roles', user.roles.join(', ')),
-                  _infoRow('Permisos', '${_viewModel.permissions.length}'),
-                  _infoRow(
-                    'Visibilidad',
-                    _viewModel.isOwnerAdmin
-                        ? 'Panel administrativo completo'
-                        : 'Panel de cliente por permisos',
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text(
+                        'Foto de perfil',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _ProfilePhotoPreview(
+                        localPhoto: _selectedPhoto,
+                        remoteUrl: _profileImageUrl(),
+                        fallbackInitial: profile.initial,
+                        label: _selectedPhotoLabel,
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _viewModel.saving
+                                  ? null
+                                  : () => _pickPhoto(ImageSource.camera),
+                              icon: const Icon(Icons.photo_camera_outlined),
+                              label: const Text('Tomar foto'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _viewModel.saving
+                                  ? null
+                                  : () => _pickPhoto(ImageSource.gallery),
+                              icon: const Icon(Icons.photo_library_outlined),
+                              label: const Text('Usar foto'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: _viewModel.saving ? null : _saveProfile,
+                              icon: _viewModel.saving
+                                  ? const SizedBox(
+                                      height: 18,
+                                      width: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(Icons.save_outlined),
+                              label: const Text('Guardar cambios'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF2E7D32),
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          OutlinedButton.icon(
+                            onPressed:
+                                _viewModel.saving ? null : _removePhoto,
+                            icon: const Icon(Icons.delete_outline),
+                            label: const Text('Quitar foto'),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
               const SizedBox(height: 12),
-              _buildActionCard(),
-            ] else ...[
-              _buildEmptyState(),
-            ],
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text(
+                        'Seguridad',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton.icon(
+                        onPressed: _showChangePasswordDialog,
+                        icon: const Icon(Icons.lock_reset),
+                        label: const Text('Cambiar contraseña'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2E7D32),
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        onPressed: _logout,
+                        icon: const Icon(Icons.logout),
+                        label: const Text('Cerrar sesión'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red.shade700,
+                          side: BorderSide(color: Colors.red.shade300),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ] else
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: const Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Text('No pudimos cargar tu perfil. Intenta refrescar.'),
+                ),
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHero(dynamic user) {
-    final displayName = user?.displayName ?? 'Perfil';
-    final email = user?.email ?? '';
+  Widget _buildHeader(dynamic profile) {
+    final name = profile?.displayName ?? 'Perfil';
+    final email = profile?.email ?? '';
+    final remoteUrl = profile == null || profile.profilePhotoUrl == null
+        ? ''
+        : Uri.parse(Env.baseUrl).resolve(profile.profilePhotoUrl!).toString();
+    final ImageProvider? imageProvider = _selectedPhoto != null
+        ? FileImage(File(_selectedPhoto!.path))
+        : remoteUrl.isNotEmpty
+            ? NetworkImage(remoteUrl)
+            : null;
+
     return Container(
-      width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -143,16 +393,19 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Row(
         children: [
           CircleAvatar(
-            radius: 28,
+            radius: 30,
             backgroundColor: Colors.white,
-            child: Text(
-              user?.initial ?? 'U',
-              style: const TextStyle(
-                color: Color(0xFF2E7D32),
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            backgroundImage: imageProvider,
+            child: (_selectedPhoto == null && remoteUrl.isEmpty)
+                ? Text(
+                    profile?.initial ?? 'U',
+                    style: const TextStyle(
+                      color: Color(0xFF2E7D32),
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                : null,
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -160,7 +413,7 @@ class _ProfilePageState extends State<ProfilePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  displayName,
+                  name,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 20,
@@ -179,119 +432,84 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+}
 
-  Widget _buildSectionCard({
-    required String title,
-    required List<Widget> children,
-  }) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ...children,
-          ],
-        ),
+class _ProfilePhotoPreview extends StatelessWidget {
+  final XFile? localPhoto;
+  final String remoteUrl;
+  final String fallbackInitial;
+  final String? label;
+
+  const _ProfilePhotoPreview({
+    required this.localPhoto,
+    required this.remoteUrl,
+    required this.fallbackInitial,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasLocal = localPhoto != null;
+    final hasRemote = remoteUrl.isNotEmpty;
+
+    return Container(
+      height: 180,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.shade300),
       ),
-    );
-  }
-
-  Widget _buildActionCard() {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              'Acciones de seguridad',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton.icon(
-              onPressed: _showChangePasswordDialog,
-              icon: const Icon(Icons.lock_reset),
-              label: const Text('Cambiar contraseña'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2E7D32),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            OutlinedButton.icon(
-              onPressed: _logout,
-              icon: const Icon(Icons.logout),
-              label: const Text('Cerrar sesión'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.red.shade700,
-                side: BorderSide(color: Colors.red.shade300),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _infoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          SizedBox(
-            width: 96,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey.shade700,
-                fontWeight: FontWeight.w600,
+          if (hasLocal)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: Image.file(File(localPhoto!.path), fit: BoxFit.cover),
+            )
+          else if (hasRemote)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: Image.network(remoteUrl, fit: BoxFit.cover),
+            )
+          else
+            Center(
+              child: CircleAvatar(
+                radius: 42,
+                backgroundColor: const Color(0xFF2E7D32),
+                child: Text(
+                  fallbackInitial,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              value.isEmpty ? '-' : value,
-              style: const TextStyle(fontSize: 14),
+          if (label != null)
+            Positioned(
+              left: 12,
+              bottom: 12,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.55),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  label!,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
             ),
-          ),
         ],
       ),
     );
-  }
-
-  Widget _buildEmptyState() {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: const Padding(
-        padding: EdgeInsets.all(20),
-        child: Text('No pudimos cargar tu perfil. Intenta refrescar.'),
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _viewModel.removeListener(_onChanged);
-    super.dispose();
   }
 }

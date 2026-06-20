@@ -1,6 +1,5 @@
 package com.financesystem.finance_api.modules.governance.notifications.infrastructure.persistence;
 
-import com.financesystem.finance_api.modules.governance.notifications.domain.model.NotificationPlatform;
 import jakarta.persistence.*;
 
 import java.time.Instant;
