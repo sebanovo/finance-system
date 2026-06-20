@@ -56,6 +56,21 @@ public final class AuditEventTypes {
     public static final String REPORT_EXPORTED = "REPORT_EXPORTED";
     public static final String REPORT_RERUN = "REPORT_RERUN";
 
+    public static final String SERVICE_PROVIDER_CREATED = "SERVICE_PROVIDER_CREATED";
+    public static final String SERVICE_PROVIDER_UPDATED = "SERVICE_PROVIDER_UPDATED";
+    public static final String SERVICE_PROVIDER_STATUS_CHANGED = "SERVICE_PROVIDER_STATUS_CHANGED";
+    public static final String SERVICE_CUSTOMER_CREATED = "SERVICE_CUSTOMER_CREATED";
+    public static final String SERVICE_CUSTOMER_UPDATED = "SERVICE_CUSTOMER_UPDATED";
+    public static final String SERVICE_BILL_CREATED = "SERVICE_BILL_CREATED";
+    public static final String SERVICE_BILL_CANCELLED = "SERVICE_BILL_CANCELLED";
+    public static final String SERVICE_ENROLLMENT_CREATED = "SERVICE_ENROLLMENT_CREATED";
+    public static final String SERVICE_ENROLLMENT_DELETED = "SERVICE_ENROLLMENT_DELETED";
+    public static final String SERVICE_BILL_QUERIED = "SERVICE_BILL_QUERIED";
+    public static final String SERVICE_PAYMENT_CREATED = "SERVICE_PAYMENT_CREATED";
+    public static final String SERVICE_PAYMENT_ASSISTED_CREATED = "SERVICE_PAYMENT_ASSISTED_CREATED";
+    public static final String SERVICE_PAYMENT_COMPLETED = "SERVICE_PAYMENT_COMPLETED";
+    public static final String SERVICE_PAYMENT_FAILED = "SERVICE_PAYMENT_FAILED";
+
     private AuditEventTypes() {
     }
 }

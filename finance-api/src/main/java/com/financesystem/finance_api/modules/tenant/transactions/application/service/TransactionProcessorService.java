@@ -782,7 +782,11 @@ public class TransactionProcessorService {
 
     @Transactional
     public TransactionResponse createPayment(CreatePaymentTransactionRequest request) {
-        UUID requestedByUserId = resolveRequestedByUserId();
+        return createPayment(request, resolveRequestedByUserId());
+    }
+
+    @Transactional
+    public TransactionResponse createPayment(CreatePaymentTransactionRequest request, UUID requestedByUserId) {
         String idempotencyKey = normalizeText(request.idempotencyKey());
 
         Transaction existing = transactionRepository

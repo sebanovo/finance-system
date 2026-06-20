@@ -126,7 +126,14 @@ public class TenantBootstrapService {
             "backups.list",
             "backups.detail",
             "backups.download",
-            "backups.restore"
+            "backups.restore",
+
+            "service-providers.read",
+            "service-bills.query",
+            "service-payments.create",
+            "service-payments.read",
+            "service-payments.detail",
+            "service-enrollments.read"
     );
 
     private static final List<String> DEFAULT_ADMIN_PERMISSION_CODES = List.of(
@@ -216,7 +223,14 @@ public class TenantBootstrapService {
             "backups.list",
             "backups.detail",
             "backups.download",
-            "backups.restore"
+            "backups.restore",
+
+            "service-providers.read",
+            "service-bills.query",
+            "service-payments.create",
+            "service-payments.read",
+            "service-payments.detail",
+            "service-enrollments.read"
     );
     private static final List<String> DEFAULT_CLIENT_PERMISSION_CODES = List.of(
             "me.accounts.create",
@@ -236,7 +250,17 @@ public class TenantBootstrapService {
             "me.transactions.qr.create",
             "me.transactions.qr.read",
             "me.transactions.qr.cancel",
-            "me.transactions.qr.confirm"
+            "me.transactions.qr.confirm",
+
+            "me.service-providers.read",
+            "me.service-enrollments.read",
+            "me.service-enrollments.create",
+            "me.service-enrollments.update",
+            "me.service-enrollments.delete",
+            "me.service-bills.query",
+            "me.service-payments.create",
+            "me.service-payments.read",
+            "me.service-payments.detail"
     );
     private static final List<FxRateSeed> DEFAULT_FX_RATES = List.of(
             new FxRateSeed("BOB", "BOB", new java.math.BigDecimal("1.00000000"), "Base currency to itself"),
