@@ -90,6 +90,37 @@ interface MenuGroup {
             <lucide-icon [name]="item.icon" class="h-4 w-4 opacity-70 group-hover:opacity-100 transition-opacity"></lucide-icon>
             {{ item.label }}
           </a>
+
+          <div *ngFor="let group of platformMenuGroups" class="mb-2">
+            <button 
+              (click)="toggleGroup(group.id)"
+              class="group flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium text-[#333333] transition-colors hover:bg-[#F1F8E9] hover:text-[#2E7D32]"
+            >
+              <div class="flex items-center gap-3">
+                <lucide-icon [name]="group.icon" class="h-4 w-4 opacity-70 group-hover:opacity-100 transition-opacity"></lucide-icon>
+                <span>{{ group.label }}</span>
+              </div>
+              <lucide-icon 
+                name="chevron-down" 
+                class="h-4 w-4 opacity-50"
+                [@rotateIcon]="expandedGroups[group.id] ? 'open' : 'closed'"
+              ></lucide-icon>
+            </button>
+
+            <div [@accordion]="expandedGroups[group.id] ? 'open' : 'closed'" class="overflow-hidden px-2">
+              <div class="ml-2 flex flex-col space-y-1 border-l border-[#C8E6C9] py-1 pl-4">
+                <a *ngFor="let item of group.items" 
+                   [routerLink]="item.route" 
+                   routerLinkActive="bg-[#2E7D32] text-white font-semibold shadow-sm"
+                   [routerLinkActiveOptions]="{exact: true}"
+                   (click)="closeMobileMenu()"
+                   class="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-[#666666] transition-all duration-200 hover:bg-[#F1F8E9] hover:text-[#2E7D32]">
+                  <lucide-icon [name]="item.icon" class="h-3.5 w-3.5 opacity-60"></lucide-icon>
+                  {{ item.label }}
+                </a>
+              </div>
+            </div>
+          </div>
         </ng-container>
 
         <ng-container *ngIf="!isPlatformRoute">
@@ -174,11 +205,14 @@ export class SidebarComponent {
 
   expandedGroups: Record<string, boolean> = {
     accesos: false,
-    operaciones: true,
+    operaciones: false,
+    servicios: false,
     divisas: false,
     seguridad: false,
     contabilidad: false,
-    reportes: true
+    reportes: false,
+    'mis-servicios': false,
+    'servicios-platform': false
   };
 
   generalItems: MenuItem[] = [
@@ -204,6 +238,25 @@ export class SidebarComponent {
             route: '/dashboard/me/transactions',
             icon: 'arrow-right-left',
             permissions: ['me.transactions.read', 'me.transactions.detail']
+          }
+        ]
+      },
+      {
+        id: 'mis-servicios',
+        label: 'Mis servicios',
+        icon: 'briefcase',
+        items: [
+          {
+            label: 'Servicios afiliados',
+            route: '/dashboard/me/service-enrollments',
+            icon: 'clipboard-list',
+            permissions: ['me.service-enrollments.read']
+          },
+          {
+            label: 'Historial de pagos',
+            route: '/dashboard/me/service-payments',
+            icon: 'credit-card',
+            permissions: ['me.service-payments.read']
           }
         ]
       }
@@ -260,6 +313,19 @@ export class SidebarComponent {
           route: '/dashboard/transactions',
           icon: 'arrow-right-left',
           permissions: ['transactions.read', 'transactions.admin.read']
+        }
+      ]
+    },
+    {
+      id: 'servicios',
+      label: 'Servicios',
+      icon: 'briefcase',
+      items: [
+        {
+          label: 'Pagos de servicios',
+          route: '/dashboard/service-payments',
+          icon: 'credit-card',
+          permissions: ['service-payments.create', 'service-payments.read', 'service-payments.detail']
         }
       ]
     },
@@ -345,6 +411,36 @@ export class SidebarComponent {
     { label: 'Suscripciones', route: '/platform/subscriptions', icon: 'dollar-sign' },
     { label: 'Reportes', route: '/platform/reporting', icon: 'bar-chart-3' },
     { label: 'Auditoría', route: '/platform/audit', icon: 'clipboard-list' }
+  ];
+
+  platformMenuGroups: MenuGroup[] = [
+    {
+      id: 'servicios-platform',
+      label: 'Servicios',
+      icon: 'briefcase',
+      items: [
+        {
+          label: 'Proveedores',
+          route: '/platform/service-providers',
+          icon: 'building-2'
+        },
+        {
+          label: 'Clientes de servicio',
+          route: '/platform/service-customers',
+          icon: 'users'
+        },
+        {
+          label: 'Deudas',
+          route: '/platform/service-bills',
+          icon: 'file-text'
+        },
+        {
+          label: 'Pagos globales',
+          route: '/platform/service-bill-payments',
+          icon: 'credit-card'
+        }
+      ]
+    }
   ];
 
   readonly menuGroups: MenuGroup[] = this.isOwnerAdmin

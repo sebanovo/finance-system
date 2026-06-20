@@ -35,9 +35,27 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/summary-page/summary-page.component').then(m => m.SummaryPageComponent)
       },
 
-      { path: 'me',
+      {
+        path: 'me',
         canActivate: [tenantRoleGuard('NON_OWNER', '/dashboard/summary')],
-        loadComponent: () => import('./pages/customer-summary-page/customer-summary-page.component').then(m => m.CustomerSummaryPageComponent)
+        loadComponent: () => import('./pages/customer-services-shell/customer-services-shell.component').then(m => m.CustomerServicesShellComponent),
+        children: [
+          { path: '', redirectTo: 'summary', pathMatch: 'full' },
+          {
+            path: 'summary',
+            loadComponent: () => import('./pages/customer-summary-page/customer-summary-page.component').then(m => m.CustomerSummaryPageComponent)
+          },
+          {
+            path: 'service-enrollments',
+            canActivate: [permissionGuard('me.service-enrollments.read')],
+            loadComponent: () => import('./pages/my-service-enrollments-page/my-service-enrollments-page.component').then(m => m.MyServiceEnrollmentsPageComponent)
+          },
+          {
+            path: 'service-payments',
+            canActivate: [permissionGuard('me.service-payments.read')],
+            loadComponent: () => import('./pages/my-service-payments-page/my-service-payments-page.component').then(m => m.MyServicePaymentsPageComponent)
+          }
+        ]
       },
 
       {
@@ -108,6 +126,11 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/reporting-page/reporting-page.component').then(m => m.ReportingPageComponent)
       },
       {
+        path: 'service-payments',
+        canActivate: [permissionGuard('service-payments.create', 'service-payments.read', 'service-payments.detail')],
+        loadComponent: () => import('./pages/service-payments-page/service-payments-page.component').then(m => m.ServicePaymentsPageComponent)
+      },
+      {
         path: 'notifications',
         loadComponent: () => import('./pages/notifications-page/notifications-page.component').then(m => m.NotificationsPageComponent)
       },
@@ -152,6 +175,10 @@ export const routes: Routes = [
       { path: 'tenants', loadComponent: () => import('./pages/platform-tenants-page/platform-tenants-page.component').then(m => m.PlatformTenantsPageComponent) },
       { path: 'subscriptions', loadComponent: () => import('./pages/platform-subscriptions-page/platform-subscriptions-page.component').then(m => m.PlatformSubscriptionsPageComponent) },
       { path: 'reporting', loadComponent: () => import('./pages/platform-reporting-page/platform-reporting-page.component').then(m => m.PlatformReportingPageComponent) },
+      { path: 'service-providers', loadComponent: () => import('./pages/platform-service-providers-page/platform-service-providers-page.component').then(m => m.PlatformServiceProvidersPageComponent) },
+      { path: 'service-customers', loadComponent: () => import('./pages/platform-service-customers-page/platform-service-customers-page.component').then(m => m.PlatformServiceCustomersPageComponent) },
+      { path: 'service-bills', loadComponent: () => import('./pages/platform-service-bills-page/platform-service-bills-page.component').then(m => m.PlatformServiceBillsPageComponent) },
+      { path: 'service-bill-payments', loadComponent: () => import('./pages/platform-service-bill-payments-page/platform-service-bill-payments-page.component').then(m => m.PlatformServiceBillPaymentsPageComponent) },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       // app.routes.ts - agregar dentro del children de platform
     ]
