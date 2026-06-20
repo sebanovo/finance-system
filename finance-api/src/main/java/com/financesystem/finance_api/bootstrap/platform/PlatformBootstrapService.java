@@ -266,6 +266,32 @@ public class PlatformBootstrapService {
         logger.info("Base backup permissions seeded successfully.");
     }
 
+    public void seedBaseServicePermissions() {
+        logger.info("Seeding base service permissions...");
+
+        List<PermissionSeed> permissions = List.of(
+                new PermissionSeed("me.service-providers.read", "services", "Read own service providers"),
+                new PermissionSeed("me.service-enrollments.read", "services", "Read own service enrollments"),
+                new PermissionSeed("me.service-enrollments.create", "services", "Create own service enrollments"),
+                new PermissionSeed("me.service-enrollments.update", "services", "Update own service enrollments"),
+                new PermissionSeed("me.service-enrollments.delete", "services", "Delete own service enrollments"),
+                new PermissionSeed("me.service-bills.query", "services", "Query own service bills"),
+                new PermissionSeed("me.service-payments.create", "services", "Create own service payments"),
+                new PermissionSeed("me.service-payments.read", "services", "Read own service payments"),
+                new PermissionSeed("me.service-payments.detail", "services", "Read own service payment details"),
+                new PermissionSeed("service-providers.read", "services", "Read service providers"),
+                new PermissionSeed("service-bills.query", "services", "Query service bills"),
+                new PermissionSeed("service-payments.create", "services", "Create service payments"),
+                new PermissionSeed("service-payments.read", "services", "Read service payments"),
+                new PermissionSeed("service-payments.detail", "services", "Read service payment details"),
+                new PermissionSeed("service-enrollments.read", "services", "Read service enrollments")
+        );
+
+        seedPermissions(permissions);
+
+        logger.info("Base service permissions seeded successfully.");
+    }
+
     public void seedBaseReportingPermissions() {
         logger.info("Seeding base reporting permissions...");
 
@@ -317,6 +343,55 @@ public class PlatformBootstrapService {
         }
 
         logger.info("Reporting permissions assigned to registered tenants successfully.");
+    }
+
+    public void seedServicePermissionsForRegisteredTenants() {
+        logger.info("Assigning service permissions to registered tenant roles...");
+
+        List<TenantSchemaSeed> tenants = jdbcTemplate.query(
+                """
+                SELECT slug, schema_name
+                FROM public.platform_tenants
+                WHERE active = true
+                  AND schema_name IS NOT NULL
+                  AND schema_name <> ''
+                ORDER BY slug ASC
+                """,
+                (rs, rowNum) -> new TenantSchemaSeed(rs.getString("slug"), rs.getString("schema_name"))
+        );
+
+        List<String> tenantCodes = List.of(
+                "service-providers.read",
+                "service-bills.query",
+                "service-payments.create",
+                "service-payments.read",
+                "service-payments.detail",
+                "service-enrollments.read"
+        );
+
+        List<String> clientCodes = List.of(
+                "me.service-providers.read",
+                "me.service-enrollments.read",
+                "me.service-enrollments.create",
+                "me.service-enrollments.update",
+                "me.service-enrollments.delete",
+                "me.service-bills.query",
+                "me.service-payments.create",
+                "me.service-payments.read",
+                "me.service-payments.detail"
+        );
+
+        for (TenantSchemaSeed tenant : tenants) {
+            validateSchemaName(tenant.schemaName());
+
+            seedTenantRolePermissions(tenant.schemaName(), "OWNER_ADMIN", tenantCodes);
+            seedTenantRolePermissions(tenant.schemaName(), "OWNER_ADMIN", clientCodes);
+            seedTenantRolePermissions(tenant.schemaName(), "ADMIN", tenantCodes);
+            seedTenantRolePermissions(tenant.schemaName(), "ADMIN", clientCodes);
+            seedTenantRolePermissions(tenant.schemaName(), "USER", clientCodes);
+        }
+
+        logger.info("Service permissions assigned to registered tenants successfully.");
     }
 
     public void seedInitialPlatformSuperadmin() {

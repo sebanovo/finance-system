@@ -43,11 +43,13 @@ public class PlatformBootstrapRunner implements ApplicationRunner {
         platformBootstrapService.seedBaseAccountingPermissions();
         platformBootstrapService.seedBaseFxPermissions();
         platformBootstrapService.seedBaseBackupPermissions();
+        platformBootstrapService.seedBaseServicePermissions();
         platformBootstrapService.seedBaseReportingPermissions();
         platformBootstrapService.seedInitialPlatformSuperadmin();
 
         tenantSchemaMigrationService.migrateRegisteredTenantSchemas();
         platformBootstrapService.seedBackupPermissionsForRegisteredTenants();
+        platformBootstrapService.seedServicePermissionsForRegisteredTenants();
         platformBootstrapService.seedReportingPermissionsForRegisteredTenants();
 
         // Reporting security backfill: per-view grants on every existing tenant
