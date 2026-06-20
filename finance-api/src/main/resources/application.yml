@@ -4,6 +4,10 @@ spring:
     name: finance-api
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
+  servlet:
+    multipart:
+      max-file-size: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:10MB}
+      max-request-size: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:10MB}
 
 server:
   port: ${BACKEND_PORT:8080}
@@ -40,6 +44,18 @@ reports:
     storage-path: ${REPORT_EXPORT_STORAGE_PATH:/app/generated-reports}
 
 app:
+  auth:
+    face-recognition:
+      enabled: ${FACEPP_ENABLED:true}
+      api-key: ${FACEPP_API_KEY:}
+      api-secret: ${FACEPP_API_SECRET:}
+      base-url: ${FACEPP_BASE_URL:https://api-us.faceplusplus.com/facepp/v3}
+      fallback-base-url: ${FACEPP_FALLBACK_BASE_URL:}
+      confidence-threshold: ${FACEPP_CONFIDENCE_THRESHOLD:80.0}
+      timeout-ms: ${FACEPP_TIMEOUT_MS:15000}
+  storage:
+    profile-photos:
+      root-dir: ${PROFILE_PHOTO_STORAGE_ROOT_DIR:uploads/profile-photos}
   tenancy:
     header-name: ${TENANT_HEADER_NAME:X-Tenant-Slug}
     public-schema: ${PUBLIC_SCHEMA:public}

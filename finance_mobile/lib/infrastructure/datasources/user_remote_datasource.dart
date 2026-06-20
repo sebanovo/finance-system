@@ -104,20 +104,33 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
   // }
   @override
   Future<UserInfoModel> getUserInfo() async {
-    // ✅ Cambiar endpoint de /api/secure/me a /api/auth/me
-    final response = await apiClient.get('/api/auth/me');
-
-    if (response.statusCode == 200) {
-      final data = response.data as Map<String, dynamic>;
-      if (data['success'] == true) {
-        return UserInfoModel.fromJson(data);
-      } else {
-        throw Exception(data['message'] ?? 'Error al obtener información');
-      }
-    } else if (response.statusCode == 401) {
+    final meResponse = await apiClient.get('/api/auth/me');
+    if (meResponse.statusCode == 401) {
       throw Exception('Sesión expirada');
-    } else {
-      throw Exception('Error ${response.statusCode}');
     }
+    if (meResponse.statusCode != 200) {
+      throw Exception('Error ${meResponse.statusCode}');
+    }
+
+    final meData = meResponse.data as Map<String, dynamic>;
+    if (meData['success'] != true) {
+      throw Exception(meData['message'] ?? 'Error al obtener información');
+    }
+
+    final profileResponse = await apiClient.get('/api/auth/profile');
+    Map<String, dynamic>? profileData;
+    if (profileResponse.statusCode == 200) {
+      final data = profileResponse.data as Map<String, dynamic>;
+      if (data['success'] == true && data['data'] is Map<String, dynamic>) {
+        profileData = data['data'] as Map<String, dynamic>;
+      }
+    }
+
+    final merged = <String, dynamic>{
+      ...meData['data'] as Map<String, dynamic>,
+      if (profileData != null) ...profileData,
+    };
+
+    return UserInfoModel.fromMergedJson(merged);
   }
 }

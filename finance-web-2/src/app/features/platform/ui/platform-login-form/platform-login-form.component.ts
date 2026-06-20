@@ -17,9 +17,11 @@ export interface PlatformLoginRequest {
     <div class="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div class="sm:mx-auto sm:w-full sm:max-w-md">
         <div class="text-center">
-          <div class="mx-auto h-12 w-12 rounded-xl bg-[#1B5E20] flex items-center justify-center">
-            <span class="text-white font-bold text-xl">P</span>
-          </div>
+          <img
+            src="/logo.png"
+            alt="Prospera"
+            class="mx-auto h-12 w-12 rounded-xl object-contain"
+          >
           <h2 class="mt-6 text-3xl font-extrabold text-[#1B5E20]">Plataforma</h2>
           <p class="mt-2 text-sm text-[#666666]">Acceso exclusivo para administradores globales</p>
         </div>

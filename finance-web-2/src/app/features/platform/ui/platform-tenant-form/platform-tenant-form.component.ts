@@ -109,9 +109,21 @@ export interface CreateTenantFormData {
           </div>
           <div>
             <label class="block text-sm font-medium text-[#2E7D32] mb-1">Contraseña *</label>
-            <input type="password" formControlName="password" placeholder="Mínimo 8 caracteres"
-                   [class.border-red-500]="isFieldInvalid('password')"
-                   class="w-full px-3 py-2 border border-[#C8E6C9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4CAF50]">
+            <div class="relative">
+              <input
+                [type]="showPassword ? 'text' : 'password'"
+                formControlName="password"
+                placeholder="Mínimo 8 caracteres"
+                [class.border-red-500]="isFieldInvalid('password')"
+                class="w-full px-3 py-2 pr-10 border border-[#C8E6C9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4CAF50]">
+              <button
+                type="button"
+                (click)="togglePasswordVisibility()"
+                class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#6B7D6C] transition-colors hover:text-[#2E7D32]"
+                tabindex="-1">
+                <lucide-icon [name]="showPassword ? 'eye-off' : 'eye'" class="h-4 w-4"></lucide-icon>
+              </button>
+            </div>
             <span *ngIf="isFieldInvalid('password')" class="text-xs text-red-600 mt-1">La contraseña es requerida (mínimo 8 caracteres)</span>
           </div>
         </div>
@@ -140,6 +152,7 @@ export class PlatformTenantFormComponent {
   @Output() cancel = new EventEmitter<void>();
 
   private fb = inject(FormBuilder);
+  showPassword = false;
   ngOnInit(): void {
     // Si hay planes disponibles y no hay valor seleccionado, selecciona el primero
     if (this.plans.length > 0 && !this.tenantForm.get('planCode')?.value) {
@@ -169,5 +182,9 @@ export class PlatformTenantFormComponent {
   isFieldInvalid(fieldName: string): boolean {
     const field = this.tenantForm.get(fieldName);
     return field ? field.invalid && (field.dirty || field.touched) : false;
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
   }
 }

@@ -35,6 +35,8 @@ export class SignupFormComponent {
   
   @Output() formSubmit = new EventEmitter<PublicSignupRequest>();
 
+  showPassword = false;
+
   signupForm: FormGroup;
 
   constructor(private fb: FormBuilder) {
@@ -60,5 +62,9 @@ export class SignupFormComponent {
   isFieldInvalid(fieldName: string): boolean {
     const field = this.signupForm.get(fieldName);
     return field ? field.invalid && (field.dirty || field.touched) : false;
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
   }
 }

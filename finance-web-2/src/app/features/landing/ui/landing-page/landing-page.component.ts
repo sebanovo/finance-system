@@ -20,9 +20,11 @@ import { LucideAngularModule } from 'lucide-angular';
       <!-- Header logo -->
       <header class="relative z-10 flex items-center justify-between px-8 py-6">
         <div class="flex items-center gap-3">
-          <div class="h-10 w-10 rounded-lg bg-[#2E7D32] flex items-center justify-center font-bold text-white text-xl shadow-lg">
-            P
-          </div>
+          <img
+            src="/logo.png"
+            alt="Prospera"
+            class="h-10 w-10 rounded-lg object-contain shadow-lg"
+          >
           <span class="font-bold text-2xl tracking-tight text-white">PROSPERA</span>
         </div>
         <div class="text-sm text-slate-400">

@@ -1,6 +1,5 @@
 package com.financesystem.finance_api.modules.governance.notifications.infrastructure.persistence;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.financesystem.finance_api.modules.governance.notifications.domain.model.Notification;
 import com.financesystem.finance_api.modules.governance.notifications.domain.model.NotificationCategory;
 import com.financesystem.finance_api.modules.governance.notifications.domain.model.NotificationPriority;

@@ -96,26 +96,53 @@ import { PlatformSuperadminMeUseCase } from '../../features/platform/application
             <form class="mt-6 grid gap-4 sm:grid-cols-2" [formGroup]="form" (ngSubmit)="submit()">
               <label class="sm:col-span-2">
                 <span class="mb-1 block text-sm font-semibold text-[#2E7D32]">Contraseña actual</span>
-                <input
-                  type="password"
-                  formControlName="currentPassword"
-                  class="w-full rounded-2xl border border-[#C8E6C9] bg-white px-4 py-3 text-sm text-[#1B5E20] outline-none transition-colors placeholder:text-[#9AA99A] focus:border-[#2E7D32]">
+                <div class="relative">
+                  <input
+                    [type]="showCurrentPassword ? 'text' : 'password'"
+                    formControlName="currentPassword"
+                    class="w-full rounded-2xl border border-[#C8E6C9] bg-white px-4 py-3 pr-10 text-sm text-[#1B5E20] outline-none transition-colors placeholder:text-[#9AA99A] focus:border-[#2E7D32]">
+                  <button
+                    type="button"
+                    (click)="togglePassword('current')"
+                    class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#6B7D6C] transition-colors hover:text-[#2E7D32]"
+                    tabindex="-1">
+                    <lucide-icon [name]="showCurrentPassword ? 'eye-off' : 'eye'" class="h-4 w-4"></lucide-icon>
+                  </button>
+                </div>
               </label>
 
               <label>
                 <span class="mb-1 block text-sm font-semibold text-[#2E7D32]">Nueva contraseña</span>
-                <input
-                  type="password"
-                  formControlName="newPassword"
-                  class="w-full rounded-2xl border border-[#C8E6C9] bg-white px-4 py-3 text-sm text-[#1B5E20] outline-none transition-colors placeholder:text-[#9AA99A] focus:border-[#2E7D32]">
+                <div class="relative">
+                  <input
+                    [type]="showNewPassword ? 'text' : 'password'"
+                    formControlName="newPassword"
+                    class="w-full rounded-2xl border border-[#C8E6C9] bg-white px-4 py-3 pr-10 text-sm text-[#1B5E20] outline-none transition-colors placeholder:text-[#9AA99A] focus:border-[#2E7D32]">
+                  <button
+                    type="button"
+                    (click)="togglePassword('new')"
+                    class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#6B7D6C] transition-colors hover:text-[#2E7D32]"
+                    tabindex="-1">
+                    <lucide-icon [name]="showNewPassword ? 'eye-off' : 'eye'" class="h-4 w-4"></lucide-icon>
+                  </button>
+                </div>
               </label>
 
               <label>
                 <span class="mb-1 block text-sm font-semibold text-[#2E7D32]">Confirmar contraseña</span>
-                <input
-                  type="password"
-                  formControlName="confirmPassword"
-                  class="w-full rounded-2xl border border-[#C8E6C9] bg-white px-4 py-3 text-sm text-[#1B5E20] outline-none transition-colors placeholder:text-[#9AA99A] focus:border-[#2E7D32]">
+                <div class="relative">
+                  <input
+                    [type]="showConfirmPassword ? 'text' : 'password'"
+                    formControlName="confirmPassword"
+                    class="w-full rounded-2xl border border-[#C8E6C9] bg-white px-4 py-3 pr-10 text-sm text-[#1B5E20] outline-none transition-colors placeholder:text-[#9AA99A] focus:border-[#2E7D32]">
+                  <button
+                    type="button"
+                    (click)="togglePassword('confirm')"
+                    class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#6B7D6C] transition-colors hover:text-[#2E7D32]"
+                    tabindex="-1">
+                    <lucide-icon [name]="showConfirmPassword ? 'eye-off' : 'eye'" class="h-4 w-4"></lucide-icon>
+                  </button>
+                </div>
               </label>
 
               <p class="sm:col-span-2 text-xs text-[#6B7D6C]">
@@ -168,6 +195,9 @@ export class PlatformSecurityPageComponent implements OnInit {
   saving = false;
   successMessage = '';
   formError = '';
+  showCurrentPassword = false;
+  showNewPassword = false;
+  showConfirmPassword = false;
 
   readonly form = this.fb.nonNullable.group({
     currentPassword: ['', [Validators.required, Validators.minLength(8)]],
@@ -183,6 +213,9 @@ export class PlatformSecurityPageComponent implements OnInit {
     this.form.reset();
     this.successMessage = '';
     this.formError = '';
+    this.showCurrentPassword = false;
+    this.showNewPassword = false;
+    this.showConfirmPassword = false;
   }
 
   async submit(): Promise<void> {
@@ -215,5 +248,19 @@ export class PlatformSecurityPageComponent implements OnInit {
     } finally {
       this.saving = false;
     }
+  }
+
+  togglePassword(field: 'current' | 'new' | 'confirm'): void {
+    if (field === 'current') {
+      this.showCurrentPassword = !this.showCurrentPassword;
+      return;
+    }
+
+    if (field === 'new') {
+      this.showNewPassword = !this.showNewPassword;
+      return;
+    }
+
+    this.showConfirmPassword = !this.showConfirmPassword;
   }
 }

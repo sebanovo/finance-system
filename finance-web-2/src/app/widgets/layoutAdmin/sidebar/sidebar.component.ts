@@ -67,9 +67,11 @@ interface MenuGroup {
     >
       <div class="flex h-16 shrink-0 items-center justify-between border-b border-[#C8E6C9] px-6">
         <div class="flex items-center gap-3">
-          <div class="flex h-8 w-8 items-center justify-center rounded-md bg-[#2E7D32] font-bold text-white shadow-sm">
-            F
-          </div>
+          <img
+            src="/logo.png"
+            alt="Prospera"
+            class="h-8 w-8 rounded-md object-contain shadow-sm"
+          >
           <span class="font-bold text-lg tracking-tight text-[#2E7D32]">Finance System</span>
         </div>
         <button (click)="closeMobileMenu()" class="md:hidden p-1.5 text-[#666666] hover:text-[#2E7D32] rounded-md hover:bg-[#F1F8E9] transition-colors">
@@ -181,6 +183,7 @@ export class SidebarComponent {
 
   generalItems: MenuItem[] = [
     { label: 'Dashboard', route: this.dashboardRoute, icon: 'layout-dashboard' },
+    { label: 'Mi perfil', route: '/dashboard/profile', icon: 'user-circle-2' },
     { label: 'Notificaciones', route: '/dashboard/notifications', icon: 'bell' }
   ];
 

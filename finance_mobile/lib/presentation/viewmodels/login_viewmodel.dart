@@ -1,15 +1,20 @@
 import 'package:finance_mobile/presentation/viewmodels/notifications_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/network/api_client.dart';
-import '../../../../core/di/injection_container.dart' as di;
-import '../../../domain/usecases/login_usecase.dart';
+import 'package:finance_mobile/core/network/api_client.dart';
+import 'package:finance_mobile/core/di/injection_container.dart' as di;
+import 'package:finance_mobile/domain/usecases/face_login_usecase.dart';
+import 'package:finance_mobile/domain/usecases/login_usecase.dart';
 
 class LoginViewModel extends ChangeNotifier {
   final LoginUseCase loginUseCase;
+  final FaceLoginUseCase faceLoginUseCase;
   final ApiClient apiClient;
 
-  LoginViewModel({required this.loginUseCase}) : apiClient = di.sl<ApiClient>();
+  LoginViewModel({
+    required this.loginUseCase,
+    required this.faceLoginUseCase,
+  }) : apiClient = di.sl<ApiClient>();
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -56,24 +61,17 @@ class LoginViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final (user, accessToken, refreshToken) = await loginUseCase(
+      final (_, accessToken, refreshToken) = await loginUseCase(
         email,
         password,
         tenantSlug,
       );
 
-      // Guardar en ApiClient (para peticiones futuras)
-      apiClient.setSession(
-        token: accessToken,
-        tenantSlug: tenantSlug,
+      await _persistSession(
+        accessToken: accessToken,
         refreshToken: refreshToken,
+        tenantSlug: tenantSlug,
       );
-
-      // Persistir en SharedPreferences para futuras sesiones
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('accessToken', accessToken);
-      await prefs.setString('refreshToken', refreshToken);
-      await prefs.setString('tenantSlug', tenantSlug);
 
       // El registro de dispositivo no debe bloquear el login.
       try {
@@ -89,6 +87,60 @@ class LoginViewModel extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<bool> faceLogin(
+    String email,
+    String tenantSlug,
+    String imagePath,
+  ) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final (_, accessToken, refreshToken) = await faceLoginUseCase(
+        email,
+        tenantSlug,
+        imagePath,
+      );
+
+      await _persistSession(
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+        tenantSlug: tenantSlug,
+      );
+
+      try {
+        final notifViewModel = di.sl<NotificationsViewModel>();
+        await notifViewModel.registerCurrentDevice();
+      } catch (_) {}
+
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _persistSession({
+    required String accessToken,
+    required String refreshToken,
+    required String tenantSlug,
+  }) async {
+    apiClient.setSession(
+      token: accessToken,
+      tenantSlug: tenantSlug,
+      refreshToken: refreshToken,
+    );
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('accessToken', accessToken);
+    await prefs.setString('refreshToken', refreshToken);
+    await prefs.setString('tenantSlug', tenantSlug);
   }
 
   void clearError() {

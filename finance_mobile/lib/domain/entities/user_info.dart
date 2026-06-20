@@ -7,6 +7,8 @@ class UserInfo {
   final String status;
   final String tenantSlug;
   final List<String> roles;
+  final String? profilePhotoUrl;
+  final String? profilePhotoContentType;
 
   UserInfo({
     required this.id,
@@ -17,6 +19,8 @@ class UserInfo {
     required this.status,
     required this.tenantSlug,
     required this.roles,
+    this.profilePhotoUrl,
+    this.profilePhotoContentType,
   });
 
   String get displayName {
