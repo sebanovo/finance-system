@@ -1,10 +1,10 @@
-# Directory Export: /home/walter/Documents/misDatos/repositorios/finance-system/finance-web-2/src
+# Directory Export: /home/walter/Documents/misDatos/repositorios/finance-system/finance-web
 
 _Generated on 2026-05-31 20:21:19Z_
 
 ## Summary
 
-- Source directory: `/home/walter/Documents/misDatos/repositorios/finance-system/finance-web-2/src`
+- Source directory: `/home/walter/Documents/misDatos/repositorios/finance-system/finance-web
 - Output file: `/home/walter/Documents/misDatos/repositorios/finance-system/frontend-done-v1.md`
 
 ## Files
@@ -178,7 +178,7 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, finance-web-2');
+    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, finance-web;
   });
 });
 
@@ -198,7 +198,7 @@ import { ToastComponent } from './shared/ui/toast/toast.component';
   styleUrl: './app.css'
 })
 export class App {
-  protected readonly title = signal('finance-web-2');
+  protected readonly title = signal('finance-web;
 }
 
 ```

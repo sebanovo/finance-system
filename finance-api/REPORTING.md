@@ -12,7 +12,7 @@ para lo global). Reemplaza al módulo viejo `modules/tenant/reporting` (eliminad
 ## Arquitectura
 
 ```
-finance-web-2 (Angular)  ──HTTPS (JWT [+ X-Tenant-Slug en rutas tenant])──┐
+finance-web (Angular)  ──HTTPS (JWT [+ X-Tenant-Slug en rutas tenant])──┐
                                                                           ▼
 finance-api (Spring Boot) = GUARDIÁN
   Riel 1: ReportDefinitionRegistry + ReportSqlBuilder

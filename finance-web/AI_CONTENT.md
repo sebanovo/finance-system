@@ -1,4 +1,4 @@
-# 📁 Documento de contexto del proyecto `finance-web-2`
+# 📁 Documento de contexto del proyecto `finance-web`
 
 ## 1. Resumen ejecutivo
 
