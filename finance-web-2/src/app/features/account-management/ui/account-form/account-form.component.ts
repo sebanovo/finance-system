@@ -36,7 +36,7 @@ import { UserListUseCase } from '../../../user-management';
           <div *ngIf="!isEditing" class="space-y-2">
             <label class="text-sm font-semibold text-[#567157]">Cliente (usuario)</label>
             <div class="relative">
-              <lucide-icon name="user-circle-2" class="absolute left-3 top-3 h-4 w-4 text-[#6B7D6C]"></lucide-icon>
+              <lucide-icon name="user-circle-2" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7D6C]"></lucide-icon>
               <select 
                 formControlName="userId"
                 class="flex h-11 w-full items-center justify-between rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 pl-10 text-sm text-[#1B5E20] outline-none transition-colors focus:border-[#2E7D32] focus:bg-white">
@@ -55,7 +55,7 @@ import { UserListUseCase } from '../../../user-management';
           <div *ngIf="!isEditing" class="space-y-2">
             <label class="text-sm font-semibold text-[#567157]">Tipo de cuenta</label>
             <div class="relative">
-              <lucide-icon name="building-2" class="absolute left-3 top-3 h-4 w-4 text-[#6B7D6C]"></lucide-icon>
+              <lucide-icon name="building-2" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7D6C]"></lucide-icon>
               <select 
                 formControlName="accountType"
                 class="flex h-11 w-full items-center justify-between rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 pl-10 text-sm text-[#1B5E20] outline-none transition-colors focus:border-[#2E7D32] focus:bg-white">
@@ -93,8 +93,8 @@ import { UserListUseCase } from '../../../user-management';
             <select 
               formControlName="currency"
               class="flex h-11 w-full items-center justify-between rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition-colors focus:border-[#2E7D32] focus:bg-white">
-              <option value="USD">Dólar Estadounidense (USD)</option>
               <option value="BOB">Boliviano (BOB)</option>
+              <option value="USD">Dólar Estadounidense (USD)</option>
               <option value="EUR">Euro (EUR)</option>
             </select>
           </div>
@@ -185,14 +185,14 @@ export class AccountFormComponent implements OnInit, OnChanges {
         primary: [this.account.primary || false]
       });
     } else {
-      this.form = this.fb.group({
-        userId: ['', Validators.required],
-        accountName: ['', Validators.required],
-        accountType: ['SAVINGS', Validators.required],
-        currency: ['USD', Validators.required],
-        customAlias: [''],
-        primary: [false]
-      });
+        this.form = this.fb.group({
+          userId: ['', Validators.required],
+          accountName: ['', Validators.required],
+          accountType: ['SAVINGS', Validators.required],
+          currency: ['BOB', Validators.required],
+          customAlias: [''],
+          primary: [false]
+        });
     }
   }
 

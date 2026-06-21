@@ -10,13 +10,17 @@ import com.financesystem.finance_api.modules.governance.backups.domain.model.*;
 import com.financesystem.finance_api.modules.governance.backups.domain.repository.BackupJobRepository;
 import com.financesystem.finance_api.modules.governance.backups.infrastructure.engine.BackupEngine;
 import com.financesystem.finance_api.modules.governance.backups.infrastructure.storage.BackupStorage;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import javax.sql.DataSource;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Map;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -29,14 +33,24 @@ public class BackupJobAsyncExecutor {
     private final AuditTrailService audit;
     private final TenantMaintenanceService maintenance;
     private final ReportingSecurityService reportingSecurityService;
+    private final JdbcTemplate jdbcTemplate;
 
-    public BackupJobAsyncExecutor(BackupJobRepository repo, BackupEngine engine, BackupStorage storage, AuditTrailService audit, TenantMaintenanceService maintenance, ReportingSecurityService reportingSecurityService) {
+    public BackupJobAsyncExecutor(
+            BackupJobRepository repo,
+            BackupEngine engine,
+            BackupStorage storage,
+            AuditTrailService audit,
+            TenantMaintenanceService maintenance,
+            ReportingSecurityService reportingSecurityService,
+            @Qualifier("targetDataSource") DataSource targetDataSource
+    ) {
         this.repo = repo;
         this.engine = engine;
         this.storage = storage;
         this.audit = audit;
         this.maintenance = maintenance;
         this.reportingSecurityService = reportingSecurityService;
+        this.jdbcTemplate = new JdbcTemplate(targetDataSource);
     }
 
     @Async("backupTaskExecutor")
@@ -63,32 +77,87 @@ public class BackupJobAsyncExecutor {
         BackupJob restore = null;
         try {
             restore = get(id);
-            BackupJob source = repo.findById(restore.sourceBackupId()).orElseThrow(() -> new BackupNotFoundException("Source backup not found"));
+            BackupJob source = repo.findById(restore.sourceBackupId())
+                    .orElseThrow(() -> new BackupNotFoundException("Source backup not found"));
+
             BackupJob running = status(restore, BackupStatus.RESTORING, null, Instant.now(), null);
             record(running, BackupAuditEventTypes.RESTORE_STARTED, null);
             Path src = storage.resolvePath(source.storagePath());
+            BackupCommandResult restoreResult = null;
+            Exception postRestoreIssue = null;
+
             if (running.scope() == BackupScope.TENANT_SCHEMA) {
                 maintenance.enableMaintenance(running.tenantSlug(), "Restoring backup " + source.id());
-                engine.restoreSchema(running.schemaName(), src);
-                // Re-apply reporting grants (the restored schema may have lost them)
-                // and refresh the cross-tenant views with the restored data.
-                reportingSecurityService.applyTenantSecurity(running.schemaName());
-                maintenance.disableMaintenance(running.tenantSlug());
+                try {
+                    restoreResult = engine.restoreSchema(running.schemaName(), src);
+                } finally {
+                    try {
+                        maintenance.disableMaintenance(running.tenantSlug());
+                    } catch (Exception maintenanceError) {
+                        log.warn(
+                                "Tenant restore applied, but maintenance disable failed. tenantSlug={}, error={}",
+                                running.tenantSlug(),
+                                maintenanceError.getMessage(),
+                                maintenanceError
+                        );
+                        postRestoreIssue = maintenanceError;
+                    }
+                }
+
+                try {
+                    reportingSecurityService.applyTenantSecurity(running.schemaName());
+                } catch (Exception reportingError) {
+                    log.warn(
+                            "Tenant restore applied, but reporting security refresh failed. schema={}, error={}",
+                            running.schemaName(),
+                            reportingError.getMessage(),
+                            reportingError
+                    );
+
+                    if (postRestoreIssue == null) {
+                        postRestoreIssue = reportingError;
+                    }
+                }
             } else {
-                engine.restoreFullDatabase(src);
-                // Full restore: re-grant every tenant and regenerate platform views.
-                reportingSecurityService.backfillRegisteredTenants();
+                prepareForFullDatabaseRestore();
+                restoreResult = engine.restoreFullDatabase(src);
+
+                try {
+                    reportingSecurityService.backfillRegisteredTenants();
+                } catch (Exception reportingError) {
+                    postRestoreIssue = reportingError;
+                    log.warn(
+                            "Full database restore applied, but reporting security backfill failed. error={}",
+                            reportingError.getMessage(),
+                            reportingError
+                    );
+                }
             }
-            BackupJob done = status(get(id), BackupStatus.RESTORED, null, null, Instant.now());
-            record(done, BackupAuditEventTypes.RESTORE_COMPLETED, null);
+
+            boolean hasWarnings = restoreResult.warnings() || postRestoreIssue != null;
+            String warningMessage = buildWarningMessage(restoreResult, postRestoreIssue);
+
+            BackupJob done = status(
+                    get(id),
+                    hasWarnings ? BackupStatus.RESTORED_WITH_WARNINGS : BackupStatus.RESTORED,
+                    warningMessage,
+                    null,
+                    Instant.now()
+            );
+            record(done, BackupAuditEventTypes.RESTORE_COMPLETED, warningMessage);
         } catch (Exception e) {
             log.error("Restore job failed: {}", id, e);
             if (restore != null && restore.tenantSlug() != null) {
-                maintenance.disableMaintenance(restore.tenantSlug());
+                try {
+                    maintenance.disableMaintenance(restore.tenantSlug());
+                } catch (Exception maintenanceError) {
+                    log.warn("Unable to disable maintenance after restore failure for tenant '{}': {}", restore.tenantSlug(), maintenanceError.getMessage(), maintenanceError);
+                }
             }
             repo.findById(id).ifPresent(job -> {
-                BackupJob failed = status(job, BackupStatus.RESTORE_FAILED, e.getMessage(), null, Instant.now());
-                record(failed, BackupAuditEventTypes.RESTORE_FAILED, e.getMessage());
+                String failureReason = safeMessage(e);
+                BackupJob failed = status(job, BackupStatus.RESTORE_FAILED, failureReason, null, Instant.now());
+                record(failed, BackupAuditEventTypes.RESTORE_FAILED, failureReason);
             });
         }
     }
@@ -126,5 +195,88 @@ public class BackupJobAsyncExecutor {
                 TenantContextHolder.set(previous);
             }
         }
+    }
+
+    private void prepareForFullDatabaseRestore() {
+        dropBackupJobsTenantForeignKey();
+
+        List<String> tenantSchemas = jdbcTemplate.queryForList(
+                """
+                SELECT schema_name
+                FROM public.platform_tenants
+                WHERE schema_name IS NOT NULL
+                  AND schema_name LIKE 'tenant\\_%' ESCAPE '\\'
+                """,
+                String.class
+        );
+
+        for (String schemaName : tenantSchemas) {
+            dropSchema(schemaName);
+        }
+    }
+
+    private void dropBackupJobsTenantForeignKey() {
+        jdbcTemplate.execute(
+                """
+                ALTER TABLE public.backup_jobs
+                    DROP CONSTRAINT IF EXISTS backup_jobs_tenant_id_fkey
+                """
+        );
+    }
+
+    private void dropSchema(String schemaName) {
+        if (schemaName == null || !schemaName.matches("^[a-zA-Z0-9_]+$")) {
+            log.warn("Skipping invalid tenant schema name during full restore cleanup: {}", schemaName);
+            return;
+        }
+
+        jdbcTemplate.execute("DROP SCHEMA IF EXISTS " + schemaName + " CASCADE");
+    }
+
+    private String buildWarningMessage(BackupCommandResult restoreResult, Exception postRestoreIssue) {
+        StringBuilder builder = new StringBuilder();
+
+        if (restoreResult != null && restoreResult.warnings()) {
+            builder.append("Restore completed with pg_restore warnings.");
+
+            if (restoreResult.output() != null && !restoreResult.output().isBlank()) {
+                builder.append(" Output: ").append(restoreResult.output());
+            }
+        }
+
+        if (postRestoreIssue != null) {
+            if (builder.length() > 0) {
+                builder.append(" | ");
+            }
+
+            builder.append("Post-restore task warning: ")
+                    .append(safeMessage(postRestoreIssue));
+        }
+
+        if (builder.length() == 0) {
+            return null;
+        }
+
+        String value = builder.toString();
+        if (value.length() <= 3500) {
+            return value;
+        }
+
+        return value.substring(0, 3500) + "... [truncated]";
+    }
+
+    private String safeMessage(Exception exception) {
+        if (exception == null) {
+            return null;
+        }
+
+        String message = exception.getMessage();
+        if (message == null || message.isBlank()) {
+            return exception.getClass().getSimpleName();
+        }
+
+        return message.length() <= 3500
+                ? message
+                : message.substring(0, 3500) + "... [truncated]";
     }
 }

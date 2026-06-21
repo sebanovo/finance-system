@@ -3,6 +3,7 @@ package com.financesystem.finance_api.modules.governance.backups.infrastructure.
 import com.financesystem.finance_api.modules.governance.backups.application.config.BackupProperties;
 import com.financesystem.finance_api.modules.governance.backups.domain.exception.BackupExecutionException;
 import com.financesystem.finance_api.modules.governance.backups.domain.model.BackupArtifact;
+import com.financesystem.finance_api.modules.governance.backups.domain.model.BackupCommandResult;
 import com.financesystem.finance_api.modules.governance.backups.infrastructure.storage.ChecksumService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,7 @@ import java.util.List;
 public class PgBackupEngineAdapter implements BackupEngine {
 
     private static final Logger log = LoggerFactory.getLogger(PgBackupEngineAdapter.class);
+
     private final BackupProperties properties;
     private final ChecksumService checksumService;
 
@@ -30,45 +32,108 @@ public class PgBackupEngineAdapter implements BackupEngine {
     @Override
     public BackupArtifact dumpSchema(String schemaName, Path target) {
         validateSqlIdentifier(schemaName, "schemaName");
-        run(List.of(properties.getPgDumpPath(), "-h", properties.getHost(), "-p", properties.getPort(), "-U", properties.getUsername(), "-d", properties.getDatabase(), "-n", schemaName, "-Fc", "-f", target.toString()), "pg_dump schema " + schemaName);
+        runStrict(
+                List.of(
+                        properties.getPgDumpPath(),
+                        "-h", properties.getHost(),
+                        "-p", properties.getPort(),
+                        "-U", properties.getUsername(),
+                        "-d", properties.getDatabase(),
+                        "-n", schemaName,
+                        "-Fc",
+                        "-f", target.toString()
+                ),
+                "pg_dump schema " + schemaName
+        );
+
         return artifact(target);
     }
 
     @Override
     public BackupArtifact dumpFullDatabase(Path target) {
-        run(List.of(properties.getPgDumpPath(), "-h", properties.getHost(), "-p", properties.getPort(), "-U", properties.getUsername(), "-d", properties.getDatabase(), "-Fc", "-f", target.toString()), "pg_dump full database");
+        runStrict(
+                buildDumpFullDatabaseCommand(target),
+                "pg_dump full database"
+        );
+
         return artifact(target);
     }
 
     @Override
-    public void restoreSchema(String schemaName, Path source) {
+    public BackupCommandResult restoreSchema(String schemaName, Path source) {
         validateSqlIdentifier(schemaName, "schemaName");
+
         if (!Files.exists(source)) {
             throw new BackupExecutionException("Backup artifact does not exist: " + source);
         }
+
         executePsql("DROP SCHEMA IF EXISTS " + schemaName + " CASCADE;");
-        //executePsql("CREATE SCHEMA IF NOT EXISTS " + schemaName + ";"); // El Dump creara el esquema
-        run(List.of(
-            properties.getPgRestorePath(), 
-            "-h", properties.getHost(), 
-            "-p", properties.getPort(), 
-            "-U", properties.getUsername(), 
-            "-d", properties.getDatabase(), 
-            "--no-owner", "--no-privileges", 
-            source.toString()), 
-            "pg_restore schema " + schemaName);
+
+        return runRestoreTolerant(
+                List.of(
+                        properties.getPgRestorePath(),
+                        "-h", properties.getHost(),
+                        "-p", properties.getPort(),
+                        "-U", properties.getUsername(),
+                        "-d", properties.getDatabase(),
+                        "--no-owner",
+                        "--no-privileges",
+                        source.toString()
+                ),
+                "pg_restore schema " + schemaName
+        );
     }
 
     @Override
-    public void restoreFullDatabase(Path source) {
+    public BackupCommandResult restoreFullDatabase(Path source) {
         if (!Files.exists(source)) {
             throw new BackupExecutionException("Backup artifact does not exist: " + source);
         }
-        run(List.of(properties.getPgRestorePath(), "-h", properties.getHost(), "-p", properties.getPort(), "-U", properties.getUsername(), "-d", properties.getDatabase(), "--clean", "--if-exists", "--no-owner", "--no-privileges", source.toString()), "pg_restore full database");
+
+        return runRestoreTolerant(buildRestoreFullDatabaseCommand(source), "pg_restore full database");
+    }
+
+    List<String> buildDumpFullDatabaseCommand(Path target) {
+        return List.of(
+                properties.getPgDumpPath(),
+                "-h", properties.getHost(),
+                "-p", properties.getPort(),
+                "-U", properties.getUsername(),
+                "-d", properties.getDatabase(),
+                "-Fc",
+                "--exclude-table=public.backup_jobs",
+                "-f", target.toString()
+        );
+    }
+
+    List<String> buildRestoreFullDatabaseCommand(Path source) {
+        return List.of(
+                properties.getPgRestorePath(),
+                "-h", properties.getHost(),
+                "-p", properties.getPort(),
+                "-U", properties.getUsername(),
+                "-d", properties.getDatabase(),
+                "--clean",
+                "--if-exists",
+                "--no-owner",
+                "--no-privileges",
+                source.toString()
+        );
     }
 
     private void executePsql(String sql) {
-        run(List.of(properties.getPsqlPath(), "-h", properties.getHost(), "-p", properties.getPort(), "-U", properties.getUsername(), "-d", properties.getDatabase(), "-v", "ON_ERROR_STOP=1", "-c", sql), "psql command");
+        runStrict(
+                List.of(
+                        properties.getPsqlPath(),
+                        "-h", properties.getHost(),
+                        "-p", properties.getPort(),
+                        "-U", properties.getUsername(),
+                        "-d", properties.getDatabase(),
+                        "-v", "ON_ERROR_STOP=1",
+                        "-c", sql
+                ),
+                "psql command"
+        );
     }
 
     private BackupArtifact artifact(Path target) {
@@ -79,24 +144,62 @@ public class PgBackupEngineAdapter implements BackupEngine {
         }
     }
 
-    private void run(List<String> command, String description) {
+    private void runStrict(List<String> command, String description) {
+        CommandExecution execution = runCommand(command, description);
+        if (execution.exitCode() != 0) {
+            throw new BackupExecutionException(
+                    "Command failed: " + description +
+                            ". Exit code: " + execution.exitCode() +
+                            ". Output: " + truncate(execution.output())
+            );
+        }
+    }
+
+    private BackupCommandResult runRestoreTolerant(List<String> command, String description) {
+        CommandExecution execution = runCommand(command, description);
+
+        if (execution.exitCode() == 0) {
+            return BackupCommandResult.success(execution.exitCode(), execution.output());
+        }
+
+        if (execution.exitCode() == 1) {
+            String output = truncate(execution.output());
+            log.warn(
+                    "Restore command finished with warnings. description={}, exitCode={}, output={}",
+                    description,
+                    execution.exitCode(),
+                    output
+            );
+            return BackupCommandResult.warning(execution.exitCode(), output);
+        }
+
+        throw new BackupExecutionException(
+                "Restore command failed: " + description +
+                        ". Exit code: " + execution.exitCode() +
+                        ". Output: " + truncate(execution.output())
+        );
+    }
+
+    private CommandExecution runCommand(List<String> command, String description) {
         try {
             log.info("Executing backup command: {}", description);
-            ProcessBuilder pb = new ProcessBuilder(new ArrayList<>(command));
-            pb.environment().put("PGPASSWORD", properties.getPassword());
-            pb.redirectErrorStream(true);
-            Process p = pb.start();
-            StringBuilder out = new StringBuilder();
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+
+            ProcessBuilder processBuilder = new ProcessBuilder(new ArrayList<>(command));
+            processBuilder.environment().put("PGPASSWORD", properties.getPassword());
+            processBuilder.redirectErrorStream(true);
+
+            Process process = processBuilder.start();
+            StringBuilder output = new StringBuilder();
+
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String line;
-                while ((line = br.readLine()) != null) {
-                    out.append(line).append(System.lineSeparator());
+                while ((line = reader.readLine()) != null) {
+                    output.append(line).append(System.lineSeparator());
                 }
             }
-            int code = p.waitFor();
-            if (code != 0) {
-                throw new BackupExecutionException("Command failed: " + description + ". Exit code: " + code + ". Output: " + out);
-            }
+
+            int exitCode = process.waitFor();
+            return new CommandExecution(exitCode, output.toString());
         } catch (BackupExecutionException e) {
             throw e;
         } catch (Exception e) {
@@ -104,9 +207,25 @@ public class PgBackupEngineAdapter implements BackupEngine {
         }
     }
 
-    private void validateSqlIdentifier(String v, String f) {
-        if (v == null || v.isBlank() || !v.matches("^[a-zA-Z0-9_]+$")) {
-            throw new BackupExecutionException(f + " is invalid: " + v);
-    
-        }}
+    private String truncate(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        String trimmed = value.trim();
+        if (trimmed.length() <= 3500) {
+            return trimmed;
+        }
+
+        return trimmed.substring(0, 3500) + "... [truncated]";
+    }
+
+    private void validateSqlIdentifier(String value, String field) {
+        if (value == null || value.isBlank() || !value.matches("^[a-zA-Z0-9_]+$")) {
+            throw new BackupExecutionException(field + " is invalid: " + value);
+        }
+    }
+
+    private record CommandExecution(int exitCode, String output) {
+    }
 }

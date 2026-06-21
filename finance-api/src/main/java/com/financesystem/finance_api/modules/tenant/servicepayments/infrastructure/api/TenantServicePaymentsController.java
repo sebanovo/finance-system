@@ -23,20 +23,20 @@ public class TenantServicePaymentsController {
 
     private final ListTenantServiceProvidersUseCase listTenantServiceProvidersUseCase;
     private final QueryTenantServiceBillsUseCase queryTenantServiceBillsUseCase;
-    private final CreateAssistedServicePaymentUseCase createAssistedServicePaymentUseCase;
+    private final CreateBankServicePaymentUseCase createBankServicePaymentUseCase;
     private final ListTenantServicePaymentsUseCase listTenantServicePaymentsUseCase;
     private final GetTenantServicePaymentUseCase getTenantServicePaymentUseCase;
 
     public TenantServicePaymentsController(
             ListTenantServiceProvidersUseCase listTenantServiceProvidersUseCase,
             QueryTenantServiceBillsUseCase queryTenantServiceBillsUseCase,
-            CreateAssistedServicePaymentUseCase createAssistedServicePaymentUseCase,
+            CreateBankServicePaymentUseCase createBankServicePaymentUseCase,
             ListTenantServicePaymentsUseCase listTenantServicePaymentsUseCase,
             GetTenantServicePaymentUseCase getTenantServicePaymentUseCase
     ) {
         this.listTenantServiceProvidersUseCase = listTenantServiceProvidersUseCase;
         this.queryTenantServiceBillsUseCase = queryTenantServiceBillsUseCase;
-        this.createAssistedServicePaymentUseCase = createAssistedServicePaymentUseCase;
+        this.createBankServicePaymentUseCase = createBankServicePaymentUseCase;
         this.listTenantServicePaymentsUseCase = listTenantServicePaymentsUseCase;
         this.getTenantServicePaymentUseCase = getTenantServicePaymentUseCase;
     }
@@ -64,10 +64,10 @@ public class TenantServicePaymentsController {
 
     @PostMapping("/service-payments")
     @PreAuthorize("hasAuthority('service-payments.create')")
-    public ApiResponse<ServicePaymentResponse> createServicePayment(@Valid @RequestBody CreateAssistedServicePaymentRequest request) {
+    public ApiResponse<ServicePaymentResponse> createServicePayment(@Valid @RequestBody CreateBankServicePaymentRequest request) {
         return ApiResponse.success(
                 "Service payment completed successfully",
-                createAssistedServicePaymentUseCase.execute(request)
+                createBankServicePaymentUseCase.execute(request)
         );
     }
 

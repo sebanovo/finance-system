@@ -253,6 +253,12 @@ import { FaceLoginRequest } from '../../../../entities/auth/model/face-login-req
             Regístrate y crea tu entorno
           </a>
         </div>
+
+        <div class="mt-4 text-center text-sm text-[#666666] border-t border-[#C8E6C9] pt-4">
+          <a routerLink="/" class="font-medium text-[#4CAF50] hover:text-[#2E7D32] transition-colors">
+            ← Volver al inicio
+          </a>
+        </div>
       </form>
     </div>
   `

@@ -23,9 +23,12 @@ public class RestorePlatformBackupUseCase {
 
     @Transactional
     public BackupJobResponse execute(UUID backupId, String confirmationText, String reason) {
-        if (!CONFIRMATION_TENANT.equals(confirmationText) && !CONFIRMATION_FULL.equals(confirmationText)) {
+        String normalizedConfirmation = confirmationText == null ? "" : confirmationText.trim();
+
+        if (!CONFIRMATION_TENANT.equals(normalizedConfirmation) && !CONFIRMATION_FULL.equals(normalizedConfirmation)) {
             throw new BackupOperationNotAllowedException("Invalid confirmation text. Expected: " + CONFIRMATION_TENANT + " or " + CONFIRMATION_FULL);
-        
-        }return backupJobMapper.toResponse(backupApplicationService.createPlatformRestoreJob(backupId, reason));
+        }
+
+        return backupJobMapper.toResponse(backupApplicationService.createPlatformRestoreJob(backupId, reason));
     }
 }

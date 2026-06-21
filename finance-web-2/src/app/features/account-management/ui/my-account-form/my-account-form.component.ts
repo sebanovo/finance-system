@@ -66,8 +66,8 @@ type MyAccountFormValue = {
                   <select
                     formControlName="currency"
                     class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition-colors focus:border-[#2E7D32] focus:bg-white">
-                    <option value="USD">USD</option>
                     <option value="BOB">BOB</option>
+                    <option value="USD">USD</option>
                     <option value="EUR">EUR</option>
                   </select>
                 </div>
@@ -120,7 +120,7 @@ export class MyAccountFormComponent implements OnChanges {
     accountName: ['', Validators.required],
     customAlias: [''],
     accountType: ['SAVINGS'],
-    currency: ['USD']
+    currency: ['BOB']
   });
   isSubmitting = false;
 
@@ -139,7 +139,7 @@ export class MyAccountFormComponent implements OnChanges {
       accountName: [this.account?.accountName || '', this.isEditing ? [] : Validators.required],
       customAlias: [this.account?.customAlias || ''],
       accountType: [this.account?.accountType || 'SAVINGS'],
-      currency: [this.account?.currency || 'USD']
+      currency: [this.account?.currency || 'BOB']
     });
 
     if (this.isEditing) {
@@ -163,11 +163,11 @@ export class MyAccountFormComponent implements OnChanges {
     const raw = this.form.getRawValue();
     const request: MyAccountFormValue = this.isEditing
       ? { customAlias: raw.customAlias || '' }
-      : {
+        : {
           accountName: raw.accountName || '',
           customAlias: raw.customAlias || '',
           accountType: raw.accountType || 'SAVINGS',
-          currency: raw.currency || 'USD'
+          currency: raw.currency || 'BOB'
         };
 
     this.saved.emit({ request, isEditing: this.isEditing });

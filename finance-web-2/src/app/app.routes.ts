@@ -52,7 +52,7 @@ export const routes: Routes = [
           },
           {
             path: 'service-payments',
-            canActivate: [permissionGuard('me.service-payments.read')],
+            canActivate: [permissionGuard('me.service-payments.read', 'me.service-payments.detail')],
             loadComponent: () => import('./pages/my-service-payments-page/my-service-payments-page.component').then(m => m.MyServicePaymentsPageComponent)
           }
         ]
@@ -126,8 +126,13 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/reporting-page/reporting-page.component').then(m => m.ReportingPageComponent)
       },
       {
+        path: 'backups',
+        canActivate: [permissionGuard('backups.list')],
+        loadComponent: () => import('./pages/backups-page/backups-page.component').then(m => m.BackupsPageComponent)
+      },
+      {
         path: 'service-payments',
-        canActivate: [permissionGuard('service-payments.create', 'service-payments.read', 'service-payments.detail')],
+        canActivate: [permissionGuard('service-payments.read', 'service-payments.create')],
         loadComponent: () => import('./pages/service-payments-page/service-payments-page.component').then(m => m.ServicePaymentsPageComponent)
       },
       {

@@ -346,7 +346,7 @@ export class TransactionSlideOverComponent implements OnInit, OnChanges {
       accountId: [this.requiresSingleAccountSelection() ? '' : ''],
       qrTransactionId: [this.requiresQrIntentId() ? '' : ''],
       amount: [requiresAmount ? '' : '', requiresAmount ? [Validators.required, Validators.min(0.01)] : []],
-      currency: [requiresAmount ? 'USD' : 'USD', requiresAmount ? [Validators.required] : []],
+      currency: [requiresAmount ? 'BOB' : 'BOB', requiresAmount ? [Validators.required] : []],
       method: [this.requiresMethodSelection() ? 'CASHBOX' : 'CASHBOX', this.requiresMethodSelection() ? [Validators.required] : []],
       direction: [this.requiresDirectionSelection() ? 'CREDIT' : 'CREDIT', this.requiresDirectionSelection() ? [Validators.required] : []],
       reason: [this.requiresReasonField() ? '' : ''],

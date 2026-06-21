@@ -24,7 +24,7 @@ public class ServicePaymentFailureAuditService {
             ServicePaymentProcessingRequest request,
             String tenantSlug,
             UUID actorUserId,
-            UUID accountOwnerUserId,
+            UUID payerUserId,
             RuntimeException exception
     ) {
         auditTrailService.recordTenantEvent(
@@ -38,7 +38,7 @@ public class ServicePaymentFailureAuditService {
                         "serviceCustomerCode", request.serviceCustomerCode(),
                         "sourceAccountNumber", request.sourceAccountNumber(),
                         "actorUserId", actorUserId,
-                        "accountOwnerUserId", accountOwnerUserId,
+                        "payerUserId", payerUserId,
                         "reason", exception.getMessage(),
                         "mode", request.paymentMode(),
                         "idempotencyKey", request.idempotencyKey()

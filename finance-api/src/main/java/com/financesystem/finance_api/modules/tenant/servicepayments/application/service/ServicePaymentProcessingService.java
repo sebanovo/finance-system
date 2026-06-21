@@ -74,14 +74,14 @@ public class ServicePaymentProcessingService {
     @Transactional
     public ServicePaymentResponse process(ServicePaymentProcessingRequest request) {
         UUID actorUserId = require(request.actorUserId(), "Actor user is required");
-        UUID accountOwnerUserId = require(request.accountOwnerUserId(), "Account owner user is required");
+        UUID payerUserId = require(request.payerUserId(), "Payer user is required");
         String tenantSlug = normalizeTenantSlug(request.tenantSlug());
         String idempotencyKey = normalize(request.idempotencyKey());
         String serviceCustomerCode = normalize(request.serviceCustomerCode());
 
         UUID tenantId = resolveTenantId(tenantSlug);
 
-        ServiceBillPayment existing = serviceBillPaymentRepository.findByIdempotencyKey(tenantId, accountOwnerUserId, idempotencyKey)
+        ServiceBillPayment existing = serviceBillPaymentRepository.findByIdempotencyKey(tenantId, payerUserId, idempotencyKey)
                 .orElse(null);
         if (existing != null) {
             if (!existing.billId().equals(request.billId())) {
@@ -94,7 +94,7 @@ public class ServicePaymentProcessingService {
             if (request.enrollmentId() != null) {
                 TenantServiceEnrollment enrollment = tenantServiceEnrollmentRepository.findById(request.enrollmentId())
                         .orElseThrow(() -> new ResourceNotFoundException("Service enrollment not found"));
-                if (!enrollment.userId().equals(accountOwnerUserId)) {
+                if (!enrollment.userId().equals(payerUserId)) {
                     throw new BusinessException("Service enrollment does not belong to the target user");
                 }
                 if (enrollment.status() != TenantServiceEnrollmentStatus.ACTIVE) {
@@ -126,7 +126,7 @@ public class ServicePaymentProcessingService {
 
             Account account = accountRepository.findByAccountNumber(normalize(request.sourceAccountNumber()))
                     .orElseThrow(() -> new ResourceNotFoundException("Source account not found"));
-            if (!account.userId().equals(accountOwnerUserId)) {
+            if (!account.userId().equals(payerUserId)) {
                 throw new BusinessException("Source account does not belong to the target user");
             }
             if (!account.active() || account.status() != AccountStatus.ACTIVE) {
@@ -152,7 +152,7 @@ public class ServicePaymentProcessingService {
                             "currency", bill.currency(),
                             "sourceAccountNumber", account.accountNumber(),
                             "actorUserId", actorUserId,
-                            "accountOwnerUserId", accountOwnerUserId,
+                            "payerUserId", payerUserId,
                             "idempotencyKey", idempotencyKey,
                             "mode", request.paymentMode()
                     )
@@ -168,7 +168,7 @@ public class ServicePaymentProcessingService {
                     idempotencyKey
             );
 
-            TransactionResponse transaction = paymentProcessingService.createPayment(paymentRequest, accountOwnerUserId);
+            TransactionResponse transaction = paymentProcessingService.createPayment(paymentRequest, payerUserId);
             String receiptNumber = nextReceiptNumber();
             Instant now = Instant.now();
 
@@ -178,7 +178,7 @@ public class ServicePaymentProcessingService {
                     provider.id(),
                     tenantId,
                     tenantSlug,
-                    accountOwnerUserId,
+                    payerUserId,
                     account.id(),
                     account.accountNumber(),
                     transaction.id(),
@@ -204,7 +204,7 @@ public class ServicePaymentProcessingService {
                     ServiceBillStatus.PAID,
                     tenantId,
                     tenantSlug,
-                    accountOwnerUserId,
+                    payerUserId,
                     account.id(),
                     account.accountNumber(),
                     transaction.id(),
@@ -229,7 +229,7 @@ public class ServicePaymentProcessingService {
                             "transactionId", transaction.id(),
                             "receiptNumber", receiptNumber,
                             "actorUserId", actorUserId,
-                            "accountOwnerUserId", accountOwnerUserId,
+                            "payerUserId", payerUserId,
                             "mode", request.paymentMode()
                     ),
                     bill,
@@ -242,7 +242,7 @@ public class ServicePaymentProcessingService {
                     request,
                     tenantSlug,
                     actorUserId,
-                    accountOwnerUserId,
+                    payerUserId,
                     exception
             );
             throw exception;

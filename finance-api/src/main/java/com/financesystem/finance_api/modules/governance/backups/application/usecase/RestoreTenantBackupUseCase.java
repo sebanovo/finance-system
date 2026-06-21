@@ -22,9 +22,12 @@ public class RestoreTenantBackupUseCase {
 
     @Transactional
     public BackupJobResponse execute(UUID backupId, String confirmationText, String reason) {
-        if (!CONFIRMATION.equals(confirmationText)) {
+        String normalizedConfirmation = confirmationText == null ? "" : confirmationText.trim();
+
+        if (!CONFIRMATION.equals(normalizedConfirmation)) {
             throw new BackupOperationNotAllowedException("Invalid confirmation text. Expected: " + CONFIRMATION);
-        
-        }return backupJobMapper.toResponse(backupApplicationService.createTenantRestoreJob(backupId, reason));
+        }
+
+        return backupJobMapper.toResponse(backupApplicationService.createTenantRestoreJob(backupId, reason));
     }
 }

@@ -1,10 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { firstValueFrom, timeout } from 'rxjs';
 import { PageResponse, PlatformBackup, PlatformService, PlatformTenant } from '../../entities/platform/api/platform.service';
 import { PlatformPaginationComponent } from '../../features/platform/ui/platform-pagination/platform-pagination.component';
+import { ToastService } from '../../shared/ui/toast/toast.service';
 
 type BackupScope = 'FULL_DATABASE' | 'TENANT_SCHEMA';
 
@@ -35,13 +37,15 @@ type BackupScope = 'FULL_DATABASE' | 'TENANT_SCHEMA';
             <button
               type="button"
               (click)="openCreateModal('FULL_DATABASE')"
-              class="inline-flex cursor-pointer items-center gap-2 rounded-full bg-[#1B5E20] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#2E7D32]">
+              title="Nuevo"
+              class="inline-flex cursor-pointer items-center gap-2 rounded-full bg-[#1B5E20] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#2E7D32] disabled:cursor-not-allowed disabled:opacity-60">
               <lucide-icon name="arrow-down-to-line" class="h-4 w-4"></lucide-icon>
               Nuevo respaldo full
             </button>
             <button
               type="button"
               (click)="reload()"
+              title="Actualizar"
               class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#C8E6C9] bg-white px-4 py-2 text-sm font-semibold text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
               <lucide-icon name="refresh-ccw" class="h-4 w-4"></lucide-icon>
               Recargar
@@ -83,6 +87,7 @@ type BackupScope = 'FULL_DATABASE' | 'TENANT_SCHEMA';
             <button
               type="button"
               (click)="openCreateModal('TENANT_SCHEMA')"
+              title="Tenant"
               class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#C8E6C9] bg-[#F1F8E9] px-4 py-2 text-sm font-semibold text-[#2E7D32] transition-colors hover:bg-[#E8F5E9]">
               <lucide-icon name="building-2" class="h-4 w-4"></lucide-icon>
               Respaldo por tenant
@@ -113,16 +118,19 @@ type BackupScope = 'FULL_DATABASE' | 'TENANT_SCHEMA';
                   </td>
                   <td class="px-4 py-4 text-sm">
                     <span class="rounded-full border px-3 py-1 text-xs font-semibold"
-                      [class.border-[#C8E6C9]]="backup.status === 'COMPLETED'"
-                      [class.bg-[#F1F8E9]]="backup.status === 'COMPLETED'"
-                      [class.text-[#2E7D32]]="backup.status === 'COMPLETED'"
-                      [class.border-[#FFD59E]]="backup.status === 'RUNNING' || backup.status === 'PENDING'"
-                      [class.bg-[#FFF7E6]]="backup.status === 'RUNNING' || backup.status === 'PENDING'"
-                      [class.text-[#B26A00]]="backup.status === 'RUNNING' || backup.status === 'PENDING'"
+                      [class.border-[#C8E6C9]]="isSuccessStatus(backup.status)"
+                      [class.bg-[#F1F8E9]]="isSuccessStatus(backup.status)"
+                      [class.text-[#2E7D32]]="isSuccessStatus(backup.status)"
+                      [class.border-[#FFE0A3]]="isWarningStatus(backup.status)"
+                      [class.bg-[#FFF8E6]]="isWarningStatus(backup.status)"
+                      [class.text-[#9A6700]]="isWarningStatus(backup.status)"
+                      [class.border-[#FFD59E]]="isRunningStatus(backup.status)"
+                      [class.bg-[#FFF7E6]]="isRunningStatus(backup.status)"
+                      [class.text-[#B26A00]]="isRunningStatus(backup.status)"
                       [class.border-[#F3C6C6]]="backup.status === 'FAILED'"
                       [class.bg-[#FFF7F7]]="backup.status === 'FAILED'"
                       [class.text-[#B42318]]="backup.status === 'FAILED'">
-                      {{ backup.status }}
+                      {{ statusLabel(backup.status) }}
                     </span>
                   </td>
                   <td class="px-4 py-4 text-sm text-[#1B5E20]">
@@ -131,13 +139,13 @@ type BackupScope = 'FULL_DATABASE' | 'TENANT_SCHEMA';
                   </td>
                   <td class="px-4 py-4 text-right text-sm font-medium">
                     <div class="inline-flex items-center gap-2">
-                      <button type="button" (click)="openDetail(backup)" class="cursor-pointer rounded-full border border-[#DDEED8] p-2 text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
+                      <button type="button" (click)="openDetail(backup)" title="Detalle" class="cursor-pointer rounded-full border border-[#DDEED8] p-2 text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
                         <lucide-icon name="eye" class="h-4 w-4"></lucide-icon>
                       </button>
-                      <button type="button" (click)="download(backup)" class="cursor-pointer rounded-full border border-[#DDEED8] p-2 text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
+                      <button type="button" (click)="download(backup)" title="Descargar" class="cursor-pointer rounded-full border border-[#DDEED8] p-2 text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
                         <lucide-icon name="arrow-down-to-line" class="h-4 w-4"></lucide-icon>
                       </button>
-                      <button type="button" (click)="openRestoreModal(backup)" class="cursor-pointer rounded-full border border-[#DDEED8] p-2 text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
+                      <button type="button" (click)="openRestoreModal(backup)" title="Restaurar" class="cursor-pointer rounded-full border border-[#DDEED8] p-2 text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
                         <lucide-icon name="rotate-ccw" class="h-4 w-4"></lucide-icon>
                       </button>
                     </div>
@@ -175,7 +183,7 @@ type BackupScope = 'FULL_DATABASE' | 'TENANT_SCHEMA';
                 <h2 class="app-modal-title">Nuevo respaldo</h2>
                 <p class="app-modal-subtitle">Crea un respaldo full o por tenant.</p>
               </div>
-              <button type="button" (click)="closeCreateModal()" class="cursor-pointer rounded-full border border-[#DDEED8] p-2 text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
+              <button type="button" (click)="closeCreateModal()" title="Cerrar" class="cursor-pointer rounded-full border border-[#DDEED8] p-2 text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
                 <lucide-icon name="x" class="h-5 w-5"></lucide-icon>
               </button>
             </div>
@@ -224,7 +232,7 @@ type BackupScope = 'FULL_DATABASE' | 'TENANT_SCHEMA';
                 <button type="submit" [disabled]="saving()" class="cursor-pointer rounded-full bg-[#1B5E20] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#2E7D32] disabled:cursor-not-allowed disabled:opacity-60">
                   {{ saving() ? 'Procesando...' : 'Crear respaldo' }}
                 </button>
-              </div>
+            </div>
             </form>
           </div>
         </div>
@@ -238,7 +246,7 @@ type BackupScope = 'FULL_DATABASE' | 'TENANT_SCHEMA';
                 <h2 class="app-modal-title">Detalle del respaldo</h2>
                 <p class="app-modal-subtitle">Información operativa y trazabilidad del job.</p>
               </div>
-              <button type="button" (click)="closeDetail()" class="cursor-pointer rounded-full border border-[#DDEED8] p-2 text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
+              <button type="button" (click)="closeDetail()" title="Cerrar" class="cursor-pointer rounded-full border border-[#DDEED8] p-2 text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
                 <lucide-icon name="x" class="h-5 w-5"></lucide-icon>
               </button>
             </div>
@@ -250,7 +258,7 @@ type BackupScope = 'FULL_DATABASE' | 'TENANT_SCHEMA';
               </div>
               <div class="rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] p-4">
                 <p class="text-xs font-bold uppercase tracking-[0.12em] text-[#6B7D6C]">Estado</p>
-                <p class="mt-1 break-words text-sm font-semibold text-[#1B5E20]">{{ backup.status }}</p>
+                <p class="mt-1 break-words text-sm font-semibold text-[#1B5E20]">{{ statusLabel(backup.status) }}</p>
               </div>
               <div class="rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] p-4">
                 <p class="text-xs font-bold uppercase tracking-[0.12em] text-[#6B7D6C]">Scope</p>
@@ -306,7 +314,7 @@ type BackupScope = 'FULL_DATABASE' | 'TENANT_SCHEMA';
                 <h2 class="app-modal-title">Restaurar respaldo</h2>
                 <p class="app-modal-subtitle">Confirma explícitamente antes de restaurar.</p>
               </div>
-              <button type="button" (click)="closeRestoreModal()" class="cursor-pointer rounded-full border border-[#DDEED8] p-2 text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
+              <button type="button" (click)="closeRestoreModal()" title="Cerrar" class="cursor-pointer rounded-full border border-[#DDEED8] p-2 text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
                 <lucide-icon name="x" class="h-5 w-5"></lucide-icon>
               </button>
             </div>
@@ -338,11 +346,13 @@ type BackupScope = 'FULL_DATABASE' | 'TENANT_SCHEMA';
     </div>
   `
 })
-export class PlatformBackupsPageComponent implements OnInit {
+export class PlatformBackupsPageComponent implements OnInit, OnDestroy {
   private readonly platformService = inject(PlatformService);
+  private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder);
   private readonly backupPageSize = 20;
   private readonly tenantSelectSize = 1000;
+  private autoRefreshTimer: number | null = null;
 
   backups = signal<PlatformBackup[]>([]);
   backupPage = signal<PageResponse<PlatformBackup> | null>(null);
@@ -359,8 +369,8 @@ export class PlatformBackupsPageComponent implements OnInit {
     const items = this.backups();
     return {
       total: items.length,
-      completed: items.filter((item) => item.status === 'COMPLETED').length,
-      running: items.filter((item) => item.status === 'RUNNING' || item.status === 'PENDING').length,
+      completed: items.filter((item) => item.status === 'COMPLETED' || item.status === 'RESTORED' || item.status === 'RESTORED_WITH_WARNINGS').length,
+      running: items.filter((item) => item.status === 'RUNNING' || item.status === 'PENDING' || item.status === 'RESTORING').length,
       failed: items.filter((item) => item.status === 'FAILED' || item.status === 'RESTORE_FAILED').length
     };
   });
@@ -398,7 +408,34 @@ export class PlatformBackupsPageComponent implements OnInit {
       }
     } finally {
       this.loading.set(false);
+      if (this.hasRunningJobs()) {
+        this.scheduleAutoRefresh();
+      } else if (this.autoRefreshTimer !== null) {
+        window.clearTimeout(this.autoRefreshTimer);
+        this.autoRefreshTimer = null;
+      }
     }
+  }
+
+  private scheduleAutoRefresh(delayMs = 4000): void {
+    if (this.autoRefreshTimer !== null) {
+      window.clearTimeout(this.autoRefreshTimer);
+    }
+
+    this.autoRefreshTimer = window.setTimeout(async () => {
+      this.autoRefreshTimer = null;
+      await this.reload();
+
+      if (this.hasRunningJobs()) {
+        this.scheduleAutoRefresh();
+      }
+    }, delayMs);
+  }
+
+  private hasRunningJobs(): boolean {
+    return this.backups().some((backup) =>
+      backup.status === 'PENDING' || backup.status === 'RUNNING' || backup.status === 'RESTORING'
+    );
   }
 
   async changePage(page: number): Promise<void> {
@@ -434,7 +471,24 @@ export class PlatformBackupsPageComponent implements OnInit {
       if (response.success) {
         await this.reload();
         this.closeCreateModal();
+        this.toast.success('Respaldo solicitado correctamente');
+        if (this.hasRunningJobs()) {
+          this.scheduleAutoRefresh();
+        }
       }
+    } catch (err) {
+      if (err instanceof HttpErrorResponse && err.status === 409) {
+        this.toast.warning('Ya existe un respaldo en proceso');
+        await this.reload();
+        return;
+      }
+
+      const message = err instanceof HttpErrorResponse
+        ? err.error?.message || err.message
+        : err instanceof Error
+          ? err.message
+          : null;
+      this.toast.error(message || 'No se pudo crear el respaldo');
     } finally {
       this.saving.set(false);
     }
@@ -482,6 +536,9 @@ export class PlatformBackupsPageComponent implements OnInit {
       if (response.success) {
         await this.reload();
         this.closeRestoreModal();
+        if (this.hasRunningJobs()) {
+          this.scheduleAutoRefresh();
+        }
       }
     } finally {
       this.saving.set(false);
@@ -496,6 +553,40 @@ export class PlatformBackupsPageComponent implements OnInit {
     link.download = backup.fileName || `backup-${backup.id}.sql`;
     link.click();
     window.URL.revokeObjectURL(url);
+  }
+
+  ngOnDestroy(): void {
+    if (this.autoRefreshTimer !== null) {
+      window.clearTimeout(this.autoRefreshTimer);
+      this.autoRefreshTimer = null;
+    }
+  }
+
+  statusLabel(status: string): string {
+    const labels: Record<string, string> = {
+      COMPLETED: 'Completado',
+      RESTORED: 'Restaurado',
+      RESTORED_WITH_WARNINGS: 'Restaurado con avisos',
+      RUNNING: 'En proceso',
+      PENDING: 'Pendiente',
+      RESTORING: 'Restaurando',
+      FAILED: 'Fallido',
+      RESTORE_FAILED: 'Restauración fallida'
+    };
+
+    return labels[status] ?? status;
+  }
+
+  isSuccessStatus(status: string): boolean {
+    return status === 'COMPLETED' || status === 'RESTORED';
+  }
+
+  isWarningStatus(status: string): boolean {
+    return status === 'RESTORED_WITH_WARNINGS';
+  }
+
+  isRunningStatus(status: string): boolean {
+    return status === 'RUNNING' || status === 'PENDING' || status === 'RESTORING';
   }
 
   formatDate(value: string | null | undefined): string {
