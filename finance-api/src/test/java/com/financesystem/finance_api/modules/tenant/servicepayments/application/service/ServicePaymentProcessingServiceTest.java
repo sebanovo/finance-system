@@ -71,7 +71,7 @@ class ServicePaymentProcessingServiceTest {
 
         UUID tenantId = UUID.randomUUID();
         UUID actorUserId = UUID.randomUUID();
-        UUID accountOwnerUserId = UUID.randomUUID();
+        UUID payerUserId = UUID.randomUUID();
         UUID billId = UUID.randomUUID();
         UUID providerId = UUID.randomUUID();
         UUID customerId = UUID.randomUUID();
@@ -123,7 +123,7 @@ class ServicePaymentProcessingServiceTest {
         );
         Account account = new Account(
                 accountId,
-                accountOwnerUserId,
+                payerUserId,
                 "100000000123",
                 AccountName.CHECKING_ACCOUNT,
                 null,
@@ -171,7 +171,7 @@ class ServicePaymentProcessingServiceTest {
                 providerId,
                 tenantId,
                 "tenant_financruz",
-                accountOwnerUserId,
+                payerUserId,
                 accountId,
                 account.accountNumber(),
                 transactionId,
@@ -196,7 +196,7 @@ class ServicePaymentProcessingServiceTest {
                 ServiceBillStatus.PAID,
                 tenantId,
                 "tenant_financruz",
-                accountOwnerUserId,
+                payerUserId,
                 accountId,
                 account.accountNumber(),
                 transactionId,
@@ -224,19 +224,19 @@ class ServicePaymentProcessingServiceTest {
         when(jdbcTemplate.query(anyString(), any(org.springframework.jdbc.core.ResultSetExtractor.class), eq("tenant_financruz")))
                 .thenReturn(tenantId);
         when(jdbcTemplate.queryForObject(anyString(), eq(Long.class))).thenReturn(1L);
-        when(paymentRepository.findByIdempotencyKey(tenantId, accountOwnerUserId, "idempotency-1")).thenReturn(Optional.empty());
+        when(paymentRepository.findByIdempotencyKey(tenantId, payerUserId, "idempotency-1")).thenReturn(Optional.empty());
         when(billRepository.findByIdForUpdate(billId)).thenReturn(Optional.of(bill));
         when(providerRepository.findById(providerId)).thenReturn(Optional.of(provider));
         when(customerRepository.findByProviderAndCode(providerId, "100001")).thenReturn(Optional.of(customer));
         when(accountRepository.findByAccountNumber("100000000123")).thenReturn(Optional.of(account));
-        when(paymentProcessingService.createPayment(any(CreatePaymentTransactionRequest.class), eq(accountOwnerUserId))).thenReturn(transactionResponse);
+        when(paymentProcessingService.createPayment(any(CreatePaymentTransactionRequest.class), eq(payerUserId))).thenReturn(transactionResponse);
         when(paymentRepository.save(any(ServiceBillPayment.class))).thenReturn(savedPayment);
         when(billRepository.save(any(ServiceBill.class))).thenReturn(updatedBill);
         when(mapper.toPaymentResponse(savedPayment, updatedBill, provider)).thenReturn(expectedResponse);
 
         var actual = service.process(new ServicePaymentProcessingRequest(
                 actorUserId,
-                accountOwnerUserId,
+                payerUserId,
                 "tenant_financruz",
                 providerId,
                 "100001",
@@ -252,8 +252,8 @@ class ServicePaymentProcessingServiceTest {
         assertSame(expectedResponse, actual);
         verify(paymentRepository).save(any(ServiceBillPayment.class));
         verify(billRepository).save(any(ServiceBill.class));
-        verify(paymentProcessingService).createPayment(any(CreatePaymentTransactionRequest.class), eq(accountOwnerUserId));
-        verify(paymentRepository).findByIdempotencyKey(tenantId, accountOwnerUserId, "idempotency-1");
+        verify(paymentProcessingService).createPayment(any(CreatePaymentTransactionRequest.class), eq(payerUserId));
+        verify(paymentRepository).findByIdempotencyKey(tenantId, payerUserId, "idempotency-1");
     }
 
     @Test
@@ -414,7 +414,7 @@ class ServicePaymentProcessingServiceTest {
 
         UUID tenantId = UUID.randomUUID();
         UUID actorUserId = UUID.randomUUID();
-        UUID accountOwnerUserId = UUID.randomUUID();
+        UUID payerUserId = UUID.randomUUID();
         UUID billId = UUID.randomUUID();
         UUID providerId = UUID.randomUUID();
         UUID customerId = UUID.randomUUID();
@@ -464,7 +464,7 @@ class ServicePaymentProcessingServiceTest {
         );
         Account account = new Account(
                 accountId,
-                accountOwnerUserId,
+                payerUserId,
                 "100000000123",
                 AccountName.CHECKING_ACCOUNT,
                 null,
@@ -484,7 +484,7 @@ class ServicePaymentProcessingServiceTest {
 
         when(jdbcTemplate.query(anyString(), any(org.springframework.jdbc.core.ResultSetExtractor.class), eq("tenant_financruz")))
                 .thenReturn(tenantId);
-        when(paymentRepository.findByIdempotencyKey(tenantId, accountOwnerUserId, "idempotency-1")).thenReturn(Optional.empty());
+        when(paymentRepository.findByIdempotencyKey(tenantId, payerUserId, "idempotency-1")).thenReturn(Optional.empty());
         when(billRepository.findByIdForUpdate(billId)).thenReturn(Optional.of(bill));
         when(providerRepository.findById(providerId)).thenReturn(Optional.of(provider));
         when(customerRepository.findByProviderAndCode(providerId, "100001")).thenReturn(Optional.of(customer));
@@ -494,7 +494,7 @@ class ServicePaymentProcessingServiceTest {
                 RuntimeException.class,
                 () -> service.process(new ServicePaymentProcessingRequest(
                         actorUserId,
-                        accountOwnerUserId,
+                        payerUserId,
                         "tenant_financruz",
                         providerId,
                         "100001",
@@ -509,7 +509,7 @@ class ServicePaymentProcessingServiceTest {
         );
 
         assertEquals("Insufficient available balance", exception.getMessage());
-        verify(failureAuditService).recordFailure(any(ServicePaymentProcessingRequest.class), eq("tenant_financruz"), eq(actorUserId), eq(accountOwnerUserId), any(RuntimeException.class));
+        verify(failureAuditService).recordFailure(any(ServicePaymentProcessingRequest.class), eq("tenant_financruz"), eq(actorUserId), eq(payerUserId), any(RuntimeException.class));
         verify(paymentProcessingService, never()).createPayment(any(CreatePaymentTransactionRequest.class), any(UUID.class));
         verify(paymentRepository, never()).save(any(ServiceBillPayment.class));
     }

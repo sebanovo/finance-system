@@ -19,7 +19,10 @@ import {
   Archive,
   Camera,
   Trash2,
-  ShieldCheck
+  ShieldCheck,
+  LoaderCircle,
+  TriangleAlert,
+  CircleAlert
 } from 'lucide-angular';
 
 
@@ -42,7 +45,8 @@ export const appConfig: ApplicationConfig = {
       RotateCcw, Reply, ClipboardList, AlertCircle, AlertTriangle, BadgeCheck,
       Building, Clock, Info, PauseCircle, PlayCircle, Sparkles, Wand2,
       BarChart3, FileChartColumn, Database, Search, Archive,
-      Camera, Trash2, ShieldCheck,
+      Camera, Trash2, ShieldCheck, LoaderCircle, TriangleAlert,
+      CircleAlert
     }))
 
   ]

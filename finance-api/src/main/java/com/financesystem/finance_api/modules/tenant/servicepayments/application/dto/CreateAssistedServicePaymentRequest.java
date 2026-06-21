@@ -6,6 +6,13 @@ import jakarta.validation.constraints.Size;
 
 import java.util.UUID;
 
+/**
+ * Legacy compatibility payload.
+ *
+ * The active bank flow uses {@link CreateBankServicePaymentRequest} and resolves the payer
+ * from the source account.
+ */
+@Deprecated(forRemoval = false)
 public record CreateAssistedServicePaymentRequest(
         @NotNull
         UUID userId,

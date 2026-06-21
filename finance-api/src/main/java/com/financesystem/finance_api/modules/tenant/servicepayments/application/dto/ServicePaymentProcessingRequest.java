@@ -6,7 +6,7 @@ import java.util.UUID;
 
 public record ServicePaymentProcessingRequest(
         UUID actorUserId,
-        UUID accountOwnerUserId,
+        UUID payerUserId,
         String tenantSlug,
         UUID providerId,
         String serviceCustomerCode,

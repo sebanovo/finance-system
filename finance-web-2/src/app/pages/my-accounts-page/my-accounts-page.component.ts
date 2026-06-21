@@ -278,7 +278,7 @@ export class MyAccountsPageComponent implements OnInit {
           accountName: event.request.accountName || 'MAIN_WALLET',
           customAlias: event.request.customAlias,
           accountType: event.request.accountType || 'SAVINGS',
-          currency: event.request.currency || 'USD'
+          currency: event.request.currency || 'BOB'
         });
       }
 

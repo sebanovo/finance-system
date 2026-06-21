@@ -211,6 +211,7 @@ export class SidebarComponent {
     seguridad: false,
     contabilidad: false,
     reportes: false,
+    backups: false,
     'mis-servicios': false,
     'servicios-platform': false
   };
@@ -256,7 +257,7 @@ export class SidebarComponent {
             label: 'Historial de pagos',
             route: '/dashboard/me/service-payments',
             icon: 'credit-card',
-            permissions: ['me.service-payments.read']
+            permissions: ['me.service-payments.read', 'me.service-payments.detail']
           }
         ]
       }
@@ -325,7 +326,7 @@ export class SidebarComponent {
           label: 'Pagos de servicios',
           route: '/dashboard/service-payments',
           icon: 'credit-card',
-          permissions: ['service-payments.create', 'service-payments.read', 'service-payments.detail']
+          permissions: ['service-payments.create', 'service-payments.read']
         }
       ]
     },
@@ -345,24 +346,6 @@ export class SidebarComponent {
           route: '/dashboard/fx/fees',
           icon: 'percent',
           permissions: ['fx.fees.read']
-        }
-      ]
-    },
-    {
-      id: 'seguridad',
-      label: 'Seguridad',
-      icon: 'lock',
-      items: [
-        {
-          label: 'Configuraciones',
-          route: '/dashboard/settings',
-          icon: 'settings'
-        },
-        {
-          label: 'Límites Operativos',
-          route: '/dashboard/limits/rules',
-          icon: 'shield-alert',
-          permissions: ['limits.read']
         }
       ]
     },
@@ -397,6 +380,37 @@ export class SidebarComponent {
           permissions: ['reports.tenant.read']
         }
       ]
+    },
+    {
+      id: 'backups',
+      label: 'Respaldos',
+      icon: 'archive',
+      items: [
+        {
+          label: 'Backups tenant',
+          route: '/dashboard/backups',
+          icon: 'arrow-down-to-line',
+          permissions: ['backups.list', 'backups.detail']
+        }
+      ]
+    },
+    {
+      id: 'seguridad',
+      label: 'Seguridad',
+      icon: 'lock',
+      items: [
+        {
+          label: 'Límites Operativos',
+          route: '/dashboard/limits/rules',
+          icon: 'shield-alert',
+          permissions: ['limits.read']
+        },
+        {
+          label: 'Configuraciones',
+          route: '/dashboard/settings',
+          icon: 'settings'
+        }
+      ]
     }
   ];
 
@@ -404,13 +418,13 @@ export class SidebarComponent {
     { label: 'Dashboard', route: '/platform/dashboard', icon: 'layout-dashboard' },
     { label: 'Mi perfil', route: '/platform/profile', icon: 'user-circle-2' },
     { label: 'Seguridad', route: '/platform/security', icon: 'lock' },
-    { label: 'Configuraciones', route: '/platform/settings', icon: 'settings' },
-    { label: 'Respaldos', route: '/platform/backups', icon: 'arrow-down-to-line' },
     { label: 'Planes', route: '/platform/plans', icon: 'credit-card' },
     { label: 'Tenants', route: '/platform/tenants', icon: 'building-2' },
     { label: 'Suscripciones', route: '/platform/subscriptions', icon: 'dollar-sign' },
     { label: 'Reportes', route: '/platform/reporting', icon: 'bar-chart-3' },
-    { label: 'Auditoría', route: '/platform/audit', icon: 'clipboard-list' }
+    { label: 'Auditoría', route: '/platform/audit', icon: 'clipboard-list' },
+    { label: 'Respaldos', route: '/platform/backups', icon: 'arrow-down-to-line' },
+    { label: 'Configuraciones', route: '/platform/settings', icon: 'settings' }
   ];
 
   platformMenuGroups: MenuGroup[] = [

@@ -10,6 +10,12 @@ import com.financesystem.finance_api.modules.tenant.servicepayments.application.
 import com.financesystem.finance_api.modules.tenant.transactions.domain.model.TransactionChannel;
 import org.springframework.stereotype.Service;
 
+/**
+ * Legacy compatibility use case.
+ *
+ * The active contract for bank/cashbox payments is {@link CreateBankServicePaymentUseCase}.
+ */
+@Deprecated(forRemoval = false)
 @Service
 public class CreateAssistedServicePaymentUseCase {
 

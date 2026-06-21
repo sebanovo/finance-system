@@ -352,12 +352,29 @@ export class PlatformService {
     );
   }
 
+  getTenantBackups(page = 0, size = 20): Observable<ApiResponse<PageResponse<PlatformBackup>>> {
+    return this.http.get<ApiResponse<PageResponse<PlatformBackup>>>(
+      `${this.baseUrl}/api/backups`,
+      { params: this.pageParams(page, size) }
+    );
+  }
+
   getBackupById(id: string): Observable<ApiResponse<PlatformBackup>> {
     return this.http.get<ApiResponse<PlatformBackup>>(`${this.baseUrl}/api/platform/backups/${id}`);
   }
 
+  getTenantBackupById(id: string): Observable<ApiResponse<PlatformBackup>> {
+    return this.http.get<ApiResponse<PlatformBackup>>(`${this.baseUrl}/api/backups/${id}`);
+  }
+
   createFullBackup(reason?: string | null): Observable<ApiResponse<PlatformBackup>> {
     return this.http.post<ApiResponse<PlatformBackup>>(`${this.baseUrl}/api/platform/backups/full`, {
+      reason: reason ?? null
+    });
+  }
+
+  createTenantSelfBackup(reason?: string | null): Observable<ApiResponse<PlatformBackup>> {
+    return this.http.post<ApiResponse<PlatformBackup>>(`${this.baseUrl}/api/backups`, {
       reason: reason ?? null
     });
   }
@@ -372,7 +389,15 @@ export class PlatformService {
     return this.http.post<ApiResponse<PlatformBackup>>(`${this.baseUrl}/api/platform/backups/${id}/restore`, request);
   }
 
+  restoreTenantBackup(id: string, request: RestoreBackupRequest): Observable<ApiResponse<PlatformBackup>> {
+    return this.http.post<ApiResponse<PlatformBackup>>(`${this.baseUrl}/api/backups/${id}/restore`, request);
+  }
+
   downloadBackup(id: string): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/api/platform/backups/${id}/download`, { responseType: 'blob' });
+  }
+
+  downloadTenantBackup(id: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/api/backups/${id}/download`, { responseType: 'blob' });
   }
 }

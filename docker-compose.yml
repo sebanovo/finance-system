@@ -40,6 +40,10 @@ services:
         condition: service_healthy
     env_file:
       - .env
+    environment:
+      PG_DUMP_PATH: /usr/lib/postgresql/16/bin/pg_dump
+      PG_RESTORE_PATH: /usr/lib/postgresql/16/bin/pg_restore
+      PSQL_PATH: /usr/lib/postgresql/16/bin/psql
     ports:
       - "${BACKEND_PORT}:8080"
     volumes:
