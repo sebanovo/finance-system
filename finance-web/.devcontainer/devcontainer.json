@@ -1,11 +1,11 @@
 {
-  "name": "finance-web-2-dev",
+  "name": "finance-web-dev",
   "build": {
     "dockerfile": "Dockerfile"
   },
-  "workspaceFolder": "/finance-web-2",
+  "workspaceFolder": "/finance-web",
   "mounts": [
-    "source=${localWorkspaceFolder},target=/finance-web-2,type=bind,consistency=cached"
+    "source=${localWorkspaceFolder},target=/finance-web,type=bind,consistency=cached"
   ],
   "forwardPorts": [4200],
   "runArgs": [

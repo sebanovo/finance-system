@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "finance-web-2": {
+    "finance-web": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -56,10 +56,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "finance-web-2:build:production"
+              "buildTarget": "finance-webuild:production"
             },
             "development": {
-              "buildTarget": "finance-web-2:build:development",
+              "buildTarget": "finance-web:build:development",
               "poll": 2000
             }
           },

@@ -9,5 +9,5 @@ import { ToastComponent } from './shared/ui/toast/toast.component';
   styleUrl: './app.css'
 })
 export class App {
-  protected readonly title = signal('finance-web-2');
+  protected readonly title = signal('finance-web');
 }
