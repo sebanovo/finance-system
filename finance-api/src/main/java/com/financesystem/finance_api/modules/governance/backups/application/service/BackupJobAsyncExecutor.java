@@ -77,8 +77,10 @@ public class BackupJobAsyncExecutor {
         BackupJob restore = null;
         try {
             restore = get(id);
-            BackupJob source = repo.findById(restore.sourceBackupId())
-                    .orElseThrow(() -> new BackupNotFoundException("Source backup not found"));
+            BackupJob source = restore.sourceBackupId() != null
+                    ? repo.findById(restore.sourceBackupId())
+                        .orElseThrow(() -> new BackupNotFoundException("Source backup not found"))
+                    : restore;
 
             BackupJob running = status(restore, BackupStatus.RESTORING, null, Instant.now(), null);
             record(running, BackupAuditEventTypes.RESTORE_STARTED, null);

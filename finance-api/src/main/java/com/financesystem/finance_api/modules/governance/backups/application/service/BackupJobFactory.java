@@ -27,4 +27,40 @@ public final class BackupJobFactory {
         String file = "restore_" + source.id() + "_" + F.format(Instant.now()) + ".job";
         return new BackupJob(null, BackupOperationType.RESTORE, source.scope(), BackupStatus.PENDING, source.tenantId(), source.tenantSlug(), source.schemaName(), source.id(), preRestoreBackupId, file, file, source.format(), null, null, requestedBy, reason, null, null, null, null, null);
     }
+
+    public static BackupJob restoreJobFromUploadedFile(
+            BackupScope scope,
+            UUID tenantId,
+            String tenantSlug,
+            String schemaName,
+            String fileName,
+            String storagePath,
+            BackupFormat format,
+            String requestedBy,
+            String reason
+    ) {
+        return new BackupJob(
+                null,
+                BackupOperationType.RESTORE,
+                scope,
+                BackupStatus.PENDING,
+                tenantId,
+                tenantSlug,
+                schemaName,
+                null,
+                null,
+                fileName,
+                storagePath,
+                format,
+                null,
+                null,
+                requestedBy,
+                reason,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+    }
 }

@@ -58,9 +58,13 @@ export class MyServiceEnrollmentListUseCase {
       );
 
       if (response.success && response.data) {
+        const pageData = {
+          ...response.data,
+          content: response.data.content.map((enrollment) => this.normalizeEnrollment(enrollment))
+        };
         this.state.set({
           status: 'success',
-          page: response.data,
+          page: pageData,
           error: null,
           filter
         });
@@ -100,7 +104,7 @@ export class MyServiceEnrollmentListUseCase {
       }
 
       await this.loadEnrollments(this.currentPage, this.currentSize, this.state().filter);
-      return response.data;
+      return this.normalizeEnrollment(response.data);
     } catch (err: any) {
       throw new Error(this.resolveError(err, 'Error al afiliar el servicio'));
     }
@@ -115,7 +119,7 @@ export class MyServiceEnrollmentListUseCase {
       }
 
       await this.loadEnrollments(this.currentPage, this.currentSize, this.state().filter);
-      return response.data;
+      return this.normalizeEnrollment(response.data);
     } catch (err: any) {
       throw new Error(this.resolveError(err, 'Error al eliminar la afiliación'));
     }
@@ -134,5 +138,13 @@ export class MyServiceEnrollmentListUseCase {
 
   private resolveError(err: any, fallback: string): string {
     return err?.error?.message || err?.message || fallback;
+  }
+
+  private normalizeEnrollment(enrollment: ServiceEnrollmentResponse): ServiceEnrollmentResponse {
+    return {
+      ...enrollment,
+      id: enrollment.id ?? enrollment.enrollmentId,
+      enrollmentId: enrollment.enrollmentId ?? enrollment.id ?? ''
+    };
   }
 }

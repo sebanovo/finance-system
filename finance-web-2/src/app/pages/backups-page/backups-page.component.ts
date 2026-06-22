@@ -52,6 +52,16 @@ import { ToastService } from '../../shared/ui/toast/toast.service';
             </button>
 
             <button
+              *ngIf="'backups.restore' | hasPermission"
+              type="button"
+              (click)="openRestoreFromFileModal()"
+              title="Restaurar"
+              class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-[#DDEED8] bg-white px-5 py-2.5 text-sm font-semibold text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
+              <lucide-icon name="upload" class="h-4 w-4"></lucide-icon>
+              Restaurar desde archivo
+            </button>
+
+            <button
               type="button"
               (click)="reload()"
               [disabled]="loading()"
@@ -358,6 +368,63 @@ import { ToastService } from '../../shared/ui/toast/toast.service';
           </div>
         </div>
       }
+
+      @if (restoreFromFileModalOpen()) {
+        <div class="app-modal-overlay" (click)="closeRestoreFromFileModal()">
+          <div class="app-modal-panel app-modal-panel-sm" (click)="$event.stopPropagation()">
+            <div class="app-modal-header">
+              <div>
+                <h2 class="app-modal-title">Restaurar desde archivo</h2>
+                <p class="app-modal-subtitle">Sube un backup descargado y confirma la restauración.</p>
+              </div>
+              <button type="button" (click)="closeRestoreFromFileModal()" title="Cerrar" class="cursor-pointer rounded-full border border-[#DDEED8] p-2 text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
+                <lucide-icon name="x" class="h-5 w-5"></lucide-icon>
+              </button>
+            </div>
+
+            <form class="mt-6 grid gap-4" [formGroup]="restoreFromFileForm" (ngSubmit)="submitRestoreFromFile()">
+              <div class="rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] p-4 text-sm text-[#1B5E20]">
+                Selecciona el archivo descargado y confirma antes de iniciar.
+              </div>
+
+              <label>
+                <span class="mb-1 block text-sm font-semibold text-[#2E7D32]">Archivo</span>
+                <input
+                  type="file"
+                  accept=".dump,.backup,.sql,application/octet-stream"
+                  (change)="onRestoreFromFileSelected($event)"
+                  class="block w-full cursor-pointer rounded-2xl border border-[#C8E6C9] bg-white px-4 py-3 text-sm text-[#1B5E20] file:mr-4 file:rounded-full file:border-0 file:bg-[#F1F8E9] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[#2E7D32] hover:file:bg-[#E8F5E9]" />
+                <p class="mt-2 text-xs text-[#6B7D6C]">
+                  {{ restoreFromFileFileName() || 'Ningún archivo seleccionado' }}
+                </p>
+              </label>
+
+              <label>
+                <span class="mb-1 block text-sm font-semibold text-[#2E7D32]">Confirmación</span>
+                <input
+                  formControlName="confirmationText"
+                  type="text"
+                  class="w-full rounded-2xl border border-[#C8E6C9] bg-white px-4 py-3 text-sm text-[#1B5E20] outline-none focus:border-[#2E7D32]"
+                  placeholder="RESTORE_TENANT_BACKUP">
+              </label>
+
+              <label>
+                <span class="mb-1 block text-sm font-semibold text-[#2E7D32]">Motivo</span>
+                <textarea formControlName="reason" rows="3" class="w-full rounded-2xl border border-[#C8E6C9] bg-white px-4 py-3 text-sm text-[#1B5E20] outline-none focus:border-[#2E7D32]"></textarea>
+              </label>
+
+              <div class="app-modal-footer">
+                <button type="button" (click)="closeRestoreFromFileModal()" class="cursor-pointer rounded-full border border-[#C8E6C9] bg-white px-4 py-2 text-sm font-semibold text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
+                  Cancelar
+                </button>
+                <button type="submit" [disabled]="saving()" class="cursor-pointer rounded-full bg-[#1B5E20] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#2E7D32] disabled:cursor-not-allowed disabled:opacity-60">
+                  {{ saving() ? 'Restaurando...' : 'Confirmar restauración' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      }
     </section>
   `
 })
@@ -372,7 +439,9 @@ export class BackupsPageComponent implements OnInit, OnDestroy {
   createModalOpen = signal(false);
   detailModalOpen = signal(false);
   restoreModalOpen = signal(false);
+  restoreFromFileModalOpen = signal(false);
   selectedBackup = signal<PlatformBackup | null>(null);
+  restoreFromFileFile = signal<File | null>(null);
   loading = signal(false);
   saving = signal(false);
   error = signal<string | null>(null);
@@ -396,6 +465,13 @@ export class BackupsPageComponent implements OnInit, OnDestroy {
     confirmationText: ['RESTORE_TENANT_BACKUP', [Validators.required]],
     reason: ['']
   });
+
+  readonly restoreFromFileForm = this.fb.nonNullable.group({
+    confirmationText: ['RESTORE_TENANT_BACKUP', [Validators.required]],
+    reason: ['']
+  });
+
+  readonly restoreFromFileFileName = computed(() => this.restoreFromFileFile()?.name ?? '');
 
   ngOnInit(): void {
     void this.reload();
@@ -512,6 +588,25 @@ export class BackupsPageComponent implements OnInit, OnDestroy {
     this.restoreModalOpen.set(false);
   }
 
+  openRestoreFromFileModal(): void {
+    this.restoreFromFileForm.reset({
+      confirmationText: 'RESTORE_TENANT_BACKUP',
+      reason: ''
+    });
+    this.restoreFromFileFile.set(null);
+    this.restoreFromFileModalOpen.set(true);
+  }
+
+  closeRestoreFromFileModal(): void {
+    this.restoreFromFileModalOpen.set(false);
+  }
+
+  onRestoreFromFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.restoreFromFileFile.set(file);
+  }
+
   async submitRestore(): Promise<void> {
     if (!this.selectedBackup()) {
       return;
@@ -541,6 +636,42 @@ export class BackupsPageComponent implements OnInit, OnDestroy {
       }
     } catch (err: any) {
       this.toast.error(err?.error?.message || err?.message || 'No se pudo restaurar el respaldo');
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  async submitRestoreFromFile(): Promise<void> {
+    const file = this.restoreFromFileFile();
+    if (!file) {
+      this.toast.error('Selecciona un archivo de respaldo');
+      return;
+    }
+
+    if (this.restoreFromFileForm.invalid) {
+      this.restoreFromFileForm.markAllAsTouched();
+      return;
+    }
+
+    this.saving.set(true);
+    try {
+      const { confirmationText, reason } = this.restoreFromFileForm.getRawValue();
+      const response = await firstValueFrom(
+        this.platformService.restoreTenantBackupFromFile(file, {
+          confirmationText,
+          reason: reason || null
+        })
+      );
+
+      if (response.success) {
+        this.toast.info('Restauración desde archivo solicitada correctamente. Revisa el estado en la tabla.');
+        await this.reload();
+        this.closeRestoreFromFileModal();
+      } else {
+        this.toast.error(response.message || 'No se pudo restaurar desde el archivo');
+      }
+    } catch (err: any) {
+      this.toast.error(err?.error?.message || err?.message || 'No se pudo restaurar desde el archivo');
     } finally {
       this.saving.set(false);
     }

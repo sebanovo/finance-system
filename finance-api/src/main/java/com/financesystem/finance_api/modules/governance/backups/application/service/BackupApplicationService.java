@@ -7,6 +7,8 @@ import com.financesystem.finance_api.modules.governance.audit.application.servic
 import com.financesystem.finance_api.modules.governance.backups.domain.exception.*;
 import com.financesystem.finance_api.modules.governance.backups.domain.model.*;
 import com.financesystem.finance_api.modules.governance.backups.domain.repository.BackupJobRepository;
+import com.financesystem.finance_api.modules.governance.backups.infrastructure.storage.BackupStorage;
+import com.financesystem.finance_api.modules.governance.backups.infrastructure.storage.ChecksumService;
 import com.financesystem.finance_api.modules.platform.tenants.domain.exception.PlatformTenantNotFoundException;
 import com.financesystem.finance_api.modules.platform.tenants.domain.model.PlatformTenant;
 import com.financesystem.finance_api.modules.platform.tenants.domain.repository.PlatformTenantRepository;
@@ -15,6 +17,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -27,13 +34,25 @@ public class BackupApplicationService {
     private final SecurityContextFacade security;
     private final BackupJobAsyncExecutor async;
     private final AuditTrailService audit;
+    private final BackupStorage storage;
+    private final ChecksumService checksumService;
 
-    public BackupApplicationService(BackupJobRepository repo, PlatformTenantRepository tenants, SecurityContextFacade security, BackupJobAsyncExecutor async, AuditTrailService audit) {
+    public BackupApplicationService(
+            BackupJobRepository repo,
+            PlatformTenantRepository tenants,
+            SecurityContextFacade security,
+            BackupJobAsyncExecutor async,
+            AuditTrailService audit,
+            BackupStorage storage,
+            ChecksumService checksumService
+    ) {
         this.repo = repo;
         this.tenants = tenants;
         this.security = security;
         this.async = async;
         this.audit = audit;
+        this.storage = storage;
+        this.checksumService = checksumService;
     }
 
     @Transactional
@@ -83,6 +102,37 @@ public class BackupApplicationService {
         BackupJob created = save(BackupJobFactory.restoreJobFromBackup(src, null, actor(), reason));
         executeAfterCommit(() -> async.executeRestore(created.id()));
         return created;
+    }
+
+    @Transactional
+    public BackupJob createTenantRestoreJobFromFile(MultipartFile file, String reason) {
+        TenantContext ctx = TenantContextHolder.getRequired();
+        PlatformTenant tenant = tenants.findBySlug(ctx.tenantSlug())
+                .orElseThrow(() -> new PlatformTenantNotFoundException("Tenant not found: " + ctx.tenantSlug()));
+        return createUploadedRestoreJob(
+                file,
+                BackupScope.TENANT_SCHEMA,
+                tenant.id(),
+                tenant.slug(),
+                tenant.schemaName(),
+                reason
+        );
+    }
+
+    @Transactional
+    public BackupJob createPlatformRestoreJobFromFile(BackupScope scope, UUID tenantId, MultipartFile file, String reason) {
+        if (scope == BackupScope.TENANT_SCHEMA) {
+            if (tenantId == null) {
+                throw new BackupOperationNotAllowedException("tenantId is required for tenant schema restore");
+            }
+
+            PlatformTenant tenant = tenants.findById(tenantId)
+                    .orElseThrow(() -> new PlatformTenantNotFoundException("Tenant not found with id: " + tenantId));
+
+            return createUploadedRestoreJob(file, scope, tenant.id(), tenant.slug(), tenant.schemaName(), reason);
+        }
+
+        return createUploadedRestoreJob(file, scope, null, null, null, reason);
     }
 
     public List<BackupJob> listTenantBackups() {
@@ -152,5 +202,101 @@ public class BackupApplicationService {
     private String actor() {
         String s = security.getCurrentSubject();
         return s == null || s.isBlank() ? "SYSTEM" : s;
+    }
+
+    private BackupJob createUploadedRestoreJob(
+            MultipartFile file,
+            BackupScope scope,
+            UUID tenantId,
+            String tenantSlug,
+            String schemaName,
+            String reason
+    ) {
+        if (file == null || file.isEmpty()) {
+            throw new BackupOperationNotAllowedException("Backup file is required");
+        }
+
+        String originalName = safeFileName(file.getOriginalFilename());
+        String storageFileName = "restore_upload_" + System.currentTimeMillis() + "_" + originalName;
+        Path target = storage.resolveTargetPath(storageFileName);
+
+        try {
+            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+        } catch (Exception e) {
+            throw new BackupOperationNotAllowedException("Unable to store uploaded backup file: " + e.getMessage());
+        }
+
+        try {
+            BackupJob created = save(BackupJobFactory.restoreJobFromUploadedFile(
+                    scope,
+                    tenantId,
+                    tenantSlug,
+                    schemaName,
+                    originalName,
+                    storage.toStoragePath(target),
+                    BackupFormat.CUSTOM,
+                    actor(),
+                    reason
+            ));
+            BackupJob withMetadata = repo.save(new BackupJob(
+                    created.id(),
+                    created.operationType(),
+                    created.scope(),
+                    created.status(),
+                    created.tenantId(),
+                    created.tenantSlug(),
+                    created.schemaName(),
+                    created.sourceBackupId(),
+                    created.preRestoreBackupId(),
+                    created.fileName(),
+                    created.storagePath(),
+                    created.format(),
+                    safeSize(target),
+                    safeChecksum(target),
+                    created.requestedBy(),
+                    created.reason(),
+                    created.failureReason(),
+                    created.startedAt(),
+                    created.finishedAt(),
+                    created.createdAt(),
+                    created.updatedAt()
+            ));
+
+            executeAfterCommit(() -> async.executeRestore(withMetadata.id()));
+            return withMetadata;
+        } catch (RuntimeException e) {
+            try {
+                Files.deleteIfExists(target);
+            } catch (Exception ignored) {
+                // Best effort cleanup.
+            }
+            throw e;
+        }
+    }
+
+    private String safeFileName(String originalName) {
+        String name = originalName == null ? "" : originalName.trim();
+        if (name.isBlank()) {
+            return "backup_upload.dump";
+        }
+
+        String sanitized = name.replaceAll("[^a-zA-Z0-9_.-]", "_");
+        return sanitized.isBlank() ? "backup_upload.dump" : sanitized;
+    }
+
+    private Long safeSize(Path target) {
+        try {
+            return Files.size(target);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String safeChecksum(Path target) {
+        try {
+            return checksumService.sha256(target);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

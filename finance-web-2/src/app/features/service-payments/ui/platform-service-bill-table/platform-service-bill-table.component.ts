@@ -26,8 +26,8 @@ import { ServiceBillResponse } from '../../../../entities/service-payments';
           <tbody class="divide-y divide-[#E8F2E2] bg-white">
             <tr *ngFor="let bill of bills" class="hover:bg-[#FAFCF8]">
               <td class="whitespace-nowrap px-5 py-4">
-                <p class="text-sm font-bold text-[#1B5E20]">{{ bill.providerName }}</p>
-                <p class="text-xs text-[#6B7D6C]">{{ bill.providerCode }}</p>
+                <p class="text-sm font-bold text-[#1B5E20]">{{ providerName(bill) }}</p>
+                <p class="text-xs text-[#6B7D6C]">{{ providerCode(bill) }}</p>
               </td>
               <td class="whitespace-nowrap px-5 py-4 text-sm font-bold text-[#1B5E20]">{{ bill.serviceCustomerCode }}</td>
               <td class="whitespace-nowrap px-5 py-4 text-sm text-[#6B7D6C]">{{ bill.customerName }}</td>
@@ -66,6 +66,14 @@ import { ServiceBillResponse } from '../../../../entities/service-payments';
 export class PlatformServiceBillTableComponent {
   @Input() bills: ServiceBillResponse[] = [];
   @Output() cancel = new EventEmitter<ServiceBillResponse>();
+
+  providerName(bill: ServiceBillResponse): string {
+    return bill.provider?.name || bill.providerName || '-';
+  }
+
+  providerCode(bill: ServiceBillResponse): string {
+    return bill.provider?.code || bill.providerCode || '-';
+  }
 
   statusLabel(status: string): string {
     const labels: Record<string, string> = {
