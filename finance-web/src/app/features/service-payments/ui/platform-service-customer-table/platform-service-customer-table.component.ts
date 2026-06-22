@@ -24,8 +24,8 @@ import { ServiceCustomerResponse } from '../../../../entities/service-payments';
           <tbody class="divide-y divide-[#E8F2E2] bg-white">
             <tr *ngFor="let customer of customers" class="hover:bg-[#FAFCF8]">
               <td class="whitespace-nowrap px-5 py-4">
-                <p class="text-sm font-bold text-[#1B5E20]">{{ customer.providerName }}</p>
-                <p class="text-xs text-[#6B7D6C]">{{ customer.providerCode }}</p>
+                <p class="text-sm font-bold text-[#1B5E20]">{{ providerName(customer) }}</p>
+                <p class="text-xs text-[#6B7D6C]">{{ providerCode(customer) }}</p>
               </td>
               <td class="whitespace-nowrap px-5 py-4 text-sm font-bold text-[#1B5E20]">{{ customer.serviceCustomerCode }}</td>
               <td class="whitespace-nowrap px-5 py-4 text-sm text-[#6B7D6C]">{{ customer.customerName }}</td>
@@ -61,4 +61,12 @@ import { ServiceCustomerResponse } from '../../../../entities/service-payments';
 export class PlatformServiceCustomerTableComponent {
   @Input() customers: ServiceCustomerResponse[] = [];
   @Output() edit = new EventEmitter<ServiceCustomerResponse>();
+
+  providerName(customer: ServiceCustomerResponse): string {
+    return customer.provider?.name || customer.providerName || '-';
+  }
+
+  providerCode(customer: ServiceCustomerResponse): string {
+    return customer.provider?.code || customer.providerCode || '-';
+  }
 }

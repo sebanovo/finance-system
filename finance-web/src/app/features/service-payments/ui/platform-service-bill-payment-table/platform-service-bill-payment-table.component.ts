@@ -27,7 +27,7 @@ import { ServiceBillPaymentResponse } from '../../../../entities/service-payment
           <tbody class="divide-y divide-[#E8F2E2] bg-white">
             <tr *ngFor="let payment of payments" class="hover:bg-[#FAFCF8]">
               <td class="whitespace-nowrap px-5 py-4 text-sm font-bold text-[#1B5E20]">{{ payment.receiptNumber }}</td>
-              <td class="whitespace-nowrap px-5 py-4 text-sm text-[#6B7D6C]">{{ payment.providerName }}</td>
+              <td class="whitespace-nowrap px-5 py-4 text-sm text-[#6B7D6C]">{{ providerName(payment) }}</td>
               <td class="whitespace-nowrap px-5 py-4 text-sm text-[#6B7D6C]">{{ payment.serviceCustomerCode }}</td>
               <td class="whitespace-nowrap px-5 py-4 text-sm font-bold text-[#1B5E20]">
                 {{ payment.amount | number:'1.2-2' }} {{ payment.currency }}
@@ -60,4 +60,8 @@ import { ServiceBillPaymentResponse } from '../../../../entities/service-payment
 export class PlatformServiceBillPaymentTableComponent {
   @Input() payments: ServiceBillPaymentResponse[] = [];
   @Output() detail = new EventEmitter<ServiceBillPaymentResponse>();
+
+  providerName(payment: ServiceBillPaymentResponse): string {
+    return payment.provider?.name || payment.providerName || '-';
+  }
 }

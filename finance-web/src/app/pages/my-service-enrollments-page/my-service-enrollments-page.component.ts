@@ -289,7 +289,7 @@ export class MyServiceEnrollmentsPageComponent implements OnInit {
     }
 
     try {
-      await this.enrollmentUseCase.deleteEnrollment(enrollment.id);
+      await this.enrollmentUseCase.deleteEnrollment(enrollment.id ?? enrollment.enrollmentId);
       this.toast.success('Afiliación eliminada correctamente');
       this.cancelDeleteEnrollment();
     } catch (error: any) {

@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -29,14 +30,16 @@ public class TenantBackupController {
     private final ListTenantBackupsUseCase list;
     private final GetTenantBackupByIdUseCase get;
     private final RestoreTenantBackupUseCase restore;
+    private final RestoreTenantBackupFromFileUseCase restoreFromFile;
     private final BackupApplicationService service;
     private final BackupStorage storage;
 
-    public TenantBackupController(CreateTenantBackupUseCase create, ListTenantBackupsUseCase list, GetTenantBackupByIdUseCase get, RestoreTenantBackupUseCase restore, BackupApplicationService service, BackupStorage storage) {
+    public TenantBackupController(CreateTenantBackupUseCase create, ListTenantBackupsUseCase list, GetTenantBackupByIdUseCase get, RestoreTenantBackupUseCase restore, RestoreTenantBackupFromFileUseCase restoreFromFile, BackupApplicationService service, BackupStorage storage) {
         this.create = create;
         this.list = list;
         this.get = get;
         this.restore = restore;
+        this.restoreFromFile = restoreFromFile;
         this.service = service;
         this.storage = storage;
     }
@@ -72,5 +75,18 @@ public class TenantBackupController {
     @PreAuthorize("hasAuthority('backups.restore')")
     public ResponseEntity<ApiResponse<BackupJobResponse>> restoreBackup(@PathVariable UUID id, @Valid @RequestBody RestoreBackupRequest request) {
         return ResponseEntity.accepted().body(ApiResponse.success("Tenant restore job accepted", restore.execute(id, request.confirmationText(), request.reason())));
+    }
+
+    @PostMapping(value = "/restore/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('backups.restore')")
+    public ResponseEntity<ApiResponse<BackupJobResponse>> restoreBackupFromFile(
+            @RequestPart("file") org.springframework.web.multipart.MultipartFile file,
+            @RequestParam("confirmationText") String confirmationText,
+            @RequestParam(value = "reason", required = false) String reason
+    ) {
+        return ResponseEntity.accepted().body(ApiResponse.success(
+                "Tenant restore file job accepted",
+                restoreFromFile.execute(file, confirmationText, reason)
+        ));
     }
 }

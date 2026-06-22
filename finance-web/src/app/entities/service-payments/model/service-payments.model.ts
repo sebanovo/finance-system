@@ -49,10 +49,11 @@ export interface ChangeServiceProviderStatusRequest {
 
 export interface ServiceCustomerResponse {
   id: string;
-  providerId: string;
-  providerCode: string;
-  providerName: string;
-  providerCategory: ServiceProviderCategory;
+  providerId?: string;
+  providerCode?: string;
+  providerName?: string;
+  providerCategory?: ServiceProviderCategory;
+  provider?: ServiceProviderSummaryResponse;
   serviceCustomerCode: string;
   customerName: string;
   status: ServiceCustomerStatus;
@@ -73,10 +74,11 @@ export interface UpdateServiceCustomerRequest {
 
 export interface ServiceBillResponse {
   id: string;
-  providerId: string;
-  providerCode: string;
-  providerName: string;
-  providerCategory: ServiceProviderCategory;
+  providerId?: string;
+  providerCode?: string;
+  providerName?: string;
+  providerCategory?: ServiceProviderCategory;
+  provider?: ServiceProviderSummaryResponse;
   serviceCustomerId: string;
   serviceCustomerCode: string;
   customerName: string;
@@ -113,10 +115,11 @@ export interface CancelServiceBillRequest {
 export interface ServiceBillPaymentResponse {
   id: string;
   billId: string;
-  providerId: string;
-  providerCode: string;
-  providerName: string;
-  providerCategory: ServiceProviderCategory;
+  providerId?: string;
+  providerCode?: string;
+  providerName?: string;
+  providerCategory?: ServiceProviderCategory;
+  provider?: ServiceProviderSummaryResponse;
   serviceCustomerCode: string;
   serviceCustomerName: string;
   billingPeriod: string;
@@ -136,7 +139,8 @@ export interface ServiceBillPaymentResponse {
 }
 
 export interface ServiceEnrollmentResponse {
-  id: string;
+  id?: string;
+  enrollmentId: string;
   provider: ServiceProviderSummaryResponse;
   serviceCustomerCode: string;
   serviceCustomerName: string | null;

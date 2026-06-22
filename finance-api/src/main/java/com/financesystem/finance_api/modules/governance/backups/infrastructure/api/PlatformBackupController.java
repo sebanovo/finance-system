@@ -6,11 +6,13 @@ import com.financesystem.finance_api.modules.governance.backups.application.dto.
 import com.financesystem.finance_api.modules.governance.backups.application.service.BackupApplicationService;
 import com.financesystem.finance_api.modules.governance.backups.application.usecase.*;
 import com.financesystem.finance_api.modules.governance.backups.domain.model.BackupJob;
+import com.financesystem.finance_api.modules.governance.backups.domain.model.BackupScope;
 import com.financesystem.finance_api.modules.governance.backups.infrastructure.storage.BackupStorage;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -30,15 +32,17 @@ public class PlatformBackupController {
     private final ListPlatformBackupsUseCase list;
     private final GetPlatformBackupByIdUseCase get;
     private final RestorePlatformBackupUseCase restore;
+    private final RestorePlatformBackupFromFileUseCase restoreFromFile;
     private final BackupApplicationService service;
     private final BackupStorage storage;
 
-    public PlatformBackupController(CreatePlatformFullBackupUseCase full, CreatePlatformTenantBackupUseCase tenant, ListPlatformBackupsUseCase list, GetPlatformBackupByIdUseCase get, RestorePlatformBackupUseCase restore, BackupApplicationService service, BackupStorage storage) {
+    public PlatformBackupController(CreatePlatformFullBackupUseCase full, CreatePlatformTenantBackupUseCase tenant, ListPlatformBackupsUseCase list, GetPlatformBackupByIdUseCase get, RestorePlatformBackupUseCase restore, RestorePlatformBackupFromFileUseCase restoreFromFile, BackupApplicationService service, BackupStorage storage) {
         this.full = full;
         this.tenant = tenant;
         this.list = list;
         this.get = get;
         this.restore = restore;
+        this.restoreFromFile = restoreFromFile;
         this.service = service;
         this.storage = storage;
     }
@@ -81,5 +85,20 @@ public class PlatformBackupController {
     @PreAuthorize("@authorizationGuards.isPlatformAdmin()")
     public ResponseEntity<ApiResponse<BackupJobResponse>> restoreBackup(@PathVariable UUID id, @Valid @RequestBody RestoreBackupRequest request) {
         return ResponseEntity.accepted().body(ApiResponse.success("Platform restore job accepted", restore.execute(id, request.confirmationText(), request.reason())));
+    }
+
+    @PostMapping(value = "/restore/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("@authorizationGuards.isPlatformAdmin()")
+    public ResponseEntity<ApiResponse<BackupJobResponse>> restoreBackupFromFile(
+            @RequestPart("file") org.springframework.web.multipart.MultipartFile file,
+            @RequestParam("scope") BackupScope scope,
+            @RequestParam(value = "tenantId", required = false) UUID tenantId,
+            @RequestParam("confirmationText") String confirmationText,
+            @RequestParam(value = "reason", required = false) String reason
+    ) {
+        return ResponseEntity.accepted().body(ApiResponse.success(
+                "Platform restore file job accepted",
+                restoreFromFile.execute(file, scope, tenantId, confirmationText, reason)
+        ));
     }
 }

@@ -393,6 +393,41 @@ export class PlatformService {
     return this.http.post<ApiResponse<PlatformBackup>>(`${this.baseUrl}/api/backups/${id}/restore`, request);
   }
 
+  restoreBackupFromFile(
+    file: File,
+    request: { confirmationText: string; reason?: string | null; scope: 'FULL_DATABASE' | 'TENANT_SCHEMA'; tenantId?: string | null }
+  ): Observable<ApiResponse<PlatformBackup>> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('confirmationText', request.confirmationText);
+    formData.append('scope', request.scope);
+
+    if (request.reason !== undefined && request.reason !== null && request.reason !== '') {
+      formData.append('reason', request.reason);
+    }
+
+    if (request.tenantId) {
+      formData.append('tenantId', request.tenantId);
+    }
+
+    return this.http.post<ApiResponse<PlatformBackup>>(`${this.baseUrl}/api/platform/backups/restore/upload`, formData);
+  }
+
+  restoreTenantBackupFromFile(
+    file: File,
+    request: { confirmationText: string; reason?: string | null }
+  ): Observable<ApiResponse<PlatformBackup>> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('confirmationText', request.confirmationText);
+
+    if (request.reason !== undefined && request.reason !== null && request.reason !== '') {
+      formData.append('reason', request.reason);
+    }
+
+    return this.http.post<ApiResponse<PlatformBackup>>(`${this.baseUrl}/api/backups/restore/upload`, formData);
+  }
+
   downloadBackup(id: string): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/api/platform/backups/${id}/download`, { responseType: 'blob' });
   }

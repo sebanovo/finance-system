@@ -44,6 +44,14 @@ type BackupScope = 'FULL_DATABASE' | 'TENANT_SCHEMA';
             </button>
             <button
               type="button"
+              (click)="openRestoreFromFileModal()"
+              title="Restaurar"
+              class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#C8E6C9] bg-white px-4 py-2 text-sm font-semibold text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
+              <lucide-icon name="upload" class="h-4 w-4"></lucide-icon>
+              Restaurar desde archivo
+            </button>
+            <button
+              type="button"
               (click)="reload()"
               title="Actualizar"
               class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#C8E6C9] bg-white px-4 py-2 text-sm font-semibold text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
@@ -343,6 +351,98 @@ type BackupScope = 'FULL_DATABASE' | 'TENANT_SCHEMA';
           </div>
         </div>
       }
+
+      @if (restoreFromFileModalOpen()) {
+        <div class="app-modal-overlay" (click)="closeRestoreFromFileModal()">
+          <div class="app-modal-panel app-modal-panel-sm" (click)="$event.stopPropagation()">
+            <div class="app-modal-header">
+              <div>
+                <h2 class="app-modal-title">Restaurar desde archivo</h2>
+                <p class="app-modal-subtitle">Sube un backup descargado y define el alcance del restore.</p>
+              </div>
+              <button type="button" (click)="closeRestoreFromFileModal()" title="Cerrar" class="cursor-pointer rounded-full border border-[#DDEED8] p-2 text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
+                <lucide-icon name="x" class="h-5 w-5"></lucide-icon>
+              </button>
+            </div>
+
+            <form class="mt-6 grid gap-4" [formGroup]="restoreFromFileForm" (ngSubmit)="submitRestoreFromFile()">
+              <div class="grid gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  (click)="setRestoreFromFileScope('FULL_DATABASE')"
+                  class="cursor-pointer rounded-2xl border px-4 py-3 text-left transition-colors"
+                  [class.border-[#2E7D32]]="restoreFromFileForm.controls.scope.value === 'FULL_DATABASE'"
+                  [class.bg-[#F1F8E9]]="restoreFromFileForm.controls.scope.value === 'FULL_DATABASE'"
+                  [class.text-[#1B5E20]]="restoreFromFileForm.controls.scope.value === 'FULL_DATABASE'"
+                  [class.border-[#DDEED8]]="restoreFromFileForm.controls.scope.value !== 'FULL_DATABASE'">
+                  <p class="text-sm font-semibold">Full database</p>
+                  <p class="text-xs text-[#6B7D6C]">Restaura toda la base</p>
+                </button>
+                <button
+                  type="button"
+                  (click)="setRestoreFromFileScope('TENANT_SCHEMA')"
+                  class="cursor-pointer rounded-2xl border px-4 py-3 text-left transition-colors"
+                  [class.border-[#2E7D32]]="restoreFromFileForm.controls.scope.value === 'TENANT_SCHEMA'"
+                  [class.bg-[#F1F8E9]]="restoreFromFileForm.controls.scope.value === 'TENANT_SCHEMA'"
+                  [class.text-[#1B5E20]]="restoreFromFileForm.controls.scope.value === 'TENANT_SCHEMA'"
+                  [class.border-[#DDEED8]]="restoreFromFileForm.controls.scope.value !== 'TENANT_SCHEMA'">
+                  <p class="text-sm font-semibold">Tenant schema</p>
+                  <p class="text-xs text-[#6B7D6C]">Restaura un tenant específico</p>
+                </button>
+              </div>
+
+              @if (restoreFromFileForm.controls.scope.value === 'TENANT_SCHEMA') {
+                <label>
+                  <span class="mb-1 block text-sm font-semibold text-[#2E7D32]">Tenant</span>
+                  <select
+                    formControlName="tenantId"
+                    class="w-full rounded-2xl border border-[#C8E6C9] bg-white px-4 py-3 text-sm text-[#1B5E20] outline-none focus:border-[#2E7D32]">
+                    <option value="">Selecciona un tenant</option>
+                    @for (tenant of tenants(); track tenant.id) {
+                      <option [value]="tenant.id">{{ tenant.name }} ({{ tenant.slug }})</option>
+                    }
+                  </select>
+                </label>
+              }
+
+              <label>
+                <span class="mb-1 block text-sm font-semibold text-[#2E7D32]">Archivo</span>
+                <input
+                  type="file"
+                  accept=".dump,.backup,.sql,application/octet-stream"
+                  (change)="onRestoreFromFileSelected($event)"
+                  class="block w-full cursor-pointer rounded-2xl border border-[#C8E6C9] bg-white px-4 py-3 text-sm text-[#1B5E20] file:mr-4 file:rounded-full file:border-0 file:bg-[#F1F8E9] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[#2E7D32] hover:file:bg-[#E8F5E9]" />
+                <p class="mt-2 text-xs text-[#6B7D6C]">
+                  {{ restoreFromFileFileName() || 'Ningún archivo seleccionado' }}
+                </p>
+              </label>
+
+              <label>
+                <span class="mb-1 block text-sm font-semibold text-[#2E7D32]">Confirmación</span>
+                <input
+                  formControlName="confirmationText"
+                  type="text"
+                  class="w-full rounded-2xl border border-[#C8E6C9] bg-white px-4 py-3 text-sm text-[#1B5E20] outline-none focus:border-[#2E7D32]"
+                  [placeholder]="restoreFromFileForm.controls.scope.value === 'FULL_DATABASE' ? 'RESTORE_FULL_DATABASE' : 'RESTORE_PLATFORM_BACKUP'">
+              </label>
+
+              <label>
+                <span class="mb-1 block text-sm font-semibold text-[#2E7D32]">Motivo</span>
+                <textarea formControlName="reason" rows="3" class="w-full rounded-2xl border border-[#C8E6C9] bg-white px-4 py-3 text-sm text-[#1B5E20] outline-none focus:border-[#2E7D32]"></textarea>
+              </label>
+
+              <div class="app-modal-footer">
+                <button type="button" (click)="closeRestoreFromFileModal()" class="cursor-pointer rounded-full border border-[#C8E6C9] bg-white px-4 py-2 text-sm font-semibold text-[#2E7D32] transition-colors hover:bg-[#F1F8E9]">
+                  Cancelar
+                </button>
+                <button type="submit" [disabled]="saving()" class="cursor-pointer rounded-full bg-[#1B5E20] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#2E7D32] disabled:cursor-not-allowed disabled:opacity-60">
+                  {{ saving() ? 'Restaurando...' : 'Confirmar restauración' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      }
     </div>
   `
 })
@@ -360,7 +460,9 @@ export class PlatformBackupsPageComponent implements OnInit, OnDestroy {
   createModalOpen = signal(false);
   detailModalOpen = signal(false);
   restoreModalOpen = signal(false);
+  restoreFromFileModalOpen = signal(false);
   selectedBackup = signal<PlatformBackup | null>(null);
+  restoreFromFileFile = signal<File | null>(null);
   saving = signal(false);
   loading = signal(false);
 
@@ -385,6 +487,15 @@ export class PlatformBackupsPageComponent implements OnInit, OnDestroy {
     confirmationText: ['RESTORE_FULL_DATABASE', [Validators.required]],
     reason: ['']
   });
+
+  readonly restoreFromFileForm = this.fb.nonNullable.group({
+    scope: ['FULL_DATABASE' as BackupScope, Validators.required],
+    tenantId: [''],
+    confirmationText: ['RESTORE_FULL_DATABASE', [Validators.required]],
+    reason: ['']
+  });
+
+  readonly restoreFromFileFileName = computed(() => this.restoreFromFileFile()?.name ?? '');
 
   ngOnInit(): void {
     void this.reload();
@@ -513,6 +624,34 @@ export class PlatformBackupsPageComponent implements OnInit, OnDestroy {
     this.restoreModalOpen.set(false);
   }
 
+  openRestoreFromFileModal(): void {
+    this.restoreFromFileForm.reset({
+      scope: 'FULL_DATABASE',
+      tenantId: '',
+      confirmationText: 'RESTORE_FULL_DATABASE',
+      reason: ''
+    });
+    this.restoreFromFileFile.set(null);
+    this.restoreFromFileModalOpen.set(true);
+  }
+
+  closeRestoreFromFileModal(): void {
+    this.restoreFromFileModalOpen.set(false);
+  }
+
+  setRestoreFromFileScope(scope: BackupScope): void {
+    this.restoreFromFileForm.patchValue({
+      scope,
+      confirmationText: scope === 'FULL_DATABASE' ? 'RESTORE_FULL_DATABASE' : 'RESTORE_PLATFORM_BACKUP',
+      tenantId: scope === 'FULL_DATABASE' ? '' : this.restoreFromFileForm.controls.tenantId.value
+    });
+  }
+
+  onRestoreFromFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.restoreFromFileFile.set(input.files?.[0] ?? null);
+  }
+
   async submitRestore(): Promise<void> {
     if (!this.selectedBackup()) {
       return;
@@ -540,6 +679,49 @@ export class PlatformBackupsPageComponent implements OnInit, OnDestroy {
           this.scheduleAutoRefresh();
         }
       }
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  async submitRestoreFromFile(): Promise<void> {
+    const file = this.restoreFromFileFile();
+    if (!file) {
+      this.toast.error('Selecciona un archivo de respaldo');
+      return;
+    }
+
+    if (this.restoreFromFileForm.invalid) {
+      this.restoreFromFileForm.markAllAsTouched();
+      return;
+    }
+
+    const { scope, tenantId, confirmationText, reason } = this.restoreFromFileForm.getRawValue();
+    if (scope === 'TENANT_SCHEMA' && !tenantId) {
+      this.toast.error('Selecciona un tenant para restaurar el archivo');
+      return;
+    }
+
+    this.saving.set(true);
+    try {
+      const response = await firstValueFrom(
+        this.platformService.restoreBackupFromFile(file, {
+          scope,
+          tenantId: scope === 'TENANT_SCHEMA' ? tenantId || null : null,
+          confirmationText,
+          reason: reason || null
+        })
+      );
+
+      if (response.success) {
+        this.toast.info('Restauración desde archivo solicitada correctamente. Revisa el estado en la tabla.');
+        await this.reload();
+        this.closeRestoreFromFileModal();
+      } else {
+        this.toast.error(response.message || 'No se pudo restaurar desde el archivo');
+      }
+    } catch (err: any) {
+      this.toast.error(err?.error?.message || err?.message || 'No se pudo restaurar desde el archivo');
     } finally {
       this.saving.set(false);
     }
