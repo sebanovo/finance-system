@@ -326,7 +326,8 @@ export class HeaderComponent implements OnInit {
       return null;
     }
 
-    return `${environment.apiUrl}${profilePhotoUrl}`;
+    const updatedAt = user?.updatedAt ? `?v=${encodeURIComponent(user.updatedAt)}` : '';
+    return `${environment.apiUrl}${profilePhotoUrl}${updatedAt}`;
   }
 
   getRole(): string {

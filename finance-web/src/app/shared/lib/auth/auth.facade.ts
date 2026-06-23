@@ -5,6 +5,7 @@ import { AuthStorageService } from '../storage/auth-storage.service';
 import { PermissionService } from '../auth/permission.service';
 import { AuthService } from '../../../entities/auth/api/auth.service';
 import { AuthenticatedTenantUserResponse } from '../../../entities/auth/model/authenticated-tenant-user-response.model';
+import { TenantProfileResponse } from '../../../entities/auth/model/tenant-profile-response.model';
 
 @Injectable({
   providedIn: 'root'
@@ -21,6 +22,27 @@ export class AuthFacade {
     if (this.authStorage.hasValidTenantSession()) {
       void this.loadCurrentUser();
     }
+  }
+
+  syncCurrentUserProfile(profile: TenantProfileResponse | null): void {
+    if (!profile) {
+      return;
+    }
+
+    const currentUser = this.currentUser();
+    this.currentUser.set({
+      id: currentUser?.id ?? profile.id,
+      email: profile.email ?? currentUser?.email ?? '',
+      firstName: profile.firstName ?? currentUser?.firstName ?? '',
+      lastName: profile.lastName ?? currentUser?.lastName ?? '',
+      active: profile.active ?? currentUser?.active ?? true,
+      status: profile.status ?? currentUser?.status ?? 'ACTIVE',
+      tenantSlug: profile.tenantSlug ?? currentUser?.tenantSlug ?? '',
+      roles: currentUser?.roles ?? [],
+      profilePhotoUrl: profile.profilePhotoAvailable ? profile.profilePhotoUrl : null,
+      profilePhotoContentType: profile.profilePhotoAvailable ? profile.profilePhotoContentType : null,
+      updatedAt: profile.updatedAt ?? currentUser?.updatedAt ?? null
+    });
   }
 
   /** Carga la información del usuario actual autenticado. */
@@ -45,8 +67,9 @@ export class AuthFacade {
 
         this.currentUser.set({
           ...currentUser,
-          profilePhotoUrl: profile?.profilePhotoUrl ?? currentUser.profilePhotoUrl ?? null,
-          profilePhotoContentType: profile?.profilePhotoContentType ?? currentUser.profilePhotoContentType ?? null
+          profilePhotoUrl: profile ? (profile.profilePhotoAvailable ? profile.profilePhotoUrl : null) : currentUser.profilePhotoUrl ?? null,
+          profilePhotoContentType: profile ? (profile.profilePhotoAvailable ? profile.profilePhotoContentType : null) : currentUser.profilePhotoContentType ?? null,
+          updatedAt: profile?.updatedAt ?? currentUser.updatedAt ?? null
         });
         this.status.set('ready');
         return;

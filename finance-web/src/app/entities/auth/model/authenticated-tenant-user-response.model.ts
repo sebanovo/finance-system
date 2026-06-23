@@ -9,4 +9,5 @@ export interface AuthenticatedTenantUserResponse {
   roles: string[];
   profilePhotoUrl?: string | null;
   profilePhotoContentType?: string | null;
+  updatedAt?: string | null;
 }
