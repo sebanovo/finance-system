@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../../entities/auth/api/auth.service';
 import { TenantProfileResponse, UpdateTenantProfileRequest } from '../../../entities/auth';
+import { AuthFacade } from '../../../shared/lib/auth/auth.facade';
 
 export interface TenantProfileState {
   status: 'idle' | 'loading' | 'success' | 'error' | 'saving';
@@ -14,6 +15,7 @@ export interface TenantProfileState {
 })
 export class ProfileUseCase {
   private readonly authService = inject(AuthService);
+  private readonly authFacade = inject(AuthFacade);
 
   private readonly state = signal<TenantProfileState>({
     status: 'idle',
@@ -32,6 +34,7 @@ export class ProfileUseCase {
       const response = await firstValueFrom(this.authService.getProfile());
 
       if (response.success && response.data) {
+        this.authFacade.syncCurrentUserProfile(response.data);
         this.state.set({ status: 'success', profile: response.data, error: null });
         return;
       }
@@ -48,6 +51,7 @@ export class ProfileUseCase {
     try {
       const response = await firstValueFrom(this.authService.updateProfile(request));
       if (response.success && response.data) {
+        this.authFacade.syncCurrentUserProfile(response.data);
         this.state.set({ status: 'success', profile: response.data, error: null });
         return true;
       }
@@ -66,6 +70,7 @@ export class ProfileUseCase {
     try {
       const response = await firstValueFrom(this.authService.removeProfilePhoto());
       if (response.success && response.data) {
+        this.authFacade.syncCurrentUserProfile(response.data);
         this.state.set({ status: 'success', profile: response.data, error: null });
         return true;
       }

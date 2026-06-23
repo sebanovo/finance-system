@@ -2,6 +2,8 @@ package com.financesystem.finance_api.bootstrap.platform;
 
 import com.financesystem.finance_api.common.tenancy.migration.TenantSchemaMigrationService;
 import com.financesystem.finance_api.common.tenancy.reporting.ReportingSecurityService;
+import com.financesystem.finance_api.bootstrap.sample.SampleDataBootstrapProperties;
+import com.financesystem.finance_api.bootstrap.sample.SampleDataBootstrapService;
 import com.financesystem.finance_api.modules.platform.subscriptions.application.service.PlatformSubscriptionLifecycleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,17 +20,23 @@ public class PlatformBootstrapRunner implements ApplicationRunner {
     private final TenantSchemaMigrationService tenantSchemaMigrationService;
     private final PlatformSubscriptionLifecycleService platformSubscriptionLifecycleService;
     private final ReportingSecurityService reportingSecurityService;
+    private final SampleDataBootstrapProperties sampleDataBootstrapProperties;
+    private final SampleDataBootstrapService sampleDataBootstrapService;
 
     public PlatformBootstrapRunner(
             PlatformBootstrapService platformBootstrapService,
             TenantSchemaMigrationService tenantSchemaMigrationService,
             PlatformSubscriptionLifecycleService platformSubscriptionLifecycleService,
-            ReportingSecurityService reportingSecurityService
+            ReportingSecurityService reportingSecurityService,
+            SampleDataBootstrapProperties sampleDataBootstrapProperties,
+            SampleDataBootstrapService sampleDataBootstrapService
     ) {
         this.platformBootstrapService = platformBootstrapService;
         this.tenantSchemaMigrationService = tenantSchemaMigrationService;
         this.platformSubscriptionLifecycleService = platformSubscriptionLifecycleService;
         this.reportingSecurityService = reportingSecurityService;
+        this.sampleDataBootstrapProperties = sampleDataBootstrapProperties;
+        this.sampleDataBootstrapService = sampleDataBootstrapService;
     }
 
     @Override
@@ -46,6 +54,12 @@ public class PlatformBootstrapRunner implements ApplicationRunner {
         platformBootstrapService.seedBaseServicePermissions();
         platformBootstrapService.seedBaseReportingPermissions();
         platformBootstrapService.seedInitialPlatformSuperadmin();
+
+        if (sampleDataBootstrapProperties.isEnabled()) {
+            sampleDataBootstrapService.seedDemoTenants();
+        } else {
+            logger.info("Optional sample data bootstrap is disabled.");
+        }
 
         tenantSchemaMigrationService.migrateRegisteredTenantSchemas();
         platformBootstrapService.seedBackupPermissionsForRegisteredTenants();

@@ -52,7 +52,9 @@ function addAuthorizationHeaders(
     req.url.includes('/api/platform/auth/refresh') ||
     req.url.includes('/api/auth/login') ||
     req.url.includes('/api/auth/refresh') ||
-    req.url.includes('/api/auth/face/login')
+    req.url.includes('/api/auth/face/login') ||
+    req.url.includes('/api/auth/forgot-password') ||
+    req.url.includes('/api/auth/reset-password')
   ) {
     return req;
   }

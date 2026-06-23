@@ -15,6 +15,10 @@ export const routes: Routes = [
   
   // Login de tenant
   { path: 'login', loadComponent: () => import('./pages/login-page/login-page.component').then(m => m.LoginPageComponent) },
+
+  // Recuperación de contraseña
+  { path: 'forgot-password', loadComponent: () => import('./pages/forgot-password-page/forgot-password-page.component').then(m => m.ForgotPasswordPageComponent) },
+  { path: 'reset-password', loadComponent: () => import('./pages/reset-password-page/reset-password-page.component').then(m => m.ResetPasswordPageComponent) },
   
   // Registro público de tenant
   { path: 'onboarding', loadComponent: () => import('./pages/onboarding-page/onboarding-page.component').then(m => m.OnboardingPageComponent) },

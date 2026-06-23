@@ -276,7 +276,7 @@ export class ProfilePageComponent implements OnInit {
         lastName: profile.lastName || ''
       }, { emitEvent: false });
 
-      this.previewSrc.set(this.resolvePreview(profile.profilePhotoUrl));
+      this.previewSrc.set(this.resolvePreview(profile));
     }, { allowSignalWrites: true });
 
     this.destroyRef.onDestroy(() => {
@@ -445,12 +445,13 @@ export class ProfilePageComponent implements OnInit {
     return `${firstName?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase() || 'U';
   }
 
-  private resolvePreview(profilePhotoUrl: string | null): string | null {
-    if (!profilePhotoUrl) {
+  private resolvePreview(profile: { profilePhotoUrl: string | null; updatedAt: string | null } | null): string | null {
+    if (!profile?.profilePhotoUrl) {
       return null;
     }
 
-    return `${environment.apiUrl}${profilePhotoUrl}`;
+    const cacheBust = profile.updatedAt ? `?v=${encodeURIComponent(profile.updatedAt)}` : '';
+    return `${environment.apiUrl}${profile.profilePhotoUrl}${cacheBust}`;
   }
 
   private revokeSelectedPreview(): void {

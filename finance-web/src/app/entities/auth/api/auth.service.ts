@@ -8,6 +8,8 @@ import { AuthenticatedTenantUserResponse } from '../model/authenticated-tenant-u
 import { FaceLoginRequest } from '../model/face-login-request.model';
 import { TenantProfileResponse } from '../model/tenant-profile-response.model';
 import { UpdateTenantProfileRequest } from '../model/update-tenant-profile-request.model';
+import { ForgotPasswordRequest } from '../model/forgot-password-request.model';
+import { ResetPasswordRequest } from '../model/reset-password-request.model';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
@@ -77,6 +79,33 @@ export class AuthService {
     const formData = new FormData();
     formData.append('photo', photo, photo.name || 'profile.jpg');
     return this.http.put<ApiResponse<TenantProfileResponse>>(`${this.API_URL}/profile/photo`, formData);
+  }
+
+  forgotPassword(request: ForgotPasswordRequest): Observable<ApiResponse<Record<string, string>>> {
+    const headers = new HttpHeaders({
+      'X-Tenant-Slug': request.tenantSlug
+    });
+
+    return this.http.post<ApiResponse<Record<string, string>>>(
+      `${this.API_URL}/forgot-password`,
+      { email: request.email },
+      { headers }
+    );
+  }
+
+  resetPassword(request: ResetPasswordRequest): Observable<ApiResponse<Record<string, string>>> {
+    const headers = new HttpHeaders({
+      'X-Tenant-Slug': request.tenantSlug
+    });
+
+    return this.http.post<ApiResponse<Record<string, string>>>(
+      `${this.API_URL}/reset-password`,
+      {
+        token: request.token,
+        newPassword: request.newPassword
+      },
+      { headers }
+    );
   }
 
   removeProfilePhoto(): Observable<ApiResponse<TenantProfileResponse>> {

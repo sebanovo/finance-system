@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { LoginUseCase, FaceLoginUseCase } from '../../features/auth';
 import { LoginFormComponent } from '../../features/auth/ui/login-form/login-form.component';
 import { FaceLoginRequest, LoginRequest } from '../../entities/auth';
@@ -12,12 +12,18 @@ import { AuthFacade } from '../../shared/lib/auth/auth.facade';
   imports: [CommonModule, LoginFormComponent],
   template: `
     <div class="min-h-screen flex items-center justify-center p-4 bg-[#F1F8E9]">
-      <app-login-form
-        [status]="displayStatus()"
-        [error]="displayError()"
-        (loginSubmit)="handleLogin($event)"
-        (faceLoginSubmit)="handleFaceLogin($event)"
-      />
+      <div class="w-full max-w-md space-y-4">
+        <div *ngIf="passwordResetSuccess" class="rounded-2xl border border-[#C8E6C9] bg-white px-4 py-3 text-sm font-medium text-[#1B5E20] shadow-sm">
+          Tu contraseña fue actualizada. Ahora puedes iniciar sesión con la nueva clave.
+        </div>
+
+        <app-login-form
+          [status]="displayStatus()"
+          [error]="displayError()"
+          (loginSubmit)="handleLogin($event)"
+          (faceLoginSubmit)="handleFaceLogin($event)"
+        />
+      </div>
     </div>
   `
 })
@@ -25,11 +31,14 @@ export class LoginPageComponent implements OnInit {
   public readonly loginUseCase = inject(LoginUseCase);
   public readonly faceLoginUseCase = inject(FaceLoginUseCase);
   private readonly authFacade = inject(AuthFacade);
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  passwordResetSuccess = false;
 
   ngOnInit(): void {
     this.loginUseCase.resetState();
     this.faceLoginUseCase.resetState();
+    this.passwordResetSuccess = this.route.snapshot.queryParamMap.get('passwordReset') === 'success';
   }
 
   async handleLogin(request: LoginRequest): Promise<void> {
