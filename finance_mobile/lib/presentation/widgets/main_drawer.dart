@@ -65,6 +65,12 @@ class MainDrawer extends StatelessWidget {
                   title: 'Movimientos',
                   onTap: () => context.push('/transactions'),
                 ),
+              if (_hasClientPermissionPrefix('me.service-'))
+                _buildDrawerItem(
+                  icon: Icons.receipt_long,
+                  title: 'Pagos de servicios',
+                  onTap: () => context.push('/service-payments'),
+                ),
               if (viewModel.hasAnyPermissionPrefix('limits.'))
                 _buildDrawerItem(
                   icon: Icons.shield_outlined,

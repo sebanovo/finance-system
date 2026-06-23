@@ -11,6 +11,7 @@ import 'package:finance_mobile/presentation/pages/devices_page.dart';
 import 'package:finance_mobile/presentation/pages/limits_page.dart';
 import 'package:finance_mobile/presentation/pages/notification_preferences_page.dart';
 import 'package:finance_mobile/presentation/pages/notifications_page.dart';
+import 'package:finance_mobile/presentation/pages/service_payments_page.dart';
 import 'package:finance_mobile/presentation/pages/qr_payment_page.dart';
 import 'package:finance_mobile/presentation/pages/transaction_detail_page.dart';
 import 'package:finance_mobile/presentation/pages/transactions_page.dart';
@@ -37,6 +38,7 @@ final GoRouter appRouter = GoRouter(
     final loggedIn = apiClient.hasSession;
     final onPublicRoute = _publicRoutes.contains(state.matchedLocation);
     final onClientOnlyRoute = _clientOnlyRoutes.contains(state.matchedLocation);
+    final onServiceOnlyRoute = _serviceOnlyRoutes.contains(state.matchedLocation);
 
     if (!loggedIn && !onPublicRoute) {
       return '/login';
@@ -49,6 +51,13 @@ final GoRouter appRouter = GoRouter(
     if (loggedIn && onClientOnlyRoute) {
       final hasClientContext = apiClient.hasAnyPermissionPrefix('me.');
       if (apiClient.isOwnerAdmin || !hasClientContext) {
+        return '/home';
+      }
+    }
+
+    if (loggedIn && onServiceOnlyRoute) {
+      final hasServiceContext = apiClient.hasAnyPermissionPrefix('me.service-');
+      if (apiClient.isOwnerAdmin || !hasServiceContext) {
         return '/home';
       }
     }
@@ -132,6 +141,10 @@ final GoRouter appRouter = GoRouter(
       path: '/notifications',
       builder: (context, _) => const NotificationsPage(),
     ),
+    GoRoute(
+      path: '/service-payments',
+      builder: (context, _) => const ServicePaymentsPage(),
+    ),
     GoRoute(path: '/limits', builder: (context, _) => const LimitsPage()),
     GoRoute(path: '/devices', builder: (context, _) => const DevicesPage()),
     GoRoute(
@@ -152,6 +165,10 @@ const Set<String> _clientOnlyRoutes = {
   '/notifications',
   '/devices',
   '/notification-preferences',
+};
+
+const Set<String> _serviceOnlyRoutes = {
+  '/service-payments',
 };
 
 String _initialLocation() {

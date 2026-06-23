@@ -11,6 +11,7 @@ class CustomerDashboardView extends StatelessWidget {
   final VoidCallback onOpenTransactions;
   final VoidCallback? onOpenLimits;
   final VoidCallback onOpenNotifications;
+  final VoidCallback onOpenServicePayments;
 
   const CustomerDashboardView({
     super.key,
@@ -21,6 +22,7 @@ class CustomerDashboardView extends StatelessWidget {
     required this.onOpenTransactions,
     this.onOpenLimits,
     required this.onOpenNotifications,
+    required this.onOpenServicePayments,
   });
 
   @override
@@ -164,6 +166,11 @@ class CustomerDashboardView extends StatelessWidget {
                 icon: Icons.notifications_active_outlined,
                 label: 'Notificaciones',
                 onPressed: onOpenNotifications,
+              ),
+              _buildHeroActionButton(
+                icon: Icons.receipt_long_outlined,
+                label: 'Pagos de servicios',
+                onPressed: onOpenServicePayments,
               ),
             ],
           ),
