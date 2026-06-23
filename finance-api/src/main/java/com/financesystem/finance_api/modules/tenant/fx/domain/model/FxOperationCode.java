@@ -5,5 +5,6 @@ public enum FxOperationCode {
     CONVERSION,
     DEPOSIT,
     WITHDRAWAL,
-    PAYMENT
+    PAYMENT,
+    SERVICE_PAYMENT
 }
