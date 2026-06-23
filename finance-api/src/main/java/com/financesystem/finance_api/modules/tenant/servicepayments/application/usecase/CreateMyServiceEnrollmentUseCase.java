@@ -71,12 +71,22 @@ public class CreateMyServiceEnrollmentUseCase {
             throw new BusinessException("Service customer is inactive");
         }
 
-        if (tenantServiceEnrollmentRepository.findByUserIdAndProviderIdAndServiceCustomerCode(userId, provider.id(), customerCode).isPresent()) {
+        var existingEnrollment = tenantServiceEnrollmentRepository.findByUserIdAndProviderIdAndServiceCustomerCode(
+                userId,
+                provider.id(),
+                customerCode
+        );
+        if (existingEnrollment.isPresent() && existingEnrollment.get().status() == TenantServiceEnrollmentStatus.ACTIVE) {
             throw new BusinessException("Service enrollment already exists");
         }
 
+        String alias = StringUtils.hasText(request.alias())
+                ? request.alias().trim()
+                : existingEnrollment.map(TenantServiceEnrollment::alias).orElse(null);
+
+        TenantServiceEnrollment source = existingEnrollment.orElse(null);
         TenantServiceEnrollment created = tenantServiceEnrollmentRepository.save(new TenantServiceEnrollment(
-                null,
+                existingEnrollment.map(TenantServiceEnrollment::id).orElse(null),
                 userId,
                 provider.id(),
                 provider.code(),
@@ -84,10 +94,10 @@ public class CreateMyServiceEnrollmentUseCase {
                 provider.category().name(),
                 customerCode,
                 serviceCustomer.customerName(),
-                StringUtils.hasText(request.alias()) ? request.alias().trim() : null,
+                alias,
                 TenantServiceEnrollmentStatus.ACTIVE,
-                null,
-                null
+                existingEnrollment.map(TenantServiceEnrollment::createdAt).orElse(null),
+                existingEnrollment.map(TenantServiceEnrollment::updatedAt).orElse(null)
         ));
 
         auditTrailService.recordTenantEvent(
@@ -100,9 +110,10 @@ public class CreateMyServiceEnrollmentUseCase {
                         "providerCode", provider.code(),
                         "serviceCustomerCode", created.serviceCustomerCode(),
                         "alias", created.alias(),
-                        "status", created.status()
+                        "status", created.status(),
+                        "reactivated", source != null && source.status() == TenantServiceEnrollmentStatus.INACTIVE
                 ),
-                null,
+                source,
                 created
         );
 

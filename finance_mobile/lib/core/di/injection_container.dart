@@ -11,6 +11,7 @@ import 'package:finance_mobile/domain/repositories/role_repository.dart';
 import 'package:finance_mobile/domain/repositories/subscription_repository.dart';
 import 'package:finance_mobile/domain/repositories/transaction_repository.dart';
 import 'package:finance_mobile/domain/repositories/user_repository.dart';
+import 'package:finance_mobile/domain/repositories/service_payments_repository.dart';
 import 'package:finance_mobile/domain/usecases/archive_notification_usecase.dart';
 import 'package:finance_mobile/domain/usecases/assign_role_usecase.dart';
 import 'package:finance_mobile/domain/usecases/change_password_usecase.dart';
@@ -21,6 +22,9 @@ import 'package:finance_mobile/domain/usecases/create_qr_transaction_intent_usec
 import 'package:finance_mobile/domain/usecases/cancel_qr_transaction_intent_usecase.dart';
 import 'package:finance_mobile/domain/usecases/confirm_qr_transaction_usecase.dart';
 import 'package:finance_mobile/domain/usecases/create_payment_usecase.dart';
+import 'package:finance_mobile/domain/usecases/create_service_enrollment_usecase.dart';
+import 'package:finance_mobile/domain/usecases/create_service_payment_usecase.dart';
+import 'package:finance_mobile/domain/usecases/delete_service_enrollment_usecase.dart';
 import 'package:finance_mobile/domain/usecases/create_release_usecase.dart';
 import 'package:finance_mobile/domain/usecases/create_transfer_usecase.dart';
 import 'package:finance_mobile/domain/usecases/create_user_usecase.dart';
@@ -38,6 +42,10 @@ import 'package:finance_mobile/domain/usecases/get_limit_rules_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_available_roles_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_customer_dashboard_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_devices_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_service_enrollments_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_service_payment_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_service_payments_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_service_providers_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_notifications_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_notification_preferences_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_permissions_usecase.dart';
@@ -59,6 +67,7 @@ import 'package:finance_mobile/domain/usecases/revoke_device_usecase.dart';
 import 'package:finance_mobile/domain/usecases/update_account_alias_usecase.dart';
 import 'package:finance_mobile/domain/usecases/update_role_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_subscription_usecase.dart';
+import 'package:finance_mobile/domain/usecases/query_service_bills_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_profile_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_user_info_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_user_roles_usecase.dart';
@@ -79,6 +88,7 @@ import 'package:finance_mobile/infrastructure/datasources/role_remote_datasource
 import 'package:finance_mobile/infrastructure/datasources/subscription_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/transaction_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/user_remote_datasource.dart';
+import 'package:finance_mobile/infrastructure/datasources/service_payments_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/repositories/account_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/auth_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/dashboard_repository_impl.dart';
@@ -89,6 +99,7 @@ import 'package:finance_mobile/infrastructure/repositories/role_repository_impl.
 import 'package:finance_mobile/infrastructure/repositories/subscription_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/transaction_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/user_repository_impl.dart';
+import 'package:finance_mobile/infrastructure/repositories/service_payments_repository_impl.dart';
 import 'package:finance_mobile/presentation/viewmodels/accounts_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/devices_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/forgot_password_viewmodel.dart';
@@ -99,6 +110,7 @@ import 'package:finance_mobile/presentation/viewmodels/notifications_viewmodel.d
 import 'package:finance_mobile/presentation/viewmodels/notification_preferences_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/permissions_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/profile_viewmodel.dart';
+import 'package:finance_mobile/presentation/viewmodels/service_payments_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/reset_password_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/roles_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/signup_viewmodel.dart';
@@ -122,6 +134,7 @@ Future<void> init() async {
   initHomeModule();
   initAccountsModule();
   initTransactionModule();
+  initServicePaymentsModule();
   initNotifationsModule();
   initDevicesNotifications();
 }
@@ -338,6 +351,36 @@ void initTransactionModule() {
       createReleaseUseCase: sl(),
       createTransferUseCase: sl(),
       createWithdrawalUseCase: sl(),
+    ),
+  );
+}
+
+void initServicePaymentsModule() {
+  sl.registerLazySingleton<ServicePaymentsRemoteDataSource>(
+    () => ServicePaymentsRemoteDataSourceImpl(sl()),
+  );
+  sl.registerLazySingleton<ServicePaymentsRepository>(
+    () => ServicePaymentsRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton(() => GetServiceProvidersUseCase(sl()));
+  sl.registerLazySingleton(() => GetServiceEnrollmentsUseCase(sl()));
+  sl.registerLazySingleton(() => CreateServiceEnrollmentUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteServiceEnrollmentUseCase(sl()));
+  sl.registerLazySingleton(() => QueryServiceBillsUseCase(sl()));
+  sl.registerLazySingleton(() => CreateServicePaymentUseCase(sl()));
+  sl.registerLazySingleton(() => GetServicePaymentsUseCase(sl()));
+  sl.registerLazySingleton(() => GetServicePaymentUseCase(sl()));
+  sl.registerFactory(
+    () => ServicePaymentsViewModel(
+      getServiceProvidersUseCase: sl(),
+      getServiceEnrollmentsUseCase: sl(),
+      createServiceEnrollmentUseCase: sl(),
+      deleteServiceEnrollmentUseCase: sl(),
+      queryServiceBillsUseCase: sl(),
+      createServicePaymentUseCase: sl(),
+      getServicePaymentsUseCase: sl(),
+      getServicePaymentUseCase: sl(),
+      getAccountsUseCase: sl(),
     ),
   );
 }

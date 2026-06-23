@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -63,6 +64,11 @@ public class ServiceBillRepositoryAdapter implements ServiceBillRepository {
 
         return jpaRepository.findAll(specification).stream()
                 .map(this::toDomain)
+                .sorted(
+                        Comparator.comparing(ServiceBill::dueDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                                .thenComparing(ServiceBill::billingPeriod, Comparator.nullsLast(Comparator.naturalOrder()))
+                                .thenComparing(ServiceBill::id, Comparator.nullsLast(Comparator.naturalOrder()))
+                )
                 .toList();
     }
 

@@ -290,8 +290,11 @@ class ApiClient extends ChangeNotifier {
   }
 
   // GET
-  Future<Response> get(String path) {
-    return dio.get(path);
+  Future<Response> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) {
+    return dio.get(path, queryParameters: queryParameters);
   }
 
   // POST

@@ -174,6 +174,7 @@ class _HomePageState extends State<HomePage> {
                       ? () => context.push('/limits')
                       : null,
                   onOpenNotifications: () => context.push('/notifications'),
+                  onOpenServicePayments: () => context.push('/service-payments'),
                 ),
                 const SizedBox(height: 16),
                 SubscriptionCard(
