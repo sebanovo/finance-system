@@ -142,30 +142,14 @@ public class SampleDataBootstrapService {
                 "Cuenta de ahorro demo"
         );
 
-        UUID transactionId = upsertTransferTransaction(
+        UUID ownerTransactionId = seedOwnerFinanceBundle(
+                tenant,
                 schemaName,
                 seed,
                 ownerUserId,
                 ownerAccountId,
-                savingsAccountId,
-                "owner-transfer-1"
-        );
-
-        upsertTransactionMovements(
-                schemaName,
-                seed,
-                transactionId,
-                ownerAccountId,
                 savingsAccountId
         );
-
-        upsertAccountingPeriods(schemaName, seed, transactionId);
-        upsertJournalEntry(schemaName, seed, transactionId, ownerAccountId, savingsAccountId);
-        upsertLimitRules(schemaName, seed, ownerUserId);
-        upsertFxConfiguration(schemaName, seed);
-        upsertOperationFees(schemaName, seed);
-        upsertNotifications(schemaName, seed, ownerUserId, transactionId, "owner");
-        upsertTenantAuditEvents(schemaName, seed, ownerUserId, transactionId);
 
         runOptionalSeedStep("service enrollment", seed.slug(), () -> upsertServiceEnrollment(
                 schemaName,
@@ -176,19 +160,12 @@ public class SampleDataBootstrapService {
                 seed.serviceAlias()
         ));
 
-        runOptionalSeedStep("regular user bundle", seed.slug(), () -> seedRegularUserBundle(
+        runOptionalSeedStep("tenant users", seed.slug(), () -> seedEnterpriseTenantUsers(
+                tenant,
                 schemaName,
                 seed,
                 ownerUserId,
                 ownerAccountId
-        ));
-
-        runOptionalSeedStep("public service data", seed.slug(), () -> seedPublicServiceData(
-                tenant,
-                seed,
-                ownerUserId,
-                ownerAccountId,
-                transactionId
         ));
 
         logger.info(
@@ -220,6 +197,294 @@ public class SampleDataBootstrapService {
         } catch (Exception exception) {
             logger.warn("Sample tenant '{}' failed during {} seeding. Continuing with the next step.", tenantSlug, stepName, exception);
         }
+    }
+
+    private UUID seedOwnerFinanceBundle(
+            PlatformTenantResponse tenant,
+            String schemaName,
+            TenantSeed seed,
+            UUID ownerUserId,
+            UUID ownerAccountId,
+            UUID savingsAccountId
+    ) {
+        String ownerAccountNumber = accountNumber(seed.accountPrefix(), "WALLET", "BOB", 1L);
+        String savingsAccountNumber = accountNumber(seed.accountPrefix(), "SAVINGS", "BOB", 1L);
+
+        List<UUID> ownerTransactionIds = seedAlternatingTransferSeriesIds(
+                schemaName,
+                seed,
+                ownerUserId,
+                ownerAccountId,
+                ownerAccountNumber,
+                seed.ownerStartingBalance(),
+                savingsAccountId,
+                savingsAccountNumber,
+                seed.savingsStartingBalance(),
+                "owner-transfer",
+                10
+        );
+        UUID ownerTransactionId = ownerTransactionIds.get(ownerTransactionIds.size() - 1);
+
+        upsertAccountingPeriods(schemaName, seed, ownerTransactionId);
+        upsertJournalEntry(schemaName, seed, ownerTransactionId, ownerAccountId, savingsAccountId);
+        upsertLimitRules(schemaName, seed, ownerUserId);
+        upsertFxConfiguration(schemaName, seed);
+        upsertOperationFees(schemaName, seed);
+        upsertNotifications(schemaName, seed, ownerUserId, ownerTransactionId, "owner");
+        upsertTenantAuditEvents(schemaName, seed, ownerUserId, ownerTransactionId);
+        seedPublicServicePaymentsForUser(
+                schemaName,
+                tenant,
+                seed,
+                ownerUserId,
+                ownerAccountId,
+                ownerAccountNumber,
+                seed.serviceCustomerCode(),
+                seed.serviceCustomerName(),
+                seed.serviceAlias(),
+                ownerTransactionIds,
+                "owner"
+        );
+
+        return ownerTransactionId;
+    }
+
+    private void seedEnterpriseTenantUsers(
+            PlatformTenantResponse tenant,
+            String schemaName,
+            TenantSeed seed,
+            UUID ownerUserId,
+            UUID ownerAccountId
+    ) {
+        List<TenantUserSeed> userSeeds = tenantUserSeeds(seed);
+        for (int index = 0; index < userSeeds.size(); index++) {
+            TenantUserSeed userSeed = userSeeds.get(index);
+            int userNumber = index + 1;
+
+            UUID userUserId = upsertTenantUser(
+                    schemaName,
+                    userSeed.email(),
+                    userSeed.firstName(),
+                    userSeed.lastName(),
+                    "USER"
+            );
+
+            long walletSequence = userNumber + 1L;
+            long checkingSequence = userNumber;
+            ensureAccountSequence(schemaName, "WALLET", "BOB", walletSequence);
+            ensureAccountSequence(schemaName, "CHECKING", "BOB", checkingSequence);
+
+            String walletAccountNumber = accountNumber(seed.accountPrefix(), "WALLET", "BOB", walletSequence);
+            String checkingAccountNumber = accountNumber(seed.accountPrefix(), "CHECKING", "BOB", checkingSequence);
+
+            UUID walletAccountId = upsertTenantAccount(
+                    schemaName,
+                    userUserId,
+                    walletAccountNumber,
+                    "MAIN_WALLET",
+                    "WALLET",
+                    "BOB",
+                    new BigDecimal("1000.00"),
+                    true,
+                    userSeed.firstName() + " wallet"
+            );
+
+            UUID checkingAccountId = upsertTenantAccount(
+                    schemaName,
+                    userUserId,
+                    checkingAccountNumber,
+                    "CHECKING_ACCOUNT",
+                    "CHECKING",
+                    "BOB",
+                    new BigDecimal("0.00"),
+                    false,
+                    userSeed.firstName() + " checking"
+            );
+
+            List<UUID> transferTransactionIds = seedAlternatingTransferSeriesIds(
+                    schemaName,
+                    seed,
+                    userUserId,
+                    walletAccountId,
+                    walletAccountNumber,
+                    new BigDecimal("1000.00"),
+                    checkingAccountId,
+                    checkingAccountNumber,
+                    new BigDecimal("0.00"),
+                    "user-" + String.format("%02d", userNumber) + "-transfer",
+                    10
+            );
+            UUID lastTransactionId = transferTransactionIds.get(transferTransactionIds.size() - 1);
+
+            upsertNotifications(schemaName, seed, userUserId, lastTransactionId, "user-" + String.format("%02d", userNumber));
+            insertTenantAuditEvent(
+                    schemaName,
+                    seed,
+                    userUserId,
+                    "TRANSFER_RECEIVED",
+                    "TRANSACTIONS",
+                    lastTransactionId.toString(),
+                    "Usuario demo recibió una serie de transferencias"
+            );
+            seedPublicServicePaymentsForUser(
+                    schemaName,
+                    tenant,
+                    seed,
+                    userUserId,
+                    checkingAccountId,
+                    checkingAccountNumber,
+                    tenantServiceCustomerCode(seed, userNumber),
+                    tenantServiceCustomerName(seed, userSeed.firstName(), userNumber),
+                    tenantServiceAlias(seed, userSeed.firstName(), userNumber),
+                    transferTransactionIds,
+                    "user-" + String.format("%02d", userNumber)
+            );
+        }
+    }
+
+    private List<UUID> seedAlternatingTransferSeriesIds(
+            String schemaName,
+            TenantSeed seed,
+            UUID requestedByUserId,
+            UUID firstAccountId,
+            String firstAccountNumber,
+            BigDecimal firstStartingBalance,
+            UUID secondAccountId,
+            String secondAccountNumber,
+            BigDecimal secondStartingBalance,
+            String transactionKeyPrefix,
+            int transactionCount
+    ) {
+        BigDecimal firstBalance = firstStartingBalance;
+        BigDecimal secondBalance = secondStartingBalance;
+        List<UUID> transactionIds = new ArrayList<>();
+
+        for (int index = 1; index <= transactionCount; index++) {
+            boolean firstIsSource = index % 2 == 1;
+
+            UUID sourceAccountId = firstIsSource ? firstAccountId : secondAccountId;
+            UUID targetAccountId = firstIsSource ? secondAccountId : firstAccountId;
+            String sourceAccountNumber = firstIsSource ? firstAccountNumber : secondAccountNumber;
+            String targetAccountNumber = firstIsSource ? secondAccountNumber : firstAccountNumber;
+            BigDecimal sourceBefore = firstIsSource ? firstBalance : secondBalance;
+            BigDecimal targetBefore = firstIsSource ? secondBalance : firstBalance;
+
+            UUID transactionId = upsertTransferTransaction(
+                    schemaName,
+                    seed,
+                    requestedByUserId,
+                    sourceAccountId,
+                    targetAccountId,
+                    transactionKeyPrefix + "-" + index
+            );
+            transactionIds.add(transactionId);
+
+            BigDecimal sourceAfter = sourceBefore.subtract(TRANSFER_AMOUNT);
+            BigDecimal targetAfter = targetBefore.add(TRANSFER_AMOUNT);
+
+            upsertTransactionMovement(
+                    schemaName,
+                    transactionId,
+                    sourceAccountId,
+                    "DEBIT",
+                    TRANSFER_AMOUNT,
+                    sourceBefore,
+                    sourceAfter,
+                    "Salida por transferencia demo"
+            );
+
+            upsertTransactionMovement(
+                    schemaName,
+                    transactionId,
+                    targetAccountId,
+                    "CREDIT",
+                    TRANSFER_AMOUNT,
+                    targetBefore,
+                    targetAfter,
+                    "Entrada por transferencia demo"
+            );
+
+            jdbcTemplate.update(
+                    """
+                    UPDATE %s.tenant_accounts
+                    SET available_balance = CASE
+                            WHEN account_number = ? THEN ?
+                            WHEN account_number = ? THEN ?
+                            ELSE available_balance
+                        END,
+                        updated_at = NOW()
+                    WHERE account_number IN (?, ?)
+                    """.formatted(schemaName),
+                    sourceAccountNumber,
+                    sourceAfter,
+                    targetAccountNumber,
+                    targetAfter,
+                    sourceAccountNumber,
+                    targetAccountNumber
+            );
+
+            if (firstIsSource) {
+                firstBalance = sourceAfter;
+                secondBalance = targetAfter;
+            } else {
+                secondBalance = sourceAfter;
+                firstBalance = targetAfter;
+            }
+        }
+
+        return transactionIds;
+    }
+
+    private UUID seedAlternatingTransferSeries(
+            String schemaName,
+            TenantSeed seed,
+            UUID requestedByUserId,
+            UUID firstAccountId,
+            String firstAccountNumber,
+            BigDecimal firstStartingBalance,
+            UUID secondAccountId,
+            String secondAccountNumber,
+            BigDecimal secondStartingBalance,
+            String transactionKeyPrefix,
+            int transactionCount
+    ) {
+        List<UUID> transactionIds = seedAlternatingTransferSeriesIds(
+                schemaName,
+                seed,
+                requestedByUserId,
+                firstAccountId,
+                firstAccountNumber,
+                firstStartingBalance,
+                secondAccountId,
+                secondAccountNumber,
+                secondStartingBalance,
+                transactionKeyPrefix,
+                transactionCount
+        );
+        return transactionIds.get(transactionIds.size() - 1);
+    }
+
+    private List<TenantUserSeed> tenantUserSeeds(TenantSeed seed) {
+        return List.of(
+                new TenantUserSeed(seed.userEmail(), seed.userFirstName(), seed.userLastName()),
+                generatedTenantUserSeed(seed, 2),
+                generatedTenantUserSeed(seed, 3),
+                generatedTenantUserSeed(seed, 4),
+                generatedTenantUserSeed(seed, 5),
+                generatedTenantUserSeed(seed, 6),
+                generatedTenantUserSeed(seed, 7),
+                generatedTenantUserSeed(seed, 8),
+                generatedTenantUserSeed(seed, 9)
+        );
+    }
+
+    private TenantUserSeed generatedTenantUserSeed(TenantSeed seed, int index) {
+        String slugBase = seed.slug().replace("-", "");
+        return new TenantUserSeed(
+                slugBase + String.format("%02d", index) + "@gmail.com",
+                "User" + String.format("%02d", index),
+                "Demo"
+        );
     }
 
     private void seedPlatformAuditEvents(PlatformTenant tenant, TenantSeed seed, UUID ownerUserId) {
@@ -282,6 +547,13 @@ public class SampleDataBootstrapService {
                 resourceId,
                 details
         );
+    }
+
+    private record TenantUserSeed(
+            String email,
+            String firstName,
+            String lastName
+    ) {
     }
 
     private UUID upsertTenantUser(
@@ -394,6 +666,7 @@ public class SampleDataBootstrapService {
         String idempotencyKey = DEMO_IDEMPOTENCY_PREFIX + ":" + seed.slug() + ":" + transactionKeySuffix;
         UUID transactionId = deterministicUuid(schemaName + ":transaction:" + idempotencyKey);
         BigDecimal amount = TRANSFER_AMOUNT;
+        String externalReference = "SEED-" + seed.slug().toUpperCase() + "-" + transactionKeySuffix.toUpperCase().replaceAll("[^A-Z0-9]+", "-");
 
         return jdbcTemplate.queryForObject(
                 """
@@ -430,9 +703,9 @@ public class SampleDataBootstrapService {
                 amount,
                 sourceAccountId,
                 targetAccountId,
-                "SEED-" + seed.slug().toUpperCase() + "-TRANSFER-001",
+                externalReference,
                 idempotencyKey,
-                "Demo transfer between seeded accounts",
+                "Demo transfer between seeded accounts - " + transactionKeySuffix,
                 requestedByUserId,
                 requestedByUserId
         );
@@ -1066,12 +1339,18 @@ public class SampleDataBootstrapService {
         );
     }
 
-    private void seedPublicServiceData(
+    private void seedPublicServicePaymentsForUser(
+            String schemaName,
             PlatformTenantResponse tenant,
             TenantSeed seed,
             UUID userId,
             UUID accountId,
-            UUID transactionId
+            String accountNumber,
+            String serviceCustomerCode,
+            String serviceCustomerName,
+            String serviceAlias,
+            List<UUID> transactionIds,
+            String keyPrefix
     ) {
         UUID providerId = jdbcTemplate.queryForObject(
                 """
@@ -1089,60 +1368,76 @@ public class SampleDataBootstrapService {
             return;
         }
 
-        UUID serviceCustomerId = upsertPublicServiceCustomer(providerId, seed.serviceCustomerCode(), seed.serviceCustomerName());
-        String currentBillingPeriod = billingPeriod(OffsetDateTime.now(ZoneOffset.UTC));
-        String previousBillingPeriod = billingPeriod(OffsetDateTime.now(ZoneOffset.UTC).minusMonths(1));
-
-        BigDecimal pendingAmount = servicePendingAmount(seed);
-        BigDecimal paidAmount = servicePaidAmount(seed);
-
-        upsertPublicServiceBill(
-                providerId,
-                serviceCustomerId,
-                seed.serviceCustomerCode(),
-                seed.serviceCustomerName(),
-                currentBillingPeriod,
-                pendingAmount,
-                "PENDING",
-                LocalDate.now(ZoneOffset.UTC).plusDays(10),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-        );
-
-        UUID paidBillId = upsertPublicServiceBill(
-                providerId,
-                serviceCustomerId,
-                seed.serviceCustomerCode(),
-                seed.serviceCustomerName(),
-                previousBillingPeriod,
-                paidAmount,
-                "PAID",
-                LocalDate.now(ZoneOffset.UTC).minusDays(5),
-                tenant.id(),
-                tenant.slug(),
+        upsertServiceEnrollment(
+                schemaName,
                 userId,
-                accountId,
-                accountNumber(seed.accountPrefix(), "WALLET", "BOB", 1L),
-                transactionId
+                seed.serviceProviderCode(),
+                serviceCustomerCode,
+                serviceCustomerName,
+                serviceAlias
         );
 
-        upsertPublicServicePayment(
-                paidBillId,
-                providerId,
-                tenant.id(),
-                tenant.slug(),
-                userId,
-                accountId,
-                accountNumber(seed.accountPrefix(), "WALLET", "BOB", 1L),
-                transactionId,
-                paidAmount,
-                "BOB",
-                seed.slug()
-        );
+        UUID serviceCustomerId = upsertPublicServiceCustomer(providerId, serviceCustomerCode, serviceCustomerName);
+
+        if ("owner".equals(keyPrefix)) {
+            upsertPublicServiceBill(
+                    providerId,
+                    serviceCustomerId,
+                    serviceCustomerCode,
+                    serviceCustomerName,
+                    billingPeriod(OffsetDateTime.now(ZoneOffset.UTC)),
+                    servicePendingAmount(seed),
+                    "PENDING",
+                    LocalDate.now(ZoneOffset.UTC).plusDays(10),
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+        }
+
+        for (int index = 0; index < transactionIds.size(); index++) {
+            int paymentIndex = index + 1;
+            UUID transactionId = transactionIds.get(index);
+            String billingPeriod = billingPeriod(OffsetDateTime.now(ZoneOffset.UTC).minusMonths(paymentIndex));
+            BigDecimal paidAmount = servicePaidAmount(seed, paymentIndex, serviceCustomerCode);
+            LocalDate dueDate = LocalDate.now(ZoneOffset.UTC).minusDays(5L + paymentIndex);
+            String paymentKeySuffix = keyPrefix + "-" + String.format("%02d", paymentIndex);
+
+            UUID paidBillId = upsertPublicServiceBill(
+                    providerId,
+                    serviceCustomerId,
+                    serviceCustomerCode,
+                    serviceCustomerName,
+                    billingPeriod,
+                    paidAmount,
+                    "PAID",
+                    dueDate,
+                    tenant.id(),
+                    tenant.slug(),
+                    userId,
+                    accountId,
+                    accountNumber,
+                    transactionId
+            );
+
+            upsertPublicServicePayment(
+                    paidBillId,
+                    providerId,
+                    tenant.id(),
+                    tenant.slug(),
+                    userId,
+                    accountId,
+                    accountNumber,
+                    transactionId,
+                    paidAmount,
+                    "BOB",
+                    seed.slug(),
+                    paymentKeySuffix
+            );
+        }
     }
 
     private UUID upsertPublicServiceCustomer(UUID providerId, String serviceCustomerCode, String customerName) {
@@ -1241,11 +1536,12 @@ public class SampleDataBootstrapService {
             UUID paidTransactionId,
             BigDecimal amount,
             String currency,
-            String seedSlug
+            String seedSlug,
+            String paymentKeySuffix
     ) {
         UUID paymentId = deterministicUuid("public:service-payment:" + billId);
-        String idempotencyKey = DEMO_IDEMPOTENCY_PREFIX + ":" + seedSlug + ":service-payment";
-        String receiptNumber = "SP-SEED-" + seedSlug.toUpperCase() + "-001";
+        String idempotencyKey = DEMO_IDEMPOTENCY_PREFIX + ":" + seedSlug + ":service-payment:" + paymentKeySuffix;
+        String receiptNumber = "SP-SEED-" + seedSlug.toUpperCase() + "-" + paymentKeySuffix.toUpperCase().replaceAll("[^A-Z0-9]+", "-");
 
         jdbcTemplate.update(
                 """
@@ -1291,9 +1587,21 @@ public class SampleDataBootstrapService {
         return BigDecimal.valueOf(39L + variant).setScale(2);
     }
 
-    private BigDecimal servicePaidAmount(TenantSeed seed) {
-        int variant = Math.abs(seed.slug().hashCode() % 5);
-        return BigDecimal.valueOf(24L + variant).setScale(2);
+    private BigDecimal servicePaidAmount(TenantSeed seed, int paymentIndex, String serviceCustomerCode) {
+        int variant = Math.abs((seed.slug() + ":" + serviceCustomerCode + ":" + paymentIndex).hashCode() % 9);
+        return BigDecimal.valueOf(24L + paymentIndex + variant).setScale(2);
+    }
+
+    private String tenantServiceCustomerCode(TenantSeed seed, int userNumber) {
+        return seed.serviceCustomerCode() + "-U" + String.format("%02d", userNumber);
+    }
+
+    private String tenantServiceCustomerName(TenantSeed seed, String firstName, int userNumber) {
+        return seed.serviceCustomerName() + " - " + firstName + " " + String.format("%02d", userNumber);
+    }
+
+    private String tenantServiceAlias(TenantSeed seed, String firstName, int userNumber) {
+        return seed.serviceAlias() + " - " + firstName + " " + String.format("%02d", userNumber);
     }
 
     private String billingPeriod(OffsetDateTime dateTime) {
@@ -1364,16 +1672,16 @@ public class SampleDataBootstrapService {
 
     private List<TenantSeed> sampleTenants() {
         return List.of(
-                new TenantSeed("Acme Finance", "acme-finance", "DEMO", "ariana@gmail.com", "Ariana", "Lopez", "bruno@gmail.com", "Bruno", "Diaz", "ACME", "ELECTRICITY_CRE", "12345678", "Casa Central", "Luz del hogar", new BigDecimal("1200.00"), new BigDecimal("420.00")),
-                new TenantSeed("Nova Wallet", "nova-wallet", "BASIC", "carla@gmail.com", "Carla", "Perez", "elena@gmail.com", "Elena", "Gutierrez", "NOVA", "INTERNET_ENTEL", "NOVA-778899", "Internet Hogar", "Internet principal", new BigDecimal("980.00"), new BigDecimal("305.00")),
-                new TenantSeed("Pampa Pay", "pampa-pay", "DEMO", "lucia@gmail.com", "Lucia", "Mendoza", "felipe@gmail.com", "Felipe", "Rojas", "PAMPA", "WATER_SAGUAPAC", "PAMPA-1001", "Casa Centro", "Agua familiar", new BigDecimal("1500.00"), new BigDecimal("260.00")),
-                new TenantSeed("Tumi Bank", "tumi-bank", "BASIC", "jose@gmail.com", "Jose", "Vargas", "gabriela@gmail.com", "Gabriela", "Sosa", "TUMI", "TV_TIGO", "TUMI-2222", "Hogar Norte", "TV cable", new BigDecimal("2100.00"), new BigDecimal("510.00")),
-                new TenantSeed("Luna Cash", "luna-cash", "DEMO", "maria@gmail.com", "Maria", "Fernandez", "hector@gmail.com", "Hector", "Lima", "LUNA", "ELECTRICITY_CRE", "LUNA-7788", "Residencial Sur", "Energia luz", new BigDecimal("800.00"), new BigDecimal("190.00")),
-                new TenantSeed("Andes Wallet", "andes-wallet", "BASIC", "pedro@gmail.com", "Pedro", "Quispe", "irene@gmail.com", "Irene", "Valdez", "ANDES", "INTERNET_ENTEL", "ANDES-9900", "Oficina Central", "Internet oficina", new BigDecimal("1750.00"), new BigDecimal("380.00")),
-                new TenantSeed("Suma Finance", "suma-finance", "DEMO", "sofia@gmail.com", "Sofia", "Rojas", "javier@gmail.com", "Javier", "Mora", "SUMA", "WATER_SAGUAPAC", "SUMA-4455", "Barrio Este", "Servicio agua", new BigDecimal("1325.00"), new BigDecimal("275.00")),
-                new TenantSeed("Kawi Pay", "kawi-pay", "BASIC", "diego@gmail.com", "Diego", "Salazar", "karen@gmail.com", "Karen", "Nunez", "KAWI", "TV_TIGO", "KAWI-3003", "Ciudad Jardín", "Tv familiar", new BigDecimal("990.00"), new BigDecimal("215.00")),
-                new TenantSeed("Runa Cash", "runa-cash", "DEMO", "ana@gmail.com", "Ana", "Torrez", "luis@gmail.com", "Luis", "Paredes", "RUNA", "ELECTRICITY_CRE", "RUNA-5566", "Centro", "Luz casa", new BigDecimal("2450.00"), new BigDecimal("610.00")),
-                new TenantSeed("Pacha Wallet", "pacha-wallet", "BASIC", "camila@gmail.com", "Camila", "Flores", "marta@gmail.com", "Marta", "Campos", "PACHA", "INTERNET_ENTEL", "PACHA-9090", "Zona Norte", "Internet hogar", new BigDecimal("1110.00"), new BigDecimal("330.00"))
+                new TenantSeed("Acme Finance", "acme-finance", "ENTERPRISE", "ariana@gmail.com", "Ariana", "Lopez", "bruno@gmail.com", "Bruno", "Diaz", "ACME", "ELECTRICITY_CRE", "12345678", "Casa Central", "Luz del hogar", new BigDecimal("1200.00"), new BigDecimal("420.00")),
+                new TenantSeed("Nova Wallet", "nova-wallet", "ENTERPRISE", "carla@gmail.com", "Carla", "Perez", "elena@gmail.com", "Elena", "Gutierrez", "NOVA", "INTERNET_ENTEL", "NOVA-778899", "Internet Hogar", "Internet principal", new BigDecimal("980.00"), new BigDecimal("305.00")),
+                new TenantSeed("Pampa Pay", "pampa-pay", "ENTERPRISE", "lucia@gmail.com", "Lucia", "Mendoza", "felipe@gmail.com", "Felipe", "Rojas", "PAMPA", "WATER_SAGUAPAC", "PAMPA-1001", "Casa Centro", "Agua familiar", new BigDecimal("1500.00"), new BigDecimal("260.00")),
+                new TenantSeed("Tumi Bank", "tumi-bank", "ENTERPRISE", "jose@gmail.com", "Jose", "Vargas", "gabriela@gmail.com", "Gabriela", "Sosa", "TUMI", "TV_TIGO", "TUMI-2222", "Hogar Norte", "TV cable", new BigDecimal("2100.00"), new BigDecimal("510.00")),
+                new TenantSeed("Luna Cash", "luna-cash", "ENTERPRISE", "maria@gmail.com", "Maria", "Fernandez", "hector@gmail.com", "Hector", "Lima", "LUNA", "ELECTRICITY_CRE", "LUNA-7788", "Residencial Sur", "Energia luz", new BigDecimal("800.00"), new BigDecimal("190.00")),
+                new TenantSeed("Andes Wallet", "andes-wallet", "ENTERPRISE", "pedro@gmail.com", "Pedro", "Quispe", "irene@gmail.com", "Irene", "Valdez", "ANDES", "INTERNET_ENTEL", "ANDES-9900", "Oficina Central", "Internet oficina", new BigDecimal("1750.00"), new BigDecimal("380.00")),
+                new TenantSeed("Suma Finance", "suma-finance", "ENTERPRISE", "sofia@gmail.com", "Sofia", "Rojas", "javier@gmail.com", "Javier", "Mora", "SUMA", "WATER_SAGUAPAC", "SUMA-4455", "Barrio Este", "Servicio agua", new BigDecimal("1325.00"), new BigDecimal("275.00")),
+                new TenantSeed("Kawi Pay", "kawi-pay", "ENTERPRISE", "diego@gmail.com", "Diego", "Salazar", "karen@gmail.com", "Karen", "Nunez", "KAWI", "TV_TIGO", "KAWI-3003", "Ciudad Jardín", "Tv familiar", new BigDecimal("990.00"), new BigDecimal("215.00")),
+                new TenantSeed("Runa Cash", "runa-cash", "ENTERPRISE", "ana@gmail.com", "Ana", "Torrez", "luis@gmail.com", "Luis", "Paredes", "RUNA", "ELECTRICITY_CRE", "RUNA-5566", "Centro", "Luz casa", new BigDecimal("2450.00"), new BigDecimal("610.00")),
+                new TenantSeed("Pacha Wallet", "pacha-wallet", "ENTERPRISE", "camila@gmail.com", "Camila", "Flores", "marta@gmail.com", "Marta", "Campos", "PACHA", "INTERNET_ENTEL", "PACHA-9090", "Zona Norte", "Internet hogar", new BigDecimal("1110.00"), new BigDecimal("330.00"))
         );
     }
 

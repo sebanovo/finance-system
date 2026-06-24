@@ -1047,7 +1047,7 @@ export class TransactionsPageComponent implements OnInit {
   }
 
   private async ensureAccountsLoaded(): Promise<void> {
-    if (this.accountListUseCase.data().length === 0) {
+    if (this.accountListUseCase.needsTenantReload() || this.accountListUseCase.data().length === 0) {
       await this.accountListUseCase.loadAccounts(0, 200);
     }
   }

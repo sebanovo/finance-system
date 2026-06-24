@@ -2,7 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard, permissionGuard } from './shared/api';
 import { platformAuthGuard } from './shared/api/guards/platform-auth.guard';
 import { tenantRoleGuard } from './shared/api/guards/tenant-role.guard';
-import { LandingPageComponent } from './features/landing/ui/landing-page/landing-page.component';
+import { LandingPageComponent } from './pages/landing-page/landing-page.component';
 import { PlatformLayoutComponent } from './shared/ui/layouts/platform-layout.component';
 
 export const routes: Routes = [
