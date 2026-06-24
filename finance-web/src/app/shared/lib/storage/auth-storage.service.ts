@@ -51,6 +51,12 @@ export class AuthStorageService {
     return this.hasToken() && this.hasTenantSlug();
   }
 
+  getSessionKey(): string {
+    const token = this.getToken() ?? '';
+    const tenantSlug = this.getTenantSlug() ?? '';
+    return `${token}|${tenantSlug}`;
+  }
+
   clear(): void {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);

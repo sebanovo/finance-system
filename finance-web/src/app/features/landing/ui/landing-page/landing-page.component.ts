@@ -1,249 +1,236 @@
-// features/landing/ui/landing-page/landing-page.component.ts
-import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
+
+type VideoCard = {
+  title: string;
+  description: string;
+  url: string;
+  badge: string;
+};
 
 @Component({
   selector: 'app-landing-page',
   standalone: true,
   imports: [CommonModule, RouterModule, LucideAngularModule],
   template: `
-    <div class="min-h-screen bg-linear-to-br from-slate-950 via-slate-900 to-[#1a3320] flex flex-col">
+    <div class="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(46,125,50,0.14),_transparent_35%),radial-gradient(circle_at_top_right,_rgba(76,175,80,0.10),_transparent_30%),linear-gradient(180deg,_#ffffff_0%,_#f6fbf3_56%,_#eef7ea_100%)] text-[#12391a]">
+      <header class="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-5 sm:px-6 lg:px-8">
+        <a routerLink="/" class="flex items-center gap-3">
+          <img src="/logo.png" alt="Finance Web" class="h-11 w-11 rounded-2xl object-contain shadow-sm ring-1 ring-[#d7ead5]" />
+          <div class="leading-tight">
+            <p class="text-lg font-black tracking-tight text-[#1b5e20]">Finance Web</p>
+            <p class="text-xs font-medium uppercase tracking-[0.22em] text-[#6b7d6c]">Plataforma financiera</p>
+          </div>
+        </a>
 
-      <!-- Fondo decorativo con partículas sutiles -->
-      <div class="absolute inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-[#2E7D32]/5 rounded-full blur-3xl"></div>
-        <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-[#4CAF50]/5 rounded-full blur-3xl"></div>
-      </div>
-
-      <!-- Header logo -->
-      <header class="relative z-10 flex items-center justify-between px-8 py-6">
-        <div class="flex items-center gap-3">
-          <img
-            src="/logo.png"
-            alt="Prospera"
-            class="h-10 w-10 rounded-lg object-contain shadow-lg"
-          >
-          <span class="font-bold text-2xl tracking-tight text-white">PROSPERA</span>
-        </div>
-        <div class="text-sm text-slate-400">
-          Plataforma SaaS Financiero
-        </div>
+        <nav class="hidden items-center gap-3 md:flex">
+          <a href="#videos" class="rounded-full px-4 py-2 text-sm font-semibold text-[#2e7d32] transition-colors hover:bg-[#eaf6eb]">Tutoriales</a>
+          <a href="#canal" class="rounded-full px-4 py-2 text-sm font-semibold text-[#2e7d32] transition-colors hover:bg-[#eaf6eb]">Canal</a>
+          <a routerLink="/login" class="rounded-full bg-[#2e7d32] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#256428]">Ingresar</a>
+        </nav>
       </header>
 
-      <!-- Contenido central -->
-      <main class="relative z-10 flex-1 flex flex-col items-center justify-center px-4 pb-12">
+      <main class="mx-auto flex w-full max-w-7xl flex-col gap-14 px-4 pb-16 sm:px-6 lg:px-8">
+        <section class="grid items-center gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:pt-4">
+          <div class="space-y-7">
+            <div class="inline-flex items-center gap-2 rounded-full border border-[#cfe5cd] bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#2e7d32] shadow-sm backdrop-blur">
+              <lucide-icon name="sparkles" [size]="14"></lucide-icon>
+              Guías rápidas y acceso seguro
+            </div>
 
-        <!-- Título principal -->
-        <div class="text-center mb-14">
-          <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#2E7D32]/20 border border-[#2E7D32]/30 text-[#4CAF50] text-sm font-medium mb-6">
-            <lucide-icon name="shield" class="h-3.5 w-3.5"></lucide-icon>
-            Acceso seguro y encriptado
+            <div class="space-y-5">
+              <h1 class="max-w-3xl text-4xl font-black tracking-tight text-[#12391a] sm:text-5xl lg:text-6xl">
+                Bienvenido a una experiencia financiera más clara, rápida y visual.
+              </h1>
+              <p class="max-w-2xl text-base leading-8 text-[#516456] sm:text-lg">
+                Entra como usuario del tenant o como superadmin, gestiona tus cuentas y aprende con videos cortos cómo usar login con face-recognition y pagos de servicios.
+              </p>
+            </div>
+
+            <div class="flex flex-col gap-3 sm:flex-row">
+              <a routerLink="/login" class="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#2e7d32] px-6 py-3.5 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(46,125,50,0.22)] transition-all hover:-translate-y-0.5 hover:bg-[#256428]">
+                <lucide-icon name="arrow-right" [size]="16"></lucide-icon>
+                Ingresar al tenant
+              </a>
+              <a routerLink="/platform/login" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#cfe5cd] bg-white px-6 py-3.5 text-sm font-semibold text-[#2e7d32] shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#f4faf2]">
+                <lucide-icon name="shield-check" [size]="16"></lucide-icon>
+                Entrar como superadmin
+              </a>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-3">
+              <article class="rounded-3xl border border-[#d9e8d7] bg-white p-5 shadow-sm">
+                <div class="mb-3 inline-flex rounded-2xl bg-[#eef7ea] p-3 text-[#2e7d32]">
+                  <lucide-icon name="users" [size]="22"></lucide-icon>
+                </div>
+                <h2 class="text-sm font-bold text-[#1b5e20]">Multitenant</h2>
+                <p class="mt-2 text-sm leading-6 text-[#5f6f5f]">Cada tenant con su propio contexto, usuarios y datos aislados.</p>
+              </article>
+
+              <article class="rounded-3xl border border-[#d9e8d7] bg-white p-5 shadow-sm">
+                <div class="mb-3 inline-flex rounded-2xl bg-[#eef7ea] p-3 text-[#2e7d32]">
+                  <lucide-icon name="camera" [size]="22"></lucide-icon>
+                </div>
+                <h2 class="text-sm font-bold text-[#1b5e20]">Face-recognition</h2>
+                <p class="mt-2 text-sm leading-6 text-[#5f6f5f]">Activa el acceso con rostro y usa la foto del perfil.</p>
+              </article>
+
+              <article class="rounded-3xl border border-[#d9e8d7] bg-white p-5 shadow-sm">
+                <div class="mb-3 inline-flex rounded-2xl bg-[#eef7ea] p-3 text-[#2e7d32]">
+                  <lucide-icon name="play" [size]="22"></lucide-icon>
+                </div>
+                <h2 class="text-sm font-bold text-[#1b5e20]">Tutoriales</h2>
+                <p class="mt-2 text-sm leading-6 text-[#5f6f5f]">Videos cortos para empezar en minutos, sin perder tiempo.</p>
+              </article>
+            </div>
           </div>
-          <h1 class="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
-            Bienvenido a tu<br>
-            <span class="text-transparent bg-clip-text bg-linear-to-r from-[#4CAF50] to-[#81C784]">Panel de Control</span>
-          </h1>
-          <p class="mt-4 text-slate-400 text-lg max-w-md mx-auto">
-            Selecciona el tipo de cuenta con la que deseas acceder al sistema.
-          </p>
-        </div>
 
-        <!-- Tarjetas de acceso -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
+          <div class="relative">
+            <div class="absolute -left-6 top-10 h-40 w-40 rounded-full bg-[#2e7d32]/10 blur-3xl"></div>
+            <div class="absolute -right-6 bottom-4 h-56 w-56 rounded-full bg-[#4caf50]/10 blur-3xl"></div>
 
-          <!-- Acceso Tenant (Admin) -->
-          <a routerLink="/login" class="group relative block rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-8 hover:bg-white/10 hover:border-[#4CAF50]/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-[#2E7D32]/20 cursor-pointer">
-            <!-- Icono -->
-            <div class="h-14 w-14 rounded-xl bg-[#2E7D32]/20 border border-[#2E7D32]/30 flex items-center justify-center mb-6 group-hover:bg-[#2E7D32]/30 transition-colors">
-              <lucide-icon name="building-2" class="h-7 w-7 text-[#4CAF50]"></lucide-icon>
+            <div class="relative overflow-hidden rounded-[2rem] border border-[#dbead8] bg-white/90 p-6 shadow-[0_20px_60px_rgba(27,94,32,0.10)] backdrop-blur">
+              <div class="flex items-start justify-between gap-4">
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[#6b7d6c]">Inicio rápido</p>
+                  <h2 class="mt-2 text-2xl font-black text-[#12391a]">Aprende lo básico y entra con seguridad</h2>
+                </div>
+                <div class="rounded-2xl bg-[#eef7ea] p-3 text-[#2e7d32]">
+                  <lucide-icon name="book-open" [size]="24"></lucide-icon>
+                </div>
+              </div>
+
+              <div class="mt-6 space-y-4">
+                <div class="rounded-2xl border border-[#dbead8] bg-[#f9fcf8] p-4">
+                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#6b7d6c]">01. Acceso seguro</p>
+                  <p class="mt-2 text-sm leading-6 text-[#516456]">Ingresa con contraseña o con rostro, según tu configuración y el tenant activo.</p>
+                </div>
+                <div class="rounded-2xl border border-[#dbead8] bg-[#f9fcf8] p-4">
+                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#6b7d6c]">02. Pagos de servicios</p>
+                  <p class="mt-2 text-sm leading-6 text-[#516456]">Consulta, paga y revisa tus pagos de servicios desde una sola interfaz.</p>
+                </div>
+                <div class="rounded-2xl border border-[#dbead8] bg-[#f9fcf8] p-4">
+                  <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#6b7d6c]">03. Tu perfil</p>
+                  <p class="mt-2 text-sm leading-6 text-[#516456]">Actualiza tu foto, usa cámara o galería y activa login facial si lo necesitas.</p>
+                </div>
+              </div>
+
+              <div class="mt-6 flex flex-wrap gap-3">
+                <a href="#videos" class="inline-flex items-center gap-2 rounded-2xl border border-[#cfe5cd] bg-white px-5 py-3 text-sm font-semibold text-[#2e7d32] transition-colors hover:bg-[#f4faf2]">
+                  <lucide-icon name="play" [size]="16"></lucide-icon>
+                  Ver tutoriales
+                </a>
+                <a [href]="youtubeChannelUrl" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-2xl bg-[#1b5e20] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#124119]">
+                  <lucide-icon name="arrow-right" [size]="16"></lucide-icon>
+                  Ir al canal de YouTube
+                </a>
+              </div>
             </div>
-            <!-- Contenido -->
-            <h2 class="text-xl font-bold text-white mb-2">Acceso Empresarial</h2>
-            <p class="text-slate-400 text-sm leading-relaxed mb-6">
-              Para administradores y usuarios de una organización. Gestiona tus cuentas, transacciones y equipo.
+          </div>
+        </section>
+
+        <section id="videos" class="space-y-6">
+          <div class="max-w-3xl space-y-3">
+            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[#6b7d6c]">Tutoriales destacados</p>
+            <h2 class="text-3xl font-black tracking-tight text-[#12391a]">Mira los videos más útiles para empezar</h2>
+            <p class="text-base leading-7 text-[#516456]">
+              Te recomiendo ver estos dos primero. Si te sirven, suscríbete al canal para encontrar más guías cortas sobre la plataforma.
             </p>
-            <!-- Características -->
-            <ul class="space-y-2 mb-8">
-              <li class="flex items-center gap-2 text-xs text-slate-400">
-                <lucide-icon name="check-circle" class="h-3.5 w-3.5 text-[#4CAF50] shrink-0"></lucide-icon>
-                Gestión de usuarios y roles
-              </li>
-              <li class="flex items-center gap-2 text-xs text-slate-400">
-                <lucide-icon name="check-circle" class="h-3.5 w-3.5 text-[#4CAF50] shrink-0"></lucide-icon>
-                Panel de transacciones y cuentas
-              </li>
-              <li class="flex items-center gap-2 text-xs text-slate-400">
-                <lucide-icon name="check-circle" class="h-3.5 w-3.5 text-[#4CAF50] shrink-0"></lucide-icon>
-                Contabilidad y tipos de cambio
-              </li>
-            </ul>
-            <!-- CTA -->
-            <div class="flex items-center gap-2 text-sm font-semibold text-[#4CAF50] group-hover:gap-3 transition-all">
-              Iniciar sesión
-              <lucide-icon name="arrow-right" class="h-4 w-4"></lucide-icon>
-            </div>
-          </a>
+          </div>
 
-          <!-- Acceso SuperAdmin (Platform) -->
-          <a routerLink="/platform/login" class="group relative block rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-8 hover:bg-white/10 hover:border-purple-500/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-purple-900/20 cursor-pointer">
-            <!-- Icono -->
-            <div class="h-14 w-14 rounded-xl bg-purple-900/20 border border-purple-500/20 flex items-center justify-center mb-6 group-hover:bg-purple-900/30 transition-colors">
-              <lucide-icon name="layout-dashboard" class="h-7 w-7 text-purple-400"></lucide-icon>
-            </div>
-            <!-- Badge -->
-            <div class="absolute top-6 right-6">
-              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-900/40 text-purple-300 border border-purple-500/30">
-                SuperAdmin
-              </span>
-            </div>
-            <!-- Contenido -->
-            <h2 class="text-xl font-bold text-white mb-2">Administración Global</h2>
-            <p class="text-slate-400 text-sm leading-relaxed mb-6">
-              Acceso exclusivo para administradores de la plataforma. Gestiona tenants, planes y suscripciones.
-            </p>
-            <!-- Características -->
-            <ul class="space-y-2 mb-8">
-              <li class="flex items-center gap-2 text-xs text-slate-400">
-                <lucide-icon name="check-circle" class="h-3.5 w-3.5 text-purple-400 shrink-0"></lucide-icon>
-                Panel de métricas global
-              </li>
-              <li class="flex items-center gap-2 text-xs text-slate-400">
-                <lucide-icon name="check-circle" class="h-3.5 w-3.5 text-purple-400 shrink-0"></lucide-icon>
-                Gestión de planes y suscripciones
-              </li>
-              <li class="flex items-center gap-2 text-xs text-slate-400">
-                <lucide-icon name="check-circle" class="h-3.5 w-3.5 text-purple-400 shrink-0"></lucide-icon>
-                Control de organizaciones (tenants)
-              </li>
-            </ul>
-            <!-- CTA -->
-            <div class="flex items-center gap-2 text-sm font-semibold text-purple-400 group-hover:gap-3 transition-all">
-              Acceder como SuperAdmin
-              <lucide-icon name="arrow-right" class="h-4 w-4"></lucide-icon>
-            </div>
-          </a>
+          <div class="grid gap-6 lg:grid-cols-2">
+            @for (video of videos; track video.title) {
+              <article class="overflow-hidden rounded-[2rem] border border-[#dbead8] bg-white shadow-[0_18px_50px_rgba(27,94,32,0.08)]">
+                <div class="aspect-video bg-[#0f2614]">
+                  <iframe
+                    class="h-full w-full"
+                    [src]="video.safeUrl"
+                    [title]="video.title"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    allowfullscreen></iframe>
+                </div>
+                <div class="space-y-4 p-5 sm:p-6">
+                  <div class="inline-flex rounded-full bg-[#eef7ea] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#2e7d32]">
+                    {{ video.badge }}
+                  </div>
+                  <div>
+                    <h3 class="text-xl font-black text-[#12391a]">{{ video.title }}</h3>
+                    <p class="mt-2 text-sm leading-6 text-[#5f6f5f]">{{ video.description }}</p>
+                  </div>
+                  <div class="flex flex-wrap gap-3">
+                    <a [href]="videoLink(video)" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-2xl bg-[#2e7d32] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#256428]">
+                      <lucide-icon name="play" [size]="16"></lucide-icon>
+                      Ver en YouTube
+                    </a>
+                    <a [href]="youtubeChannelUrl" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-2xl border border-[#cfe5cd] bg-white px-4 py-2.5 text-sm font-semibold text-[#2e7d32] transition-colors hover:bg-[#f4faf2]">
+                      <lucide-icon name="sparkles" [size]="16"></lucide-icon>
+                      Más videos del canal
+                    </a>
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+        </section>
 
-        </div>
+        <section id="canal" class="rounded-[2rem] border border-[#cfe5cd] bg-[#12391a] px-6 py-8 text-white shadow-[0_18px_50px_rgba(18,57,26,0.16)] sm:px-8">
+          <div class="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+            <div class="space-y-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[#b8e6bc]">Canal de YouTube</p>
+              <h2 class="text-3xl font-black tracking-tight sm:text-4xl">Síguenos para ver más videos, guías y novedades</h2>
+              <p class="max-w-2xl text-base leading-7 text-[#d7ead5]">
+                Encontrarás explicaciones rápidas sobre login con face-recognition, pagos de servicios, perfil de usuario, cuentas y otras funciones del sistema.
+              </p>
+            </div>
 
-        <!-- Link a registro público -->
-        <p class="mt-10 text-sm text-slate-500">
-          ¿Eres nuevo? 
-          <a routerLink="/onboarding" class="text-[#4CAF50] font-medium hover:underline hover:text-[#81C784] transition-colors">
-            Regístrate y crea tu organización gratis
-          </a>
-        </p>
-
+            <div class="flex flex-col gap-3 sm:flex-row lg:justify-end">
+              <a [href]="youtubeChannelUrl" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-[#12391a] transition-colors hover:bg-[#eef7ea]">
+                <lucide-icon name="play" [size]="16"></lucide-icon>
+                Abrir canal
+              </a>
+              <a routerLink="/login" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/20 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10">
+                <lucide-icon name="arrow-right" [size]="16"></lucide-icon>
+                Ir al login
+              </a>
+            </div>
+          </div>
+        </section>
       </main>
-
-      <!-- Footer -->
-      <footer class="relative z-10 text-center pb-6 text-xs text-slate-600">
-        © 2025 PROSPERA — Plataforma Financiera SaaS
-      </footer>
-
     </div>
   `
 })
-export class LandingPageComponent {}
-// import { Component } from '@angular/core';
-// import { CommonModule } from '@angular/common';
-// import { RouterModule } from '@angular/router';
-// import { LucideAngularModule } from 'lucide-angular';
+export class LandingPageComponent {
+  readonly youtubeChannelUrl = 'https://youtube.com/@prospera-6777?si=Bb9wP5j311yJgtKF';
+  readonly videos: Array<VideoCard & { safeUrl: SafeResourceUrl }> = [];
 
-// @Component({
-//   selector: 'app-landing-page',
-//   standalone: true,
-//   imports: [CommonModule, RouterModule, LucideAngularModule],
-//   template: `
-//     <div class="min-h-screen bg-white">
-//       <!-- Navbar -->
-//       <nav class="bg-white border-b border-[#C8E6C9] sticky top-0 z-50">
-//         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-//           <div class="flex justify-between items-center h-16">
-//             <div class="flex items-center">
-//               <div class="h-8 w-8 rounded-md bg-[#2E7D32] flex items-center justify-center">
-//                 <span class="text-white font-bold text-lg">F</span>
-//               </div>
-//               <span class="ml-2 text-xl font-bold text-[#2E7D32]">Finance System</span>
-//             </div>
-//             <div class="flex items-center gap-4">
-//               <a routerLink="/login" class="text-[#2E7D32] hover:text-[#4CAF50] px-3 py-2 text-sm font-medium">
-//                 Iniciar Sesión
-//               </a>
-//               <a routerLink="/onboarding" class="bg-[#2E7D32] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#4CAF50] transition-colors">
-//                 Crear Cuenta
-//               </a>
-//             </div>
-//           </div>
-//         </div>
-//       </nav>
+  constructor(private readonly sanitizer: DomSanitizer) {
+    const items: VideoCard[] = [
+      {
+        title: 'Como iniciar sesión con face-recognition',
+        description: 'Aprende cómo ingresar con rostro usando la foto de perfil y el flujo de acceso facial del sistema.',
+        url: 'https://www.youtube.com/embed/RgVVV59qzMI?si=2qieICAG3MGf8-VC',
+        badge: 'Acceso con rostro'
+      },
+      {
+        title: 'Como pagar servicios',
+        description: 'Mira cómo registrar y pagar servicios desde la experiencia del tenant, paso a paso.',
+        url: 'https://www.youtube.com/embed/Q907PF4RQXU?si=FMCvZAtQ_IRFxTUC',
+        badge: 'Pagos de servicios'
+      }
+    ];
 
-//       <!-- Hero -->
-//       <div class="relative bg-[#F1F8E9] overflow-hidden">
-//         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-//           <div class="text-center">
-//             <h1 class="text-4xl md:text-6xl font-bold text-[#2E7D32] tracking-tight">
-//               Gestión financiera
-//               <span class="text-[#4CAF50]">a nivel corporativo</span>
-//             </h1>
-//             <p class="mt-6 text-lg text-[#666666] max-w-2xl mx-auto">
-//               Centraliza la administración de finanzas, usuarios y roles en una sola plataforma.
-//               Diseñado con arquitectura robusta para escalar junto a los objetivos de tu empresa.
-//             </p>
-//             <div class="mt-10 flex flex-col sm:flex-row justify-center gap-4">
-//               <a routerLink="/onboarding" class="bg-[#2E7D32] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#4CAF50] transition-colors">
-//                 Comenzar prueba gratis
-//               </a>
-//               <a routerLink="/login" class="border border-[#C8E6C9] text-[#2E7D32] px-6 py-3 rounded-lg font-medium hover:bg-[#F1F8E9] transition-colors">
-//                 Iniciar sesión
-//               </a>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
+    this.videos = items.map((video) => ({
+      ...video,
+      safeUrl: this.sanitizer.bypassSecurityTrustResourceUrl(video.url)
+    }));
+  }
 
-//       <!-- Features -->
-//       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-//         <div class="text-center mb-12">
-//           <h2 class="text-3xl font-bold text-[#2E7D32]">Características</h2>
-//           <p class="mt-4 text-[#666666]">Todo lo que necesitas para administrar tu negocio</p>
-//         </div>
-//         <div class="grid md:grid-cols-3 gap-8">
-//           <div class="bg-white p-6 rounded-xl border border-[#C8E6C9] shadow-sm">
-//             <div class="h-12 w-12 rounded-lg bg-[#E8F5E9] flex items-center justify-center mb-4">
-//               <lucide-icon name="users" class="h-6 w-6 text-[#2E7D32]"></lucide-icon>
-//             </div>
-//             <h3 class="text-lg font-semibold text-[#2E7D32]">Gestión de Usuarios</h3>
-//             <p class="mt-2 text-[#666666] text-sm">Administra usuarios con control granular de permisos y roles.</p>
-//           </div>
-//           <div class="bg-white p-6 rounded-xl border border-[#C8E6C9] shadow-sm">
-//             <div class="h-12 w-12 rounded-lg bg-[#E8F5E9] flex items-center justify-center mb-4">
-//               <lucide-icon name="shield" class="h-6 w-6 text-[#2E7D32]"></lucide-icon>
-//             </div>
-//             <h3 class="text-lg font-semibold text-[#2E7D32]">Control de Acceso</h3>
-//             <p class="mt-2 text-[#666666] text-sm">Define roles personalizados y permisos específicos.</p>
-//           </div>
-//           <div class="bg-white p-6 rounded-xl border border-[#C8E6C9] shadow-sm">
-//             <div class="h-12 w-12 rounded-lg bg-[#E8F5E9] flex items-center justify-center mb-4">
-//               <lucide-icon name="building" class="h-6 w-6 text-[#2E7D32]"></lucide-icon>
-//             </div>
-//             <h3 class="text-lg font-semibold text-[#2E7D32]">Multitenencia</h3>
-//             <p class="mt-2 text-[#666666] text-sm">Soporta múltiples empresas con aislamiento de datos total.</p>
-//           </div>
-//         </div>
-//       </div>
-
-//       <!-- Footer -->
-//       <footer class="bg-[#F1F8E9] border-t border-[#C8E6C9] py-8">
-//         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-//           <p class="text-[#666666] text-sm">© 2024 Finance System. Todos los derechos reservados.</p>
-//           <div class="mt-4">
-//             <a routerLink="/platform/login" class="text-xs text-[#4CAF50] hover:text-[#2E7D32]">Acceso SuperAdmin</a>
-//           </div>
-//         </div>
-//       </footer>
-//     </div>
-//   `
-// })
-// export class LandingPageComponent {}
+  videoLink(video: VideoCard): string {
+    return video.url.replace('embed/', 'watch?v=').split('?')[0];
+  }
+}
