@@ -2,6 +2,8 @@ package com.financesystem.finance_api.modules.platform.billing.infrastructure.pe
 
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -33,7 +35,8 @@ public class StripeWebhookEventEntity {
     private String lastError;
 
     @Column(columnDefinition = "jsonb")
-    private String payload;
+    @JdbcTypeCode(SqlTypes.JSON)
+    private JsonNode payload;
 
     @Column(nullable = false, updatable = false)
     private Instant receivedAt;
@@ -113,11 +116,11 @@ public class StripeWebhookEventEntity {
         this.lastError = lastError;
     }
 
-    public String getPayload() {
+    public JsonNode getPayload() {
         return payload;
     }
 
-    public void setPayload(String payload) {
+    public void setPayload(JsonNode payload) {
         this.payload = payload;
     }
 

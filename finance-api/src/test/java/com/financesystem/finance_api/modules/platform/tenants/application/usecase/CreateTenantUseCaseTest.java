@@ -83,6 +83,7 @@ class CreateTenantUseCaseTest {
                 "tenant_financruz",
                 "ACTIVE",
                 planId,
+                null,
                 true,
                 now,
                 now

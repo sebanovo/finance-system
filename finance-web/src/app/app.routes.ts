@@ -12,6 +12,10 @@ export const routes: Routes = [
   
   // Landing page
   { path: '', component: LandingPageComponent },
+  {
+    path: 'prices',
+    loadComponent: () => import('./pages/prices-page/prices-page.component').then(m => m.PricesPageComponent)
+  },
   
   // Login de tenant
   { path: 'login', loadComponent: () => import('./pages/login-page/login-page.component').then(m => m.LoginPageComponent) },

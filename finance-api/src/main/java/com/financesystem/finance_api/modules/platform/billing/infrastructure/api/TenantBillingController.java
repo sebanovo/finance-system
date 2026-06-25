@@ -62,6 +62,7 @@ public class TenantBillingController {
     }
 
     @GetMapping("/current")
+    @PreAuthorize("hasAuthority('billing.subscription.manage')")
     public ApiResponse<PlatformSubscriptionResponse> currentSubscription() {
         return ApiResponse.success(
                 "Current tenant subscription retrieved successfully",
@@ -70,6 +71,7 @@ public class TenantBillingController {
     }
 
     @GetMapping("/status")
+    @PreAuthorize("hasAuthority('billing.subscription.manage')")
     public ApiResponse<BillingStatusResponse> billingStatus() {
         return ApiResponse.success(
                 "Billing status retrieved successfully",

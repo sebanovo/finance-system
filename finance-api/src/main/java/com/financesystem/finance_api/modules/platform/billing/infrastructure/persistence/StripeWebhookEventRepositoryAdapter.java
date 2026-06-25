@@ -2,8 +2,6 @@ package com.financesystem.finance_api.modules.platform.billing.infrastructure.pe
 
 import com.financesystem.finance_api.modules.platform.billing.domain.model.StripeWebhookEvent;
 import com.financesystem.finance_api.modules.platform.billing.domain.repository.StripeWebhookEventRepository;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -12,14 +10,11 @@ import java.util.Optional;
 public class StripeWebhookEventRepositoryAdapter implements StripeWebhookEventRepository {
 
     private final StripeWebhookEventJpaRepository jpaRepository;
-    private final ObjectMapper objectMapper;
 
     public StripeWebhookEventRepositoryAdapter(
-            StripeWebhookEventJpaRepository jpaRepository,
-            ObjectMapper objectMapper
+            StripeWebhookEventJpaRepository jpaRepository
     ) {
         this.jpaRepository = jpaRepository;
-        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -46,19 +41,11 @@ public class StripeWebhookEventRepositoryAdapter implements StripeWebhookEventRe
         entity.setProcessedAt(event.processedAt());
         entity.setProcessingAttempts(event.processingAttempts());
         entity.setLastError(event.lastError());
-        entity.setPayload(event.payload() == null ? null : event.payload().toString());
+        entity.setPayload(event.payload());
         return entity;
     }
 
     private StripeWebhookEvent toDomain(StripeWebhookEventEntity entity) {
-        JsonNode payload = null;
-        if (entity.getPayload() != null && !entity.getPayload().isBlank()) {
-            try {
-                payload = objectMapper.readTree(entity.getPayload());
-            } catch (Exception ignored) {
-                payload = null;
-            }
-        }
         return new StripeWebhookEvent(
                 entity.getId(),
                 entity.getStripeEventId(),
@@ -67,7 +54,7 @@ public class StripeWebhookEventRepositoryAdapter implements StripeWebhookEventRe
                 entity.getProcessedAt(),
                 entity.getProcessingAttempts(),
                 entity.getLastError(),
-                payload,
+                entity.getPayload(),
                 entity.getReceivedAt(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()

@@ -3,7 +3,6 @@ package com.financesystem.finance_api.modules.governance.backups.infrastructure.
 import com.financesystem.finance_api.modules.governance.backups.application.config.BackupProperties;
 import com.financesystem.finance_api.modules.governance.backups.domain.exception.BackupExecutionException;
 import com.financesystem.finance_api.modules.governance.backups.domain.model.BackupArtifact;
-import com.financesystem.finance_api.modules.governance.backups.domain.model.BackupCommandResult;
 import com.financesystem.finance_api.modules.governance.backups.infrastructure.storage.ChecksumService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +59,7 @@ public class PgBackupEngineAdapter implements BackupEngine {
     }
 
     @Override
-    public BackupCommandResult restoreSchema(String schemaName, Path source) {
+    public String restoreSchema(String schemaName, Path source) {
         validateSqlIdentifier(schemaName, "schemaName");
 
         if (!Files.exists(source)) {
@@ -85,7 +84,7 @@ public class PgBackupEngineAdapter implements BackupEngine {
     }
 
     @Override
-    public BackupCommandResult restoreFullDatabase(Path source) {
+    public String restoreFullDatabase(Path source) {
         if (!Files.exists(source)) {
             throw new BackupExecutionException("Backup artifact does not exist: " + source);
         }
@@ -155,11 +154,11 @@ public class PgBackupEngineAdapter implements BackupEngine {
         }
     }
 
-    private BackupCommandResult runRestoreTolerant(List<String> command, String description) {
+    private String runRestoreTolerant(List<String> command, String description) {
         CommandExecution execution = runCommand(command, description);
 
         if (execution.exitCode() == 0) {
-            return BackupCommandResult.success(execution.exitCode(), execution.output());
+            return null;
         }
 
         if (execution.exitCode() == 1) {
@@ -170,7 +169,7 @@ public class PgBackupEngineAdapter implements BackupEngine {
                     execution.exitCode(),
                     output
             );
-            return BackupCommandResult.warning(execution.exitCode(), output);
+            return output;
         }
 
         throw new BackupExecutionException(

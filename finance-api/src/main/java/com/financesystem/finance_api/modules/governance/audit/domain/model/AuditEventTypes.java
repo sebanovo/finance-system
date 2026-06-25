@@ -10,6 +10,7 @@ public final class AuditEventTypes {
     public static final String SUBSCRIPTION_ASSIGNED = "SUBSCRIPTION_ASSIGNED";
     public static final String SUBSCRIPTION_EXPIRED = "SUBSCRIPTION_EXPIRED";
     public static final String PUBLIC_SIGNUP_COMPLETED = "PUBLIC_SIGNUP_COMPLETED";
+    public static final String PUBLIC_SIGNUP_CHECKOUT_CREATED = "PUBLIC_SIGNUP_CHECKOUT_CREATED";
     public static final String PLATFORM_PLAN_CREATED = "PLATFORM_PLAN_CREATED";
     public static final String PLATFORM_PLAN_ACTIVATED = "PLATFORM_PLAN_ACTIVATED";
     public static final String PLATFORM_PLAN_DEACTIVATED = "PLATFORM_PLAN_DEACTIVATED";
