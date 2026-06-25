@@ -25,6 +25,8 @@ import 'package:finance_mobile/presentation/pages/permissions_pages.dart';
 import 'package:finance_mobile/presentation/pages/roles_pages.dart';
 import 'package:finance_mobile/presentation/pages/login_page.dart';
 import 'package:finance_mobile/presentation/pages/reset_password_page.dart';
+import 'package:finance_mobile/presentation/pages/activate_account_page.dart';
+import 'package:finance_mobile/presentation/pages/my_loans_page.dart';
 import 'package:finance_mobile/presentation/pages/signup_page.dart';
 import 'package:finance_mobile/presentation/pages/forgot_password_page.dart';
 import 'package:finance_mobile/presentation/pages/users_page.dart';
@@ -86,7 +88,15 @@ final GoRouter appRouter = GoRouter(
         return ResetPasswordPage(initialTenant: tenant);
       },
     ),
+    GoRoute(
+      path: '/activate-account',
+      builder: (context, state) {
+        final tenant = state.extra as String?;
+        return ActivateAccountPage(initialTenant: tenant);
+      },
+    ),
     GoRoute(path: '/accounts', builder: (context, _) => const AccountsPage()),
+    GoRoute(path: '/loans', builder: (context, _) => const MyLoansPage()),
     GoRoute(
       path: '/accounts/:id',
       builder: (context, state) {
@@ -159,6 +169,7 @@ const Set<String> _publicRoutes = {
   '/signup',
   '/forgot-password',
   '/reset-password',
+  '/activate-account',
 };
 
 const Set<String> _clientOnlyRoutes = {

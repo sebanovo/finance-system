@@ -170,6 +170,9 @@ class _HomePageState extends State<HomePage> {
                   errorMessage: _viewModel.dashboardErrorMessage,
                   onOpenAccounts: () => context.push('/accounts'),
                   onOpenTransactions: () => context.push('/transactions'),
+                  onOpenLoans: _viewModel.hasAnyPermissionPrefix('me.loans.')
+                      ? () => context.push('/loans')
+                      : null,
                   onOpenLimits: _viewModel.hasAnyPermissionPrefix('limits.')
                       ? () => context.push('/limits')
                       : null,

@@ -211,6 +211,30 @@ public class PlatformBootstrapService {
         logger.info("Base limits permissions seeded successfully.");
     }
 
+    public void seedBaseLoanPermissions() {
+        logger.info("Seeding base loans permissions...");
+
+        List<PermissionSeed> permissions = List.of(
+                // OWNER_ADMIN PERMISSIONS
+                new PermissionSeed("loans.request", "loans", "Request (open) tenant loans"),
+                new PermissionSeed("loans.list", "loans", "List tenant loans"),
+                new PermissionSeed("loans.view", "loans", "View tenant loan details and schedule"),
+                new PermissionSeed("loans.approve", "loans", "Approve tenant loans"),
+                new PermissionSeed("loans.reject", "loans", "Reject tenant loans"),
+                new PermissionSeed("loans.disburse", "loans", "Disburse approved tenant loans"),
+                new PermissionSeed("loans.repay", "loans", "Record repayments for tenant loans"),
+                // CLIENT PERMISSIONS
+                new PermissionSeed("me.loans.request", "loans", "Request own loans"),
+                new PermissionSeed("me.loans.list", "loans", "List own loans"),
+                new PermissionSeed("me.loans.view", "loans", "View own loan details and schedule"),
+                new PermissionSeed("me.loans.pay", "loans", "Record repayments for own loans")
+        );
+
+        seedPermissions(permissions);
+
+        logger.info("Base loans permissions seeded successfully.");
+    }
+
     public void seedBaseAccountingPermissions() {
         logger.info("Seeding base accounting permissions...");
 

@@ -89,6 +89,9 @@ app:
     password-reset:
       expiration-minutes: ${PASSWORD_RESET_EXPIRATION_MINUTES:30}
       reset-url-base: ${PASSWORD_RESET_URL_BASE:http://localhost:4200/reset-password}
+    account-activation:
+      expiration-minutes: ${ACCOUNT_ACTIVATION_EXPIRATION_MINUTES:1440}
+      activation-url-base: ${ACCOUNT_ACTIVATION_URL_BASE:http://localhost:4200/activate}
     push:
       enabled: ${NOTIFICATIONS_PUSH_ENABLED:false}
       provider: ${NOTIFICATIONS_PROVIDER:FIREBASE}

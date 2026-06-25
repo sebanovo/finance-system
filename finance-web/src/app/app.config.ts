@@ -23,7 +23,8 @@ import {
   LoaderCircle,
   TriangleAlert,
   CircleAlert,
-  Upload
+  Upload,
+  HandCoins
 } from 'lucide-angular';
 
 
@@ -47,7 +48,7 @@ export const appConfig: ApplicationConfig = {
       Building, Clock, Info, PauseCircle, PlayCircle, Sparkles, Wand2,
       BarChart3, FileChartColumn, Database, Search, Archive,
       Camera, Trash2, ShieldCheck, LoaderCircle, TriangleAlert,
-      CircleAlert, Upload
+      CircleAlert, Upload, HandCoins
     }))
 
   ]

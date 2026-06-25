@@ -12,6 +12,7 @@ import {
 } from '../../../entities/reporting/model/reporting.model';
 import { ReportTableComponent } from './report-table.component';
 import { ReportBarChartComponent } from './report-bar-chart.component';
+import { ReportDonutChartComponent } from './report-donut-chart.component';
 import { ReportExportButtonsComponent } from './report-export-buttons.component';
 
 type Tab = 'controlled' | 'ai' | 'history';
@@ -19,7 +20,7 @@ type Tab = 'controlled' | 'ai' | 'history';
 @Component({
   selector: 'app-reporting-console',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReportTableComponent, ReportBarChartComponent, ReportExportButtonsComponent],
+  imports: [CommonModule, FormsModule, ReportTableComponent, ReportBarChartComponent, ReportDonutChartComponent, ReportExportButtonsComponent],
   template: `
     <div class="space-y-6">
       <!-- Header + scope banner -->
@@ -70,7 +71,7 @@ type Tab = 'controlled' | 'ai' | 'history';
                     @for (param of def.params; track param.name) {
                       <label class="block">
                         <span class="mb-1 block text-sm font-semibold text-[#567157]">
-                          {{ param.name }} <span class="text-xs text-[#9AA89A]">({{ param.type }})</span>
+                          {{ prettify(param.name) }}
                         </span>
                         @if (param.options && param.options.length > 0) {
                           <select
@@ -79,7 +80,7 @@ type Tab = 'controlled' | 'ai' | 'history';
                             class="w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-4 py-3 text-sm text-[#1B5E20] outline-none transition-colors focus:border-[#2E7D32] focus:bg-white">
                             <option value="">Todos</option>
                             @for (opt of param.options; track opt) {
-                              <option [value]="opt">{{ opt }}</option>
+                              <option [value]="opt">{{ prettify(opt) }}</option>
                             }
                           </select>
                         } @else if (param.type === 'BOOLEAN') {
@@ -179,8 +180,8 @@ type Tab = 'controlled' | 'ai' | 'history';
                 </thead>
                 <tbody class="divide-y divide-[#EEF5EA] bg-white">
                   @for (e of page.content; track e.id) {
-                    <tr>
-                      <td class="px-4 py-3 text-sm font-semibold text-[#1B5E20]">{{ e.definitionKey ?? 'IA' }}</td>
+                    <tr [style.background-color]="viewedId() === e.id ? '#F1F8E9' : null">
+                      <td class="px-4 py-3 text-sm font-semibold text-[#1B5E20]">{{ e.title }}</td>
                       <td class="px-4 py-3 text-sm text-[#4F5D4F]">{{ e.kind }}</td>
                       <td class="px-4 py-3">
                         <span class="rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em]"
@@ -192,10 +193,16 @@ type Tab = 'controlled' | 'ai' | 'history';
                       <td class="px-4 py-3 text-sm text-[#4F5D4F]">{{ e.rowCount ?? '—' }}</td>
                       <td class="px-4 py-3 text-sm text-[#4F5D4F]">{{ formatDate(e.createdAt) }}</td>
                       <td class="px-4 py-3 text-right">
-                        <button type="button" (click)="rerun(e)" [disabled]="loading()"
-                          class="cursor-pointer rounded-full border border-[#C8E6C9] bg-white px-3 py-1.5 text-xs font-semibold text-[#2E7D32] hover:bg-[#F1F8E9] disabled:opacity-50">
-                          Re-ejecutar
-                        </button>
+                        <div class="flex justify-end gap-2">
+                          <button type="button" (click)="viewSnapshot(e)" [disabled]="loading() || e.status !== 'SUCCESS'"
+                            class="cursor-pointer rounded-full bg-[#2E7D32] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#256428] disabled:opacity-50">
+                            Ver
+                          </button>
+                          <button type="button" (click)="rerun(e)" [disabled]="loading()"
+                            class="cursor-pointer rounded-full border border-[#C8E6C9] bg-white px-3 py-1.5 text-xs font-semibold text-[#2E7D32] hover:bg-[#F1F8E9] disabled:opacity-50">
+                            Re-ejecutar
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   } @empty {
@@ -214,11 +221,17 @@ type Tab = 'controlled' | 'ai' | 'history';
               </div>
             </div>
           }
+
+          @if (viewedId()) {
+            <div class="mt-5">
+              <ng-container [ngTemplateOutlet]="resultBlock"></ng-container>
+            </div>
+          }
         </section>
       }
     </div>
 
-    <!-- Shared result block (controlled + ai) -->
+    <!-- Shared result block (controlled + ai + history view) -->
     <ng-template #resultBlock>
       @if (error(); as err) {
         <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{{ err }}</div>
@@ -227,6 +240,9 @@ type Tab = 'controlled' | 'ai' | 'history';
         <div class="space-y-4 rounded-2xl border border-[#E8F2E2] bg-white p-5">
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
+              @if (resultTitle()) {
+                <h3 class="text-lg font-black tracking-tight text-[#1B5E20]">{{ resultTitle() }}</h3>
+              }
               @if (res.transcript) {
                 <p class="mb-2 rounded-xl bg-[#F1F8E9] px-3 py-2 text-xs text-[#2E7D32]">
                   🎤 Transcripción: "{{ res.transcript }}"
@@ -239,7 +255,12 @@ type Tab = 'controlled' | 'ai' | 'history';
             </div>
             <app-report-export-buttons [busy]="exporting()" (exportFormat)="exportResult($event)"></app-report-export-buttons>
           </div>
-          <app-report-bar-chart [columns]="res.columns" [rows]="res.rows"></app-report-bar-chart>
+          <div class="grid gap-4 lg:grid-cols-2">
+            <app-report-donut-chart [columns]="res.columns" [rows]="res.rows"></app-report-donut-chart>
+            <div class="rounded-2xl border border-[#E8F2E2] bg-white p-4">
+              <app-report-bar-chart [columns]="res.columns" [rows]="res.rows"></app-report-bar-chart>
+            </div>
+          </div>
           <app-report-table [columns]="res.columns" [rows]="res.rows"></app-report-table>
         </div>
       }
@@ -257,6 +278,8 @@ export class ReportingConsoleComponent implements OnInit {
   readonly paramValues = signal<Record<string, string>>({});
 
   readonly result = signal<ReportResult | null>(null);
+  readonly resultTitle = signal<string | null>(null);
+  readonly viewedId = signal<string | null>(null);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly exporting = signal(false);
@@ -313,12 +336,16 @@ export class ReportingConsoleComponent implements OnInit {
   async runControlled(): Promise<void> {
     const def = this.selected();
     if (!def) return;
+    this.viewedId.set(null);
+    this.resultTitle.set(def.title);
     await this.execute(() => firstValueFrom(this.api.run(this.scope(), def.key, this.paramValues())));
   }
 
   async runAiText(): Promise<void> {
     const prompt = this.aiPrompt().trim();
     if (!prompt) return;
+    this.viewedId.set(null);
+    this.resultTitle.set('Reporte IA');
     await this.execute(() => firstValueFrom(this.api.aiText(this.scope(), prompt)));
   }
 
@@ -396,7 +423,37 @@ export class ReportingConsoleComponent implements OnInit {
 
   async rerun(e: ReportExecutionSummary): Promise<void> {
     this.tab.set('controlled');
+    this.viewedId.set(null);
+    this.resultTitle.set(e.title);
     await this.execute(() => firstValueFrom(this.api.rerun(this.scope(), e.id)));
+  }
+
+  /** Show the stored snapshot of a past execution (no re-run). */
+  async viewSnapshot(e: ReportExecutionSummary): Promise<void> {
+    this.loading.set(true);
+    this.error.set(null);
+    try {
+      const res = await firstValueFrom(this.api.getExecution(this.scope(), e.id));
+      const d = res.data;
+      this.result.set({
+        executionId: d.summary.id,
+        kind: d.summary.kind,
+        columns: d.columns,
+        rows: d.rows,
+        rowCount: d.summary.rowCount ?? d.rows.length,
+        truncated: d.summary.truncated,
+        explanation: null,
+        transcript: d.transcript,
+        schemaUsed: '',
+        limitKind: 'USER'
+      });
+      this.resultTitle.set(e.title);
+      this.viewedId.set(e.id);
+    } catch (err) {
+      this.error.set(this.errorMessage(err));
+    } finally {
+      this.loading.set(false);
+    }
   }
 
   formatDate(value: string | null | undefined): string {
@@ -404,6 +461,37 @@ export class ReportingConsoleComponent implements OnInit {
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? '—'
       : new Intl.DateTimeFormat('es-BO', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+  }
+
+  private static readonly LABELS: Record<string, string> = {
+    eventType: 'Tipo de evento', outcome: 'Resultado', status: 'Estado', currency: 'Moneda',
+    active: 'Activo', limitType: 'Tipo de límite', entryType: 'Tipo de asiento',
+    REPORT_EXPORTED: 'Reporte exportado', REPORT_EXECUTED: 'Reporte ejecutado', REPORT_RERUN: 'Reporte re-ejecutado',
+    LOGIN: 'Inicio de sesión', LOGIN_SUCCESS: 'Inicio de sesión', LOGOUT: 'Cierre de sesión',
+    TOKEN_REFRESHED: 'Token renovado', PASSWORD_CHANGED: 'Contraseña cambiada',
+    PASSWORD_RESET_REQUESTED: 'Reseteo solicitado', PASSWORD_RESET_COMPLETED: 'Reseteo completado',
+    USER_CREATED: 'Usuario creado', USER_UPDATED: 'Usuario actualizado',
+    USER_ACTIVATED: 'Usuario activado', USER_DEACTIVATED: 'Usuario desactivado', USER_ROLES_ASSIGNED: 'Roles asignados',
+    ROLE_CREATED: 'Rol creado', ROLE_UPDATED: 'Rol actualizado', ROLE_ACTIVATED: 'Rol activado', ROLE_DEACTIVATED: 'Rol desactivado',
+    ACCOUNT_CREATED: 'Cuenta creada', ACCOUNT_UPDATED: 'Cuenta actualizada', ACCOUNT_ACTIVATED: 'Cuenta activada',
+    ACCOUNT_BLOCKED: 'Cuenta bloqueada', ACCOUNT_FROZEN: 'Cuenta congelada', ACCOUNT_CLOSED: 'Cuenta cerrada',
+    ACCOUNT_APPROVAL_REQUESTED: 'Aprobación solicitada',
+    TRANSACTION_CREATED: 'Transacción creada', TRANSACTION_COMPLETED: 'Transacción completada',
+    TRANSACTION_FAILED: 'Transacción fallida', TRANSFER_RECEIVED: 'Transferencia recibida',
+    ACCOUNTING_PERIOD_CREATED: 'Periodo contable creado', ACCOUNTING_PERIOD_CLOSED: 'Periodo contable cerrado',
+    LIMIT_RULE_CREATED: 'Límite creado', LIMIT_RULE_UPDATED: 'Límite actualizado', LIMIT_RULE_DEACTIVATED: 'Límite desactivado',
+    LOAN_REQUESTED: 'Préstamo solicitado', LOAN_APPROVED: 'Préstamo aprobado', LOAN_REJECTED: 'Préstamo rechazado',
+    LOAN_DISBURSED: 'Préstamo desembolsado', LOAN_PAYMENT_RECORDED: 'Pago de préstamo', LOAN_PAID_OFF: 'Préstamo pagado',
+    SUCCESS: 'Éxito', FAILURE: 'Fallo'
+  };
+
+  /** Humanize a camelCase param name or an UPPER_SNAKE option value. */
+  prettify(value: string): string {
+    if (!value) return '';
+    const known = ReportingConsoleComponent.LABELS[value];
+    if (known) return known;
+    const s = value.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/_/g, ' ').toLowerCase().trim();
+    return s.charAt(0).toUpperCase() + s.slice(1);
   }
 
   private errorMessage(e: unknown): string {

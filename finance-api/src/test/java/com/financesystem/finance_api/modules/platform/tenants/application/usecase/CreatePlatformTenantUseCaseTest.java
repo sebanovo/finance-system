@@ -57,6 +57,7 @@ class CreatePlatformTenantUseCaseTest {
         verify(createTenantUseCase).execute(any());
         verify(tenantOwnerAdminProvisioningService).provisionOwnerAdmin(
                 "tenant_financruz",
+                "financruz",
                 "admin@financruz.com",
                 "Password123!",
                 "Carlos",

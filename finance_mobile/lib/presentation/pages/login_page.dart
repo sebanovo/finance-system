@@ -577,6 +577,13 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
         TextButton(
+          onPressed: () => context.push('/activate-account'),
+          child: const Text(
+            'Activar cuenta',
+            style: TextStyle(color: Color(0xFF2E7D32)),
+          ),
+        ),
+        TextButton(
           onPressed: () => context.push('/signup'),
           child: const Text(
             'Crear tenant nuevo',

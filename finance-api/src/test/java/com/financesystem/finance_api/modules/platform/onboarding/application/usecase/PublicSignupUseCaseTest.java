@@ -128,11 +128,12 @@ class PublicSignupUseCaseTest {
         assertTrue(response.loginHint().contains("financruz"));
         verify(tenantOwnerAdminProvisioningService).provisionOwnerAdmin(
                 "tenant_financruz",
+                "financruz",
                 "admin@financruz.com",
                 "Password123!",
                 "Carlos",
                 "Rojas"
         );
-        verify(auditTrailService).recordPlatformEvent(anyString(), anyString(), anyString(), any());
+        verify(auditTrailService).recordPlatformEvent(anyString(), anyString(), anyString(), any(), any(), any());
     }
 }

@@ -392,6 +392,10 @@ public class TransactionProcessorService {
 
     @Transactional
     public TransactionResponse createDeposit(CreateDepositTransactionRequest request) {
+        return createDeposit(request, FxOperationCode.DEPOSIT);
+    }
+
+    public TransactionResponse createDeposit(CreateDepositTransactionRequest request, FxOperationCode feeOperationCode) {
         UUID requestedByUserId = resolveRequestedByUserId();
         String idempotencyKey = normalizeText(request.idempotencyKey());
 
@@ -428,7 +432,7 @@ public class TransactionProcessorService {
         String normalizedCurrency = request.currency().name();
         BigDecimal amount = safeMoney(request.amount());
         FxQuote fxQuote = currencyExchangeService.calculate(
-                FxOperationCode.DEPOSIT,
+                feeOperationCode,
                 amount,
                 request.currency(),
                 targetAccount.currency()
@@ -584,6 +588,10 @@ public class TransactionProcessorService {
 
     @Transactional
     public TransactionResponse createWithdrawal(CreateWithdrawalTransactionRequest request) {
+        return createWithdrawal(request, FxOperationCode.WITHDRAWAL);
+    }
+
+    public TransactionResponse createWithdrawal(CreateWithdrawalTransactionRequest request, FxOperationCode feeOperationCode) {
         UUID requestedByUserId = resolveRequestedByUserId();
         String idempotencyKey = normalizeText(request.idempotencyKey());
 
@@ -617,7 +625,7 @@ public class TransactionProcessorService {
         String normalizedCurrency = request.currency().name();
         BigDecimal amount = safeMoney(request.amount());
         FxQuote fxQuote = currencyExchangeService.calculate(
-                FxOperationCode.WITHDRAWAL,
+                feeOperationCode,
                 amount,
                 request.currency(),
                 sourceAccount.currency()

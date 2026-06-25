@@ -21,6 +21,10 @@ abstract class AuthRepository {
     String newPassword,
   );
 
+  Future<void> activateAccount(String tenantSlug, String token);
+
+  Future<void> resendActivation(String email, String tenantSlug);
+
   Future<void> signup(TenantSignup signupData, String password);
 
   Future<void> forgotPassword(String email, String tenantSlug);

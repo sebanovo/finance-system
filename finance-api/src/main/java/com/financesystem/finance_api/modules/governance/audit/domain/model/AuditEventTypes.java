@@ -47,6 +47,13 @@ public final class AuditEventTypes {
     public static final String LIMIT_RULE_UPDATED = "LIMIT_RULE_UPDATED";
     public static final String LIMIT_RULE_DEACTIVATED = "LIMIT_RULE_DEACTIVATED";
 
+    public static final String LOAN_REQUESTED = "LOAN_REQUESTED";
+    public static final String LOAN_APPROVED = "LOAN_APPROVED";
+    public static final String LOAN_REJECTED = "LOAN_REJECTED";
+    public static final String LOAN_DISBURSED = "LOAN_DISBURSED";
+    public static final String LOAN_PAYMENT_RECORDED = "LOAN_PAYMENT_RECORDED";
+    public static final String LOAN_PAID_OFF = "LOAN_PAID_OFF";
+
     public static final String TRANSACTION_CREATED = "TRANSACTION_CREATED";
     public static final String TRANSACTION_COMPLETED = "TRANSACTION_COMPLETED";
     public static final String TRANSACTION_FAILED = "TRANSACTION_FAILED";

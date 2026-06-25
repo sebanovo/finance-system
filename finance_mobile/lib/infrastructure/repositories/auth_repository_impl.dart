@@ -64,6 +64,16 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<void> activateAccount(String tenantSlug, String token) async {
+    await remoteDataSource.activateAccount(tenantSlug, token);
+  }
+
+  @override
+  Future<void> resendActivation(String email, String tenantSlug) async {
+    await remoteDataSource.resendActivation(email, tenantSlug);
+  }
+
+  @override
   Future<void> signup(TenantSignup signupData, String password) async {
     final request = SignupRequest(
       companyName: signupData.companyName,
