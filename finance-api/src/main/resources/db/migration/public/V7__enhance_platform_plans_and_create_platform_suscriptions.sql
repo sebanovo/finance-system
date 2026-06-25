@@ -14,15 +14,6 @@ ALTER TABLE public.platform_plans
     ADD COLUMN IF NOT EXISTS currency VARCHAR(10) NOT NULL DEFAULT 'USD';
 
 ALTER TABLE public.platform_plans
-    ADD COLUMN IF NOT EXISTS stripe_product_id VARCHAR(120) NULL;
-
-ALTER TABLE public.platform_plans
-    ADD COLUMN IF NOT EXISTS stripe_monthly_price_id VARCHAR(120) NULL;
-
-ALTER TABLE public.platform_plans
-    ADD COLUMN IF NOT EXISTS stripe_yearly_price_id VARCHAR(120) NULL;
-
-ALTER TABLE public.platform_plans
     ADD COLUMN IF NOT EXISTS public_visible BOOLEAN NOT NULL DEFAULT TRUE;
 
 ALTER TABLE public.platform_plans
@@ -34,17 +25,6 @@ CREATE INDEX IF NOT EXISTS idx_platform_plans_public_visible
 CREATE INDEX IF NOT EXISTS idx_platform_plans_sort_order
     ON public.platform_plans(sort_order);
 
-CREATE UNIQUE INDEX IF NOT EXISTS uq_platform_plans_stripe_product_id
-    ON public.platform_plans(stripe_product_id)
-    WHERE stripe_product_id IS NOT NULL;
-
-CREATE UNIQUE INDEX IF NOT EXISTS uq_platform_plans_stripe_monthly_price_id
-    ON public.platform_plans(stripe_monthly_price_id)
-    WHERE stripe_monthly_price_id IS NOT NULL;
-
-CREATE UNIQUE INDEX IF NOT EXISTS uq_platform_plans_stripe_yearly_price_id
-    ON public.platform_plans(stripe_yearly_price_id)
-    WHERE stripe_yearly_price_id IS NOT NULL;
 
 ALTER TABLE public.platform_tenants
     ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(120) NULL;
@@ -52,6 +32,7 @@ ALTER TABLE public.platform_tenants
 CREATE UNIQUE INDEX IF NOT EXISTS uq_platform_tenants_stripe_customer_id
     ON public.platform_tenants(stripe_customer_id)
     WHERE stripe_customer_id IS NOT NULL;
+
 
 CREATE TABLE IF NOT EXISTS public.platform_subscriptions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -80,6 +61,18 @@ CREATE TABLE IF NOT EXISTS public.platform_subscriptions (
 
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT chk_platform_subscriptions_status CHECK (
+        status IN (
+            'TRIAL',
+            'ACTIVE',
+            'PAST_DUE',
+            'SUSPENDED',
+            'INCOMPLETE',
+            'EXPIRED',
+            'CANCELLED'
+        )
+    ),
 
     CONSTRAINT chk_platform_subscriptions_billing_interval CHECK (
         billing_interval IS NULL OR billing_interval IN ('MONTHLY', 'YEARLY')
@@ -120,7 +113,6 @@ CREATE TABLE IF NOT EXISTS public.subscription_checkout_sessions (
     requested_by_email VARCHAR(255) NULL,
 
     billing_interval VARCHAR(20) NOT NULL,
-
     status VARCHAR(30) NOT NULL DEFAULT 'PENDING',
 
     stripe_customer_id VARCHAR(120) NULL,
@@ -129,7 +121,6 @@ CREATE TABLE IF NOT EXISTS public.subscription_checkout_sessions (
     stripe_price_id VARCHAR(120) NULL,
 
     checkout_url TEXT NULL,
-
     success_url TEXT NULL,
     cancel_url TEXT NULL,
 
@@ -167,6 +158,9 @@ CREATE INDEX IF NOT EXISTS idx_subscription_checkout_sessions_plan_id
 CREATE INDEX IF NOT EXISTS idx_subscription_checkout_sessions_status
     ON public.subscription_checkout_sessions(status);
 
+CREATE INDEX IF NOT EXISTS idx_subscription_checkout_sessions_stripe_subscription_id
+    ON public.subscription_checkout_sessions(stripe_subscription_id);
+
 CREATE INDEX IF NOT EXISTS idx_subscription_checkout_sessions_requested_by_user_id
     ON public.subscription_checkout_sessions(requested_by_user_id);
 
@@ -193,14 +187,12 @@ CREATE TABLE IF NOT EXISTS public.subscription_payments (
 
     amount NUMERIC(19, 4) NOT NULL,
     currency VARCHAR(10) NOT NULL,
-
     status VARCHAR(30) NOT NULL,
 
     billing_reason VARCHAR(80) NULL,
 
     paid_at TIMESTAMPTZ NULL,
     failed_at TIMESTAMPTZ NULL,
-
     failure_reason TEXT NULL,
 
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -250,7 +242,6 @@ CREATE TABLE IF NOT EXISTS public.stripe_webhook_events (
     processing_attempts INTEGER NOT NULL DEFAULT 0,
 
     last_error TEXT NULL,
-
     payload JSONB NULL,
 
     received_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

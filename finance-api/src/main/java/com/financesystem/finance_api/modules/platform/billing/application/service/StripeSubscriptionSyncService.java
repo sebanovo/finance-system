@@ -176,7 +176,7 @@ public class StripeSubscriptionSyncService {
                         false,
                         true,
                         stripeSubscription.getId(),
-                        resolvePriceId(stripeSubscription),
+                        null,
                         billingInterval,
                         toInstant(stripeSubscription.getStartDate()),
                         null,

@@ -36,15 +36,6 @@ public record CreatePlatformPlanRequest(
         @Size(max = 10)
         String currency,
 
-        @Size(max = 120)
-        String stripeProductId,
-
-        @Size(max = 120)
-        String stripeMonthlyPriceId,
-
-        @Size(max = 120)
-        String stripeYearlyPriceId,
-
         Boolean publicVisible,
 
         Integer sortOrder

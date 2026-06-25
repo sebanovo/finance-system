@@ -39,8 +39,8 @@ public class StripeCheckoutService {
                             SessionCreateParams.LineItem.builder()
                                     .setPriceData(
                                             SessionCreateParams.LineItem.PriceData.builder()
-                                                    .setCurrency(plan.currency() == null ? "USD" : plan.currency().toUpperCase())
-                                                    .setUnitAmountDecimal(resolveAmount(plan, billingInterval))
+                                                    .setCurrency(normalizeCurrency(plan.currency()))
+                                                    .setUnitAmount(toStripeMinorUnits(resolveAmount(plan, billingInterval)))
                                                     .setRecurring(
                                                             SessionCreateParams.LineItem.PriceData.Recurring.builder()
                                                                     .setInterval(
@@ -107,5 +107,20 @@ public class StripeCheckoutService {
         }
 
         return amount;
+    }
+
+    private long toStripeMinorUnits(BigDecimal amount) {
+        return amount
+                .multiply(BigDecimal.valueOf(100))
+                .setScale(0, java.math.RoundingMode.HALF_UP)
+                .longValueExact();
+    }
+
+    private String normalizeCurrency(String currency) {
+        if (!StringUtils.hasText(currency)) {
+            return "usd";
+        }
+
+        return currency.trim().toLowerCase();
     }
 }

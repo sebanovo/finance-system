@@ -44,15 +44,6 @@ public class PlatformPlanEntity {
     @Column(nullable = false, length = 10)
     private String currency = "USD";
 
-    @Column(length = 120)
-    private String stripeProductId;
-
-    @Column(length = 120)
-    private String stripeMonthlyPriceId;
-
-    @Column(length = 120)
-    private String stripeYearlyPriceId;
-
     @Column(nullable = false)
     private boolean publicVisible = true;
 
@@ -172,30 +163,6 @@ public class PlatformPlanEntity {
 
     public void setCurrency(String currency) {
         this.currency = currency;
-    }
-
-    public String getStripeProductId() {
-        return stripeProductId;
-    }
-
-    public void setStripeProductId(String stripeProductId) {
-        this.stripeProductId = stripeProductId;
-    }
-
-    public String getStripeMonthlyPriceId() {
-        return stripeMonthlyPriceId;
-    }
-
-    public void setStripeMonthlyPriceId(String stripeMonthlyPriceId) {
-        this.stripeMonthlyPriceId = stripeMonthlyPriceId;
-    }
-
-    public String getStripeYearlyPriceId() {
-        return stripeYearlyPriceId;
-    }
-
-    public void setStripeYearlyPriceId(String stripeYearlyPriceId) {
-        this.stripeYearlyPriceId = stripeYearlyPriceId;
     }
 
     public boolean isPublicVisible() {

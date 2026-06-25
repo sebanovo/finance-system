@@ -51,9 +51,6 @@ public class PlatformBootstrapService {
                         null,
                         null,
                         envOrDefault("STRIPE_DEFAULT_CURRENCY", "USD"),
-                        null,
-                        null,
-                        null,
                         false,
                         1
                 ),
@@ -68,9 +65,6 @@ public class PlatformBootstrapService {
                         envDecimalOrDefault("BASIC_MONTHLY_AMOUNT", "9.99"),
                         envDecimalOrDefault("BASIC_YEARLY_AMOUNT", "99.99"),
                         envOrDefault("STRIPE_DEFAULT_CURRENCY", "USD"),
-                        envOrNull("STRIPE_BASIC_PRODUCT_ID"),
-                        envOrNull("STRIPE_BASIC_MONTHLY_PRICE_ID"),
-                        envOrNull("STRIPE_BASIC_YEARLY_PRICE_ID"),
                         true,
                         2
                 ),
@@ -85,9 +79,6 @@ public class PlatformBootstrapService {
                         envDecimalOrDefault("PRO_MONTHLY_AMOUNT", "19.99"),
                         envDecimalOrDefault("PRO_YEARLY_AMOUNT", "199.99"),
                         envOrDefault("STRIPE_DEFAULT_CURRENCY", "USD"),
-                        envOrNull("STRIPE_PRO_PRODUCT_ID"),
-                        envOrNull("STRIPE_PRO_MONTHLY_PRICE_ID"),
-                        envOrNull("STRIPE_PRO_YEARLY_PRICE_ID"),
                         true,
                         3
                 ),
@@ -102,9 +93,6 @@ public class PlatformBootstrapService {
                         null,
                         null,
                         envOrDefault("STRIPE_DEFAULT_CURRENCY", "USD"),
-                        envOrNull("STRIPE_ENTERPRISE_PRODUCT_ID"),
-                        null,
-                        null,
                         true,
                         4
                 )
@@ -124,16 +112,13 @@ public class PlatformBootstrapService {
                         monthly_amount,
                         yearly_amount,
                         currency,
-                        stripe_product_id,
-                        stripe_monthly_price_id,
-                        stripe_yearly_price_id,
                         public_visible,
                         sort_order,
                         active,
                         created_at,
                         updated_at
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, true, NOW(), NOW())
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, true, NOW(), NOW())
                     ON CONFLICT (code) DO UPDATE SET
                         name = EXCLUDED.name,
                         description = EXCLUDED.description,
@@ -144,9 +129,6 @@ public class PlatformBootstrapService {
                         monthly_amount = EXCLUDED.monthly_amount,
                         yearly_amount = EXCLUDED.yearly_amount,
                         currency = EXCLUDED.currency,
-                        stripe_product_id = EXCLUDED.stripe_product_id,
-                        stripe_monthly_price_id = EXCLUDED.stripe_monthly_price_id,
-                        stripe_yearly_price_id = EXCLUDED.stripe_yearly_price_id,
                         public_visible = EXCLUDED.public_visible,
                         sort_order = EXCLUDED.sort_order,
                         active = true,
@@ -162,9 +144,6 @@ public class PlatformBootstrapService {
                     plan.monthlyAmount(),
                     plan.yearlyAmount(),
                     plan.currency(),
-                    plan.stripeProductId(),
-                    plan.stripeMonthlyPriceId(),
-                    plan.stripeYearlyPriceId(),
                     plan.publicVisible(),
                     plan.sortOrder()
             );
@@ -568,9 +547,6 @@ public class PlatformBootstrapService {
             BigDecimal monthlyAmount,
             BigDecimal yearlyAmount,
             String currency,
-            String stripeProductId,
-            String stripeMonthlyPriceId,
-            String stripeYearlyPriceId,
             boolean publicVisible,
             int sortOrder
             ) {

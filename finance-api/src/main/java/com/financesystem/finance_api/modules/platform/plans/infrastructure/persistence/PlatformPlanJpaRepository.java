@@ -12,9 +12,5 @@ public interface PlatformPlanJpaRepository extends JpaRepository<PlatformPlanEnt
 
     Optional<PlatformPlanEntity> findByCode(String code);
 
-    Optional<PlatformPlanEntity> findByStripeMonthlyPriceId(String stripeMonthlyPriceId);
-
-    Optional<PlatformPlanEntity> findByStripeYearlyPriceId(String stripeYearlyPriceId);
-
     List<PlatformPlanEntity> findByActiveTrueAndPublicVisibleTrueOrderBySortOrderAscCodeAsc();
 }

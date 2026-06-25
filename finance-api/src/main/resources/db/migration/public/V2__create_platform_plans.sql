@@ -15,10 +15,6 @@ CREATE TABLE IF NOT EXISTS public.platform_plans (
     yearly_amount NUMERIC(19, 4) NULL,
     currency VARCHAR(10) NOT NULL DEFAULT 'USD',
 
-    stripe_product_id VARCHAR(120) NULL,
-    stripe_monthly_price_id VARCHAR(120) NULL,
-    stripe_yearly_price_id VARCHAR(120) NULL,
-
     public_visible BOOLEAN NOT NULL DEFAULT TRUE,
     sort_order INTEGER NOT NULL DEFAULT 0,
 
@@ -58,15 +54,3 @@ CREATE INDEX IF NOT EXISTS idx_platform_plans_public_visible
 
 CREATE INDEX IF NOT EXISTS idx_platform_plans_sort_order
     ON public.platform_plans(sort_order);
-
-CREATE UNIQUE INDEX IF NOT EXISTS uq_platform_plans_stripe_product_id
-    ON public.platform_plans(stripe_product_id)
-    WHERE stripe_product_id IS NOT NULL;
-
-CREATE UNIQUE INDEX IF NOT EXISTS uq_platform_plans_stripe_monthly_price_id
-    ON public.platform_plans(stripe_monthly_price_id)
-    WHERE stripe_monthly_price_id IS NOT NULL;
-
-CREATE UNIQUE INDEX IF NOT EXISTS uq_platform_plans_stripe_yearly_price_id
-    ON public.platform_plans(stripe_yearly_price_id)
-    WHERE stripe_yearly_price_id IS NOT NULL;

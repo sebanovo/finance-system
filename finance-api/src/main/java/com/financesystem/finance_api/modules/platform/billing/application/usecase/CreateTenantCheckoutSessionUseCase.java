@@ -68,7 +68,6 @@ public class CreateTenantCheckoutSessionUseCase {
                 securityContextFacade.getCurrentEmail()
         );
 
-        String stripePriceId = stripeCheckoutService.resolveStripePriceId(plan, billingInterval);
         Session stripeSession = stripeCheckoutService.createSubscriptionCheckoutSession(
                 tenantWithCustomer,
                 plan,
@@ -87,7 +86,7 @@ public class CreateTenantCheckoutSessionUseCase {
                         tenantWithCustomer.stripeCustomerId(),
                         stripeSession.getId(),
                         null,
-                        stripePriceId,
+                        null,
                         stripeSession.getUrl(),
                         null,
                         null,
