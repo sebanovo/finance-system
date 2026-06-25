@@ -64,6 +64,7 @@ public final class ReportApiDtos {
             UUID id,
             String kind,
             String definitionKey,
+            String title,
             String status,
             String scope,
             String tenantSlug,

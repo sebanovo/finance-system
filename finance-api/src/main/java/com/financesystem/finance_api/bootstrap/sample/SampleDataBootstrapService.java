@@ -16,12 +16,14 @@ import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -1256,6 +1258,201 @@ public class SampleDataBootstrapService {
                 resourceId,
                 details
         );
+    }
+
+    // ---- Rich demo activity: extra users, many transactions and varied audit events ----
+
+    private static final String[] FIRST_NAMES = {
+            "Mateo", "Valentina", "Santiago", "Camila", "Sebastian", "Daniela", "Nicolas", "Lucia",
+            "Gabriel", "Sofia", "Emilia", "Tomas", "Renata", "Joaquin", "Antonella", "Benjamin",
+            "Isabela", "Maximiliano", "Catalina", "Agustin"
+    };
+    private static final String[] LAST_NAMES = {
+            "Gutierrez", "Ramirez", "Flores", "Castro", "Romero", "Vargas", "Suarez", "Mendez",
+            "Cabrera", "Ortiz", "Delgado", "Rios", "Navarro", "Herrera", "Aguilar", "Pena",
+            "Cardenas", "Ledezma", "Antezana", "Choque"
+    };
+    private static final int EXTRA_USERS_PER_TENANT = 6;
+    private static final int BULK_TX_PER_TENANT = 54;
+    private static final int BULK_AUDIT_PER_TENANT = 30;
+
+    private record SeedAccount(UUID userId, UUID accountId, String email) {
+    }
+
+    private int stableHash(String value) {
+        return Math.abs(deterministicUuid(value).hashCode());
+    }
+
+    private String emailDomain(TenantSeed seed) {
+        return seed.slug().replace("-", "") + ".com";
+    }
+
+    private void seedRichActivity(String schemaName, TenantSeed seed, UUID ownerUserId,
+                                  UUID ownerAccountId, UUID savingsAccountId) {
+        List<SeedAccount> accounts = new ArrayList<>();
+        accounts.add(new SeedAccount(ownerUserId, ownerAccountId, seed.ownerEmail()));
+        accounts.add(new SeedAccount(ownerUserId, savingsAccountId, seed.ownerEmail()));
+
+        ensureAccountSequence(schemaName, "CHECKING", "BOB", EXTRA_USERS_PER_TENANT + 2L);
+        for (int i = 0; i < EXTRA_USERS_PER_TENANT; i++) {
+            int h = stableHash(seed.slug() + ":extra-user:" + i);
+            String first = FIRST_NAMES[h % FIRST_NAMES.length];
+            String last = LAST_NAMES[(h / 7) % LAST_NAMES.length];
+            String email = (first + "." + last + (i + 1)).toLowerCase(Locale.ROOT) + "@" + emailDomain(seed);
+            UUID userId = upsertTenantUser(schemaName, email, first, last, "USER");
+
+            long seq = i + 2L; // CHECKING seq 1 is used by the primary regular user
+            String accountNumber = accountNumber(seed.accountPrefix(), "CHECKING", "BOB", seq);
+            BigDecimal balance = BigDecimal.valueOf(300 + (h % 4200)).setScale(2, RoundingMode.HALF_UP);
+            UUID accountId = upsertTenantAccount(schemaName, userId, accountNumber, "CHECKING_ACCOUNT",
+                    "CHECKING", "BOB", balance, false, "Cuenta de " + first);
+            accounts.add(new SeedAccount(userId, accountId, email));
+        }
+
+        seedManyTransactions(schemaName, seed, accounts);
+        seedManyAuditEvents(schemaName, seed, accounts);
+    }
+
+    private void seedManyTransactions(String schemaName, TenantSeed seed, List<SeedAccount> accounts) {
+        // Weighted type mix for a realistic distribution.
+        String[] types = {"DEPOSIT", "WITHDRAWAL", "TRANSFER", "PAYMENT", "DEPOSIT",
+                "WITHDRAWAL", "TRANSFER", "PAYMENT", "FEE", "DEPOSIT", "TRANSFER", "PAYMENT"};
+        for (int idx = 0; idx < BULK_TX_PER_TENANT; idx++) {
+            int h = stableHash(seed.slug() + ":bulk-tx:" + idx);
+            String type = types[h % types.length];
+            String status = (idx % 11 == 0) ? "FAILED" : (idx % 19 == 0) ? "REVERSED" : "COMPLETED";
+            int daysAgo = (h % 150) + 1;
+            int hoursAgo = (h / 11) % 24;
+            BigDecimal amount = BigDecimal.valueOf(20 + (h % 498000) / 100.0).setScale(2, RoundingMode.HALF_UP);
+
+            SeedAccount a = accounts.get(h % accounts.size());
+            SeedAccount b = accounts.get((h / 13 + 1) % accounts.size());
+            if (b.accountId().equals(a.accountId())) {
+                b = accounts.get((h / 13 + 2) % accounts.size());
+            }
+
+            UUID source;
+            UUID target;
+            String channel;
+            switch (type) {
+                case "DEPOSIT" -> { source = null; target = a.accountId(); channel = "CASHBOX"; }
+                case "TRANSFER" -> { source = a.accountId(); target = b.accountId(); channel = "MANUAL"; }
+                case "PAYMENT" -> { source = a.accountId(); target = null; channel = "API"; }
+                case "FEE" -> { source = a.accountId(); target = null; channel = "SYSTEM"; }
+                default -> { source = a.accountId(); target = null; channel = "CASHBOX"; } // WITHDRAWAL
+            }
+            UUID requestedBy = source != null ? a.userId() : a.userId();
+
+            UUID txId = deterministicUuid(schemaName + ":bulk-tx:" + idx);
+            String idemKey = "sample-bulk:" + seed.slug() + ":" + idx;
+            String failureReason = "FAILED".equals(status) ? "Fondos insuficientes" : null;
+
+            try {
+                jdbcTemplate.update(
+                        """
+                        INSERT INTO %s.tenant_transactions (
+                            id, type, status, channel, amount, currency, source_account_id, target_account_id,
+                            external_reference, idempotency_key, description, failure_reason, metadata,
+                            parent_transaction_id, reversed_transaction_id, requested_by_user_id, approved_by_user_id,
+                            processed_at, created_at, updated_at
+                        )
+                        VALUES (
+                            ?, ?, ?, ?, ?, 'BOB', ?, ?,
+                            ?, ?, ?, ?, '{}'::jsonb,
+                            NULL, NULL, ?, ?,
+                            NOW() - make_interval(days => ?, hours => ?),
+                            NOW() - make_interval(days => ?, hours => ?),
+                            NOW() - make_interval(days => ?, hours => ?)
+                        )
+                        ON CONFLICT (requested_by_user_id, idempotency_key) DO NOTHING
+                        """.formatted(schemaName),
+                        txId, type, status, channel, amount, source, target,
+                        "SEED-" + seed.slug().toUpperCase() + "-" + idx, idemKey,
+                        demoTransactionDescription(type), failureReason,
+                        requestedBy, requestedBy,
+                        daysAgo, hoursAgo, daysAgo, hoursAgo, daysAgo, hoursAgo);
+
+                if ("COMPLETED".equals(status)) {
+                    BigDecimal base = BigDecimal.valueOf(amount.doubleValue() + (h % 6000))
+                            .setScale(2, RoundingMode.HALF_UP);
+                    if (source != null) {
+                        insertSeedMovement(schemaName, txId, source, "DEBIT", amount,
+                                base, base.subtract(amount), daysAgo, hoursAgo);
+                    }
+                    if (target != null) {
+                        insertSeedMovement(schemaName, txId, target, "CREDIT", amount,
+                                base, base.add(amount), daysAgo, hoursAgo);
+                    }
+                }
+            } catch (Exception e) {
+                logger.warn("Sample bulk transaction {} for '{}' failed: {}", idx, seed.slug(), e.getMessage());
+            }
+        }
+    }
+
+    private void insertSeedMovement(String schemaName, UUID transactionId, UUID accountId, String movementType,
+                                    BigDecimal amount, BigDecimal balanceBefore, BigDecimal balanceAfter,
+                                    int daysAgo, int hoursAgo) {
+        UUID movementId = deterministicUuid(schemaName + ":bulk-movement:" + transactionId + ":" + accountId + ":" + movementType);
+        jdbcTemplate.update(
+                """
+                INSERT INTO %s.tenant_transaction_movements (
+                    id, transaction_id, account_id, movement_type, amount, currency,
+                    balance_before, balance_after, description, created_at
+                )
+                VALUES (?, ?, ?, ?, ?, 'BOB', ?, ?, ?, NOW() - make_interval(days => ?, hours => ?))
+                ON CONFLICT (id) DO NOTHING
+                """.formatted(schemaName),
+                movementId, transactionId, accountId, movementType, amount,
+                balanceBefore.max(BigDecimal.ZERO), balanceAfter.max(BigDecimal.ZERO),
+                "Movimiento demo", daysAgo, hoursAgo);
+    }
+
+    private String demoTransactionDescription(String type) {
+        return switch (type) {
+            case "DEPOSIT" -> "Depósito en efectivo";
+            case "WITHDRAWAL" -> "Retiro de cajero";
+            case "TRANSFER" -> "Transferencia entre cuentas";
+            case "PAYMENT" -> "Pago de servicio";
+            case "FEE" -> "Comisión de mantenimiento";
+            default -> "Movimiento demo";
+        };
+    }
+
+    private void seedManyAuditEvents(String schemaName, TenantSeed seed, List<SeedAccount> accounts) {
+        String[][] events = {
+                {"LOGIN", "USER", "SECURITY"}, {"LOGIN_SUCCESS", "USER", "SECURITY"},
+                {"LOGOUT", "USER", "SECURITY"}, {"PASSWORD_CHANGED", "USER", "SECURITY"},
+                {"TRANSACTION_CREATED", "TRANSACTION", "TRANSACTIONS"}, {"TRANSACTION_COMPLETED", "TRANSACTION", "TRANSACTIONS"},
+                {"ACCOUNT_CREATED", "ACCOUNT", "ACCOUNTS"}, {"ACCOUNT_BLOCKED", "ACCOUNT", "ACCOUNTS"},
+                {"USER_CREATED", "USER", "USERS"}, {"REPORT_EXECUTED", "REPORT", "REPORTS"},
+                {"REPORT_EXPORTED", "REPORT", "REPORTS"}, {"LIMIT_RULE_CREATED", "LIMIT", "LIMITS"}
+        };
+        for (int idx = 0; idx < BULK_AUDIT_PER_TENANT; idx++) {
+            int h = stableHash(seed.slug() + ":bulk-audit:" + idx);
+            String[] ev = events[h % events.length];
+            SeedAccount actor = accounts.get(h % accounts.size());
+            int daysAgo = (h % 140) + 1;
+            int hoursAgo = (h / 5) % 24;
+            String outcome = (idx % 9 == 0) ? "FAILURE" : "SUCCESS";
+            UUID eventId = deterministicUuid(schemaName + ":bulk-audit:" + idx);
+            try {
+                jdbcTemplate.update(
+                        """
+                        INSERT INTO %s.tenant_audit_events (
+                            id, actor_subject, actor_id, actor_email, tenant_slug, event_type, resource_type,
+                            resource_id, event_details, source, outcome, created_at
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'BOOTSTRAP', ?, NOW() - make_interval(days => ?, hours => ?))
+                        ON CONFLICT (id) DO NOTHING
+                        """.formatted(schemaName),
+                        eventId, actor.userId().toString(), actor.userId(), actor.email(), seed.slug(),
+                        ev[0], ev[1], deterministicUuid(schemaName + ":auditres:" + idx).toString(),
+                        "Evento de auditoría demo", outcome, daysAgo, hoursAgo);
+            } catch (Exception e) {
+                logger.warn("Sample bulk audit {} for '{}' failed: {}", idx, seed.slug(), e.getMessage());
+            }
+        }
     }
 
     private String currentPeriodCode(TenantSeed seed) {

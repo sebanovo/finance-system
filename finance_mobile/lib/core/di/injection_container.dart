@@ -2,6 +2,7 @@ import 'package:finance_mobile/core/network/api_client.dart';
 import 'package:finance_mobile/core/services/biometric_auth_service.dart';
 import 'package:finance_mobile/core/services/notification_service.dart';
 import 'package:finance_mobile/domain/repositories/account_repository.dart';
+import 'package:finance_mobile/domain/repositories/loan_repository.dart';
 import 'package:finance_mobile/domain/repositories/auth_repository.dart';
 import 'package:finance_mobile/domain/repositories/dashboard_repository.dart';
 import 'package:finance_mobile/domain/repositories/limit_repository.dart';
@@ -76,9 +77,11 @@ import 'package:finance_mobile/domain/usecases/login_usecase.dart';
 import 'package:finance_mobile/domain/usecases/logout_usecase.dart';
 import 'package:finance_mobile/domain/usecases/remove_profile_photo_usecase.dart';
 import 'package:finance_mobile/domain/usecases/reset_password_usecase.dart';
+import 'package:finance_mobile/domain/usecases/activate_account_usecase.dart';
 import 'package:finance_mobile/domain/usecases/signup_usecase.dart';
 import 'package:finance_mobile/domain/usecases/update_profile_usecase.dart';
 import 'package:finance_mobile/infrastructure/datasources/account_remote_datasource.dart';
+import 'package:finance_mobile/infrastructure/datasources/loan_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/auth_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/dashboard_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/limit_remote_datasource.dart';
@@ -90,6 +93,7 @@ import 'package:finance_mobile/infrastructure/datasources/transaction_remote_dat
 import 'package:finance_mobile/infrastructure/datasources/user_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/service_payments_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/repositories/account_repository_impl.dart';
+import 'package:finance_mobile/infrastructure/repositories/loan_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/auth_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/dashboard_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/limit_repository_impl.dart';
@@ -101,6 +105,7 @@ import 'package:finance_mobile/infrastructure/repositories/transaction_repositor
 import 'package:finance_mobile/infrastructure/repositories/user_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/service_payments_repository_impl.dart';
 import 'package:finance_mobile/presentation/viewmodels/accounts_viewmodel.dart';
+import 'package:finance_mobile/presentation/viewmodels/loans_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/devices_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/forgot_password_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/home_viewmodel.dart';
@@ -112,6 +117,7 @@ import 'package:finance_mobile/presentation/viewmodels/permissions_viewmodel.dar
 import 'package:finance_mobile/presentation/viewmodels/profile_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/service_payments_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/reset_password_viewmodel.dart';
+import 'package:finance_mobile/presentation/viewmodels/activate_account_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/roles_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/signup_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/transactions_viewmodel.dart';
@@ -133,6 +139,7 @@ Future<void> init() async {
   initLimitsModule();
   initHomeModule();
   initAccountsModule();
+  initLoansModule();
   initTransactionModule();
   initServicePaymentsModule();
   initNotifationsModule();
@@ -188,6 +195,11 @@ void initAuthModule() {
   // Reset Features
   sl.registerLazySingleton(() => ResetPasswordUseCase(sl()));
   sl.registerFactory(() => ResetPasswordViewModel(resetPasswordUseCase: sl()));
+  // Account Activation Features
+  sl.registerLazySingleton(() => ActivateAccountUseCase(sl()));
+  sl.registerFactory(
+    () => ActivateAccountViewModel(activateAccountUseCase: sl()),
+  );
   // SignUp(Tenant) Features
   sl.registerLazySingleton(() => SignupUseCase(sl()));
   sl.registerFactory(() => SignupViewModel(signupUseCase: sl()));
@@ -313,6 +325,22 @@ void initAccountsModule() {
       updateAccountAliasUseCase: sl(),
       getAccountTransactionsUseCase: sl(),
       createAccountUseCase: sl(),
+    ),
+  );
+}
+
+void initLoansModule() {
+  // Loans feature (self-service)
+  sl.registerLazySingleton<LoanRemoteDataSource>(
+    () => LoanRemoteDataSourceImpl(sl()),
+  );
+  sl.registerLazySingleton<LoanRepository>(
+    () => LoanRepositoryImpl(sl()),
+  );
+  sl.registerFactory(
+    () => LoansViewModel(
+      loanRepository: sl(),
+      getAccountsUseCase: sl(),
     ),
   );
 }

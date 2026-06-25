@@ -2,6 +2,8 @@ package com.financesystem.finance_api.modules.reporting.infrastructure.api;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.financesystem.finance_api.modules.reporting.application.ReportLabels;
+import com.financesystem.finance_api.modules.reporting.application.registry.ReportDefinitionRegistry;
 import com.financesystem.finance_api.modules.reporting.application.service.ReportRunService.RunOutcome;
 import com.financesystem.finance_api.modules.reporting.application.service.ReportSnapshotMapper;
 import com.financesystem.finance_api.modules.reporting.domain.ReportColumn;
@@ -21,10 +23,13 @@ public class ReportResponseMapper {
 
     private final ReportSnapshotMapper snapshotMapper;
     private final ObjectMapper objectMapper;
+    private final ReportDefinitionRegistry registry;
 
-    public ReportResponseMapper(ReportSnapshotMapper snapshotMapper, ObjectMapper objectMapper) {
+    public ReportResponseMapper(ReportSnapshotMapper snapshotMapper, ObjectMapper objectMapper,
+                                ReportDefinitionRegistry registry) {
         this.snapshotMapper = snapshotMapper;
         this.objectMapper = objectMapper;
+        this.registry = registry;
     }
 
     public DefinitionResponse toDefinition(ReportDefinition definition) {
@@ -59,6 +64,7 @@ public class ReportResponseMapper {
                 e.getId(),
                 e.getKind().name(),
                 e.getDefinitionKey(),
+                resolveTitle(e.getDefinitionKey()),
                 e.getStatus().name(),
                 e.getActorScope().name(),
                 e.getTenantSlug(),
@@ -96,7 +102,15 @@ public class ReportResponseMapper {
     }
 
     private List<ColumnResponse> toColumns(List<ReportColumn> columns) {
-        return columns.stream().map(c -> new ColumnResponse(c.name(), c.type().name())).toList();
+        return columns.stream()
+                .map(c -> new ColumnResponse(ReportLabels.humanize(c.name()), c.type().name()))
+                .toList();
+    }
+
+    private String resolveTitle(String definitionKey) {
+        String definitionTitle = definitionKey == null ? null
+                : registry.find(definitionKey).map(d -> d.title()).orElse(null);
+        return ReportLabels.reportTitle(definitionTitle, definitionKey);
     }
 
     private List<String> toStringList(JsonNode node) {

@@ -10,6 +10,8 @@ import { TenantProfileResponse } from '../model/tenant-profile-response.model';
 import { UpdateTenantProfileRequest } from '../model/update-tenant-profile-request.model';
 import { ForgotPasswordRequest } from '../model/forgot-password-request.model';
 import { ResetPasswordRequest } from '../model/reset-password-request.model';
+import { ActivateAccountRequest } from '../model/activate-account-request.model';
+import { ResendActivationRequest } from '../model/resend-activation-request.model';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
@@ -104,6 +106,30 @@ export class AuthService {
         token: request.token,
         newPassword: request.newPassword
       },
+      { headers }
+    );
+  }
+
+  activateAccount(request: ActivateAccountRequest): Observable<ApiResponse<Record<string, string>>> {
+    const headers = new HttpHeaders({
+      'X-Tenant-Slug': request.tenantSlug
+    });
+
+    return this.http.post<ApiResponse<Record<string, string>>>(
+      `${this.API_URL}/activate-account`,
+      { token: request.token },
+      { headers }
+    );
+  }
+
+  resendActivation(request: ResendActivationRequest): Observable<ApiResponse<Record<string, string>>> {
+    const headers = new HttpHeaders({
+      'X-Tenant-Slug': request.tenantSlug
+    });
+
+    return this.http.post<ApiResponse<Record<string, string>>>(
+      `${this.API_URL}/resend-activation`,
+      { email: request.email },
       { headers }
     );
   }

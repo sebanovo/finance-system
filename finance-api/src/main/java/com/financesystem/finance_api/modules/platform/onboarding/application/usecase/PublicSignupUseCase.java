@@ -59,6 +59,7 @@ public class PublicSignupUseCase {
 
         tenantOwnerAdminProvisioningService.provisionOwnerAdmin(
                 createdTenant.schemaName(),
+                createdTenant.slug(),
                 request.adminEmail(),
                 request.password(),
                 request.firstName(),
@@ -93,7 +94,8 @@ public class PublicSignupUseCase {
                 currentPlan.code(),
                 currentSubscription.status().name(),
                 currentSubscription.expiresAt(),
-                "Use /api/auth/login with X-Tenant-Slug = " + createdTenant.slug()
+                "Revisa tu correo y activa la cuenta antes de iniciar sesión (X-Tenant-Slug = "
+                        + createdTenant.slug() + ")."
         );
     }
 }

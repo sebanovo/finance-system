@@ -49,6 +49,7 @@ export interface ReportExecutionSummary {
   id: string;
   kind: 'CONTROLLED' | 'AI';
   definitionKey: string | null;
+  title: string;
   status: 'PENDING' | 'SUCCESS' | 'FAILED';
   scope: 'TENANT' | 'PLATFORM';
   tenantSlug: string | null;

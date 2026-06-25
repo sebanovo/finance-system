@@ -29,6 +29,7 @@ public class CreatePlatformTenantUseCase {
 
         tenantOwnerAdminProvisioningService.provisionOwnerAdmin(
                 tenantResponse.schemaName(),
+                tenantResponse.slug(),
                 request.adminEmail(),
                 request.password(),
                 request.firstName(),

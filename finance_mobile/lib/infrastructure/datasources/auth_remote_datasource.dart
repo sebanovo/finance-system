@@ -13,6 +13,8 @@ abstract class AuthRemoteDataSource {
     String token,
     String newPassword,
   );
+  Future<void> activateAccount(String tenantSlug, String token);
+  Future<void> resendActivation(String email, String tenantSlug);
   Future<void> signup(SignupRequest request);
   Future<void> forgotPassword(String email, String tenantSlug);
   Future<void> changePassword(String currentPassword, String newPassword);
@@ -75,6 +77,40 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw Exception(error['message'] ?? 'Error al restablecer');
     } else {
       throw Exception('Error ${response.statusCode}');
+    }
+  }
+
+  @override
+  Future<void> activateAccount(String tenantSlug, String token) async {
+    apiClient.setTenant(tenantSlug);
+    final body = {'token': token};
+    final response = await apiClient.post('/api/auth/activate-account', body);
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = response.data;
+      if (data['success'] != true) {
+        throw Exception(data['message'] ?? 'Error al activar la cuenta');
+      }
+    } else if (response.statusCode == 400 || response.statusCode == 401) {
+      final Map<String, dynamic> error = response.data;
+      throw Exception(error['message'] ?? 'Error al activar la cuenta');
+    } else {
+      throw Exception('Error ${response.statusCode}');
+    }
+  }
+
+  @override
+  Future<void> resendActivation(String email, String tenantSlug) async {
+    apiClient.setTenant(tenantSlug);
+    final response = await apiClient.post('/api/auth/resend-activation', {
+      'email': email,
+    });
+    if (response.statusCode != 200) {
+      final error = response.data as Map<String, dynamic>;
+      throw Exception(error['message'] ?? 'Error al reenviar el correo');
+    }
+    final data = response.data as Map<String, dynamic>;
+    if (data['success'] != true) {
+      throw Exception(data['message'] ?? 'Error desconocido');
     }
   }
 

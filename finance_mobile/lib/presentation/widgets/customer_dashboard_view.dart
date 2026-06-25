@@ -9,6 +9,7 @@ class CustomerDashboardView extends StatelessWidget {
   final String? errorMessage;
   final VoidCallback onOpenAccounts;
   final VoidCallback onOpenTransactions;
+  final VoidCallback? onOpenLoans;
   final VoidCallback? onOpenLimits;
   final VoidCallback onOpenNotifications;
   final VoidCallback onOpenServicePayments;
@@ -20,6 +21,7 @@ class CustomerDashboardView extends StatelessWidget {
     required this.errorMessage,
     required this.onOpenAccounts,
     required this.onOpenTransactions,
+    this.onOpenLoans,
     this.onOpenLimits,
     required this.onOpenNotifications,
     required this.onOpenServicePayments,
@@ -156,6 +158,12 @@ class CustomerDashboardView extends StatelessWidget {
                 label: 'Movimientos',
                 onPressed: onOpenTransactions,
               ),
+              if (onOpenLoans != null)
+                _buildHeroActionButton(
+                  icon: Icons.savings_outlined,
+                  label: 'Mis préstamos',
+                  onPressed: onOpenLoans!,
+                ),
               if (onOpenLimits != null)
                 _buildHeroActionButton(
                   icon: Icons.shield_outlined,
