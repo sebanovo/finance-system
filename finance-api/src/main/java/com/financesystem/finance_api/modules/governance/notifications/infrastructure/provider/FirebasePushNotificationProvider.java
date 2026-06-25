@@ -11,13 +11,13 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
+import java.io.ByteArrayInputStream;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -29,7 +29,7 @@ public class FirebasePushNotificationProvider implements PushNotificationProvide
 
     private final NotificationPushProperties notificationPushProperties;
     private final FirebasePushProperties firebasePushProperties;
-    private final ResourceLoader resourceLoader;
+    private final ObjectMapper objectMapper;
 
     private volatile FirebaseMessaging firebaseMessaging;
     private volatile String firebaseInitializationError;
@@ -37,11 +37,11 @@ public class FirebasePushNotificationProvider implements PushNotificationProvide
     public FirebasePushNotificationProvider(
             NotificationPushProperties notificationPushProperties,
             FirebasePushProperties firebasePushProperties,
-            ResourceLoader resourceLoader
+            ObjectMapper objectMapper
     ) {
         this.notificationPushProperties = notificationPushProperties;
         this.firebasePushProperties = firebasePushProperties;
-        this.resourceLoader = resourceLoader;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -114,11 +114,10 @@ public class FirebasePushNotificationProvider implements PushNotificationProvide
     }
 
     private FirebaseMessaging initializeFirebaseMessaging() throws Exception {
-        String credentialsPath = firebasePushProperties.getCredentialsPath();
         String projectId = firebasePushProperties.getProjectId();
 
         FirebaseOptions.Builder optionsBuilder = FirebaseOptions.builder();
-        try (InputStream inputStream = openCredentialsStream(credentialsPath)) {
+        try (InputStream inputStream = openCredentialsStream()) {
             GoogleCredentials credentials = GoogleCredentials.fromStream(inputStream);
             optionsBuilder.setCredentials(credentials);
         }
@@ -169,15 +168,26 @@ public class FirebasePushNotificationProvider implements PushNotificationProvide
         return data;
     }
 
-    private InputStream openCredentialsStream(String credentialsPath) throws Exception {
-        if (credentialsPath == null || credentialsPath.isBlank()) {
-            throw new IllegalStateException("Firebase credentials path is not configured");
+    private InputStream openCredentialsStream() throws Exception {
+        String privateKey = firebasePushProperties.getPrivateKey();
+        if (privateKey == null || privateKey.isBlank()) {
+            throw new IllegalStateException("Firebase private key is not configured");
         }
-        Resource resource = resourceLoader.getResource(credentialsPath);
-        if (resource.exists()) {
-            return resource.getInputStream();
-        }
-        throw new IllegalStateException("Firebase credentials file not found at " + credentialsPath);
+        Map<String, Object> credentials = new LinkedHashMap<>();
+        credentials.put("type", safeValue(firebasePushProperties.getType()));
+        credentials.put("project_id", safeValue(firebasePushProperties.getProjectId()));
+        credentials.put("private_key_id", safeValue(firebasePushProperties.getPrivateKeyId()));
+        credentials.put("private_key", privateKey.replace("\\n", "\n"));
+        credentials.put("client_email", safeValue(firebasePushProperties.getClientEmail()));
+        credentials.put("client_id", safeValue(firebasePushProperties.getClientId()));
+        credentials.put("auth_uri", safeValue(firebasePushProperties.getAuthUri()));
+        credentials.put("token_uri", safeValue(firebasePushProperties.getTokenUri()));
+        credentials.put("auth_provider_x509_cert_url", safeValue(firebasePushProperties.getAuthProviderX509CertUrl()));
+        credentials.put("client_x509_cert_url", safeValue(firebasePushProperties.getClientX509CertUrl()));
+        credentials.put("universe_domain", safeValue(firebasePushProperties.getUniverseDomain()));
+
+        byte[] json = objectMapper.writeValueAsBytes(credentials);
+        return new ByteArrayInputStream(json);
     }
 
     private boolean isFirebaseProvider() {

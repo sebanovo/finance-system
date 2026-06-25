@@ -6,7 +6,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class PasswordResetNotificationProperties {
 
     private int expirationMinutes = 30;
-    private String resetUrlBase = "http://localhost:4200/reset-password";
+    private String frontendUrlBase = "http://localhost:4200";
+    private String resetUrlPath = "/reset-password";
 
     public int getExpirationMinutes() {
         return expirationMinutes;
@@ -16,11 +17,19 @@ public class PasswordResetNotificationProperties {
         this.expirationMinutes = expirationMinutes;
     }
 
-    public String getResetUrlBase() {
-        return resetUrlBase;
+    public String getFrontendUrlBase() {
+        return frontendUrlBase;
     }
 
-    public void setResetUrlBase(String resetUrlBase) {
-        this.resetUrlBase = resetUrlBase;
+    public void setFrontendUrlBase(String frontendUrlBase) {
+        this.frontendUrlBase = frontendUrlBase;
+    }
+
+    public String getResetUrlPath() {
+        return resetUrlPath;
+    }
+
+    public void setResetUrlPath(String resetUrlPath) {
+        this.resetUrlPath = resetUrlPath;
     }
 }

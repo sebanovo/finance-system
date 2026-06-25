@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../viewmodels/signup_viewmodel.dart';
 
-class SignupForm extends StatelessWidget {
+class SignupForm extends StatefulWidget {
   final SignupViewModel viewModel;
   final GlobalKey<FormState> formKey;
   final TextEditingController companyNameController;
@@ -24,6 +24,13 @@ class SignupForm extends StatelessWidget {
     required this.lastNameController,
     required this.onSubmit,
   });
+
+  @override
+  State<SignupForm> createState() => _SignupFormState();
+}
+
+class _SignupFormState extends State<SignupForm> {
+  bool _obscurePassword = true;
 
   InputDecoration _buildInputDecoration({
     required String label,
@@ -57,12 +64,12 @@ class SignupForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Form(
-      key: formKey,
+      key: widget.formKey,
       child: Column(
         children: [
           TextFormField(
-            controller: companyNameController,
-            validator: viewModel.validateCompanyName,
+            controller: widget.companyNameController,
+            validator: widget.viewModel.validateCompanyName,
             decoration: _buildInputDecoration(
               label: 'Nombre de la empresa',
               hint: 'Ej: Mi Empresa SRL',
@@ -71,8 +78,8 @@ class SignupForm extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           TextFormField(
-            controller: tenantSlugController,
-            validator: viewModel.validateTenantSlug,
+            controller: widget.tenantSlugController,
+            validator: widget.viewModel.validateTenantSlug,
             decoration: _buildInputDecoration(
               label: 'Slug del tenant',
               hint: 'Ej: miempresa2',
@@ -81,9 +88,9 @@ class SignupForm extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           TextFormField(
-            controller: adminEmailController,
+            controller: widget.adminEmailController,
             keyboardType: TextInputType.emailAddress,
-            validator: viewModel.validateEmail,
+            validator: widget.viewModel.validateEmail,
             decoration: _buildInputDecoration(
               label: 'Correo del administrador',
               hint: 'admin@ejemplo.com',
@@ -92,19 +99,28 @@ class SignupForm extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           TextFormField(
-            controller: passwordController,
-            obscureText: true,
-            validator: viewModel.validatePassword,
+            controller: widget.passwordController,
+            obscureText: _obscurePassword,
+            validator: widget.viewModel.validatePassword,
             decoration: _buildInputDecoration(
               label: 'Contraseña',
               hint: 'Mínimo 8 caracteres',
               icon: Icons.lock,
+            ).copyWith(
+              suffixIcon: IconButton(
+                onPressed: () {
+                  setState(() => _obscurePassword = !_obscurePassword);
+                },
+                icon: Icon(
+                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 16),
           TextFormField(
-            controller: firstNameController,
-            validator: viewModel.validateFirstName,
+            controller: widget.firstNameController,
+            validator: widget.viewModel.validateFirstName,
             decoration: _buildInputDecoration(
               label: 'Nombre',
               hint: 'Ej: Juan',
@@ -113,8 +129,8 @@ class SignupForm extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           TextFormField(
-            controller: lastNameController,
-            validator: viewModel.validateLastName,
+            controller: widget.lastNameController,
+            validator: widget.viewModel.validateLastName,
             decoration: _buildInputDecoration(
               label: 'Apellido',
               hint: 'Ej: Pérez',
@@ -123,11 +139,11 @@ class SignupForm extends StatelessWidget {
           ),
           const SizedBox(height: 28),
           _buildSubmitButton(),
-          if (viewModel.errorMessage != null)
+          if (widget.viewModel.errorMessage != null)
             Padding(
               padding: const EdgeInsets.only(top: 12),
               child: Text(
-                viewModel.errorMessage!,
+                widget.viewModel.errorMessage!,
                 style: TextStyle(color: Colors.red.shade700, fontSize: 14),
                 textAlign: TextAlign.center,
               ),
@@ -141,7 +157,7 @@ class SignupForm extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: viewModel.isLoading ? null : onSubmit,
+        onPressed: widget.viewModel.isLoading ? null : widget.onSubmit,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
@@ -162,7 +178,7 @@ class SignupForm extends StatelessWidget {
           child: Container(
             height: 40,
             alignment: Alignment.center,
-            child: viewModel.isLoading
+            child: widget.viewModel.isLoading
                 ? const CircularProgressIndicator(color: Colors.white)
                 : const Text(
                     'Registrar empresa',

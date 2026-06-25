@@ -33,6 +33,7 @@ import { CreateServiceEnrollmentRequest, ServiceProviderResponse } from '../../.
               <label class="text-sm font-semibold text-[#567157]">Proveedor</label>
               <select
                 formControlName="providerId"
+                (change)="onProviderChange()"
                 class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition-colors focus:border-[#2E7D32] focus:bg-white">
                 <option value="" disabled>Selecciona proveedor</option>
                 <option *ngFor="let provider of providers" [value]="provider.id">
@@ -46,13 +47,27 @@ import { CreateServiceEnrollmentRequest, ServiceProviderResponse } from '../../.
 
             <div class="space-y-2">
               <label class="text-sm font-semibold text-[#567157]">Código de servicio</label>
-              <input
-                type="text"
+
+              <select
+                *ngIf="serviceCustomerCodeOptions.length > 0"
                 formControlName="serviceCustomerCode"
+                class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition-colors focus:border-[#2E7D32] focus:bg-white">
+                <option value="" disabled>Selecciona un código</option>
+                <option *ngFor="let code of serviceCustomerCodeOptions" [value]="code">
+                  {{ code }}
+                </option>
+                <option value="__custom__">Otro código...</option>
+              </select>
+
+              <input
+                *ngIf="serviceCustomerCodeOptions.length === 0 || useCustomCode"
+                type="text"
+                formControlName="customServiceCustomerCode"
                 placeholder="Ej. 100001"
                 class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition-colors placeholder:text-[#9AA99A] focus:border-[#2E7D32] focus:bg-white" />
-              <p *ngIf="form.get('serviceCustomerCode')?.invalid && form.get('serviceCustomerCode')?.touched" class="text-xs text-red-600">
-                Ingresa el código del servicio.
+
+              <p *ngIf="serviceCodeTouched" class="text-xs text-red-600">
+                Selecciona o ingresa el código del servicio.
               </p>
             </div>
 
@@ -95,6 +110,7 @@ import { CreateServiceEnrollmentRequest, ServiceProviderResponse } from '../../.
 export class MyServiceEnrollmentFormComponent implements OnChanges {
   @Input() isOpen = false;
   @Input() providers: ServiceProviderResponse[] = [];
+  @Input() serviceCustomerCodesByProvider: Record<string, string[]> = {};
   @Input() isSubmitting = false;
 
   @Output() closed = new EventEmitter<void>();
@@ -105,6 +121,7 @@ export class MyServiceEnrollmentFormComponent implements OnChanges {
   form = this.fb.group({
     providerId: ['', Validators.required],
     serviceCustomerCode: ['', Validators.required],
+    customServiceCustomerCode: [''],
     alias: ['']
   });
 
@@ -113,9 +130,32 @@ export class MyServiceEnrollmentFormComponent implements OnChanges {
       this.form.reset({
         providerId: '',
         serviceCustomerCode: '',
+        customServiceCustomerCode: '',
         alias: ''
       });
+      this.onProviderChange();
     }
+  }
+
+  onProviderChange(): void {
+    const hasOptions = this.serviceCustomerCodeOptions.length > 0;
+    const serviceCodeControl = this.form.get('serviceCustomerCode');
+    const customCodeControl = this.form.get('customServiceCustomerCode');
+
+    if (hasOptions) {
+      serviceCodeControl?.setValidators([Validators.required]);
+      customCodeControl?.clearValidators();
+      serviceCodeControl?.setValue('');
+      customCodeControl?.setValue('');
+    } else {
+      serviceCodeControl?.clearValidators();
+      customCodeControl?.setValidators([Validators.required]);
+      serviceCodeControl?.setValue('');
+      customCodeControl?.setValue('');
+    }
+
+    serviceCodeControl?.updateValueAndValidity({ emitEvent: false });
+    customCodeControl?.updateValueAndValidity({ emitEvent: false });
   }
 
   close(): void {
@@ -131,12 +171,50 @@ export class MyServiceEnrollmentFormComponent implements OnChanges {
     }
 
     const raw = this.form.getRawValue();
+    const selectedCode = raw.serviceCustomerCode ?? '';
+    const customCode = raw.customServiceCustomerCode?.trim() || '';
+    const serviceCustomerCode =
+      this.serviceCustomerCodeOptions.length === 0 || selectedCode === '__custom__'
+        ? customCode
+        : selectedCode.trim();
+
+    if (!serviceCustomerCode) {
+      this.form.get('serviceCustomerCode')?.setErrors({ required: true });
+      this.form.get('customServiceCustomerCode')?.setErrors({ required: true });
+      this.form.markAllAsTouched();
+      return;
+    }
 
     this.saved.emit({
       providerId: raw.providerId ?? '',
-      serviceCustomerCode: (raw.serviceCustomerCode ?? '').trim(),
+      serviceCustomerCode,
       alias: raw.alias?.trim() || null
     });
+  }
+
+  get selectedProviderId(): string {
+    return this.form.get('providerId')?.value ?? '';
+  }
+
+  get serviceCustomerCodeOptions(): string[] {
+    const providerId = this.selectedProviderId;
+    return providerId ? this.serviceCustomerCodesByProvider[providerId] ?? [] : [];
+  }
+
+  get useCustomCode(): boolean {
+    return this.form.get('serviceCustomerCode')?.value === '__custom__';
+  }
+
+  get serviceCodeTouched(): boolean {
+    const serviceCode = this.form.get('serviceCustomerCode');
+    const customCode = this.form.get('customServiceCustomerCode');
+    return !!(serviceCode?.touched || customCode?.touched) && !this.currentServiceCustomerCode;
+  }
+
+  get currentServiceCustomerCode(): string {
+    const selectedCode = this.form.get('serviceCustomerCode')?.value ?? '';
+    const customCode = this.form.get('customServiceCustomerCode')?.value?.trim() || '';
+    return selectedCode === '__custom__' ? customCode : selectedCode.trim();
   }
 
   categoryLabel(category: string): string {

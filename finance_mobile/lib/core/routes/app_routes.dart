@@ -25,7 +25,7 @@ import 'package:finance_mobile/presentation/pages/permissions_pages.dart';
 import 'package:finance_mobile/presentation/pages/roles_pages.dart';
 import 'package:finance_mobile/presentation/pages/login_page.dart';
 import 'package:finance_mobile/presentation/pages/reset_password_page.dart';
-import 'package:finance_mobile/presentation/pages/activate_account_page.dart';
+import 'package:finance_mobile/presentation/pages/verify_email_page.dart';
 import 'package:finance_mobile/presentation/pages/my_loans_page.dart';
 import 'package:finance_mobile/presentation/pages/signup_page.dart';
 import 'package:finance_mobile/presentation/pages/forgot_password_page.dart';
@@ -84,15 +84,45 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/reset-password',
       builder: (context, state) {
-        final tenant = state.extra as String?;
-        return ResetPasswordPage(initialTenant: tenant);
+        final query = state.uri.queryParameters;
+        final extraTenant = state.extra as String?;
+        return ResetPasswordPage(
+          initialTenant: query['tenant'] ?? extraTenant,
+          token: query['token'],
+        );
       },
     ),
     GoRoute(
       path: '/activate-account',
       builder: (context, state) {
-        final tenant = state.extra as String?;
-        return ActivateAccountPage(initialTenant: tenant);
+        final query = state.uri.queryParameters;
+        final extraTenant = state.extra as String?;
+        return ActivateAccountPage(
+          initialTenant: query['tenant'] ?? extraTenant,
+          token: query['token'],
+        );
+      },
+    ),
+    GoRoute(
+      path: '/verify-email',
+      builder: (context, state) {
+        final query = state.uri.queryParameters;
+        final extraTenant = state.extra as String?;
+        return ActivateAccountPage(
+          initialTenant: query['tenant'] ?? extraTenant,
+          token: query['token'],
+        );
+      },
+    ),
+    GoRoute(
+      path: '/activate',
+      builder: (context, state) {
+        final query = state.uri.queryParameters;
+        final extraTenant = state.extra as String?;
+        return ActivateAccountPage(
+          initialTenant: query['tenant'] ?? extraTenant,
+          token: query['token'],
+        );
       },
     ),
     GoRoute(path: '/accounts', builder: (context, _) => const AccountsPage()),
@@ -170,6 +200,8 @@ const Set<String> _publicRoutes = {
   '/forgot-password',
   '/reset-password',
   '/activate-account',
+  '/verify-email',
+  '/activate',
 };
 
 const Set<String> _clientOnlyRoutes = {

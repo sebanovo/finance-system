@@ -1,13 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
-import { SummaryCardsComponent, SummaryUseCase } from '../../features/dashboard';
+import {
+  SummaryCardsComponent,
+  SummaryUseCase,
+  TenantDashboardChartsComponent,
+} from '../../features/dashboard';
 import { TenantDashboardActivityItem } from '../../entities/dashboard';
 
 @Component({
   selector: 'app-summary-page',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, SummaryCardsComponent],
+  imports: [CommonModule, LucideAngularModule, SummaryCardsComponent, TenantDashboardChartsComponent],
   template: `
     <div class="space-y-6">
       @if (summaryUseCase.status() === 'loading') {
@@ -71,6 +75,10 @@ import { TenantDashboardActivityItem } from '../../entities/dashboard';
 
           <div class="my-8">
             <app-summary-cards [data]="dashboard"></app-summary-cards>
+          </div>
+
+          <div class="my-8">
+            <app-tenant-dashboard-charts [data]="dashboard"></app-tenant-dashboard-charts>
           </div>
 
           <section class="grid gap-4 xl:grid-cols-[1.35fr_0.95fr]">

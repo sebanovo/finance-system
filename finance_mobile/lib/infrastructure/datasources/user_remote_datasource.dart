@@ -8,8 +8,9 @@ abstract class UserRemoteDataSource {
   Future<List<UserModel>> getUsers();
   Future<List<RoleModel>> getUserRoles(String userId);
   Future<List<RoleModel>> getAvailableRoles();
-  Future<void> assignRole(String userId, String roleId);
+  Future<void> assignRole(String userId, List<String> roleIds);
   Future<void> createUser(CreateUserRequest request);
+  Future<void> toggleUserStatus(String userId, bool currentlyActive);
   Future<UserInfoModel> getUserInfo();
 }
 
@@ -69,13 +70,23 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
   }
 
   @override
-  Future<void> assignRole(String userId, String roleId) async {
+  Future<void> assignRole(String userId, List<String> roleIds) async {
     final response = await apiClient.put('/api/access/users/$userId/roles', {
-      'roleIds': [roleId],
+      'roleIds': roleIds,
     });
     if (response.statusCode != 200) {
       final error = response.data as Map<String, dynamic>;
       throw Exception(error['message'] ?? 'Error al asignar rol');
+    }
+  }
+
+  @override
+  Future<void> toggleUserStatus(String userId, bool currentlyActive) async {
+    final endpoint = currentlyActive ? '/api/users/$userId/deactivate' : '/api/users/$userId/activate';
+    final response = await apiClient.patch(endpoint, {});
+    if (response.statusCode != 200) {
+      final error = response.data as Map<String, dynamic>;
+      throw Exception(error['message'] ?? 'Error al cambiar el estado del usuario');
     }
   }
 

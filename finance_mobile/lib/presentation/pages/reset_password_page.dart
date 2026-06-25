@@ -19,6 +19,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   final tokenController = TextEditingController();
   final newPasswordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
+  bool _obscureNewPassword = true;
+  bool _obscureConfirmPassword = true;
 
   late ResetPasswordViewModel _viewModel;
 
@@ -153,7 +155,19 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                               controller: newPasswordController,
                               label: 'Nueva contraseña',
                               icon: Icons.lock,
-                              obscureText: true,
+                              obscureText: _obscureNewPassword,
+                              suffixIcon: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _obscureNewPassword = !_obscureNewPassword;
+                                  });
+                                },
+                                icon: Icon(
+                                  _obscureNewPassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                ),
+                              ),
                               validator: _validatePassword,
                             ),
                             const SizedBox(height: 16),
@@ -161,7 +175,20 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                               controller: confirmPasswordController,
                               label: 'Confirmar contraseña',
                               icon: Icons.lock_outline,
-                              obscureText: true,
+                              obscureText: _obscureConfirmPassword,
+                              suffixIcon: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _obscureConfirmPassword =
+                                        !_obscureConfirmPassword;
+                                  });
+                                },
+                                icon: Icon(
+                                  _obscureConfirmPassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                ),
+                              ),
                               validator: _validateConfirmPassword,
                             ),
                             const SizedBox(height: 28),
@@ -250,6 +277,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     String? hint,
     required IconData icon,
     bool obscureText = false,
+    Widget? suffixIcon,
     required String? Function(String?) validator,
   }) {
     return TextFormField(
@@ -260,6 +288,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         labelText: label,
         hintText: hint,
         prefixIcon: Icon(icon, color: const Color(0xFF4CAF50)),
+        suffixIcon: suffixIcon,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
           borderSide: BorderSide.none,

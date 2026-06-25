@@ -1,4 +1,3 @@
-import 'package:finance_mobile/presentation/viewmodels/notifications_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:finance_mobile/core/network/api_client.dart';
@@ -11,10 +10,8 @@ class LoginViewModel extends ChangeNotifier {
   final FaceLoginUseCase faceLoginUseCase;
   final ApiClient apiClient;
 
-  LoginViewModel({
-    required this.loginUseCase,
-    required this.faceLoginUseCase,
-  }) : apiClient = di.sl<ApiClient>();
+  LoginViewModel({required this.loginUseCase, required this.faceLoginUseCase})
+    : apiClient = di.sl<ApiClient>();
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;

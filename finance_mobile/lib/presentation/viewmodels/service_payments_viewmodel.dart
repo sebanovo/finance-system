@@ -4,12 +4,14 @@ import '../../domain/entities/account.dart';
 import '../../domain/entities/service_bills_query_result.dart';
 import '../../domain/entities/service_enrollment.dart';
 import '../../domain/entities/service_payment.dart';
+import '../../domain/entities/service_provider_catalog.dart';
 import '../../domain/entities/service_provider.dart';
 import '../../domain/usecases/create_service_enrollment_usecase.dart';
 import '../../domain/usecases/create_service_payment_usecase.dart';
 import '../../domain/usecases/delete_service_enrollment_usecase.dart';
 import '../../domain/usecases/get_accounts_usecase.dart';
 import '../../domain/usecases/get_service_enrollments_usecase.dart';
+import '../../domain/usecases/get_service_provider_catalog_usecase.dart';
 import '../../domain/usecases/get_service_payment_usecase.dart';
 import '../../domain/usecases/get_service_payments_usecase.dart';
 import '../../domain/usecases/get_service_providers_usecase.dart';
@@ -17,6 +19,7 @@ import '../../domain/usecases/query_service_bills_usecase.dart';
 
 class ServicePaymentsViewModel extends ChangeNotifier {
   final GetServiceProvidersUseCase getServiceProvidersUseCase;
+  final GetServiceProviderCatalogUseCase getServiceProviderCatalogUseCase;
   final GetServiceEnrollmentsUseCase getServiceEnrollmentsUseCase;
   final CreateServiceEnrollmentUseCase createServiceEnrollmentUseCase;
   final DeleteServiceEnrollmentUseCase deleteServiceEnrollmentUseCase;
@@ -30,6 +33,7 @@ class ServicePaymentsViewModel extends ChangeNotifier {
   List<ServiceEnrollment> _enrollments = [];
   List<ServicePayment> _payments = [];
   List<Account> _accounts = [];
+  List<ServiceProviderCatalog> _providerCatalog = [];
   ServiceBillsQueryResult? _currentBillsQuery;
   ServicePayment? _lastCreatedPayment;
   bool _loadingProviders = false;
@@ -47,6 +51,7 @@ class ServicePaymentsViewModel extends ChangeNotifier {
 
   ServicePaymentsViewModel({
     required this.getServiceProvidersUseCase,
+    required this.getServiceProviderCatalogUseCase,
     required this.getServiceEnrollmentsUseCase,
     required this.createServiceEnrollmentUseCase,
     required this.deleteServiceEnrollmentUseCase,
@@ -61,6 +66,7 @@ class ServicePaymentsViewModel extends ChangeNotifier {
   List<ServiceEnrollment> get enrollments => _enrollments;
   List<ServicePayment> get payments => _payments;
   List<Account> get accounts => _accounts;
+  List<ServiceProviderCatalog> get providerCatalog => _providerCatalog;
   ServiceBillsQueryResult? get currentBillsQuery => _currentBillsQuery;
   bool get loadingProviders => _loadingProviders;
   bool get loadingEnrollments => _loadingEnrollments;
@@ -109,6 +115,7 @@ class ServicePaymentsViewModel extends ChangeNotifier {
   Future<void> loadData() async {
     await Future.wait([
       loadProviders(),
+      loadProviderCatalog(),
       loadEnrollments(),
       loadAccounts(),
       loadPayments(),
@@ -125,6 +132,16 @@ class ServicePaymentsViewModel extends ChangeNotifier {
       _errorMessage = e.toString();
     } finally {
       _loadingProviders = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadProviderCatalog() async {
+    try {
+      _providerCatalog = await getServiceProviderCatalogUseCase();
+    } catch (e) {
+      _providerCatalog = [];
+    } finally {
       notifyListeners();
     }
   }

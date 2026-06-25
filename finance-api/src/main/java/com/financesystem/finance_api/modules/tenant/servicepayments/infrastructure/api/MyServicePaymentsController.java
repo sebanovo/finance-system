@@ -3,8 +3,10 @@ package com.financesystem.finance_api.modules.tenant.servicepayments.infrastruct
 import com.financesystem.finance_api.common.response.ApiResponse;
 import com.financesystem.finance_api.modules.platform.servicepayments.application.dto.PlatformServiceProviderFilter;
 import com.financesystem.finance_api.modules.platform.servicepayments.application.dto.ServiceProviderResponse;
+import com.financesystem.finance_api.modules.platform.servicepayments.application.dto.ServiceProviderCatalogResponse;
 import com.financesystem.finance_api.modules.tenant.servicepayments.application.dto.*;
 import com.financesystem.finance_api.modules.tenant.servicepayments.application.usecase.*;
+import com.financesystem.finance_api.modules.platform.servicepayments.application.usecase.ListServiceProviderCatalogUseCase;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
@@ -29,6 +31,7 @@ import java.util.UUID;
 public class MyServicePaymentsController {
 
     private final ListMyServiceProvidersUseCase listMyServiceProvidersUseCase;
+    private final ListServiceProviderCatalogUseCase listServiceProviderCatalogUseCase;
     private final CreateMyServiceEnrollmentUseCase createMyServiceEnrollmentUseCase;
     private final ListMyServiceEnrollmentsUseCase listMyServiceEnrollmentsUseCase;
     private final DeleteMyServiceEnrollmentUseCase deleteMyServiceEnrollmentUseCase;
@@ -39,6 +42,7 @@ public class MyServicePaymentsController {
 
     public MyServicePaymentsController(
             ListMyServiceProvidersUseCase listMyServiceProvidersUseCase,
+            ListServiceProviderCatalogUseCase listServiceProviderCatalogUseCase,
             CreateMyServiceEnrollmentUseCase createMyServiceEnrollmentUseCase,
             ListMyServiceEnrollmentsUseCase listMyServiceEnrollmentsUseCase,
             DeleteMyServiceEnrollmentUseCase deleteMyServiceEnrollmentUseCase,
@@ -48,6 +52,7 @@ public class MyServicePaymentsController {
             GetMyServicePaymentUseCase getMyServicePaymentUseCase
     ) {
         this.listMyServiceProvidersUseCase = listMyServiceProvidersUseCase;
+        this.listServiceProviderCatalogUseCase = listServiceProviderCatalogUseCase;
         this.createMyServiceEnrollmentUseCase = createMyServiceEnrollmentUseCase;
         this.listMyServiceEnrollmentsUseCase = listMyServiceEnrollmentsUseCase;
         this.deleteMyServiceEnrollmentUseCase = deleteMyServiceEnrollmentUseCase;
@@ -66,6 +71,15 @@ public class MyServicePaymentsController {
         return ApiResponse.success(
                 "Service providers retrieved successfully",
                 listMyServiceProvidersUseCase.execute(filter, pageable)
+        );
+    }
+
+    @GetMapping("/service-providers/catalog")
+    @PreAuthorize("hasAuthority('me.service-providers.read')")
+    public ApiResponse<java.util.List<ServiceProviderCatalogResponse>> listServiceProviderCatalog() {
+        return ApiResponse.success(
+                "Service provider catalog retrieved successfully",
+                listServiceProviderCatalogUseCase.execute()
         );
     }
 

@@ -1,9 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
+import { AccountListUseCase } from '../../features/account-management';
+import { UserListUseCase } from '../../features/user-management';
 import { LoansService } from '../../entities/loans/api/loans.service';
 import { LoanInstallmentResponse, LoanResponse } from '../../entities/loans/model/loans.model';
+import { AccountOwnerResponse } from '../../entities/accounts/model/accounts.model';
 
 @Component({
   standalone: true,
@@ -28,12 +31,28 @@ import { LoanInstallmentResponse, LoanResponse } from '../../entities/loans/mode
       <form *ngIf="showForm()" [formGroup]="form" (ngSubmit)="create()"
         class="mb-6 grid grid-cols-1 gap-4 rounded-2xl border border-[#DDEED8] bg-white p-5 md:grid-cols-2">
         <div>
-          <label class="mb-1 block text-xs font-semibold text-[#567157]">ID de usuario (prestatario)</label>
-          <input formControlName="userId" class="w-full rounded-xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm" placeholder="UUID del usuario">
+          <label class="mb-1 block text-xs font-semibold text-[#567157]">Usuario prestatario</label>
+          <select
+            formControlName="userId"
+            (change)="onSelectedUserChange($any($event.target).value)"
+            class="w-full rounded-xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm">
+            <option value="">Selecciona un usuario</option>
+            <option *ngFor="let user of users()" [value]="user.id">
+              {{ user.firstName }} {{ user.lastName }} · {{ user.email }}
+            </option>
+          </select>
         </div>
         <div>
-          <label class="mb-1 block text-xs font-semibold text-[#567157]">ID de cuenta de desembolso</label>
-          <input formControlName="accountId" class="w-full rounded-xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm" placeholder="UUID de la cuenta">
+          <label class="mb-1 block text-xs font-semibold text-[#567157]">Cuenta de desembolso</label>
+          <select
+            formControlName="accountId"
+            [disabled]="!selectedUserId()"
+            class="w-full rounded-xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60">
+            <option value="">Selecciona una cuenta</option>
+            <option *ngFor="let account of filteredAccounts()" [value]="account.id">
+              {{ account.accountNumber }} · {{ account.displayName }} · {{ account.currency }}
+            </option>
+          </select>
         </div>
         <div>
           <label class="mb-1 block text-xs font-semibold text-[#567157]">Monto</label>
@@ -113,6 +132,8 @@ import { LoanInstallmentResponse, LoanResponse } from '../../entities/loans/mode
 export class LoansPageComponent implements OnInit {
   private readonly loansService = inject(LoansService);
   private readonly fb = inject(FormBuilder);
+  private readonly userListUseCase = inject(UserListUseCase);
+  private readonly accountListUseCase = inject(AccountListUseCase);
 
   readonly loans = signal<LoanResponse[]>([]);
   readonly schedule = signal<LoanInstallmentResponse[]>([]);
@@ -121,6 +142,17 @@ export class LoansPageComponent implements OnInit {
   readonly busy = signal(false);
   readonly message = signal<string | null>(null);
   readonly error = signal<string | null>(null);
+  readonly selectedUserId = signal('');
+  readonly users = computed(() => this.userListUseCase.data());
+  readonly accounts = computed(() => this.accountListUseCase.data());
+  readonly filteredAccounts = computed(() => {
+    const userId = this.selectedUserId();
+    if (!userId) {
+      return [] as AccountOwnerResponse[];
+    }
+
+    return this.accounts().filter((account) => account.userId === userId);
+  });
 
   readonly form = this.fb.group({
     userId: ['', Validators.required],
@@ -133,7 +165,11 @@ export class LoansPageComponent implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
-    await this.load();
+    await Promise.all([
+      this.userListUseCase.loadUsers(0, 200),
+      this.accountListUseCase.loadAccounts(0, 200),
+      this.load()
+    ]);
   }
 
   private async load(): Promise<void> {
@@ -162,10 +198,16 @@ export class LoansPageComponent implements OnInit {
       }));
       this.flash('Préstamo creado (REQUESTED).');
       this.showForm.set(false);
+      this.selectedUserId.set('');
       this.form.reset({ userId: '', accountId: '', principal: null, annualInterestRate: 12, termMonths: 6, interestMethod: 'FLAT', purpose: '' });
       await this.load();
     } catch (e: any) { this.error.set(e?.error?.message ?? 'No se pudo crear.'); }
     finally { this.busy.set(false); }
+  }
+
+  onSelectedUserChange(userId: string): void {
+    this.selectedUserId.set(userId);
+    this.form.patchValue({ accountId: '' });
   }
 
   async approve(loan: LoanResponse): Promise<void> { await this.run(() => firstValueFrom(this.loansService.approveLoan(loan.id)), 'Aprobado.'); }

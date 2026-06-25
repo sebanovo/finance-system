@@ -128,6 +128,31 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
     return null;
   }
 
+  List<String> _serviceCustomerCodeOptionsForProvider(String? providerId) {
+    if (providerId == null || providerId.isEmpty) {
+      return const [];
+    }
+
+    final catalogProvider = _viewModel.providerCatalog
+        .where((entry) => entry.provider.id == providerId)
+        .toList();
+    final codes = catalogProvider.isNotEmpty
+        ? catalogProvider
+            .expand((entry) => entry.serviceCustomerCodes)
+            .where((code) => code.isNotEmpty)
+            .toSet()
+            .toList()
+        : _viewModel.enrollments
+            .where((enrollment) => enrollment.provider.id == providerId)
+            .map((enrollment) => enrollment.serviceCustomerCode.trim())
+            .where((code) => code.isNotEmpty)
+            .toSet()
+            .toList();
+    codes.sort();
+
+    return codes;
+  }
+
   String _formatDate(DateTime? date) {
     if (date == null) {
       return 'Sin fecha';
@@ -145,111 +170,173 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
       return;
     }
 
-    final codeController = TextEditingController(text: _serviceCodeController.text);
     final aliasController = TextEditingController();
-
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: 20,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Afiliar servicio',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF2E7D32),
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                provider.name,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Código cliente: ${provider.serviceCustomerCodeLabel ?? 'Código'}',
-                style: TextStyle(color: Colors.grey.shade700),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: codeController,
-                decoration: InputDecoration(
-                  labelText: provider.serviceCustomerCodeLabel ?? 'Código de servicio',
-                  border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.confirmation_number_outlined),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: aliasController,
-                decoration: const InputDecoration(
-                  labelText: 'Alias opcional',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.label_outline),
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _viewModel.creatingEnrollment
-                      ? null
-                      : () async {
-                          final navigator = Navigator.of(context);
-                          final code = codeController.text.trim();
-                          if (code.isEmpty) {
-                            _showSnackBar('Ingresa el código del servicio');
-                            return;
-                          }
-                          await _viewModel.createEnrollment(
-                            providerId: provider.id,
-                            serviceCustomerCode: code,
-                            alias: aliasController.text.trim().isEmpty
-                                ? null
-                                : aliasController.text.trim(),
-                          );
-                          if (mounted && _viewModel.errorMessage == null) {
-                            _serviceCodeController.text = code;
-                            navigator.pop();
-                          }
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2E7D32),
-                    foregroundColor: Colors.white,
-                  ),
-                  icon: _viewModel.creatingEnrollment
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.check_circle_outline),
-                  label: Text(
-                    _viewModel.creatingEnrollment ? 'Afiliando...' : 'Afiliar',
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+    final codeOptions = _serviceCustomerCodeOptionsForProvider(provider.id);
+    final initialCode = _serviceCodeController.text.trim();
+    String codeMode = codeOptions.contains(initialCode) ? initialCode : '__custom__';
+    final manualCodeController = TextEditingController(
+      text: codeMode == '__custom__' ? initialCode : codeMode,
     );
+
+    try {
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        builder: (context) {
+          return StatefulBuilder(
+            builder: (context, setSheetState) {
+            final useCustomCode = codeMode == '__custom__' || codeOptions.isEmpty;
+              final currentCode = useCustomCode ? manualCodeController.text.trim() : codeMode;
+              return Padding(
+                padding: EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: 20,
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                  Text(
+                    'Afiliar servicio',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF2E7D32),
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    provider.name,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Código cliente: ${provider.serviceCustomerCodeLabel ?? 'Código'}',
+                    style: TextStyle(color: Colors.grey.shade700),
+                  ),
+                  const SizedBox(height: 16),
+                  if (codeOptions.isNotEmpty)
+                    DropdownButtonFormField<String>(
+                      key: ValueKey('service-code-${provider.id}-$codeMode'),
+                      initialValue: codeMode == '__custom__' ? '__custom__' : codeMode,
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        labelText: provider.serviceCustomerCodeLabel ?? 'Código de servicio',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.confirmation_number_outlined),
+                      ),
+                      items: [
+                        ...codeOptions.map(
+                          (code) => DropdownMenuItem(
+                            value: code,
+                            child: Text(
+                              code,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                        const DropdownMenuItem(
+                          value: '__custom__',
+                          child: Text('Otro código...'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setSheetState(() {
+                          codeMode = value ?? '__custom__';
+                          if (codeMode != '__custom__') {
+                            manualCodeController.text = codeMode;
+                          }
+                        });
+                      },
+                    )
+                  else
+                    TextField(
+                      controller: manualCodeController,
+                      decoration: InputDecoration(
+                        labelText: provider.serviceCustomerCodeLabel ?? 'Código de servicio',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.confirmation_number_outlined),
+                      ),
+                    ),
+                  if (codeOptions.isNotEmpty && useCustomCode) ...[
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: manualCodeController,
+                      decoration: InputDecoration(
+                        labelText: provider.serviceCustomerCodeLabel ?? 'Código de servicio',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.confirmation_number_outlined),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: aliasController,
+                    decoration: const InputDecoration(
+                      labelText: 'Alias opcional',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.label_outline),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _viewModel.creatingEnrollment
+                          ? null
+                          : () async {
+                              final navigator = Navigator.of(context);
+                              final code = currentCode.trim();
+                              if (code.isEmpty) {
+                                _showSnackBar('Selecciona o ingresa el código del servicio');
+                                return;
+                              }
+                              await _viewModel.createEnrollment(
+                                providerId: provider.id,
+                                serviceCustomerCode: code,
+                                alias: aliasController.text.trim().isEmpty
+                                    ? null
+                                    : aliasController.text.trim(),
+                              );
+                              if (mounted && _viewModel.errorMessage == null) {
+                                _serviceCodeController.text = code;
+                                navigator.pop();
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2E7D32),
+                        foregroundColor: Colors.white,
+                      ),
+                      icon: _viewModel.creatingEnrollment
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.check_circle_outline),
+                      label: Text(
+                        _viewModel.creatingEnrollment ? 'Afiliando...' : 'Afiliar',
+                      ),
+                    ),
+                  ),
+                ],
+                ),
+              );
+            },
+          );
+        },
+      );
+    } finally {
+      aliasController.dispose();
+      manualCodeController.dispose();
+    }
   }
 
   Future<void> _openProviderSelectionSheet() async {

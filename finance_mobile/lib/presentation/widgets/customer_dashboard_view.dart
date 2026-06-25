@@ -63,6 +63,8 @@ class CustomerDashboardView extends StatelessWidget {
         const SizedBox(height: 16),
         _buildSummaryGrid(data.summary),
         const SizedBox(height: 16),
+        _buildAnalyticsSection(data),
+        const SizedBox(height: 16),
         _buildAccountsSection(displayAccounts),
         const SizedBox(height: 16),
         _buildBalancesSection(displayBalances),
@@ -77,6 +79,62 @@ class CustomerDashboardView extends StatelessWidget {
         const SizedBox(height: 16),
         _buildInsightsSection(displayInsights),
       ],
+    );
+  }
+
+  Widget _buildAnalyticsSection(CustomerDashboard data) {
+    final balanceBars = _balanceChartItems(data.balances.byCurrency);
+    final transactionTypeBars = _transactionTypeChartItems(data.transactions.byType);
+    final accountTypeBars = _accountTypeChartItems(data.accounts.items);
+    final monthlyVolume = data.transactions.monthlyVolume.take(7).toList();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cardWidth = constraints.maxWidth >= 900
+            ? (constraints.maxWidth - 12) / 2
+            : constraints.maxWidth;
+
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            SizedBox(
+              width: cardWidth,
+              child: _SectionCard(
+                title: 'Volumen mensual',
+                subtitle: 'Evolución de los últimos movimientos',
+                child: monthlyVolume.isEmpty
+                    ? const _EmptySection(message: 'No hay volumen mensual para graficar')
+                    : _CompactVolumeChart(points: monthlyVolume),
+              ),
+            ),
+            SizedBox(
+              width: cardWidth,
+              child: _SectionCard(
+                title: 'Saldo por moneda',
+                subtitle: 'Distribución de saldos disponibles',
+                child: _buildChartBars(balanceBars),
+              ),
+            ),
+            SizedBox(
+              width: cardWidth,
+              child: _SectionCard(
+                title: 'Movimientos por tipo',
+                subtitle: 'Volumen monetario por operación',
+                child: _buildChartBars(transactionTypeBars),
+              ),
+            ),
+            SizedBox(
+              width: cardWidth,
+              child: _SectionCard(
+                title: 'Cuentas por tipo',
+                subtitle: 'Mix de productos activos',
+                child: _buildChartBars(accountTypeBars),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -264,6 +322,100 @@ class CustomerDashboardView extends StatelessWidget {
                   .toList(),
             ),
     );
+  }
+
+  List<_ChartLineItem> _balanceChartItems(List<CustomerDashboardCurrencyBalanceItem> balances) {
+    if (balances.isEmpty) {
+      return const [];
+    }
+    final maxValue = balances
+        .map((item) => item.balance.amount)
+        .reduce((left, right) => left > right ? left : right);
+    return balances
+        .map(
+          (item) => _ChartLineItem(
+            label: item.currency,
+            value: _formatMoney(item.balance.amount, item.balance.currency),
+            ratio: maxValue == 0 ? 0 : item.balance.amount / maxValue,
+          ),
+        )
+        .toList();
+  }
+
+  List<_ChartLineItem> _transactionTypeChartItems(
+    List<CustomerDashboardTransactionAggregateItem> items,
+  ) {
+    if (items.isEmpty) {
+      return const [];
+    }
+    final maxValue = items
+        .map((item) => item.amount.amount)
+        .reduce((left, right) => left > right ? left : right);
+    return items
+        .map(
+          (item) => _ChartLineItem(
+            label: _chartLabel(item.type),
+            value: _formatMoney(item.amount.amount, item.amount.currency),
+            ratio: maxValue == 0 ? 0 : item.amount.amount / maxValue,
+          ),
+        )
+        .toList();
+  }
+
+  List<_ChartLineItem> _accountTypeChartItems(List<CustomerDashboardAccountItem> accounts) {
+    if (accounts.isEmpty) {
+      return const [];
+    }
+    final grouped = <String, int>{};
+    for (final account in accounts) {
+      final key = _chartLabel(account.type.isNotEmpty ? account.type : 'Cuenta');
+      grouped[key] = (grouped[key] ?? 0) + 1;
+    }
+    final maxValue = grouped.values.reduce((left, right) => left > right ? left : right);
+    return grouped.entries
+        .map(
+          (entry) => _ChartLineItem(
+            label: entry.key,
+            value: '${entry.value}',
+            ratio: maxValue == 0 ? 0 : entry.value / maxValue,
+          ),
+        )
+        .toList();
+  }
+
+  Widget _buildChartBars(List<_ChartLineItem> items) {
+    if (items.isEmpty) {
+      return const _EmptySection(message: 'No hay datos suficientes para graficar');
+    }
+
+    return Column(
+      children: items
+          .map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _ProgressTile(
+                label: item.label,
+                value: item.value,
+                ratio: item.ratio,
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  String _chartLabel(String value) {
+    return value
+        .replaceAll('_', ' ')
+        .toLowerCase()
+        .replaceAllMapped(
+          RegExp(r'(^|\s)\S'),
+          (match) => match.group(0)!.toUpperCase(),
+        );
+  }
+
+  String _formatMoney(double amount, String currency) {
+    return '${amount.toStringAsFixed(2)} $currency';
   }
 
   Widget _buildTransactionsSection(
@@ -1494,4 +1646,16 @@ class _InsightMiniCard extends StatelessWidget {
         return const Color(0xFF2E7D32);
     }
   }
+}
+
+class _ChartLineItem {
+  final String label;
+  final String value;
+  final double ratio;
+
+  const _ChartLineItem({
+    required this.label,
+    required this.value,
+    required this.ratio,
+  });
 }

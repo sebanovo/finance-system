@@ -44,6 +44,7 @@ import 'package:finance_mobile/domain/usecases/get_available_roles_usecase.dart'
 import 'package:finance_mobile/domain/usecases/get_customer_dashboard_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_devices_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_service_enrollments_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_service_provider_catalog_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_service_payment_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_service_payments_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_service_providers_usecase.dart';
@@ -76,6 +77,7 @@ import 'package:finance_mobile/domain/usecases/get_users_usecase.dart';
 import 'package:finance_mobile/domain/usecases/login_usecase.dart';
 import 'package:finance_mobile/domain/usecases/logout_usecase.dart';
 import 'package:finance_mobile/domain/usecases/remove_profile_photo_usecase.dart';
+import 'package:finance_mobile/domain/usecases/toggle_user_status_usecase.dart';
 import 'package:finance_mobile/domain/usecases/reset_password_usecase.dart';
 import 'package:finance_mobile/domain/usecases/activate_account_usecase.dart';
 import 'package:finance_mobile/domain/usecases/signup_usecase.dart';
@@ -235,6 +237,7 @@ void initUserModule() {
   sl.registerLazySingleton(() => GetUsersUseCase(sl()));
   sl.registerLazySingleton(() => GetUserRolesUseCase(sl()));
   sl.registerLazySingleton(() => AssignRoleUseCase(sl()));
+  sl.registerLazySingleton(() => ToggleUserStatusUseCase(sl()));
   sl.registerLazySingleton(() => CreateUserUseCase(sl()));
   sl.registerLazySingleton(() => GetAvailableRolesUseCase(sl()));
   sl.registerLazySingleton(() => GetUserInfoUseCase(sl()));
@@ -243,6 +246,7 @@ void initUserModule() {
       getUsersUseCase: sl(),
       getUserRolesUseCase: sl(),
       assignRoleUseCase: sl(),
+      toggleUserStatusUseCase: sl(),
       createUserUseCase: sl(),
       getAvailableRolesUseCase: sl(),
     ),
@@ -391,6 +395,7 @@ void initServicePaymentsModule() {
     () => ServicePaymentsRepositoryImpl(sl()),
   );
   sl.registerLazySingleton(() => GetServiceProvidersUseCase(sl()));
+  sl.registerLazySingleton(() => GetServiceProviderCatalogUseCase(sl()));
   sl.registerLazySingleton(() => GetServiceEnrollmentsUseCase(sl()));
   sl.registerLazySingleton(() => CreateServiceEnrollmentUseCase(sl()));
   sl.registerLazySingleton(() => DeleteServiceEnrollmentUseCase(sl()));
@@ -401,6 +406,7 @@ void initServicePaymentsModule() {
   sl.registerFactory(
     () => ServicePaymentsViewModel(
       getServiceProvidersUseCase: sl(),
+      getServiceProviderCatalogUseCase: sl(),
       getServiceEnrollmentsUseCase: sl(),
       createServiceEnrollmentUseCase: sl(),
       deleteServiceEnrollmentUseCase: sl(),

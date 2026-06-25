@@ -25,6 +25,8 @@ All seeded tenants now use the `ENTERPRISE` plan so the dataset can stay coheren
 | `USER` users | 90 |
 | Tenant accounts | 200 |
 | Tenant transactions | 1000 |
+| Tenant loans | 800 |
+| Tenant loan installments | 800 |
 | Accounting periods | 20 |
 | Journal entries | 10 |
 | Limit rules | 20 |
@@ -72,6 +74,8 @@ The sample bundle only uses `ENTERPRISE`, but the platform still defines the oth
 | Users per tenant | 10 total: 1 `OWNER_ADMIN` + 9 `USER` |
 | Accounts per tenant | 20 total: 2 per user |
 | Transactions per tenant | 100 total: 10 per user |
+| Loans per user | 8 total: 4 per account, 1 received + 3 rejected |
+| Loan installments per user | 8 total: 4 installments for each received loan |
 | Tenant compliance | 10 users stays well under `ENTERPRISE.maxUsers = 9999` |
 | Role compliance | The seeded role count stays within `ENTERPRISE.maxRoles` |
 
@@ -179,6 +183,35 @@ The sample bundle only uses `ENTERPRISE`, but the platform still defines the oth
 | `pacha-wallet` | User 07 | `USER` | `pachawallet07@gmail.com` | User 07 Demo | `password` |
 | `pacha-wallet` | User 08 | `USER` | `pachawallet08@gmail.com` | User 08 Demo | `password` |
 | `pacha-wallet` | User 09 | `USER` | `pachawallet09@gmail.com` | User 09 Demo | `password` |
+
+## Loan Pattern
+
+Each tenant user now has loans and debt installments seeded on both of their accounts.
+
+| Slot | Wallet account loans | Checking account loans | Received loans | Rejected loans | Installments generated |
+|---|---|---|---:|---:|---:|
+| Owner | 4 | 4 | 2 | 6 | 8 |
+| User 01 | 4 | 4 | 2 | 6 | 8 |
+| User 02 | 4 | 4 | 2 | 6 | 8 |
+| User 03 | 4 | 4 | 2 | 6 | 8 |
+| User 04 | 4 | 4 | 2 | 6 | 8 |
+| User 05 | 4 | 4 | 2 | 6 | 8 |
+| User 06 | 4 | 4 | 2 | 6 | 8 |
+| User 07 | 4 | 4 | 2 | 6 | 8 |
+| User 08 | 4 | 4 | 2 | 6 | 8 |
+| User 09 | 4 | 4 | 2 | 6 | 8 |
+
+### Loan rules
+
+| Rule | Value |
+|---|---|
+| Loans per account | 4 |
+| Received loans per account | 1 |
+| Rejected loans per account | 3 |
+| Installments per received loan | 4 |
+| Installment status | `OVERDUE` or `PENDING` |
+| Currency | `BOB` |
+| Interest method | `FLAT` |
 
 ## Account Pattern
 

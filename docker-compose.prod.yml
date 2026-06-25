@@ -20,14 +20,15 @@ services:
       timeout: 5s
       retries: 5
 
-  # mailpit:
-  #   image: axllent/mailpit:latest
-  #   container_name: finance_mailpit
-  #   restart: unless-stopped
-  #   ports:
-  #     - "8025:8025"
-  #   networks:
-  #     - finance-net
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: finance_mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - finance-net
 
   serv-finance-api:
     image: sebastiandevjs/finance-api:1.0.0

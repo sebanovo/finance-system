@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class AppMailProperties {
 
     private String from = "no-reply@finance.local";
+    private String publicBaseUrl = "http://localhost:8080";
 
     public String getFrom() {
         return from;
@@ -13,5 +14,13 @@ public class AppMailProperties {
 
     public void setFrom(String from) {
         this.from = from;
+    }
+
+    public String getPublicBaseUrl() {
+        return publicBaseUrl;
+    }
+
+    public void setPublicBaseUrl(String publicBaseUrl) {
+        this.publicBaseUrl = publicBaseUrl;
     }
 }

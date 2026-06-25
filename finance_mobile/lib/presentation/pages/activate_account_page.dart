@@ -86,7 +86,7 @@ class _ActivateAccountPageState extends State<ActivateAccountPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Activar cuenta'),
+        title: const Text('Verificar correo'),
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: const Color(0xFF2E7D32),
@@ -102,8 +102,8 @@ class _ActivateAccountPageState extends State<ActivateAccountPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.asset("assets/logo.png", width: 100),
-                    Card(
+                            Image.asset("assets/logo.png", width: 100),
+                            Card(
                       elevation: 4,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(32),

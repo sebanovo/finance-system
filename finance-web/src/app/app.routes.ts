@@ -22,6 +22,8 @@ export const routes: Routes = [
 
   // Activación de cuenta (confirmación de correo)
   { path: 'activate', loadComponent: () => import('./pages/activate-account-page/activate-account-page.component').then(m => m.ActivateAccountPageComponent) },
+  { path: 'verify-email', loadComponent: () => import('./pages/activate-account-page/activate-account-page.component').then(m => m.ActivateAccountPageComponent) },
+  { path: 'activate-account', loadComponent: () => import('./pages/activate-account-page/activate-account-page.component').then(m => m.ActivateAccountPageComponent) },
 
   // Registro público de tenant
   { path: 'onboarding', loadComponent: () => import('./pages/onboarding-page/onboarding-page.component').then(m => m.OnboardingPageComponent) },

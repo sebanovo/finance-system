@@ -28,6 +28,7 @@ public class TenantUserController {
     private final UpdateTenantUserUseCase updateTenantUserUseCase;
     private final ActivateTenantUserUseCase activateTenantUserUseCase;
     private final DeactivateTenantUserUseCase deactivateTenantUserUseCase;
+    private final CreateTenantUserWithoutVerificationUseCase createTenantUserWithoutVerificationUseCase;
 
     public TenantUserController(
             CreateTenantUserUseCase createTenantUserUseCase,
@@ -35,7 +36,8 @@ public class TenantUserController {
             GetTenantUserByIdUseCase getTenantUserByIdUseCase,
             UpdateTenantUserUseCase updateTenantUserUseCase,
             ActivateTenantUserUseCase activateTenantUserUseCase,
-            DeactivateTenantUserUseCase deactivateTenantUserUseCase
+            DeactivateTenantUserUseCase deactivateTenantUserUseCase,
+            CreateTenantUserWithoutVerificationUseCase createTenantUserWithoutVerificationUseCase
     ) {
         this.createTenantUserUseCase = createTenantUserUseCase;
         this.listTenantUsersUseCase = listTenantUsersUseCase;
@@ -43,6 +45,7 @@ public class TenantUserController {
         this.updateTenantUserUseCase = updateTenantUserUseCase;
         this.activateTenantUserUseCase = activateTenantUserUseCase;
         this.deactivateTenantUserUseCase = deactivateTenantUserUseCase;
+        this.createTenantUserWithoutVerificationUseCase = createTenantUserWithoutVerificationUseCase;
     }
 
     // @PostMapping
@@ -53,6 +56,15 @@ public class TenantUserController {
         return ApiResponse.success(
                 "Tenant user created successfully",
                 createTenantUserUseCase.execute(request)
+        );
+    }
+
+    @PostMapping("/direct")
+    @PreAuthorize("hasAuthority('users.create')")
+    public ApiResponse<TenantUserResponse> createUserWithoutVerification(@Valid @RequestBody CreateTenantUserRequest request) {
+        return ApiResponse.success(
+                "Tenant user created successfully without verification",
+                createTenantUserWithoutVerificationUseCase.execute(request)
         );
     }
 

@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../core/network/api_client.dart';
 import '../models/model_parsers.dart';
 import '../models/service_bill_model.dart';
+import '../models/service_provider_catalog_model.dart';
 import '../models/service_enrollment_model.dart';
 import '../models/service_payment_model.dart';
 import '../models/service_provider_model.dart';
@@ -15,6 +16,8 @@ abstract class ServicePaymentsRemoteDataSource {
     int page,
     int size,
   });
+
+  Future<List<ServiceProviderCatalogModel>> getServiceProviderCatalog();
 
   Future<List<ServiceEnrollmentModel>> getServiceEnrollments({
     String? providerId,
@@ -78,6 +81,16 @@ class ServicePaymentsRemoteDataSourceImpl
       response,
       (json) => ServiceProviderModel.fromJson(json),
       fallbackMessage: 'Error al obtener proveedores de servicios',
+    );
+  }
+
+  @override
+  Future<List<ServiceProviderCatalogModel>> getServiceProviderCatalog() async {
+    final response = await apiClient.get('/api/me/service-providers/catalog');
+    return _parseListResponse(
+      response,
+      (json) => ServiceProviderCatalogModel.fromJson(json),
+      fallbackMessage: 'Error al obtener catálogo de proveedores de servicios',
     );
   }
 

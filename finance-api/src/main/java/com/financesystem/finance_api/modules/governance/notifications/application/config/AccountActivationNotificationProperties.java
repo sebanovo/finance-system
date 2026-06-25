@@ -6,7 +6,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class AccountActivationNotificationProperties {
 
     private int expirationMinutes = 1440;
-    private String activationUrlBase = "http://localhost:4200/activate";
+    private String frontendUrlBase = "http://localhost:4200";
+    private String activationUrlPath = "/verify-email";
 
     public int getExpirationMinutes() {
         return expirationMinutes;
@@ -16,11 +17,19 @@ public class AccountActivationNotificationProperties {
         this.expirationMinutes = expirationMinutes;
     }
 
-    public String getActivationUrlBase() {
-        return activationUrlBase;
+    public String getFrontendUrlBase() {
+        return frontendUrlBase;
     }
 
-    public void setActivationUrlBase(String activationUrlBase) {
-        this.activationUrlBase = activationUrlBase;
+    public void setFrontendUrlBase(String frontendUrlBase) {
+        this.frontendUrlBase = frontendUrlBase;
+    }
+
+    public String getActivationUrlPath() {
+        return activationUrlPath;
+    }
+
+    public void setActivationUrlPath(String activationUrlPath) {
+        this.activationUrlPath = activationUrlPath;
     }
 }

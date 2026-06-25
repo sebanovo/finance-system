@@ -16,6 +16,9 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
   final confirmPasswordController = TextEditingController();
   final formKey = GlobalKey<FormState>();
   bool isLoading = false;
+  bool _obscureCurrentPassword = true;
+  bool _obscureNewPassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
@@ -70,10 +73,22 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: currentPasswordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
+                  obscureText: _obscureCurrentPassword,
+                  decoration: InputDecoration(
                     labelText: 'Contraseña actual',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _obscureCurrentPassword = !_obscureCurrentPassword;
+                        });
+                      },
+                      icon: Icon(
+                        _obscureCurrentPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                    ),
                   ),
                   validator: (v) =>
                       v == null || v.isEmpty ? 'Campo obligatorio' : null,
@@ -81,10 +96,22 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: newPasswordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
+                  obscureText: _obscureNewPassword,
+                  decoration: InputDecoration(
                     labelText: 'Nueva contraseña',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _obscureNewPassword = !_obscureNewPassword;
+                        });
+                      },
+                      icon: Icon(
+                        _obscureNewPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                    ),
                   ),
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'Campo obligatorio';
@@ -95,10 +122,22 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: confirmPasswordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
+                  obscureText: _obscureConfirmPassword,
+                  decoration: InputDecoration(
                     labelText: 'Confirmar nueva contraseña',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _obscureConfirmPassword = !_obscureConfirmPassword;
+                        });
+                      },
+                      icon: Icon(
+                        _obscureConfirmPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                    ),
                   ),
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'Campo obligatorio';

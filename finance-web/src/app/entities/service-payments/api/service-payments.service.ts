@@ -28,6 +28,7 @@ import {
   ServiceEnrollmentResponse,
   ServicePaymentResponse,
   ServiceProviderResponse,
+  ServiceProviderCatalogResponse,
   TenantServicePaymentFilter,
   UpdateServiceCustomerRequest,
   UpdateServiceProviderRequest
@@ -211,6 +212,18 @@ export class ServicePaymentsService {
     return this.http.get<ApiResponse<PageResponse<ServiceProviderResponse>>>(
       `${this.MY_URL}/service-providers`,
       { params: this.buildParams(page, size, filter) }
+    );
+  }
+
+  listMyServiceProviderCatalog(): Observable<ApiResponse<ServiceProviderCatalogResponse[]>> {
+    return this.http.get<ApiResponse<ServiceProviderCatalogResponse[]>>(
+      `${this.MY_URL}/service-providers/catalog`
+    );
+  }
+
+  listTenantServiceProviderCatalog(): Observable<ApiResponse<ServiceProviderCatalogResponse[]>> {
+    return this.http.get<ApiResponse<ServiceProviderCatalogResponse[]>>(
+      `${this.TENANT_URL}/service-providers/catalog`
     );
   }
 

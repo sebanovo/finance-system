@@ -41,6 +41,30 @@ public class ServicePaymentsMapper {
         );
     }
 
+    public ServiceCustomerCatalogResponse toCatalogResponse(ServiceCustomer serviceCustomer) {
+        return new ServiceCustomerCatalogResponse(
+                serviceCustomer.id(),
+                serviceCustomer.serviceCustomerCode(),
+                serviceCustomer.customerName(),
+                serviceCustomer.status()
+        );
+    }
+
+    public ServiceProviderCatalogResponse toCatalogResponse(
+            ServiceProvider serviceProvider,
+            java.util.List<ServiceCustomerCatalogResponse> serviceCustomers
+    ) {
+        return new ServiceProviderCatalogResponse(
+                serviceProvider.id(),
+                serviceProvider.code(),
+                serviceProvider.name(),
+                serviceProvider.category(),
+                serviceProvider.serviceCustomerCodeLabel(),
+                serviceProvider.status(),
+                serviceCustomers
+        );
+    }
+
     public ServiceBillResponse toResponse(ServiceBill serviceBill, ServiceProvider provider) {
         return new ServiceBillResponse(
                 serviceBill.id(),

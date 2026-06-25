@@ -7,8 +7,8 @@ class UserListItem extends StatelessWidget {
   final User user;
   final List<Role> roles;
   final bool isLoadingRoles;
-  final String? currentRoleId;
   final VoidCallback onEditRole;
+  final VoidCallback onToggleStatus;
   final bool isLoading;
 
   const UserListItem({
@@ -16,8 +16,8 @@ class UserListItem extends StatelessWidget {
     required this.user,
     required this.roles,
     required this.isLoadingRoles,
-    required this.currentRoleId,
     required this.onEditRole,
+    required this.onToggleStatus,
     this.isLoading = false,
   });
 
@@ -70,6 +70,15 @@ class UserListItem extends StatelessWidget {
                 onPressed: isLoading ? null : onEditRole,
                 tooltip: 'Editar rol',
               ),
+              IconButton(
+                icon: Icon(
+                  user.active ? Icons.block : Icons.check_circle,
+                  size: 20,
+                  color: user.active ? Colors.redAccent : const Color(0xFF2E7D32),
+                ),
+                onPressed: isLoading ? null : onToggleStatus,
+                tooltip: user.active ? 'Desactivar usuario' : 'Activar usuario',
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -116,15 +125,24 @@ class UserListItem extends StatelessWidget {
       ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.edit, size: 20, color: Color(0xFF4CAF50)),
-            onPressed: isLoading ? null : onEditRole,
-            tooltip: 'Editar rol',
-          ),
-          _buildStatusBadge(),
-        ],
-      ),
+          children: [
+            IconButton(
+              icon: const Icon(Icons.edit, size: 20, color: Color(0xFF4CAF50)),
+              onPressed: isLoading ? null : onEditRole,
+              tooltip: 'Editar rol',
+            ),
+            IconButton(
+              icon: Icon(
+                user.active ? Icons.block : Icons.check_circle,
+                size: 20,
+                color: user.active ? Colors.redAccent : const Color(0xFF2E7D32),
+              ),
+              onPressed: isLoading ? null : onToggleStatus,
+              tooltip: user.active ? 'Desactivar usuario' : 'Activar usuario',
+            ),
+            _buildStatusBadge(),
+          ],
+        ),
     );
   }
 
@@ -161,17 +179,20 @@ class UserListItem extends StatelessWidget {
       );
     }
     if (roles.isNotEmpty) {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Chip(
-            label: Text(roles.first.name),
-            backgroundColor: const Color(0xFFE8F5E9),
-            labelStyle: const TextStyle(fontSize: 11, color: Color(0xFF2E7D32)),
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            padding: EdgeInsets.zero,
-          ),
-        ],
+      return Wrap(
+        spacing: 6,
+        runSpacing: 4,
+        children: roles
+            .map(
+              (role) => Chip(
+                label: Text(role.name),
+                backgroundColor: const Color(0xFFE8F5E9),
+                labelStyle: const TextStyle(fontSize: 11, color: Color(0xFF2E7D32)),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                padding: EdgeInsets.zero,
+              ),
+            )
+            .toList(),
       );
     }
     return Container(

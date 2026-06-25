@@ -1,10 +1,11 @@
 package com.financesystem.finance_api.bootstrap.sample;
 
-import com.financesystem.finance_api.modules.platform.tenants.application.dto.CreatePlatformTenantRequest;
+import com.financesystem.finance_api.modules.platform.tenants.application.dto.CreateTenantRequest;
 import com.financesystem.finance_api.modules.platform.tenants.application.dto.PlatformTenantResponse;
-import com.financesystem.finance_api.modules.platform.tenants.application.usecase.CreatePlatformTenantUseCase;
+import com.financesystem.finance_api.modules.platform.tenants.application.usecase.CreateTenantUseCase;
 import com.financesystem.finance_api.modules.platform.tenants.domain.model.PlatformTenant;
 import com.financesystem.finance_api.modules.platform.tenants.domain.repository.PlatformTenantRepository;
+import com.financesystem.finance_api.modules.platform.onboarding.application.service.TenantOwnerAdminProvisioningService;
 import com.financesystem.finance_api.modules.platform.subscriptions.application.service.PlatformSubscriptionProvisioningService;
 import com.financesystem.finance_api.modules.platform.subscriptions.domain.repository.PlatformSubscriptionRepository;
 import org.slf4j.Logger;
@@ -34,7 +35,8 @@ public class SampleDataBootstrapService {
     private static final String DEMO_IDEMPOTENCY_PREFIX = "sample-bootstrap";
     private static final BigDecimal TRANSFER_AMOUNT = new BigDecimal("150.00");
 
-    private final CreatePlatformTenantUseCase createPlatformTenantUseCase;
+    private final CreateTenantUseCase createTenantUseCase;
+    private final TenantOwnerAdminProvisioningService tenantOwnerAdminProvisioningService;
     private final PlatformTenantRepository platformTenantRepository;
     private final PlatformSubscriptionRepository platformSubscriptionRepository;
     private final PlatformSubscriptionProvisioningService platformSubscriptionProvisioningService;
@@ -42,14 +44,16 @@ public class SampleDataBootstrapService {
     private final PasswordEncoder passwordEncoder;
 
     public SampleDataBootstrapService(
-            CreatePlatformTenantUseCase createPlatformTenantUseCase,
+            CreateTenantUseCase createTenantUseCase,
+            TenantOwnerAdminProvisioningService tenantOwnerAdminProvisioningService,
             PlatformTenantRepository platformTenantRepository,
             PlatformSubscriptionRepository platformSubscriptionRepository,
             PlatformSubscriptionProvisioningService platformSubscriptionProvisioningService,
             @Qualifier("targetDataSource") DataSource targetDataSource,
             PasswordEncoder passwordEncoder
     ) {
-        this.createPlatformTenantUseCase = createPlatformTenantUseCase;
+        this.createTenantUseCase = createTenantUseCase;
+        this.tenantOwnerAdminProvisioningService = tenantOwnerAdminProvisioningService;
         this.platformTenantRepository = platformTenantRepository;
         this.platformSubscriptionRepository = platformSubscriptionRepository;
         this.platformSubscriptionProvisioningService = platformSubscriptionProvisioningService;
@@ -85,17 +89,22 @@ public class SampleDataBootstrapService {
                         tenant.createdAt(),
                         tenant.updatedAt()
                 ))
-                .orElseGet(() -> createPlatformTenantUseCase.execute(
-                        new CreatePlatformTenantRequest(
-                                seed.name(),
-                                seed.slug(),
-                                seed.planCode(),
-                                seed.ownerEmail(),
-                                DEMO_PASSWORD,
-                                seed.ownerFirstName(),
-                                seed.ownerLastName()
-                        )
-                ));
+                .orElseGet(() -> {
+                    PlatformTenantResponse tenant = createTenantUseCase.execute(
+                            new CreateTenantRequest(seed.name(), seed.slug(), seed.planCode())
+                    );
+
+                    tenantOwnerAdminProvisioningService.provisionOwnerAdminWithoutVerification(
+                            tenant.schemaName(),
+                            tenant.slug(),
+                            seed.ownerEmail(),
+                            DEMO_PASSWORD,
+                            seed.ownerFirstName(),
+                            seed.ownerLastName()
+                    );
+
+                    return tenant;
+                });
     }
 
     private void seedTenantBundle(TenantSeed seed, PlatformTenantResponse tenant) {
@@ -248,6 +257,16 @@ public class SampleDataBootstrapService {
                 ownerTransactionIds,
                 "owner"
         );
+        seedLoanBundleForUser(
+                schemaName,
+                seed,
+                ownerUserId,
+                ownerAccountId,
+                ownerAccountNumber,
+                savingsAccountId,
+                savingsAccountNumber,
+                "owner"
+        );
 
         return ownerTransactionId;
     }
@@ -340,6 +359,16 @@ public class SampleDataBootstrapService {
                     tenantServiceCustomerName(seed, userSeed.firstName(), userNumber),
                     tenantServiceAlias(seed, userSeed.firstName(), userNumber),
                     transferTransactionIds,
+                    "user-" + String.format("%02d", userNumber)
+            );
+            seedLoanBundleForUser(
+                    schemaName,
+                    seed,
+                    userUserId,
+                    walletAccountId,
+                    walletAccountNumber,
+                    checkingAccountId,
+                    checkingAccountNumber,
                     "user-" + String.format("%02d", userNumber)
             );
         }
@@ -482,11 +511,10 @@ public class SampleDataBootstrapService {
     }
 
     private TenantUserSeed generatedTenantUserSeed(TenantSeed seed, int index) {
-        String slugBase = seed.slug().replace("-", "");
         return new TenantUserSeed(
-                slugBase + String.format("%02d", index) + "@gmail.com",
-                "User" + String.format("%02d", index),
-                "Demo"
+                "user" + index + "@gmail.com",
+                "user" + index,
+                seed.slug()
         );
     }
 
@@ -1638,6 +1666,196 @@ public class SampleDataBootstrapService {
         }
     }
 
+    private void seedLoanBundleForUser(
+            String schemaName,
+            TenantSeed seed,
+            UUID userId,
+            UUID firstAccountId,
+            String firstAccountNumber,
+            UUID secondAccountId,
+            String secondAccountNumber,
+            String keyPrefix
+    ) {
+        seedLoanSeriesForAccount(schemaName, seed, userId, firstAccountId, firstAccountNumber, keyPrefix + "-first");
+        seedLoanSeriesForAccount(schemaName, seed, userId, secondAccountId, secondAccountNumber, keyPrefix + "-second");
+    }
+
+    private void seedLoanSeriesForAccount(
+            String schemaName,
+            TenantSeed seed,
+            UUID userId,
+            UUID accountId,
+            String accountNumber,
+            String keyPrefix
+    ) {
+        for (int loanIndex = 1; loanIndex <= 4; loanIndex++) {
+            boolean receivedLoan = loanIndex == 1;
+            String loanKey = keyPrefix + "-loan-" + loanIndex;
+            BigDecimal principal = seedLoanPrincipal(seed, keyPrefix, loanIndex);
+            BigDecimal annualInterestRate = seedLoanInterestRate(seed, loanIndex);
+            OffsetDateTime disbursedAt = receivedLoan ? OffsetDateTime.now(ZoneOffset.UTC).minusDays(20L + loanIndex) : null;
+
+            UUID loanId = upsertTenantLoan(
+                    schemaName,
+                    userId,
+                    accountId,
+                    loanKey,
+                    principal,
+                    "BOB",
+                    annualInterestRate,
+                    receivedLoan ? 12 : 18,
+                    receivedLoan ? "DISBURSED" : "REJECTED",
+                    receivedLoan ? "Prestamo demo recibido y desembolsado" : "Prestamo demo rechazado",
+                    receivedLoan ? "Solicitud aprobada para dataset demo" : "Solicitud rechazada para dataset demo",
+                    disbursedAt,
+                    null
+            );
+
+            if (receivedLoan) {
+                seedLoanInstallments(schemaName, loanId, principal, annualInterestRate, seed.slug());
+            }
+        }
+    }
+
+    private UUID upsertTenantLoan(
+            String schemaName,
+            UUID userId,
+            UUID accountId,
+            String loanKey,
+            BigDecimal principal,
+            String currency,
+            BigDecimal annualInterestRate,
+            int termMonths,
+            String status,
+            String purpose,
+            String statusReason,
+            OffsetDateTime disbursedAt,
+            OffsetDateTime closedAt
+    ) {
+        UUID loanId = deterministicUuid(schemaName + ":loan:" + loanKey);
+        return jdbcTemplate.queryForObject(
+                """
+                INSERT INTO %s.tenant_loans (
+                    id, user_id, account_id, principal, currency, annual_interest_rate, term_months,
+                    interest_method, status, purpose, status_reason, disbursed_at, closed_at, created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'FLAT', ?, ?, ?, ?, ?, NOW(), NOW())
+                ON CONFLICT (id) DO UPDATE SET
+                    user_id = EXCLUDED.user_id,
+                    account_id = EXCLUDED.account_id,
+                    principal = EXCLUDED.principal,
+                    currency = EXCLUDED.currency,
+                    annual_interest_rate = EXCLUDED.annual_interest_rate,
+                    term_months = EXCLUDED.term_months,
+                    interest_method = EXCLUDED.interest_method,
+                    status = EXCLUDED.status,
+                    purpose = EXCLUDED.purpose,
+                    status_reason = EXCLUDED.status_reason,
+                    disbursed_at = EXCLUDED.disbursed_at,
+                    closed_at = EXCLUDED.closed_at,
+                    updated_at = NOW()
+                RETURNING id
+                """.formatted(schemaName),
+                UUID.class,
+                loanId,
+                userId,
+                accountId,
+                principal,
+                currency,
+                annualInterestRate,
+                termMonths,
+                status,
+                purpose,
+                statusReason,
+                disbursedAt,
+                closedAt
+        );
+    }
+
+    private void seedLoanInstallments(
+            String schemaName,
+            UUID loanId,
+            BigDecimal principal,
+            BigDecimal annualInterestRate,
+            String seedSlug
+    ) {
+        BigDecimal principalPerInstallment = principal.divide(BigDecimal.valueOf(4), 2, RoundingMode.HALF_UP);
+        BigDecimal interestTotal = principal.multiply(annualInterestRate).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        BigDecimal interestPerInstallment = interestTotal.divide(BigDecimal.valueOf(4), 2, RoundingMode.HALF_UP);
+        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+
+        for (int installmentNumber = 1; installmentNumber <= 4; installmentNumber++) {
+            LocalDate dueDate = today.minusMonths(4L - installmentNumber);
+            BigDecimal totalDue = principalPerInstallment.add(interestPerInstallment).setScale(2, RoundingMode.HALF_UP);
+            String status = dueDate.isBefore(today) ? "OVERDUE" : "PENDING";
+            upsertLoanInstallment(
+                    schemaName,
+                    loanId,
+                    installmentNumber,
+                    dueDate,
+                    principalPerInstallment,
+                    interestPerInstallment,
+                    totalDue,
+                    BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP),
+                    status,
+                    seedSlug
+            );
+        }
+    }
+
+    private UUID upsertLoanInstallment(
+            String schemaName,
+            UUID loanId,
+            int installmentNumber,
+            LocalDate dueDate,
+            BigDecimal principalDue,
+            BigDecimal interestDue,
+            BigDecimal totalDue,
+            BigDecimal paidAmount,
+            String status,
+            String seedSlug
+    ) {
+        UUID installmentId = deterministicUuid(schemaName + ":loan-installment:" + seedSlug + ":" + loanId + ":" + installmentNumber);
+        return jdbcTemplate.queryForObject(
+                """
+                INSERT INTO %s.tenant_loan_installments (
+                    id, loan_id, number, due_date, principal_due, interest_due, total_due, paid_amount,
+                    status, paid_at, created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NOW(), NOW())
+                ON CONFLICT (loan_id, number) DO UPDATE SET
+                    due_date = EXCLUDED.due_date,
+                    principal_due = EXCLUDED.principal_due,
+                    interest_due = EXCLUDED.interest_due,
+                    total_due = EXCLUDED.total_due,
+                    paid_amount = EXCLUDED.paid_amount,
+                    status = EXCLUDED.status,
+                    updated_at = NOW()
+                RETURNING id
+                """.formatted(schemaName),
+                UUID.class,
+                installmentId,
+                loanId,
+                installmentNumber,
+                dueDate,
+                principalDue,
+                interestDue,
+                totalDue,
+                paidAmount,
+                status
+        );
+    }
+
+    private BigDecimal seedLoanPrincipal(TenantSeed seed, String keyPrefix, int loanIndex) {
+        int variant = Math.abs((seed.slug() + ":" + keyPrefix + ":" + loanIndex).hashCode() % 8);
+        return BigDecimal.valueOf(800L + (loanIndex * 150L) + (variant * 25L)).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal seedLoanInterestRate(TenantSeed seed, int loanIndex) {
+        int variant = Math.abs((seed.slug() + ":loan-rate:" + loanIndex).hashCode() % 6);
+        return BigDecimal.valueOf(12L + loanIndex + variant).setScale(2, RoundingMode.HALF_UP);
+    }
+
     private UUID upsertPublicServiceCustomer(UUID providerId, String serviceCustomerCode, String customerName) {
         UUID customerId = deterministicUuid("public:service-customer:" + providerId + ":" + serviceCustomerCode);
         return jdbcTemplate.queryForObject(
@@ -1870,16 +2088,16 @@ public class SampleDataBootstrapService {
 
     private List<TenantSeed> sampleTenants() {
         return List.of(
-                new TenantSeed("Acme Finance", "acme-finance", "ENTERPRISE", "ariana@gmail.com", "Ariana", "Lopez", "bruno@gmail.com", "Bruno", "Diaz", "ACME", "ELECTRICITY_CRE", "12345678", "Casa Central", "Luz del hogar", new BigDecimal("1200.00"), new BigDecimal("420.00")),
-                new TenantSeed("Nova Wallet", "nova-wallet", "ENTERPRISE", "carla@gmail.com", "Carla", "Perez", "elena@gmail.com", "Elena", "Gutierrez", "NOVA", "INTERNET_ENTEL", "NOVA-778899", "Internet Hogar", "Internet principal", new BigDecimal("980.00"), new BigDecimal("305.00")),
-                new TenantSeed("Pampa Pay", "pampa-pay", "ENTERPRISE", "lucia@gmail.com", "Lucia", "Mendoza", "felipe@gmail.com", "Felipe", "Rojas", "PAMPA", "WATER_SAGUAPAC", "PAMPA-1001", "Casa Centro", "Agua familiar", new BigDecimal("1500.00"), new BigDecimal("260.00")),
-                new TenantSeed("Tumi Bank", "tumi-bank", "ENTERPRISE", "jose@gmail.com", "Jose", "Vargas", "gabriela@gmail.com", "Gabriela", "Sosa", "TUMI", "TV_TIGO", "TUMI-2222", "Hogar Norte", "TV cable", new BigDecimal("2100.00"), new BigDecimal("510.00")),
-                new TenantSeed("Luna Cash", "luna-cash", "ENTERPRISE", "maria@gmail.com", "Maria", "Fernandez", "hector@gmail.com", "Hector", "Lima", "LUNA", "ELECTRICITY_CRE", "LUNA-7788", "Residencial Sur", "Energia luz", new BigDecimal("800.00"), new BigDecimal("190.00")),
-                new TenantSeed("Andes Wallet", "andes-wallet", "ENTERPRISE", "pedro@gmail.com", "Pedro", "Quispe", "irene@gmail.com", "Irene", "Valdez", "ANDES", "INTERNET_ENTEL", "ANDES-9900", "Oficina Central", "Internet oficina", new BigDecimal("1750.00"), new BigDecimal("380.00")),
-                new TenantSeed("Suma Finance", "suma-finance", "ENTERPRISE", "sofia@gmail.com", "Sofia", "Rojas", "javier@gmail.com", "Javier", "Mora", "SUMA", "WATER_SAGUAPAC", "SUMA-4455", "Barrio Este", "Servicio agua", new BigDecimal("1325.00"), new BigDecimal("275.00")),
-                new TenantSeed("Kawi Pay", "kawi-pay", "ENTERPRISE", "diego@gmail.com", "Diego", "Salazar", "karen@gmail.com", "Karen", "Nunez", "KAWI", "TV_TIGO", "KAWI-3003", "Ciudad Jardín", "Tv familiar", new BigDecimal("990.00"), new BigDecimal("215.00")),
-                new TenantSeed("Runa Cash", "runa-cash", "ENTERPRISE", "ana@gmail.com", "Ana", "Torrez", "luis@gmail.com", "Luis", "Paredes", "RUNA", "ELECTRICITY_CRE", "RUNA-5566", "Centro", "Luz casa", new BigDecimal("2450.00"), new BigDecimal("610.00")),
-                new TenantSeed("Pacha Wallet", "pacha-wallet", "ENTERPRISE", "camila@gmail.com", "Camila", "Flores", "marta@gmail.com", "Marta", "Campos", "PACHA", "INTERNET_ENTEL", "PACHA-9090", "Zona Norte", "Internet hogar", new BigDecimal("1110.00"), new BigDecimal("330.00"))
+                new TenantSeed("tenant1", "tenant1", "ENTERPRISE", "tenant1@gmail.com", "tenant1", "owner", "user1@gmail.com", "user1", "tenant1", "TEN1", "ELECTRICITY_CRE", "tenant1-svc", "tenant1 customer", "tenant1 alias", new BigDecimal("1200.00"), new BigDecimal("420.00")),
+                new TenantSeed("tenant2", "tenant2", "ENTERPRISE", "tenant2@gmail.com", "tenant2", "owner", "user1@gmail.com", "user1", "tenant2", "TEN2", "INTERNET_ENTEL", "tenant2-svc", "tenant2 customer", "tenant2 alias", new BigDecimal("980.00"), new BigDecimal("305.00")),
+                new TenantSeed("tenant3", "tenant3", "ENTERPRISE", "tenant3@gmail.com", "tenant3", "owner", "user1@gmail.com", "user1", "tenant3", "TEN3", "WATER_SAGUAPAC", "tenant3-svc", "tenant3 customer", "tenant3 alias", new BigDecimal("1500.00"), new BigDecimal("260.00")),
+                new TenantSeed("tenant4", "tenant4", "ENTERPRISE", "tenant4@gmail.com", "tenant4", "owner", "user1@gmail.com", "user1", "tenant4", "TEN4", "TV_TIGO", "tenant4-svc", "tenant4 customer", "tenant4 alias", new BigDecimal("2100.00"), new BigDecimal("510.00")),
+                new TenantSeed("tenant5", "tenant5", "ENTERPRISE", "tenant5@gmail.com", "tenant5", "owner", "user1@gmail.com", "user1", "tenant5", "TEN5", "ELECTRICITY_CRE", "tenant5-svc", "tenant5 customer", "tenant5 alias", new BigDecimal("800.00"), new BigDecimal("190.00")),
+                new TenantSeed("tenant6", "tenant6", "ENTERPRISE", "tenant6@gmail.com", "tenant6", "owner", "user1@gmail.com", "user1", "tenant6", "TEN6", "INTERNET_ENTEL", "tenant6-svc", "tenant6 customer", "tenant6 alias", new BigDecimal("1750.00"), new BigDecimal("380.00")),
+                new TenantSeed("tenant7", "tenant7", "ENTERPRISE", "tenant7@gmail.com", "tenant7", "owner", "user1@gmail.com", "user1", "tenant7", "TEN7", "WATER_SAGUAPAC", "tenant7-svc", "tenant7 customer", "tenant7 alias", new BigDecimal("1325.00"), new BigDecimal("275.00")),
+                new TenantSeed("tenant8", "tenant8", "ENTERPRISE", "tenant8@gmail.com", "tenant8", "owner", "user1@gmail.com", "user1", "tenant8", "TEN8", "TV_TIGO", "tenant8-svc", "tenant8 customer", "tenant8 alias", new BigDecimal("990.00"), new BigDecimal("215.00")),
+                new TenantSeed("tenant9", "tenant9", "ENTERPRISE", "tenant9@gmail.com", "tenant9", "owner", "user1@gmail.com", "user1", "tenant9", "TEN9", "ELECTRICITY_CRE", "tenant9-svc", "tenant9 customer", "tenant9 alias", new BigDecimal("2450.00"), new BigDecimal("610.00")),
+                new TenantSeed("tenant10", "tenant10", "ENTERPRISE", "tenant10@gmail.com", "tenant10", "owner", "user1@gmail.com", "user1", "tenant10", "TEN10", "INTERNET_ENTEL", "tenant10-svc", "tenant10 customer", "tenant10 alias", new BigDecimal("1110.00"), new BigDecimal("330.00"))
         );
     }
 

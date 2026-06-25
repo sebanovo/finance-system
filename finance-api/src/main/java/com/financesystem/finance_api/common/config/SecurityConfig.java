@@ -14,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 
 @Configuration
 @EnableMethodSecurity
@@ -45,6 +46,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(restAccessDeniedHandler)
                 )
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                         .requestMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
@@ -61,7 +63,10 @@ public class SecurityConfig {
                                 "/api/auth/resend-activation",
                                 "/api/auth/face/login",
                                 "/api/platform/auth/login",
-                                "/api/platform/auth/refresh"
+                                "/api/platform/auth/refresh",
+                                "/assets/**",
+                                "/logo.png",
+                                "/favicon.ico"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

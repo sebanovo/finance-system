@@ -40,6 +40,8 @@ services:
         condition: service_healthy
       reports-ai:
         condition: service_started
+      mailpit:
+        condition: service_started
     env_file:
       - .env
     environment:

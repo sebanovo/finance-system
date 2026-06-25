@@ -51,6 +51,29 @@ public class TenantOwnerAdminProvisioningService {
             String firstName,
             String lastName
     ) {
+        return provisionOwnerAdminInternal(schemaName, tenantSlug, email, rawPassword, firstName, lastName, true);
+    }
+
+    public UUID provisionOwnerAdminWithoutVerification(
+            String schemaName,
+            String tenantSlug,
+            String email,
+            String rawPassword,
+            String firstName,
+            String lastName
+    ) {
+        return provisionOwnerAdminInternal(schemaName, tenantSlug, email, rawPassword, firstName, lastName, false);
+    }
+
+    private UUID provisionOwnerAdminInternal(
+            String schemaName,
+            String tenantSlug,
+            String email,
+            String rawPassword,
+            String firstName,
+            String lastName,
+            boolean issueActivationEmail
+    ) {
         validateSchemaName(schemaName);
 
         String normalizedEmail = email.trim().toLowerCase();
@@ -82,20 +105,23 @@ public class TenantOwnerAdminProvisioningService {
         UUID userId = UUID.randomUUID();
         String passwordHash = passwordEncoder.encode(rawPassword);
 
-        // Email-verification flow: the owner admin is created PENDING/inactive and
-        // must confirm ownership of the inbox through the activation link before login.
+        boolean active = !issueActivationEmail;
+        String status = issueActivationEmail ? "PENDING" : "ACTIVE";
+
         jdbcTemplate.update(
                 """
                 INSERT INTO %s.tenant_users (
                     id, email, password_hash, first_name, last_name, active, status, created_at, updated_at
                 )
-                VALUES (?, ?, ?, ?, ?, false, 'PENDING', NOW(), NOW())
+                VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                 """.formatted(schemaName),
                 userId,
                 normalizedEmail,
                 passwordHash,
                 normalizedFirstName,
-                normalizedLastName
+                normalizedLastName,
+                active,
+                status
         );
 
         UUID ownerAdminRoleId = jdbcTemplate.queryForObject(
@@ -129,7 +155,9 @@ public class TenantOwnerAdminProvisioningService {
                 normalizedEmail
         );
 
-        issueActivation(schemaName, tenantSlug, normalizedEmail);
+        if (issueActivationEmail) {
+            issueActivation(schemaName, tenantSlug, normalizedEmail);
+        }
 
         return userId;
     }
