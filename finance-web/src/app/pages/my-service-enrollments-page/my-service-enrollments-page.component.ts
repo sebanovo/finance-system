@@ -168,6 +168,7 @@ import { ToastService } from '../../shared/ui/toast/toast.service';
         [enrollment]="selectedEnrollment()"
         [providers]="providerUseCase.data()"
         [accounts]="accountUseCase.data()"
+        [serviceCustomerCodesByProvider]="serviceCustomerCodesByProvider"
         [queryResult]="billQueryUseCase.result()"
         [queryLoading]="billQueryUseCase.status() === 'loading'"
         [paymentLoading]="paymentUseCase.status() === 'loading'"

@@ -78,6 +78,12 @@ export class ServicePaymentsService {
     );
   }
 
+  listPlatformProviderCatalog(): Observable<ApiResponse<ServiceProviderCatalogResponse[]>> {
+    return this.http.get<ApiResponse<ServiceProviderCatalogResponse[]>>(
+      `${this.PLATFORM_URL}/service-providers/catalog`
+    );
+  }
+
   getPlatformProvider(id: string): Observable<ApiResponse<ServiceProviderResponse>> {
     return this.http.get<ApiResponse<ServiceProviderResponse>>(`${this.PLATFORM_URL}/service-providers/${id}`);
   }

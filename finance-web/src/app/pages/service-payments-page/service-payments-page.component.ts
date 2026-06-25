@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
+import { AccountListUseCase } from '../../features/account-management';
 import { PlatformPaginationComponent } from '../../features/platform/ui/platform-pagination/platform-pagination.component';
 import {
   ServicePaymentDetailComponent,
@@ -10,6 +11,7 @@ import {
   TenantServicePaymentHistoryUseCase,
   TenantServicePaymentTableComponent,
   TenantServiceProviderListUseCase,
+  TenantServiceProviderCatalogUseCase,
   ServicePaymentsErrorCardComponent,
   ServicePaymentsLoadingCardComponent,
   ServicePaymentsStateCardComponent,
@@ -143,6 +145,8 @@ import { ToastService } from '../../shared/ui/toast/toast.service';
       <app-tenant-bank-service-payment-drawer
         [isOpen]="paymentDrawerOpen()"
         [providers]="providerUseCase.data()"
+        [accounts]="accountUseCase.data()"
+        [serviceCustomerCodesByProvider]="serviceCustomerCodesByProvider"
         [queryResult]="billQueryUseCase.result()"
         [queryLoading]="billQueryUseCase.status() === 'loading'"
         [paymentLoading]="paymentUseCase.status() === 'loading'"
@@ -163,6 +167,8 @@ import { ToastService } from '../../shared/ui/toast/toast.service';
 })
 export class ServicePaymentsPageComponent implements OnInit {
   readonly providerUseCase = inject(TenantServiceProviderListUseCase);
+  readonly providerCatalogUseCase = inject(TenantServiceProviderCatalogUseCase);
+  readonly accountUseCase = inject(AccountListUseCase);
   readonly historyUseCase = inject(TenantServicePaymentHistoryUseCase);
   readonly billQueryUseCase = inject(TenantServiceBillQueryUseCase);
   readonly paymentUseCase = inject(TenantBankServicePaymentUseCase);
@@ -179,7 +185,30 @@ export class ServicePaymentsPageComponent implements OnInit {
 
   ngOnInit(): void {
     void this.providerUseCase.loadProviders(0, 100, {});
+    void this.providerCatalogUseCase.loadCatalog();
+    void this.accountUseCase.loadAccounts(0, 100);
     void this.historyUseCase.loadPayments();
+  }
+
+  get serviceCustomerCodesByProvider(): Record<string, string[]> {
+    const grouped: Record<string, Set<string>> = {};
+
+    for (const provider of this.providerCatalogUseCase.catalog()) {
+      if (!grouped[provider.id]) {
+        grouped[provider.id] = new Set<string>();
+      }
+
+      for (const serviceCustomer of provider.serviceCustomers ?? []) {
+        const code = serviceCustomer.serviceCustomerCode?.trim();
+        if (code) {
+          grouped[provider.id].add(code);
+        }
+      }
+    }
+
+    return Object.fromEntries(
+      Object.entries(grouped).map(([providerId, codes]) => [providerId, Array.from(codes).sort()])
+    );
   }
 
   reloadHistory(): void {

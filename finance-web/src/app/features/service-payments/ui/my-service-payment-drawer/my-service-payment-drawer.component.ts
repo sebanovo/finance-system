@@ -114,6 +114,7 @@ import { ServicePaymentDetailComponent } from '../service-payment-detail/service
                   <label class="text-sm font-semibold text-[#567157]">Proveedor</label>
                   <select
                     formControlName="providerId"
+                    (change)="onProviderChange()"
                     class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none focus:border-[#2E7D32] focus:bg-white">
                     <option value="" disabled>Selecciona proveedor</option>
                     @for (provider of providers; track provider.id) {
@@ -126,11 +127,18 @@ import { ServicePaymentDetailComponent } from '../service-payment-detail/service
 
                 <div class="space-y-2">
                   <label class="text-sm font-semibold text-[#567157]">Código de servicio</label>
-                  <input
-                    type="text"
+                  <select
                     formControlName="serviceCustomerCode"
-                    placeholder="Ej. 100001"
-                    class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none placeholder:text-[#9AA99A] focus:border-[#2E7D32] focus:bg-white" />
+                    class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none focus:border-[#2E7D32] focus:bg-white">
+                    <option value="" disabled>Selecciona un código</option>
+                    @for (code of serviceCustomerCodeOptions; track code) {
+                      <option [value]="code">{{ code }}</option>
+                    }
+                  </select>
+
+                  <div *ngIf="serviceCustomerCodeOptions.length === 0" class="rounded-2xl border border-dashed border-[#C8E6C9] bg-[#FAFCF8] px-4 py-3 text-sm text-[#6B7D6C]">
+                    No hay códigos sugeridos disponibles para este proveedor.
+                  </div>
                 </div>
               </form>
 
@@ -408,6 +416,7 @@ export class MyServicePaymentDrawerComponent implements OnChanges {
   @Input() enrollment: ServiceEnrollmentResponse | null = null;
   @Input() providers: ServiceProviderResponse[] = [];
   @Input() accounts: AccountOwnerResponse[] = [];
+  @Input() serviceCustomerCodesByProvider: Record<string, string[]> = {};
   @Input() queryResult: QueryServiceBillsResponse | null = null;
   @Input() queryLoading = false;
   @Input() paymentLoading = false;
@@ -434,6 +443,11 @@ export class MyServicePaymentDrawerComponent implements OnChanges {
     providerId: ['', Validators.required],
     serviceCustomerCode: ['', Validators.required]
   });
+
+  get serviceCustomerCodeOptions(): string[] {
+    const providerId = this.queryForm.get('providerId')?.value ?? '';
+    return this.serviceCustomerCodesByProvider[providerId] ?? [];
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen'] && this.isOpen) {
@@ -496,6 +510,12 @@ export class MyServicePaymentDrawerComponent implements OnChanges {
   selectAccountByNumber(accountNumber: string): void {
     const account = this.accounts.find(item => item.accountNumber === accountNumber) ?? null;
     this.selectedAccount.set(account);
+  }
+
+  onProviderChange(): void {
+    const serviceCodeControl = this.queryForm.get('serviceCustomerCode');
+    serviceCodeControl?.setValue('');
+    serviceCodeControl?.updateValueAndValidity({ emitEvent: false });
   }
 
   back(): void {

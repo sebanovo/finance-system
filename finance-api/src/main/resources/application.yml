@@ -74,7 +74,6 @@ app:
       - /api/public/**
       - /assets/**
       - /logo.png
-      - /favicon.ico
     global-paths:
       - /api/platform/**
   security:

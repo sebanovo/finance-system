@@ -66,7 +66,6 @@ public class SecurityConfig {
                                 "/api/platform/auth/refresh",
                                 "/assets/**",
                                 "/logo.png",
-                                "/favicon.ico"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
