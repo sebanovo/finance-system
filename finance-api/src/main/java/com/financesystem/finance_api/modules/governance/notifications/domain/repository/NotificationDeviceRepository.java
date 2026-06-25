@@ -18,5 +18,7 @@ public interface NotificationDeviceRepository {
 
     Optional<NotificationDevice> findByUserIdAndFcmToken(UUID userId, String fcmToken);
 
+    Optional<NotificationDevice> findByFcmToken(String fcmToken);
+
     List<NotificationDevice> findActiveByUserId(UUID userId);
 }

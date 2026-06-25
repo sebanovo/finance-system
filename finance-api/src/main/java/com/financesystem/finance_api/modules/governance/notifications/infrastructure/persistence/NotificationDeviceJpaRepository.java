@@ -15,4 +15,6 @@ public interface NotificationDeviceJpaRepository extends JpaRepository<Notificat
     Optional<NotificationDeviceEntity> findByUserIdAndDeviceId(UUID userId, String deviceId);
 
     Optional<NotificationDeviceEntity> findByUserIdAndFcmToken(UUID userId, String fcmToken);
+
+    Optional<NotificationDeviceEntity> findByFcmToken(String fcmToken);
 }
