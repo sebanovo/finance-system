@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import {
+  LANDING_APP_DOWNLOAD,
   LANDING_FEATURES,
   LANDING_HERO_CARDS,
   LANDING_METRICS,
@@ -10,6 +11,8 @@ import {
   LANDING_YOUTUBE_CHANNEL_URL
 } from '../../data/landing.content';
 import { LandingFeatureCard, LandingMetricCard, LandingPlanPreviewCard, LandingVideoCard } from '../../model/landing-plan.model';
+import { LandingAppDownloadData } from '../../model/landing-app-download.model';
+import { LandingAppDownloadComponent } from '../landing-app-download/landing-app-download.component';
 import { LandingCtaComponent } from '../landing-cta/landing-cta.component';
 import { LandingFeaturesComponent } from '../landing-features/landing-features.component';
 import { LandingHeroComponent } from '../landing-hero/landing-hero.component';
@@ -29,6 +32,7 @@ import { PublicNavbarComponent } from '../public-navbar/public-navbar.component'
     LandingQuickCardsComponent,
     LandingMetricsComponent,
     LandingFeaturesComponent,
+    LandingAppDownloadComponent,
     LandingPlanPreviewComponent,
     LandingVideosComponent,
     LandingCtaComponent
@@ -42,8 +46,9 @@ import { PublicNavbarComponent } from '../public-navbar/public-navbar.component'
         <app-landing-quick-cards [cards]="heroCards" />
         <app-landing-metrics [metrics]="metrics" />
         <app-landing-features [features]="features" />
-        <app-landing-plan-preview [plans]="plans" />
         <app-landing-videos [videos]="videos" [youtubeChannelUrl]="youtubeChannelUrl" />
+        <app-landing-app-download [data]="appDownload" />
+        <app-landing-plan-preview [plans]="plans" />
         <app-landing-cta [youtubeChannelUrl]="youtubeChannelUrl" />
       </main>
     </div>
@@ -55,6 +60,7 @@ export class LandingPageComponent {
   readonly features: LandingFeatureCard[] = LANDING_FEATURES;
   readonly metrics: LandingMetricCard[] = LANDING_METRICS;
   readonly plans: LandingPlanPreviewCard[] = LANDING_PLAN_PREVIEWS;
+  readonly appDownload: LandingAppDownloadData = LANDING_APP_DOWNLOAD;
   readonly videos: Array<LandingVideoCard & { safeUrl: SafeResourceUrl }>;
 
   constructor(private readonly sanitizer: DomSanitizer) {

@@ -5,6 +5,7 @@ import {
   LandingPlanPreviewCard,
   LandingVideoCard
 } from '../model/landing-plan.model';
+import { LandingAppDownloadData } from '../model/landing-app-download.model';
 
 export const LANDING_YOUTUBE_CHANNEL_URL = 'https://youtube.com/@prospera-6777?si=Bb9wP5j311yJgtKF';
 
@@ -106,3 +107,29 @@ export const LANDING_PLAN_PREVIEWS: LandingPlanPreviewCard[] = [
     ctaLink: '/prices'
   }
 ];
+
+export const LANDING_APP_DOWNLOAD: LandingAppDownloadData = {
+  badge: 'Aplicación móvil',
+  title: 'Finance Web también en tu móvil',
+  description:
+    'Descarga la app móvil desde Drive y gestiona cuentas, pagos de servicios, perfil y acceso seguro desde tu dispositivo.',
+  driveDownloadUrl: 'https://drive.google.com',
+  qrImageUrl: '/qr-app.png',
+  features: [
+    {
+      icon: 'shield-check',
+      title: 'Acceso seguro',
+      description: 'Ingresa con tus credenciales y mantén tu sesión protegida.'
+    },
+    {
+      icon: 'credit-card',
+      title: 'Pagos rápidos',
+      description: 'Consulta y paga servicios desde el móvil.'
+    },
+    {
+      icon: 'bell',
+      title: 'Notificaciones',
+      description: 'Revisa avisos importantes de tu cuenta.'
+    }
+  ]
+};

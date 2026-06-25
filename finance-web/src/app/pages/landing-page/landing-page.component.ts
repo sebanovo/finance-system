@@ -1,10 +1,17 @@
 import { Component } from '@angular/core';
-import { LandingPageComponent as PublicLandingPageComponent } from '../../features/landing/ui/landing-page/landing-page.component';
+import { PublicFooterComponent, PublicNavbarComponent } from '../../shared/ui/public-layout';
+import { LandingPageWidgetComponent } from '../../widgets/landing';
 
 @Component({
   selector: 'app-landing-page',
   standalone: true,
-  imports: [PublicLandingPageComponent],
-  template: `<app-public-landing-page />`
+  imports: [PublicNavbarComponent, LandingPageWidgetComponent, PublicFooterComponent],
+  template: `
+    <div class="min-h-screen bg-white">
+      <app-public-navbar />
+      <app-landing-page-widget />
+      <app-public-footer />
+    </div>
+  `
 })
 export class LandingPageComponent {}

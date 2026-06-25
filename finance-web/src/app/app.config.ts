@@ -6,7 +6,7 @@ import { authTokenInterceptor } from './shared/api';
 
 import {
   LucideAngularModule, Building2, User, ArrowRight, ArrowLeft, Eye, EyeOff,
-  LayoutDashboard, Settings, Shield, Users, Key, Briefcase, CreditCard,
+  LayoutDashboard, Monitor, Settings, Shield, Users, Key, Briefcase, CreditCard,
   ArrowRightLeft, DollarSign, RefreshCcw, Percent, Lock, ShieldAlert,
   BookOpen, Calendar, FileText, LogOut, ChevronDown, Menu, X, Bell,
   Plus, UserCircle2, Save, MoreHorizontal, Wallet, Pencil, CheckCircle,
@@ -20,10 +20,20 @@ import {
   Camera,
   Trash2,
   ShieldCheck,
+  Smartphone,
+  Download,
   LoaderCircle,
   TriangleAlert,
   CircleAlert,
-  Upload
+  Upload,
+  Star,
+  QrCode,
+  Facebook,
+  Instagram,
+  Youtube,
+  ExternalLink,
+  LogIn,
+  UserCog
 } from 'lucide-angular';
 
 
@@ -38,7 +48,7 @@ export const appConfig: ApplicationConfig = {
     provideAnimationsAsync(),
     importProvidersFrom(LucideAngularModule.pick({
       Building2, User, ArrowRight, ArrowLeft, Eye, EyeOff,
-      LayoutDashboard, Settings, Shield, Users, Key, Briefcase, CreditCard,
+      LayoutDashboard, Monitor, Settings, Shield, Users, Key, Briefcase, CreditCard,
       ArrowRightLeft, DollarSign, RefreshCcw, Percent, Lock, ShieldAlert,
       BookOpen, Calendar, FileText, LogOut, ChevronDown, Menu, X, Bell,
       Plus, UserCircle2, Save, MoreHorizontal, Wallet, Pencil, CheckCircle,
@@ -46,8 +56,9 @@ export const appConfig: ApplicationConfig = {
       RotateCcw, Reply, ClipboardList, AlertCircle, AlertTriangle, BadgeCheck,
       Building, Clock, Info, PauseCircle, PlayCircle, Sparkles, Wand2,
       BarChart3, FileChartColumn, Database, Search, Archive,
-      Camera, Trash2, ShieldCheck, LoaderCircle, TriangleAlert,
-      CircleAlert, Upload
+      Camera, Trash2, ShieldCheck, Smartphone, Download, LoaderCircle,
+      TriangleAlert, CircleAlert, Upload, Star, QrCode,
+      Facebook, Instagram, Youtube, ExternalLink, LogIn, UserCog
     }))
 
   ]

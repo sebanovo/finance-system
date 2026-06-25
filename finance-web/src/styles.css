@@ -41,7 +41,7 @@
 
   /* Constantes estructurales */
   --radius: 0.625rem;
-  
+
   /* Fondos y Textos Base (Mantenemos limpieza B2B) */
   --background: #ffffff;
   --foreground: #1f2937; /* Gris muy oscuro, mejor legibilidad que el negro puro */
@@ -49,41 +49,41 @@
   --card-foreground: #1f2937;
   --popover: #ffffff;
   --popover-foreground: #1f2937;
-  
+
   /* Marca PROSPERA - Botones y acciones principales */
-  --primary: #1B4D30; /* Verde Oscuro */
+  --primary: #1b4d30; /* Verde Oscuro */
   --primary-foreground: #ffffff;
-  
+
   /* Elementos Secundarios */
-  --secondary: #3D8C7C; /* Teal / Aqua */
+  --secondary: #3d8c7c; /* Teal / Aqua */
   --secondary-foreground: #ffffff;
-  
+
   /* Elementos Desactivados o Muted */
   --muted: #f3f4f6; /* Gris muy suave */
   --muted-foreground: #6b7280;
-  
+
   /* Hover states en tablas y menús */
-  --accent: #E8F5E9; /* Verde súper suave basado en tu logo */
-  --accent-foreground: #1B4D30;
-  
+  --accent: #e8f5e9; /* Verde súper suave basado en tu logo */
+  --accent-foreground: #1b4d30;
+
   /* Alertas destructivas (Mantenemos rojo estándar) */
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  
+
   /* Bordes e Inputs */
   --border: #e5e7eb; /* Gris limpio para dividir secciones */
   --input: #e5e7eb;
-  --ring: #8BC34A; /* Verde Lima brillante para el focus de inputs */
-  
+  --ring: #8bc34a; /* Verde Lima brillante para el focus de inputs */
+
   /* Sidebar (Panel Lateral) - Estilo Premium B2B */
-  --sidebar: #1B4D30; /* Fondo verde oscuro corporativo */
+  --sidebar: #1b4d30; /* Fondo verde oscuro corporativo */
   --sidebar-foreground: #ffffff; /* Texto blanco en el menú */
-  --sidebar-primary: #8BC34A; /* Verde lima para la sección activa */
-  --sidebar-primary-foreground: #1B4D30; /* Texto del ítem activo */
-  --sidebar-accent: #2E7D32; /* Hover en los ítems del menú (Verde bosque) */
+  --sidebar-primary: #8bc34a; /* Verde lima para la sección activa */
+  --sidebar-primary-foreground: #1b4d30; /* Texto del ítem activo */
+  --sidebar-accent: #2e7d32; /* Hover en los ítems del menú (Verde bosque) */
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #1B4D30;
-  --sidebar-ring: #8BC34A;
+  --sidebar-border: #1b4d30;
+  --sidebar-ring: #8bc34a;
 }
 
 /* ── Variables CSS: Modo Oscuro ── */
@@ -97,36 +97,36 @@
   --card-foreground: #f9fafb;
   --popover: #1f2937;
   --popover-foreground: #f9fafb;
-  
+
   /* En dark mode, los colores brillantes funcionan mejor para botones */
-  --primary: #8BC34A; /* Verde Lima */
-  --primary-foreground: #1B4D30; 
-  
-  --secondary: #3D8C7C;
+  --primary: #8bc34a; /* Verde Lima */
+  --primary-foreground: #1b4d30;
+
+  --secondary: #3d8c7c;
   --secondary-foreground: #ffffff;
-  
+
   --muted: #374151;
   --muted-foreground: #9ca3af;
-  
-  --accent: #1B4D30; /* Hover oscuro */
+
+  --accent: #1b4d30; /* Hover oscuro */
   --accent-foreground: #ffffff;
-  
+
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  
+
   --border: #374151;
   --input: #374151;
-  --ring: #8BC34A;
-  
+  --ring: #8bc34a;
+
   /* Sidebar Modo Oscuro */
-  --sidebar: #1f2937; 
+  --sidebar: #1f2937;
   --sidebar-foreground: #f9fafb;
-  --sidebar-primary: #8BC34A;
-  --sidebar-primary-foreground: #1B4D30;
+  --sidebar-primary: #8bc34a;
+  --sidebar-primary-foreground: #1b4d30;
   --sidebar-accent: #374151;
   --sidebar-accent-foreground: #f9fafb;
   --sidebar-border: #374151;
-  --sidebar-ring: #8BC34A;
+  --sidebar-ring: #8bc34a;
 }
 
 /* ── Estilos Base ── */
@@ -172,4 +172,18 @@
   .app-modal-footer {
     @apply mt-6 flex justify-end;
   }
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 84px;
+}
+
+body {
+  margin: 0;
+  background: #ffffff;
+}
+
+a {
+  cursor: pointer;
 }
