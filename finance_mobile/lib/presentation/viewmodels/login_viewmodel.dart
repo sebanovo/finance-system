@@ -73,12 +73,6 @@ class LoginViewModel extends ChangeNotifier {
         tenantSlug: tenantSlug,
       );
 
-      // El registro de dispositivo no debe bloquear el login.
-      try {
-        final notifViewModel = di.sl<NotificationsViewModel>();
-        await notifViewModel.registerCurrentDevice();
-      } catch (_) {}
-
       return true;
     } catch (e) {
       _errorMessage = e.toString();
@@ -110,11 +104,6 @@ class LoginViewModel extends ChangeNotifier {
         refreshToken: refreshToken,
         tenantSlug: tenantSlug,
       );
-
-      try {
-        final notifViewModel = di.sl<NotificationsViewModel>();
-        await notifViewModel.registerCurrentDevice();
-      } catch (_) {}
 
       return true;
     } catch (e) {
