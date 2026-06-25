@@ -30,6 +30,9 @@ public class PlatformTenantEntity {
     @Column(name = "plan_id")
     private UUID planId;
 
+    @Column(length = 120)
+    private String stripeCustomerId;
+
     @Column(nullable = false)
     private boolean active;
 
@@ -97,6 +100,14 @@ public class PlatformTenantEntity {
 
     public void setPlanId(UUID planId) {
         this.planId = planId;
+    }
+
+    public String getStripeCustomerId() {
+        return stripeCustomerId;
+    }
+
+    public void setStripeCustomerId(String stripeCustomerId) {
+        this.stripeCustomerId = stripeCustomerId;
     }
 
     public boolean isActive() {

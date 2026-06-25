@@ -10,8 +10,22 @@ public record PlatformTenant(
         String schemaName,
         PlatformTenantStatus status,
         UUID planId,
+        String stripeCustomerId,
         boolean active,
         Instant createdAt,
         Instant updatedAt
 ) {
+    public PlatformTenant(
+            UUID id,
+            String name,
+            String slug,
+            String schemaName,
+            PlatformTenantStatus status,
+            UUID planId,
+            boolean active,
+            Instant createdAt,
+            Instant updatedAt
+    ) {
+        this(id, name, slug, schemaName, status, planId, null, active, createdAt, updatedAt);
+    }
 }

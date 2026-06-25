@@ -35,8 +35,26 @@ public class PlatformPlanRepositoryAdapter implements PlatformPlanRepository {
     }
 
     @Override
+    public Optional<PlatformPlan> findByStripeMonthlyPriceId(String stripePriceId) {
+        return jpaRepository.findByStripeMonthlyPriceId(stripePriceId).map(this::toDomain);
+    }
+
+    @Override
+    public Optional<PlatformPlan> findByStripeYearlyPriceId(String stripePriceId) {
+        return jpaRepository.findByStripeYearlyPriceId(stripePriceId).map(this::toDomain);
+    }
+
+    @Override
     public List<PlatformPlan> findAll() {
         return jpaRepository.findAll()
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<PlatformPlan> findActivePublicPlans() {
+        return jpaRepository.findByActiveTrueAndPublicVisibleTrueOrderBySortOrderAscCodeAsc()
                 .stream()
                 .map(this::toDomain)
                 .toList();
@@ -57,6 +75,14 @@ public class PlatformPlanRepositoryAdapter implements PlatformPlanRepository {
         entity.setMaxRoles(plan.maxRoles());
         entity.setPlanType(plan.planType());
         entity.setTrialDays(plan.trialDays());
+        entity.setMonthlyAmount(plan.monthlyAmount());
+        entity.setYearlyAmount(plan.yearlyAmount());
+        entity.setCurrency(plan.currency());
+        entity.setStripeProductId(plan.stripeProductId());
+        entity.setStripeMonthlyPriceId(plan.stripeMonthlyPriceId());
+        entity.setStripeYearlyPriceId(plan.stripeYearlyPriceId());
+        entity.setPublicVisible(plan.publicVisible());
+        entity.setSortOrder(plan.sortOrder());
         entity.setActive(plan.active());
         return entity;
     }
@@ -71,6 +97,14 @@ public class PlatformPlanRepositoryAdapter implements PlatformPlanRepository {
                 entity.getMaxRoles(),
                 entity.getPlanType(),
                 entity.getTrialDays(),
+                entity.getMonthlyAmount(),
+                entity.getYearlyAmount(),
+                entity.getCurrency(),
+                entity.getStripeProductId(),
+                entity.getStripeMonthlyPriceId(),
+                entity.getStripeYearlyPriceId(),
+                entity.isPublicVisible(),
+                entity.getSortOrder(),
                 entity.isActive(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()

@@ -19,8 +19,12 @@ public class PlatformSubscriptionMapper {
     ) {
         Long remainingDays = null;
 
-        if (subscription.expiresAt() != null) {
-            long days = Duration.between(Instant.now(), subscription.expiresAt()).toDays();
+        Instant endDate = subscription.currentPeriodEnd() != null
+                ? subscription.currentPeriodEnd()
+                : subscription.expiresAt();
+
+        if (endDate != null) {
+            long days = Duration.between(Instant.now(), endDate).toDays();
             remainingDays = Math.max(days, 0);
         }
 
@@ -38,8 +42,15 @@ public class PlatformSubscriptionMapper {
                 subscription.status().name(),
                 subscription.trial(),
                 subscription.currentSubscription(),
+                subscription.stripeSubscriptionId(),
+                subscription.stripePriceId(),
+                subscription.billingInterval() == null ? null : subscription.billingInterval().name(),
                 subscription.startedAt(),
                 subscription.expiresAt(),
+                subscription.currentPeriodStart(),
+                subscription.currentPeriodEnd(),
+                subscription.cancelAtPeriodEnd(),
+                subscription.cancelledAt(),
                 remainingDays,
                 subscription.createdAt(),
                 subscription.updatedAt()

@@ -4,6 +4,8 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.math.BigDecimal;
+
 public record CreatePlatformPlanRequest(
         @NotBlank
         @Size(max = 50)
@@ -26,6 +28,25 @@ public record CreatePlatformPlanRequest(
         @Size(max = 20)
         String planType,
 
-        Integer trialDays
+        Integer trialDays,
+
+        BigDecimal monthlyAmount,
+        BigDecimal yearlyAmount,
+
+        @Size(max = 10)
+        String currency,
+
+        @Size(max = 120)
+        String stripeProductId,
+
+        @Size(max = 120)
+        String stripeMonthlyPriceId,
+
+        @Size(max = 120)
+        String stripeYearlyPriceId,
+
+        Boolean publicVisible,
+
+        Integer sortOrder
 ) {
 }

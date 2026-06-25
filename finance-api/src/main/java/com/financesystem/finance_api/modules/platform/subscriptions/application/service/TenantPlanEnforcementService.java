@@ -34,7 +34,7 @@ public class TenantPlanEnforcementService {
         this.platformSubscriptionLifecycleService = platformSubscriptionLifecycleService;
     }
 
-    public TenantSubscriptionPolicySnapshot resolveCurrentTenantPolicy() {
+    public TenantSubscriptionPolicySnapshot currentPolicy() {
         platformSubscriptionLifecycleService.refreshExpiredSubscriptions();
 
         String tenantSlug = TenantContextHolder.getRequired().tenantSlug();
@@ -71,8 +71,16 @@ public class TenantPlanEnforcementService {
         );
     }
 
+    public TenantSubscriptionPolicySnapshot resolveCurrentTenantPolicy() {
+        return currentPolicy();
+    }
+
+    public void assertCanOperate() {
+        assertTenantOperational(currentPolicy());
+    }
+
     public void assertCanCreateUser(long currentActiveUsers) {
-        TenantSubscriptionPolicySnapshot policy = resolveCurrentTenantPolicy();
+        TenantSubscriptionPolicySnapshot policy = currentPolicy();
         assertTenantOperational(policy);
 
         if (currentActiveUsers >= policy.maxUsers()) {
@@ -84,7 +92,7 @@ public class TenantPlanEnforcementService {
     }
 
     public void assertCanActivateUser(long currentActiveUsers) {
-        TenantSubscriptionPolicySnapshot policy = resolveCurrentTenantPolicy();
+        TenantSubscriptionPolicySnapshot policy = currentPolicy();
         assertTenantOperational(policy);
 
         if (currentActiveUsers >= policy.maxUsers()) {
@@ -96,7 +104,7 @@ public class TenantPlanEnforcementService {
     }
 
     public void assertCanCreateRole(long currentActiveCustomRoles) {
-        TenantSubscriptionPolicySnapshot policy = resolveCurrentTenantPolicy();
+        TenantSubscriptionPolicySnapshot policy = currentPolicy();
         assertTenantOperational(policy);
 
         if (currentActiveCustomRoles >= policy.maxRoles()) {
@@ -108,7 +116,7 @@ public class TenantPlanEnforcementService {
     }
 
     public void assertCanActivateRole(long currentActiveCustomRoles) {
-        TenantSubscriptionPolicySnapshot policy = resolveCurrentTenantPolicy();
+        TenantSubscriptionPolicySnapshot policy = currentPolicy();
         assertTenantOperational(policy);
 
         if (currentActiveCustomRoles >= policy.maxRoles()) {

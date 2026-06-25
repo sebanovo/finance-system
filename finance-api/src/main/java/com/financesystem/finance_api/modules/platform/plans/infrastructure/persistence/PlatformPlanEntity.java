@@ -2,6 +2,7 @@ package com.financesystem.finance_api.modules.platform.plans.infrastructure.pers
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -34,6 +35,30 @@ public class PlatformPlanEntity {
     @Column
     private Integer trialDays;
 
+    @Column(precision = 19, scale = 4)
+    private BigDecimal monthlyAmount;
+
+    @Column(precision = 19, scale = 4)
+    private BigDecimal yearlyAmount;
+
+    @Column(nullable = false, length = 10)
+    private String currency = "USD";
+
+    @Column(length = 120)
+    private String stripeProductId;
+
+    @Column(length = 120)
+    private String stripeMonthlyPriceId;
+
+    @Column(length = 120)
+    private String stripeYearlyPriceId;
+
+    @Column(nullable = false)
+    private boolean publicVisible = true;
+
+    @Column(nullable = false)
+    private int sortOrder = 0;
+
     @Column(nullable = false)
     private boolean active;
 
@@ -48,11 +73,17 @@ public class PlatformPlanEntity {
         Instant now = Instant.now();
         this.createdAt = now;
         this.updatedAt = now;
+        if (this.currency == null || this.currency.isBlank()) {
+            this.currency = "USD";
+        }
     }
 
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = Instant.now();
+        if (this.currency == null || this.currency.isBlank()) {
+            this.currency = "USD";
+        }
     }
 
     public UUID getId() {
@@ -117,6 +148,70 @@ public class PlatformPlanEntity {
 
     public void setTrialDays(Integer trialDays) {
         this.trialDays = trialDays;
+    }
+
+    public BigDecimal getMonthlyAmount() {
+        return monthlyAmount;
+    }
+
+    public void setMonthlyAmount(BigDecimal monthlyAmount) {
+        this.monthlyAmount = monthlyAmount;
+    }
+
+    public BigDecimal getYearlyAmount() {
+        return yearlyAmount;
+    }
+
+    public void setYearlyAmount(BigDecimal yearlyAmount) {
+        this.yearlyAmount = yearlyAmount;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    public String getStripeProductId() {
+        return stripeProductId;
+    }
+
+    public void setStripeProductId(String stripeProductId) {
+        this.stripeProductId = stripeProductId;
+    }
+
+    public String getStripeMonthlyPriceId() {
+        return stripeMonthlyPriceId;
+    }
+
+    public void setStripeMonthlyPriceId(String stripeMonthlyPriceId) {
+        this.stripeMonthlyPriceId = stripeMonthlyPriceId;
+    }
+
+    public String getStripeYearlyPriceId() {
+        return stripeYearlyPriceId;
+    }
+
+    public void setStripeYearlyPriceId(String stripeYearlyPriceId) {
+        this.stripeYearlyPriceId = stripeYearlyPriceId;
+    }
+
+    public boolean isPublicVisible() {
+        return publicVisible;
+    }
+
+    public void setPublicVisible(boolean publicVisible) {
+        this.publicVisible = publicVisible;
+    }
+
+    public int getSortOrder() {
+        return sortOrder;
+    }
+
+    public void setSortOrder(int sortOrder) {
+        this.sortOrder = sortOrder;
     }
 
     public boolean isActive() {

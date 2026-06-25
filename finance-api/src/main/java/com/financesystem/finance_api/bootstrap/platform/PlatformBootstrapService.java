@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.sql.DataSource;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -36,22 +37,103 @@ public class PlatformBootstrapService {
     }
 
     public void seedBasePlans() {
-        logger.info("Seeding base platform plans...");
+        logger.info("Seeding base platform plans with billing metadata...");
 
         List<PlanSeed> plans = List.of(
-                new PlanSeed("DEMO", "Demo", "Demo trial plan", 5, 3, "DEMO", 10),
-                new PlanSeed("BASIC", "Basic", "Basic subscription plan", 10, 5, "PAID", null),
-                new PlanSeed("PRO", "Professional", "Professional subscription plan", 25, 10, "PAID", null),
-                new PlanSeed("ENTERPRISE", "Enterprise", "Enterprise subscription plan", 9999, 999, "PAID", null)
+                new PlanSeed(
+                        "DEMO",
+                        "Demo",
+                        "Demo trial plan",
+                        5,
+                        3,
+                        "DEMO",
+                        10,
+                        null,
+                        null,
+                        envOrDefault("STRIPE_DEFAULT_CURRENCY", "USD"),
+                        null,
+                        null,
+                        null,
+                        false,
+                        1
+                ),
+                new PlanSeed(
+                        "BASIC",
+                        "Basic",
+                        "Basic subscription plan",
+                        10,
+                        5,
+                        "PAID",
+                        null,
+                        envDecimalOrDefault("BASIC_MONTHLY_AMOUNT", "9.99"),
+                        envDecimalOrDefault("BASIC_YEARLY_AMOUNT", "99.99"),
+                        envOrDefault("STRIPE_DEFAULT_CURRENCY", "USD"),
+                        envOrNull("STRIPE_BASIC_PRODUCT_ID"),
+                        envOrNull("STRIPE_BASIC_MONTHLY_PRICE_ID"),
+                        envOrNull("STRIPE_BASIC_YEARLY_PRICE_ID"),
+                        true,
+                        2
+                ),
+                new PlanSeed(
+                        "PRO",
+                        "Professional",
+                        "Professional subscription plan",
+                        25,
+                        10,
+                        "PAID",
+                        null,
+                        envDecimalOrDefault("PRO_MONTHLY_AMOUNT", "19.99"),
+                        envDecimalOrDefault("PRO_YEARLY_AMOUNT", "199.99"),
+                        envOrDefault("STRIPE_DEFAULT_CURRENCY", "USD"),
+                        envOrNull("STRIPE_PRO_PRODUCT_ID"),
+                        envOrNull("STRIPE_PRO_MONTHLY_PRICE_ID"),
+                        envOrNull("STRIPE_PRO_YEARLY_PRICE_ID"),
+                        true,
+                        3
+                ),
+                new PlanSeed(
+                        "ENTERPRISE",
+                        "Enterprise",
+                        "Enterprise subscription plan",
+                        9999,
+                        999,
+                        "ENTERPRISE",
+                        null,
+                        null,
+                        null,
+                        envOrDefault("STRIPE_DEFAULT_CURRENCY", "USD"),
+                        envOrNull("STRIPE_ENTERPRISE_PRODUCT_ID"),
+                        null,
+                        null,
+                        true,
+                        4
+                )
         );
 
         for (PlanSeed plan : plans) {
             jdbcTemplate.update(
                     """
                     INSERT INTO public.platform_plans (
-                        code, name, description, max_users, max_roles, plan_type, trial_days, active, created_at, updated_at
+                        code,
+                        name,
+                        description,
+                        max_users,
+                        max_roles,
+                        plan_type,
+                        trial_days,
+                        monthly_amount,
+                        yearly_amount,
+                        currency,
+                        stripe_product_id,
+                        stripe_monthly_price_id,
+                        stripe_yearly_price_id,
+                        public_visible,
+                        sort_order,
+                        active,
+                        created_at,
+                        updated_at
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, true, NOW(), NOW())
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, true, NOW(), NOW())
                     ON CONFLICT (code) DO UPDATE SET
                         name = EXCLUDED.name,
                         description = EXCLUDED.description,
@@ -59,6 +141,14 @@ public class PlatformBootstrapService {
                         max_roles = EXCLUDED.max_roles,
                         plan_type = EXCLUDED.plan_type,
                         trial_days = EXCLUDED.trial_days,
+                        monthly_amount = EXCLUDED.monthly_amount,
+                        yearly_amount = EXCLUDED.yearly_amount,
+                        currency = EXCLUDED.currency,
+                        stripe_product_id = EXCLUDED.stripe_product_id,
+                        stripe_monthly_price_id = EXCLUDED.stripe_monthly_price_id,
+                        stripe_yearly_price_id = EXCLUDED.stripe_yearly_price_id,
+                        public_visible = EXCLUDED.public_visible,
+                        sort_order = EXCLUDED.sort_order,
                         active = true,
                         updated_at = NOW()
                     """,
@@ -68,7 +158,15 @@ public class PlatformBootstrapService {
                     plan.maxUsers(),
                     plan.maxRoles(),
                     plan.planType(),
-                    plan.trialDays()
+                    plan.trialDays(),
+                    plan.monthlyAmount(),
+                    plan.yearlyAmount(),
+                    plan.currency(),
+                    plan.stripeProductId(),
+                    plan.stripeMonthlyPriceId(),
+                    plan.stripeYearlyPriceId(),
+                    plan.publicVisible(),
+                    plan.sortOrder()
             );
         }
 
@@ -292,6 +390,16 @@ public class PlatformBootstrapService {
         logger.info("Base service permissions seeded successfully.");
     }
 
+    public void seedBaseBillingPermissions() {
+        logger.info("Seeding base billing permissions...");
+
+        seedPermissions(List.of(
+                new PermissionSeed("billing.subscription.manage", "billing", "Manage tenant subscriptions")
+        ));
+
+        logger.info("Base billing permissions seeded successfully.");
+    }
+
     public void seedBaseReportingPermissions() {
         logger.info("Seeding base reporting permissions...");
 
@@ -394,6 +502,33 @@ public class PlatformBootstrapService {
         logger.info("Service permissions assigned to registered tenants successfully.");
     }
 
+    public void seedBillingPermissionsForRegisteredTenants() {
+        logger.info("Assigning billing permissions to registered tenant roles...");
+
+        List<TenantSchemaSeed> tenants = jdbcTemplate.query(
+                """
+                SELECT slug, schema_name
+                FROM public.platform_tenants
+                WHERE active = true
+                  AND schema_name IS NOT NULL
+                  AND schema_name <> ''
+                ORDER BY slug ASC
+                """,
+                (rs, rowNum) -> new TenantSchemaSeed(rs.getString("slug"), rs.getString("schema_name"))
+        );
+
+        for (TenantSchemaSeed tenant : tenants) {
+            validateSchemaName(tenant.schemaName());
+            seedTenantRolePermissions(
+                    tenant.schemaName(),
+                    "OWNER_ADMIN",
+                    List.of("billing.subscription.manage")
+            );
+        }
+
+        logger.info("Billing permissions assigned to registered tenants successfully.");
+    }
+
     public void seedInitialPlatformSuperadmin() {
         logger.info("Seeding initial platform superadmin...");
 
@@ -429,7 +564,15 @@ public class PlatformBootstrapService {
             int maxUsers,
             int maxRoles,
             String planType,
-            Integer trialDays
+            Integer trialDays,
+            BigDecimal monthlyAmount,
+            BigDecimal yearlyAmount,
+            String currency,
+            String stripeProductId,
+            String stripeMonthlyPriceId,
+            String stripeYearlyPriceId,
+            boolean publicVisible,
+            int sortOrder
             ) {
 
     }
@@ -587,6 +730,26 @@ public class PlatformBootstrapService {
             String schemaName
             ) {
 
+    }
+
+    private String envOrDefault(String key, String defaultValue) {
+        String value = System.getenv(key);
+        if (!StringUtils.hasText(value)) {
+            return defaultValue;
+        }
+        return value.trim();
+    }
+
+    private String envOrNull(String key) {
+        String value = System.getenv(key);
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+        return value.trim();
+    }
+
+    private BigDecimal envDecimalOrDefault(String key, String defaultValue) {
+        return new BigDecimal(envOrDefault(key, defaultValue));
     }
 
 }

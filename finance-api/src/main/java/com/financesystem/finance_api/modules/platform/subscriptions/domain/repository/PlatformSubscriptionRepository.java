@@ -12,6 +12,8 @@ public interface PlatformSubscriptionRepository {
 
     Optional<PlatformSubscription> findById(UUID id);
 
+    Optional<PlatformSubscription> findByStripeSubscriptionId(String stripeSubscriptionId);
+
     Optional<PlatformSubscription> findCurrentByTenantId(UUID tenantId);
 
     List<PlatformSubscription> findAll();

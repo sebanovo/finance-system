@@ -14,7 +14,13 @@ public interface PlatformPlanRepository {
 
     Optional<PlatformPlan> findByCode(String code);
 
+    Optional<PlatformPlan> findByStripeMonthlyPriceId(String stripePriceId);
+
+    Optional<PlatformPlan> findByStripeYearlyPriceId(String stripePriceId);
+
     List<PlatformPlan> findAll();
+
+    List<PlatformPlan> findActivePublicPlans();
 
     boolean existsByCode(String code);
 }

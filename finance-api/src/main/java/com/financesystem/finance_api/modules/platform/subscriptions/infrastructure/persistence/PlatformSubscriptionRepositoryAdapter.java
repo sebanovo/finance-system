@@ -30,6 +30,11 @@ public class PlatformSubscriptionRepositoryAdapter implements PlatformSubscripti
     }
 
     @Override
+    public Optional<PlatformSubscription> findByStripeSubscriptionId(String stripeSubscriptionId) {
+        return jpaRepository.findByStripeSubscriptionId(stripeSubscriptionId).map(this::toDomain);
+    }
+
+    @Override
     public Optional<PlatformSubscription> findCurrentByTenantId(UUID tenantId) {
         return jpaRepository.findByTenantIdAndCurrentSubscriptionTrue(tenantId).map(this::toDomain);
     }
@@ -55,8 +60,15 @@ public class PlatformSubscriptionRepositoryAdapter implements PlatformSubscripti
         entity.setStatus(subscription.status());
         entity.setTrial(subscription.trial());
         entity.setCurrentSubscription(subscription.currentSubscription());
+        entity.setStripeSubscriptionId(subscription.stripeSubscriptionId());
+        entity.setStripePriceId(subscription.stripePriceId());
+        entity.setBillingInterval(subscription.billingInterval());
         entity.setStartedAt(subscription.startedAt());
         entity.setExpiresAt(subscription.expiresAt());
+        entity.setCurrentPeriodStart(subscription.currentPeriodStart());
+        entity.setCurrentPeriodEnd(subscription.currentPeriodEnd());
+        entity.setCancelAtPeriodEnd(subscription.cancelAtPeriodEnd());
+        entity.setCancelledAt(subscription.cancelledAt());
         return entity;
     }
 
@@ -68,8 +80,15 @@ public class PlatformSubscriptionRepositoryAdapter implements PlatformSubscripti
                 entity.getStatus(),
                 entity.isTrial(),
                 entity.isCurrentSubscription(),
+                entity.getStripeSubscriptionId(),
+                entity.getStripePriceId(),
+                entity.getBillingInterval(),
                 entity.getStartedAt(),
                 entity.getExpiresAt(),
+                entity.getCurrentPeriodStart(),
+                entity.getCurrentPeriodEnd(),
+                entity.isCancelAtPeriodEnd(),
+                entity.getCancelledAt(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );

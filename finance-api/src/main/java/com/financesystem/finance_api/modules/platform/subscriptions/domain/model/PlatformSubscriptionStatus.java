@@ -3,6 +3,9 @@ package com.financesystem.finance_api.modules.platform.subscriptions.domain.mode
 public enum PlatformSubscriptionStatus {
     TRIAL,
     ACTIVE,
+    PAST_DUE,
+    SUSPENDED,
+    INCOMPLETE,
     EXPIRED,
     CANCELLED
 }
