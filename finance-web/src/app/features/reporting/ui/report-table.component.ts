@@ -13,7 +13,7 @@ import { ReportColumn } from '../../../entities/reporting/model/reporting.model'
         Sin columnas para mostrar.
       </div>
     } @else {
-      <div class="overflow-x-auto rounded-2xl border border-[#E8F2E2]">
+      <div class="max-w-full overflow-x-auto rounded-2xl border border-[#E8F2E2]">
         <table class="w-full divide-y divide-[#E8F2E2]">
           <thead class="bg-[#F7FBF3]">
             <tr class="text-left text-xs font-bold uppercase tracking-[0.12em] text-[#6B7D6C]">

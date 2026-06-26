@@ -257,7 +257,7 @@ type Tab = 'controlled' | 'ai' | 'history';
           </div>
           <div class="grid gap-4 lg:grid-cols-2">
             <app-report-donut-chart [columns]="res.columns" [rows]="res.rows"></app-report-donut-chart>
-            <div class="rounded-2xl border border-[#E8F2E2] bg-white p-4">
+            <div class="min-w-0 rounded-2xl border border-[#E8F2E2] bg-white p-4">
               <app-report-bar-chart [columns]="res.columns" [rows]="res.rows"></app-report-bar-chart>
             </div>
           </div>

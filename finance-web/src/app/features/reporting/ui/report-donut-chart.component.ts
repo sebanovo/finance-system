@@ -20,11 +20,11 @@ interface Slice {
   imports: [CommonModule],
   template: `
     @if (slices().length > 0) {
-      <div class="rounded-2xl border border-[#E8F2E2] bg-white p-5">
+      <div class="min-w-0 rounded-2xl border border-[#E8F2E2] bg-white p-5">
         <p class="mb-4 text-xs font-semibold uppercase tracking-[0.14em] text-[#6B7D6C]">
           {{ valueLabel() }} por {{ categoryLabel() }}
         </p>
-        <div class="flex flex-col items-center gap-5 sm:flex-row">
+        <div class="flex min-w-0 flex-col items-center gap-5 sm:flex-row">
           <div class="relative h-44 w-44 shrink-0">
             <svg viewBox="0 0 42 42" class="h-44 w-44 -rotate-90">
               <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#EEF5EA" stroke-width="4.5"></circle>
@@ -40,9 +40,9 @@ interface Slice {
               <span class="mt-1 text-[10px] font-semibold uppercase tracking-wider text-[#9AA89A]">Total</span>
             </div>
           </div>
-          <ul class="grid w-full grid-cols-1 gap-2 sm:grid-cols-2">
+          <ul class="grid min-w-0 w-full grid-cols-1 gap-2 sm:grid-cols-2">
             @for (s of slices(); track s.label) {
-              <li class="flex items-center gap-2 text-xs">
+              <li class="flex min-w-0 items-center gap-2 text-xs">
                 <span class="h-3 w-3 shrink-0 rounded-full" [style.background-color]="s.color"></span>
                 <span class="truncate text-[#4F5D4F]" [title]="s.label">{{ s.label }}</span>
                 <span class="ml-auto shrink-0 font-semibold text-[#1B5E20]">{{ formatNumber(s.value) }}</span>

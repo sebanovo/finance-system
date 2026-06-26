@@ -1,7 +1,9 @@
 import { HttpBackend, HttpClient, HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { catchError, of, switchMap, throwError } from 'rxjs';
 import { ApiResponse } from '../models/api-response.model';
+import { AuthTokenResponse } from '../../../entities/auth';
 import { AuthStorageService } from '../../../shared/lib/storage/auth-storage.service';
 import { PlatformStorageService } from '../../../features/platform/lib/platform-storage.service';
 import { PlatformAuthTokenResponse } from '../../../entities/platform/api/platform.service';
@@ -16,6 +18,7 @@ export const authTokenInterceptor: HttpInterceptorFn = (req, next) => {
 
   const authStorage = inject(AuthStorageService);
   const platformStorage = inject(PlatformStorageService);
+  const router = inject(Router);
   const httpBackend = inject(HttpBackend);
   const refreshHttp = new HttpClient(httpBackend);
 
@@ -24,7 +27,26 @@ export const authTokenInterceptor: HttpInterceptorFn = (req, next) => {
   return next(clonedRequest).pipe(
     catchError((error: unknown) => {
       if (!shouldAttemptPlatformRefresh(req, error, platformStorage)) {
-        return throwError(() => error);
+        if (!shouldAttemptTenantRefresh(req, error, authStorage)) {
+          return throwError(() => error);
+        }
+
+        return refreshTenantSession(refreshHttp, authStorage).pipe(
+          switchMap((accessToken) => {
+            const retryRequest = req.clone({
+              setHeaders: {
+                Authorization: `Bearer ${accessToken}`,
+                'X-Tenant-Slug': authStorage.getTenantSlug() ?? ''
+              }
+            });
+            return next(retryRequest);
+          }),
+          catchError((refreshError) => {
+            authStorage.clear();
+            void router.navigate(['/login'], { replaceUrl: true });
+            return throwError(() => refreshError);
+          })
+        );
       }
 
       return refreshPlatformSession(refreshHttp, platformStorage).pipe(
@@ -39,6 +61,7 @@ export const authTokenInterceptor: HttpInterceptorFn = (req, next) => {
         }),
         catchError((refreshError) => {
           platformStorage.clearSession();
+          void router.navigate(['/platform/login'], { replaceUrl: true });
           return throwError(() => refreshError);
         })
       );
@@ -137,6 +160,48 @@ function shouldAttemptPlatformRefresh(
   return platformStorage.hasRefreshToken();
 }
 
+function shouldAttemptTenantRefresh(
+  req: Parameters<HttpInterceptorFn>[0],
+  error: unknown,
+  authStorage: AuthStorageService
+): boolean {
+  if (!(error instanceof HttpErrorResponse)) {
+    return false;
+  }
+
+  if (error.status !== 401) {
+    return false;
+  }
+
+  if (isPublicApiRequest(req.url)) {
+    return false;
+  }
+
+  if (req.url.includes('/api/platform/')) {
+    return false;
+  }
+
+  if (!req.url.includes('/api/')) {
+    return false;
+  }
+
+  if (
+    req.url.includes('/api/auth/login') ||
+    req.url.includes('/api/auth/refresh') ||
+    req.url.includes('/api/auth/face/login') ||
+    req.url.includes('/api/auth/forgot-password') ||
+    req.url.includes('/api/auth/reset-password')
+  ) {
+    return false;
+  }
+
+  if (req.headers.has(PLATFORM_REFRESH_HEADER)) {
+    return false;
+  }
+
+  return authStorage.hasRefreshToken() && authStorage.hasTenantSlug();
+}
+
 function refreshPlatformSession(
   refreshHttp: HttpClient,
   platformStorage: PlatformStorageService
@@ -157,6 +222,43 @@ function refreshPlatformSession(
         platformStorage.saveAccessToken(response.data.accessToken);
         if (response.data.refreshToken) {
           platformStorage.saveRefreshToken(response.data.refreshToken);
+        }
+
+        return of(response.data.accessToken);
+      })
+    );
+}
+
+function refreshTenantSession(
+  refreshHttp: HttpClient,
+  authStorage: AuthStorageService
+) {
+  const refreshToken = authStorage.getRefreshToken();
+  const tenantSlug = authStorage.getTenantSlug();
+
+  if (!refreshToken) {
+    return throwError(() => new Error('Missing tenant refresh token'));
+  }
+
+  if (!tenantSlug) {
+    return throwError(() => new Error('Missing tenant slug'));
+  }
+
+  return refreshHttp
+    .post<ApiResponse<AuthTokenResponse>>(
+      `${environment.apiUrl}/api/auth/refresh`,
+      { refreshToken },
+      { headers: { 'X-Tenant-Slug': tenantSlug } }
+    )
+    .pipe(
+      switchMap((response) => {
+        if (!response.success || !response.data?.accessToken) {
+          return throwError(() => new Error(response.message || 'Tenant token refresh failed'));
+        }
+
+        authStorage.saveToken(response.data.accessToken);
+        if (response.data.refreshToken) {
+          authStorage.saveRefreshToken(response.data.refreshToken);
         }
 
         return of(response.data.accessToken);

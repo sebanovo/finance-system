@@ -166,6 +166,31 @@ interface MenuGroup {
             </div>
           </div>
         </ng-container>
+
+        <ng-container *ngIf="!isPlatformRoute && canAccessSubscription()">
+          <div class="mx-1 mt-4 rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-emerald-50 p-4 shadow-sm">
+            <div class="flex items-start gap-3">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-700 text-white shadow-sm">
+                <lucide-icon name="sparkles" class="h-5 w-5"></lucide-icon>
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <p class="text-xs font-black uppercase tracking-[0.18em] text-emerald-700">Upgrade</p>
+                <h3 class="mt-1 text-sm font-black text-[#1B5E20]">Mejora tu plan</h3>
+                <p class="mt-1 text-xs leading-5 text-[#567157]">
+                  Amplía tu capacidad de usuarios, roles y acceso al dashboard de suscripción.
+                </p>
+              </div>
+            </div>
+
+            <a
+              routerLink="/dashboard/subscription"
+              (click)="closeMobileMenu()"
+              class="mt-4 inline-flex h-10 w-full items-center justify-center rounded-2xl bg-emerald-700 px-4 text-sm font-black text-white transition-colors hover:bg-emerald-800">
+              Ver planes
+            </a>
+          </div>
+        </ng-container>
       </nav>
 
       <div class="shrink-0 border-t border-[#C8E6C9] p-4">
@@ -488,6 +513,11 @@ export class SidebarComponent {
     }
 
     return this.permissionService.hasAnyPermission(...item.permissions);
+  }
+
+  canAccessSubscription(): boolean {
+    return this.permissionService.hasPermission('billing.subscription.manage')
+      || this.permissionService.hasRole('OWNER_ADMIN');
   }
 
   toggleGroup(id: string): void {
