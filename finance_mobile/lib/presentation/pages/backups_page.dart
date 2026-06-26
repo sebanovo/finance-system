@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -380,12 +379,12 @@ class _BackupsPageState extends State<BackupsPage> {
               ..._viewModel.backups.map(
                 (backup) => Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                    child: Card(
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        side: const BorderSide(color: Color(0xFFE5E7EB)),
-                      ),
+                  child: Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: const BorderSide(color: Color(0xFFE5E7EB)),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
@@ -685,8 +684,9 @@ class _RestoreBackupSheet extends StatefulWidget {
 }
 
 class _RestoreBackupSheetState extends State<_RestoreBackupSheet> {
-  final _confirmationController =
-      TextEditingController(text: 'RESTORE_TENANT_BACKUP');
+  final _confirmationController = TextEditingController(
+    text: 'RESTORE_TENANT_BACKUP',
+  );
   final _reasonController = TextEditingController();
   PlatformFile? _selectedFile;
   Uint8List? _fileBytes;
@@ -759,9 +759,9 @@ class _RestoreBackupSheetState extends State<_RestoreBackupSheet> {
                 Text(
                   'Restaurar desde archivo',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF111827),
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF111827),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 const Text(
@@ -773,7 +773,9 @@ class _RestoreBackupSheetState extends State<_RestoreBackupSheet> {
                   onPressed: _pickBackupFile,
                   icon: const Icon(Icons.attach_file),
                   label: Text(
-                    _selectedFile == null ? 'Seleccionar archivo' : _selectedFile!.name,
+                    _selectedFile == null
+                        ? 'Seleccionar archivo'
+                        : _selectedFile!.name,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -806,14 +808,19 @@ class _RestoreBackupSheetState extends State<_RestoreBackupSheet> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: FilledButton(
-                        onPressed: _selectedFile == null || _fileBytes == null || _submitting
+                        onPressed:
+                            _selectedFile == null ||
+                                _fileBytes == null ||
+                                _submitting
                             ? null
                             : _restore,
                         child: _submitting
                             ? const SizedBox(
                                 height: 18,
                                 width: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Text('Restaurar'),
                       ),
