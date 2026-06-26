@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
-import { PublicNavbarComponent } from '../../features/landing';
-import { PublicFooterComponent } from '../../shared/ui/public-layout';
+import { PublicFooterComponent, PublicNavbarComponent } from '../../shared/ui/public-layout';
 import { PricingPageWidgetComponent } from '../../widgets/pricing';
 
 @Component({
@@ -9,7 +8,7 @@ import { PricingPageWidgetComponent } from '../../widgets/pricing';
   imports: [PublicNavbarComponent, PricingPageWidgetComponent, PublicFooterComponent],
   template: `
     <div class="min-h-screen bg-[#F7FBF3]">
-      <app-public-navbar mode="prices" />
+      <app-public-navbar />
       <app-pricing-page-widget />
       <app-public-footer />
     </div>

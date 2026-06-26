@@ -1,6 +1,7 @@
 package com.financesystem.finance_api.modules.platform.billing.infrastructure.persistence;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,4 +14,13 @@ public interface SubscriptionCheckoutSessionJpaRepository extends JpaRepository<
     Optional<SubscriptionCheckoutSessionEntity> findByStripeSubscriptionId(String stripeSubscriptionId);
 
     List<SubscriptionCheckoutSessionEntity> findByTenantIdOrderByCreatedAtDesc(UUID tenantId);
+
+    @Query("""
+        select s
+        from SubscriptionCheckoutSessionEntity s
+        where s.status in ('PENDING', 'OPEN', 'CREATED')
+          and s.stripeSessionId is not null
+        order by s.createdAt asc
+    """)
+    List<SubscriptionCheckoutSessionEntity> findPendingActivationCandidates();
 }

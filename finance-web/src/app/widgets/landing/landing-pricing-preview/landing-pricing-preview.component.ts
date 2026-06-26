@@ -84,8 +84,8 @@ interface LandingPreviewPlan {
 
               <div class="mt-auto pt-8">
                 <a
-                  routerLink="/onboarding"
-                  [queryParams]="plan.queryParams"
+                  [routerLink]="plan.queryParams?.['plan'] === 'DEMO' ? '/onboarding' : '/prices'"
+                  [queryParams]="plan.queryParams?.['plan'] === 'DEMO' ? plan.queryParams : null"
                   class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-black transition-colors"
                   [class.bg-[#2E7D32]]="plan.featured"
                   [class.text-white]="plan.featured"

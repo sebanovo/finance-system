@@ -21,7 +21,7 @@
   </div>
 
   <!-- Mensaje de Éxito -->
-  <div *ngIf="success" @fadeSlideInOut
+  <div *ngIf="shouldShowSuccessCard()" @fadeSlideInOut
     class="mb-6 p-4 bg-accent text-accent-foreground rounded-md border border-primary/20 flex flex-col items-center gap-3 text-center">
     <lucide-icon name="arrow-right" class="h-10 w-10 text-primary animate-bounce"></lucide-icon>
     <div>

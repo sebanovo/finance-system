@@ -19,4 +19,6 @@ public interface SubscriptionCheckoutSessionRepository {
     Optional<UUID> findByTenantIdFromStripeSubscription(String stripeSubscriptionId);
 
     List<SubscriptionCheckoutSession> findByTenantId(UUID tenantId);
+
+    List<SubscriptionCheckoutSession> findPendingActivationCandidates();
 }

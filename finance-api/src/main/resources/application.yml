@@ -51,6 +51,31 @@ app:
       success-url: ${STRIPE_SUCCESS_URL:http://localhost:4200/billing/success?session_id={CHECKOUT_SESSION_ID}}
       cancel-url: ${STRIPE_CANCEL_URL:http://localhost:4200/billing/cancel}
       customer-portal-return-url: ${STRIPE_CUSTOMER_PORTAL_RETURN_URL:http://localhost:4200/settings/billing}
+  security:
+    jwt:
+      secret: ${JWT_SECRET:4a2d6b9f8e7c1a5d3f2b4c6e8a0d9f1b3c5e7a9d2f4b6c8e0a1d3f5b7c9e2a4}
+      access-expiration-ms: ${JWT_ACCESS_EXPIRATION:900000}
+      refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION:604800000}
+  bootstrap:
+    superadmin:
+      email: ${PLATFORM_SUPERADMIN_EMAIL:superadmin@finance.local}
+      password: ${PLATFORM_SUPERADMIN_PASSWORD:SuperAdmin123!}
+      first-name: ${PLATFORM_SUPERADMIN_FIRST_NAME:Platform}
+      last-name: ${PLATFORM_SUPERADMIN_LAST_NAME:Admin}
+    sample-data:
+      enabled: ${APP_BOOTSTRAP_SAMPLE_DATA_ENABLED:false}
+  mail:
+    from: ${MAIL_FROM:no-reply@finance.local}
+  notifications:
+    password-reset:
+      expiration-minutes: ${PASSWORD_RESET_EXPIRATION_MINUTES:30}
+      reset-url-base: ${PASSWORD_RESET_URL_BASE:http://localhost:4200/reset-password}
+    push:
+      enabled: ${NOTIFICATIONS_PUSH_ENABLED:false}
+      provider: ${NOTIFICATIONS_PROVIDER:FIREBASE}
+      firebase:
+        credentials-path: ${FIREBASE_CREDENTIALS_PATH:classpath:firebase/service-account.example.json}
+        project-id: ${FIREBASE_PROJECT_ID:finance-system-dev}
   auth:
     face-recognition:
       enabled: ${FACEPP_ENABLED:true}
@@ -77,28 +102,7 @@ app:
       - /api/public/**
     global-paths:
       - /api/platform/**
-  security:
-    jwt:
-      secret: ${JWT_SECRET:4a2d6b9f8e7c1a5d3f2b4c6e8a0d9f1b3c5e7a9d2f4b6c8e0a1d3f5b7c9e2a4}
-      access-expiration-ms: ${JWT_ACCESS_EXPIRATION:900000}
-      refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION:604800000}
-  bootstrap:
-    superadmin:
-      email: ${PLATFORM_SUPERADMIN_EMAIL:superadmin@finance.local}
-      password: ${PLATFORM_SUPERADMIN_PASSWORD:SuperAdmin123!}
-      first-name: ${PLATFORM_SUPERADMIN_FIRST_NAME:Platform}
-      last-name: ${PLATFORM_SUPERADMIN_LAST_NAME:Admin}
-    sample-data:
-      enabled: ${APP_BOOTSTRAP_SAMPLE_DATA_ENABLED:false}
-  mail:
-    from: ${MAIL_FROM:no-reply@finance.local}
-  notifications:
-    password-reset:
-      expiration-minutes: ${PASSWORD_RESET_EXPIRATION_MINUTES:30}
-      reset-url-base: ${PASSWORD_RESET_URL_BASE:http://localhost:4200/reset-password}
-    push:
-      enabled: ${NOTIFICATIONS_PUSH_ENABLED:false}
-      provider: ${NOTIFICATIONS_PROVIDER:FIREBASE}
-      firebase:
-        credentials-path: ${FIREBASE_CREDENTIALS_PATH:classpath:firebase/service-account.example.json}
-        project-id: ${FIREBASE_PROJECT_ID:finance-system-dev}
+
+finance:
+  billing:
+    checkout-reconciliation-ms: ${CHECKOUT_RECONCILIATION_MS:60000}

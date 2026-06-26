@@ -51,6 +51,14 @@ public class SubscriptionCheckoutSessionRepositoryAdapter implements Subscriptio
                 .toList();
     }
 
+    @Override
+    public List<SubscriptionCheckoutSession> findPendingActivationCandidates() {
+        return jpaRepository.findPendingActivationCandidates()
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
     private SubscriptionCheckoutSessionEntity toEntity(SubscriptionCheckoutSession session) {
         SubscriptionCheckoutSessionEntity entity = new SubscriptionCheckoutSessionEntity();
         entity.setId(session.id());
