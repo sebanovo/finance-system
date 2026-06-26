@@ -57,7 +57,7 @@ public class GetTenantSummaryUseCase {
                         "Plan not found for current subscription"
                 ));
 
-        long totalUsers = tenantUserRepository.countActiveUsers();
+        long totalUsers = tenantUserRepository.countActiveAndPendingUsers();
 
         long trialDaysLeft = 0;
         if (subscription.trial() && subscription.expiresAt() != null) {

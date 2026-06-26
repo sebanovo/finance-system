@@ -13,6 +13,7 @@ import com.financesystem.finance_api.modules.identity.auth.application.dto.AuthT
 import com.financesystem.finance_api.modules.identity.auth.application.dto.RefreshTokenRequest;
 import com.financesystem.finance_api.modules.identity.auth.domain.exception.AuthenticationFailedException;
 import com.financesystem.finance_api.modules.identity.users.domain.model.TenantUser;
+import com.financesystem.finance_api.modules.identity.users.domain.model.TenantUserStatus;
 import com.financesystem.finance_api.modules.identity.users.domain.repository.TenantUserRepository;
 import io.jsonwebtoken.Claims;
 import org.springframework.stereotype.Service;
@@ -68,7 +69,10 @@ public class RefreshTenantTokenUseCase {
         TenantUser tenantUser = tenantUserRepository.findById(userId)
                 .orElseThrow(() -> new AuthenticationFailedException("User not found for refresh token"));
 
-        if (!tenantUser.active()) {
+        if (tenantUser.status() == TenantUserStatus.PENDING || !tenantUser.active()) {
+            if (tenantUser.status() == TenantUserStatus.PENDING) {
+                throw new AuthenticationFailedException("Tu cuenta aún no está activada. Revisa tu correo.");
+            }
             throw new AuthenticationFailedException("User is inactive");
         }
 

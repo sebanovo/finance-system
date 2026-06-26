@@ -86,7 +86,7 @@ public class TenantPlanEnforcementService {
         if (currentActiveUsers >= policy.maxUsers()) {
             throw new TenantSubscriptionAccessDeniedException(
                     "Your current plan '" + policy.planCode() + "' allows a maximum of "
-                    + policy.maxUsers() + " active users. Upgrade is required to create more users."
+                    + policy.maxUsers() + " users (active or pending). Upgrade is required to create more users."
             );
         }
     }
@@ -98,7 +98,7 @@ public class TenantPlanEnforcementService {
         if (currentActiveUsers >= policy.maxUsers()) {
             throw new TenantSubscriptionAccessDeniedException(
                     "Your current plan '" + policy.planCode() + "' allows a maximum of "
-                    + policy.maxUsers() + " active users. Upgrade is required to activate more users."
+                    + policy.maxUsers() + " users (active or pending). Upgrade is required to activate more users."
             );
         }
     }

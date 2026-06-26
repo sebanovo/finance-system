@@ -28,7 +28,6 @@ public class TenantUserController {
     private final UpdateTenantUserUseCase updateTenantUserUseCase;
     private final ActivateTenantUserUseCase activateTenantUserUseCase;
     private final DeactivateTenantUserUseCase deactivateTenantUserUseCase;
-    private final CreateTenantUserWithoutVerificationUseCase createTenantUserWithoutVerificationUseCase;
 
     public TenantUserController(
             CreateTenantUserUseCase createTenantUserUseCase,
@@ -36,8 +35,7 @@ public class TenantUserController {
             GetTenantUserByIdUseCase getTenantUserByIdUseCase,
             UpdateTenantUserUseCase updateTenantUserUseCase,
             ActivateTenantUserUseCase activateTenantUserUseCase,
-            DeactivateTenantUserUseCase deactivateTenantUserUseCase,
-            CreateTenantUserWithoutVerificationUseCase createTenantUserWithoutVerificationUseCase
+            DeactivateTenantUserUseCase deactivateTenantUserUseCase
     ) {
         this.createTenantUserUseCase = createTenantUserUseCase;
         this.listTenantUsersUseCase = listTenantUsersUseCase;
@@ -45,7 +43,6 @@ public class TenantUserController {
         this.updateTenantUserUseCase = updateTenantUserUseCase;
         this.activateTenantUserUseCase = activateTenantUserUseCase;
         this.deactivateTenantUserUseCase = deactivateTenantUserUseCase;
-        this.createTenantUserWithoutVerificationUseCase = createTenantUserWithoutVerificationUseCase;
     }
 
     // @PostMapping
@@ -63,8 +60,8 @@ public class TenantUserController {
     @PreAuthorize("hasAuthority('users.create')")
     public ApiResponse<TenantUserResponse> createUserWithoutVerification(@Valid @RequestBody CreateTenantUserRequest request) {
         return ApiResponse.success(
-                "Tenant user created successfully without verification",
-                createTenantUserWithoutVerificationUseCase.execute(request)
+                "Tenant user created successfully",
+                createTenantUserUseCase.execute(request)
         );
     }
 

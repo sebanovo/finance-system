@@ -90,10 +90,6 @@ public class TenantOwnerAdminProvisioningService {
                 normalizedEmail
         );
 
-        if (existingUsers != null && existingUsers > 0) {
-            throw new BusinessException("A tenant user with email '" + normalizedEmail + "' already exists");
-        }
-
         jdbcTemplate.execute("""
                 INSERT INTO %s.tenant_roles (name, description, active, created_at)
                 VALUES ('OWNER_ADMIN', 'Tenant owner administrator role', true, NOW())
@@ -102,27 +98,69 @@ public class TenantOwnerAdminProvisioningService {
                     description = EXCLUDED.description
                 """.formatted(schemaName));
 
-        UUID userId = UUID.randomUUID();
         String passwordHash = passwordEncoder.encode(rawPassword);
+        UUID userId;
 
-        boolean active = !issueActivationEmail;
-        String status = issueActivationEmail ? "PENDING" : "ACTIVE";
+        if (existingUsers != null && existingUsers > 0) {
+            ExistingTenantUser existingUser = jdbcTemplate.queryForObject(
+                    """
+                    SELECT id, status
+                    FROM %s.tenant_users
+                    WHERE email = ?
+                    LIMIT 1
+                    """.formatted(schemaName),
+                    (rs, rowNum) -> new ExistingTenantUser(
+                            rs.getObject("id", UUID.class),
+                            rs.getString("status")
+                    ),
+                    normalizedEmail
+            );
 
-        jdbcTemplate.update(
-                """
-                INSERT INTO %s.tenant_users (
-                    id, email, password_hash, first_name, last_name, active, status, created_at, updated_at
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-                """.formatted(schemaName),
-                userId,
-                normalizedEmail,
-                passwordHash,
-                normalizedFirstName,
-                normalizedLastName,
-                active,
-                status
-        );
+            if (existingUser == null || existingUser.id() == null) {
+                throw new BusinessException("A tenant user with email '" + normalizedEmail + "' already exists");
+            }
+
+            userId = existingUser.id();
+
+            if (issueActivationEmail && "ACTIVE".equalsIgnoreCase(existingUser.status())) {
+                throw new BusinessException("A tenant user with email '" + normalizedEmail + "' already exists");
+            }
+
+            jdbcTemplate.update(
+                    """
+                    UPDATE %s.tenant_users
+                    SET password_hash = ?, first_name = ?, last_name = ?, active = ?, status = ?, updated_at = NOW()
+                    WHERE email = ?
+                    """.formatted(schemaName),
+                    passwordHash,
+                    normalizedFirstName,
+                    normalizedLastName,
+                    !issueActivationEmail,
+                    issueActivationEmail ? "PENDING" : "ACTIVE",
+                    normalizedEmail
+            );
+        } else {
+            userId = UUID.randomUUID();
+
+            boolean active = !issueActivationEmail;
+            String status = issueActivationEmail ? "PENDING" : "ACTIVE";
+
+            jdbcTemplate.update(
+                    """
+                    INSERT INTO %s.tenant_users (
+                        id, email, password_hash, first_name, last_name, active, status, created_at, updated_at
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                    """.formatted(schemaName),
+                    userId,
+                    normalizedEmail,
+                    passwordHash,
+                    normalizedFirstName,
+                    normalizedLastName,
+                    active,
+                    status
+            );
+        }
 
         UUID ownerAdminRoleId = jdbcTemplate.queryForObject(
                 """
@@ -162,10 +200,23 @@ public class TenantOwnerAdminProvisioningService {
         return userId;
     }
 
+    private record ExistingTenantUser(UUID id, String status) {
+    }
+
     private void issueActivation(String schemaName, String tenantSlug, String normalizedEmail) {
         Instant now = Instant.now();
         Instant expiresAt = now.plus(activationProperties.getExpirationMinutes(), ChronoUnit.MINUTES);
         String token = generateSecureToken();
+
+        jdbcTemplate.update(
+                """
+                UPDATE %s.tenant_account_activation_tokens
+                SET used = true, used_at = ?
+                WHERE email = ? AND used = false
+                """.formatted(schemaName),
+                OffsetDateTime.ofInstant(now, ZoneOffset.UTC),
+                normalizedEmail
+        );
 
         jdbcTemplate.update(
                 """

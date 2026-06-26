@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { PendingCheckoutStorageService } from '../../entities/billing';
+import { TenantUpgradeCheckoutStorageService } from '../../entities/billing';
+import { AuthStorageService } from '../../shared/lib/storage/auth-storage.service';
 import { PublicFooterComponent, PublicNavbarComponent } from '../../shared/ui/public-layout';
 
 @Component({
@@ -56,8 +58,16 @@ import { PublicFooterComponent, PublicNavbarComponent } from '../../shared/ui/pu
 })
 export class BillingCancelPageComponent {
   private readonly storage = inject(PendingCheckoutStorageService);
+  private readonly tenantUpgradeCheckoutStorage = inject(TenantUpgradeCheckoutStorageService);
+  private readonly authStorage = inject(AuthStorageService);
+  private readonly router = inject(Router);
 
   constructor() {
     this.storage.clear();
+    const tenantUpgradePending = this.tenantUpgradeCheckoutStorage.get();
+    if (tenantUpgradePending && this.authStorage.hasValidTenantSession()) {
+      void this.router.navigate(['/dashboard/subscription/cancel'], { replaceUrl: true });
+      return;
+    }
   }
 }

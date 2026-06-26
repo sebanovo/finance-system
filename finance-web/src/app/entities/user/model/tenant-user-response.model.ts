@@ -4,6 +4,7 @@ export interface TenantUserResponse {
   firstName: string;
   lastName: string;
   active: boolean;
+  status?: 'ACTIVE' | 'INACTIVE' | 'PENDING' | string;
 }
 
 export interface PageResponse<T> {

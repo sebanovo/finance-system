@@ -84,7 +84,7 @@ public class PublicPaidSignupUseCase {
         PlatformTenant createdTenant = platformTenantRepository.findById(createdTenantResponse.id())
                 .orElseThrow();
 
-        tenantOwnerAdminProvisioningService.provisionOwnerAdminWithoutVerification(
+        tenantOwnerAdminProvisioningService.provisionOwnerAdmin(
                 createdTenant.schemaName(),
                 createdTenant.slug(),
                 request.adminEmail().trim().toLowerCase(),
@@ -164,7 +164,7 @@ public class PublicPaidSignupUseCase {
                 savedCheckout.checkoutUrl(),
                 savedCheckout.status(),
                 savedCheckout.expiresAt(),
-                "Redirect the user to checkoutUrl. The paid subscription will be activated after Stripe webhook confirmation."
+                "Redirect the user to checkoutUrl. The subscription will be activated after Stripe webhook confirmation and the owner must verify the inbox before signing in."
         );
     }
 

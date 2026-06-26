@@ -14,6 +14,7 @@ import com.financesystem.finance_api.modules.identity.auth.domain.exception.Inva
 import com.financesystem.finance_api.modules.identity.auth.domain.model.PasswordResetToken;
 import com.financesystem.finance_api.modules.identity.auth.domain.repository.PasswordResetTokenRepository;
 import com.financesystem.finance_api.modules.identity.users.domain.model.TenantUser;
+import com.financesystem.finance_api.modules.identity.users.domain.model.TenantUserStatus;
 import com.financesystem.finance_api.modules.identity.users.domain.repository.TenantUserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -69,7 +70,10 @@ public class ResetPasswordUseCase {
         TenantUser tenantUser = tenantUserRepository.findByEmail(passwordResetToken.email())
                 .orElseThrow(() -> new BusinessException("User associated with password reset token was not found"));
 
-        if (!tenantUser.active()) {
+        if (tenantUser.status() == TenantUserStatus.PENDING || !tenantUser.active()) {
+            if (tenantUser.status() == TenantUserStatus.PENDING) {
+                throw new BusinessException("Tu cuenta aún no está activada. Revisa tu correo.");
+            }
             throw new BusinessException("User is inactive");
         }
 
