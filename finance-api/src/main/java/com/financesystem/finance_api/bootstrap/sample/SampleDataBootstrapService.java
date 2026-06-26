@@ -255,7 +255,8 @@ public class SampleDataBootstrapService {
                 seed.serviceCustomerName(),
                 seed.serviceAlias(),
                 ownerTransactionIds,
-                "owner"
+                "owner",
+                0
         );
         seedLoanBundleForUser(
                 schemaName,
@@ -359,7 +360,8 @@ public class SampleDataBootstrapService {
                     tenantServiceCustomerName(seed, userSeed.firstName(), userNumber),
                     tenantServiceAlias(seed, userSeed.firstName(), userNumber),
                     transferTransactionIds,
-                    "user-" + String.format("%02d", userNumber)
+                    "user-" + String.format("%02d", userNumber),
+                    userNumber
             );
             seedLoanBundleForUser(
                     schemaName,
@@ -1576,7 +1578,8 @@ public class SampleDataBootstrapService {
             String serviceCustomerName,
             String serviceAlias,
             List<UUID> transactionIds,
-            String keyPrefix
+            String keyPrefix,
+            int userNumber
     ) {
         UUID providerId = jdbcTemplate.queryForObject(
                 """
@@ -1622,6 +1625,35 @@ public class SampleDataBootstrapService {
                     null,
                     null
             );
+        }
+
+        if (userNumber > 0 && userNumber <= 5) {
+            int pendingBillCount = Math.min(4, transactionIds.size());
+            for (int index = 0; index < pendingBillCount; index++) {
+                int billIndex = index + 1;
+                String billingPeriod = billingPeriod(OffsetDateTime.now(ZoneOffset.UTC).minusMonths(billIndex));
+                BigDecimal pendingAmount = servicePendingAmount(seed).add(BigDecimal.valueOf(billIndex * 25L));
+                LocalDate dueDate = LocalDate.now(ZoneOffset.UTC).plusDays(10L + billIndex);
+                String billKeySuffix = keyPrefix + "-pending-" + String.format("%02d", billIndex);
+
+                upsertPublicServiceBill(
+                        providerId,
+                        serviceCustomerId,
+                        serviceCustomerCode,
+                        serviceCustomerName,
+                        billingPeriod,
+                        pendingAmount,
+                        "PENDING",
+                        dueDate,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null
+                );
+            }
+            return;
         }
 
         for (int index = 0; index < transactionIds.size(); index++) {

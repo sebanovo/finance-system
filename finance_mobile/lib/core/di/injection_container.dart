@@ -13,6 +13,7 @@ import 'package:finance_mobile/domain/repositories/subscription_repository.dart'
 import 'package:finance_mobile/domain/repositories/transaction_repository.dart';
 import 'package:finance_mobile/domain/repositories/user_repository.dart';
 import 'package:finance_mobile/domain/repositories/service_payments_repository.dart';
+import 'package:finance_mobile/domain/repositories/backups_repository.dart';
 import 'package:finance_mobile/domain/usecases/archive_notification_usecase.dart';
 import 'package:finance_mobile/domain/usecases/assign_role_usecase.dart';
 import 'package:finance_mobile/domain/usecases/change_password_usecase.dart';
@@ -82,6 +83,10 @@ import 'package:finance_mobile/domain/usecases/reset_password_usecase.dart';
 import 'package:finance_mobile/domain/usecases/activate_account_usecase.dart';
 import 'package:finance_mobile/domain/usecases/signup_usecase.dart';
 import 'package:finance_mobile/domain/usecases/update_profile_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_backups_usecase.dart';
+import 'package:finance_mobile/domain/usecases/create_backup_usecase.dart';
+import 'package:finance_mobile/domain/usecases/restore_backup_from_file_usecase.dart';
+import 'package:finance_mobile/domain/usecases/download_backup_usecase.dart';
 import 'package:finance_mobile/infrastructure/datasources/account_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/loan_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/auth_remote_datasource.dart';
@@ -94,6 +99,7 @@ import 'package:finance_mobile/infrastructure/datasources/subscription_remote_da
 import 'package:finance_mobile/infrastructure/datasources/transaction_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/user_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/service_payments_remote_datasource.dart';
+import 'package:finance_mobile/infrastructure/datasources/backups_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/repositories/account_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/loan_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/auth_repository_impl.dart';
@@ -106,6 +112,8 @@ import 'package:finance_mobile/infrastructure/repositories/subscription_reposito
 import 'package:finance_mobile/infrastructure/repositories/transaction_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/user_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/service_payments_repository_impl.dart';
+import 'package:finance_mobile/infrastructure/repositories/backups_repository_impl.dart';
+import 'package:finance_mobile/presentation/viewmodels/backups_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/accounts_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/loans_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/devices_viewmodel.dart';
@@ -144,6 +152,7 @@ Future<void> init() async {
   initLoansModule();
   initTransactionModule();
   initServicePaymentsModule();
+  initBackupsModule();
   initNotifationsModule();
   initDevicesNotifications();
 }
@@ -415,6 +424,28 @@ void initServicePaymentsModule() {
       getServicePaymentsUseCase: sl(),
       getServicePaymentUseCase: sl(),
       getAccountsUseCase: sl(),
+    ),
+  );
+}
+
+void initBackupsModule() {
+  sl.registerLazySingleton<BackupsRemoteDataSource>(
+    () => BackupsRemoteDataSourceImpl(sl()),
+  );
+  sl.registerLazySingleton<BackupsRepository>(
+    () => BackupsRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton(() => GetBackupsUseCase(sl()));
+  sl.registerLazySingleton(() => CreateBackupUseCase(sl()));
+  sl.registerLazySingleton(() => RestoreBackupFromFileUseCase(sl()));
+  sl.registerLazySingleton(() => DownloadBackupUseCase(sl()));
+  sl.registerFactory(
+    () => BackupsViewModel(
+      getBackupsUseCase: sl(),
+      createBackupUseCase: sl(),
+      restoreBackupFromFileUseCase: sl(),
+      downloadBackupUseCase: sl(),
+      apiClient: sl(),
     ),
   );
 }

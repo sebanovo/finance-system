@@ -43,6 +43,16 @@ class MainDrawer extends StatelessWidget {
                 onTap: () => context.push('/users'),
               ),
               _buildDrawerItem(
+                icon: Icons.receipt_long,
+                title: 'Pagos de servicios',
+                onTap: () => context.push('/service-payments'),
+              ),
+              _buildDrawerItem(
+                icon: Icons.backup,
+                title: 'Respaldos',
+                onTap: () => context.push('/backups'),
+              ),
+              _buildDrawerItem(
                 icon: Icons.security,
                 title: 'Roles',
                 onTap: () => context.push('/roles'),

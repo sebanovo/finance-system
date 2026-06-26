@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../viewmodels/permissions_viewmodel.dart';
+import '../../domain/entities/permission.dart';
 import '../../domain/entities/role.dart';
 
 class RoleFormSheet extends StatefulWidget {
@@ -49,6 +50,12 @@ class _RoleFormSheetState extends State<RoleFormSheet> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedCodes.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecciona al menos un permiso')),
+      );
+      return;
+    }
     setState(() => _submitting = true);
     await widget.onSubmit(
       _nameController.text.trim(),
@@ -63,7 +70,7 @@ class _RoleFormSheetState extends State<RoleFormSheet> {
     final permissions = widget.permissionsViewModel.permissions;
     final loadingPerms = widget.permissionsViewModel.loading;
 
-    final grouped = <String, List<dynamic>>{};
+    final grouped = <String, List<Permission>>{};
     for (final p in permissions) {
       grouped.putIfAbsent(p.module, () => []).add(p);
     }
@@ -93,6 +100,8 @@ class _RoleFormSheetState extends State<RoleFormSheet> {
               const SizedBox(height: 20),
               _buildPermissionsHeader(),
               const SizedBox(height: 8),
+              _buildSelectAllPermissions(permissions),
+              const SizedBox(height: 12),
               Expanded(
                 child: loadingPerms
                     ? const Center(child: CircularProgressIndicator())
@@ -174,7 +183,52 @@ class _RoleFormSheetState extends State<RoleFormSheet> {
     );
   }
 
-  Widget _buildPermissionsList(Map<String, List<dynamic>> grouped) {
+  Widget _buildSelectAllPermissions(List<Permission> permissions) {
+    final allSelected = permissions.isNotEmpty && _selectedCodes.length == permissions.length;
+    final someSelected = _selectedCodes.isNotEmpty && !allSelected;
+
+    return Card(
+      elevation: 0,
+      color: const Color(0xFFF7FBF3),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFFDDEED8)),
+      ),
+      child: CheckboxListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        controlAffinity: ListTileControlAffinity.leading,
+        activeColor: const Color(0xFF2E7D32),
+        tristate: true,
+        value: allSelected ? true : (someSelected ? null : false),
+        title: const Text(
+          'Seleccionar todos los permisos',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
+        subtitle: Text(
+          someSelected
+              ? '${_selectedCodes.length} de ${permissions.length} seleccionados'
+              : allSelected
+                  ? 'Todos los permisos fueron asignados'
+                  : 'Marca esta opción para asignar todo el catálogo',
+        ),
+        onChanged: _submitting
+            ? null
+            : (checked) {
+                setState(() {
+                  if (checked == true) {
+                    _selectedCodes
+                      ..clear()
+                      ..addAll(permissions.map((p) => p.code));
+                  } else {
+                    _selectedCodes.clear();
+                  }
+                });
+              },
+      ),
+    );
+  }
+
+  Widget _buildPermissionsList(Map<String, List<Permission>> grouped) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: grouped.entries.map((entry) {
@@ -195,6 +249,7 @@ class _RoleFormSheetState extends State<RoleFormSheet> {
                 ),
               ),
             ),
+            _buildModuleToggle(module, perms),
             ...perms.map((p) {
               final selected = _selectedCodes.contains(p.code);
               return CheckboxListTile(
@@ -222,6 +277,40 @@ class _RoleFormSheetState extends State<RoleFormSheet> {
           ],
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildModuleToggle(String module, List<Permission> perms) {
+    final selectedCount = perms.where((p) => _selectedCodes.contains(p.code)).length;
+    final allSelected = perms.isNotEmpty && selectedCount == perms.length;
+    final someSelected = selectedCount > 0 && selectedCount < perms.length;
+
+    return CheckboxListTile(
+      dense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 0),
+      controlAffinity: ListTileControlAffinity.leading,
+      activeColor: const Color(0xFF2E7D32),
+      tristate: true,
+      value: allSelected ? true : (someSelected ? null : false),
+      title: Text(
+        'Seleccionar todo el módulo',
+        style: TextStyle(fontSize: 12, color: Colors.grey[800]),
+      ),
+      subtitle: Text(
+        '$selectedCount de ${perms.length} permisos',
+        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+      ),
+      onChanged: _submitting
+          ? null
+          : (checked) {
+              setState(() {
+                if (checked == true) {
+                  _selectedCodes.addAll(perms.map((p) => p.code));
+                } else {
+                  _selectedCodes.removeWhere((code) => perms.any((p) => p.code == code));
+                }
+              });
+            },
     );
   }
 

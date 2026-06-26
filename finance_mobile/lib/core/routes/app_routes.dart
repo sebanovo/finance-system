@@ -11,6 +11,7 @@ import 'package:finance_mobile/presentation/pages/devices_page.dart';
 import 'package:finance_mobile/presentation/pages/limits_page.dart';
 import 'package:finance_mobile/presentation/pages/notification_preferences_page.dart';
 import 'package:finance_mobile/presentation/pages/notifications_page.dart';
+import 'package:finance_mobile/presentation/pages/backups_page.dart';
 import 'package:finance_mobile/presentation/pages/service_payments_page.dart';
 import 'package:finance_mobile/presentation/pages/qr_payment_page.dart';
 import 'package:finance_mobile/presentation/pages/transaction_detail_page.dart';
@@ -41,6 +42,7 @@ final GoRouter appRouter = GoRouter(
     final onPublicRoute = _publicRoutes.contains(state.matchedLocation);
     final onClientOnlyRoute = _clientOnlyRoutes.contains(state.matchedLocation);
     final onServiceOnlyRoute = _serviceOnlyRoutes.contains(state.matchedLocation);
+    final onOwnerOnlyRoute = _ownerOnlyRoutes.contains(state.matchedLocation);
 
     if (!loggedIn && !onPublicRoute) {
       return '/login';
@@ -59,9 +61,13 @@ final GoRouter appRouter = GoRouter(
 
     if (loggedIn && onServiceOnlyRoute) {
       final hasServiceContext = apiClient.hasAnyPermissionPrefix('me.service-');
-      if (apiClient.isOwnerAdmin || !hasServiceContext) {
+      if (!apiClient.isOwnerAdmin && !hasServiceContext) {
         return '/home';
       }
+    }
+
+    if (loggedIn && onOwnerOnlyRoute && !apiClient.isOwnerAdmin) {
+      return '/home';
     }
 
     return null;
@@ -185,6 +191,10 @@ final GoRouter appRouter = GoRouter(
       path: '/service-payments',
       builder: (context, _) => const ServicePaymentsPage(),
     ),
+    GoRoute(
+      path: '/backups',
+      builder: (context, _) => const BackupsPage(),
+    ),
     GoRoute(path: '/limits', builder: (context, _) => const LimitsPage()),
     GoRoute(path: '/devices', builder: (context, _) => const DevicesPage()),
     GoRoute(
@@ -212,6 +222,10 @@ const Set<String> _clientOnlyRoutes = {
 
 const Set<String> _serviceOnlyRoutes = {
   '/service-payments',
+};
+
+const Set<String> _ownerOnlyRoutes = {
+  '/backups',
 };
 
 String _initialLocation() {

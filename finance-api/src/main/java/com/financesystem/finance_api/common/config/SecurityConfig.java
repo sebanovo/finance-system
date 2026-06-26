@@ -65,7 +65,7 @@ public class SecurityConfig {
                                 "/api/platform/auth/login",
                                 "/api/platform/auth/refresh",
                                 "/assets/**",
-                                "/logo.png",
+                                "/logo.png"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

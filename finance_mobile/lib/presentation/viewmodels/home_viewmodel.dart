@@ -54,6 +54,8 @@ class HomeViewModel extends ChangeNotifier {
       apiClient.hasAnyPermissionPrefix(prefix);
   bool get isClient => hasAnyPermissionPrefix('me.');
 
+  bool get shouldAutoRegisterDevice => isClient && !isOwnerAdmin;
+
   Future<void> loadData() async {
     await Future.wait([
       loadSubscription(),

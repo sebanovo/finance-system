@@ -50,6 +50,8 @@ abstract class ServicePaymentsRepository {
   Future<List<ServicePayment>> getServicePayments({
     String? providerId,
     String? receiptNumber,
+    String? accountNumber,
+    String? userId,
     String? billId,
     int page,
     int size,

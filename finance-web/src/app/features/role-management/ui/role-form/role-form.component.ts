@@ -95,23 +95,61 @@ export class RoleFormComponent implements OnInit, OnChanges {
     })).sort((a, b) => a.module.localeCompare(b.module));
   }
 
+  private get permissionsArray(): FormArray {
+    return this.roleForm.get('permissionCodes') as FormArray;
+  }
+
+  private syncPermissionCodes(codes: string[]): void {
+    const uniqueCodes = Array.from(new Set(codes.filter(code => !!code && code.trim().length > 0)));
+    this.permissionsArray.clear();
+    uniqueCodes.forEach(code => {
+      this.permissionsArray.push(new FormControl(code));
+    });
+  }
+
+  private getAllPermissionCodes(): string[] {
+    return this.groupedPermissions.reduce((codes: string[], group) => {
+      group.permissions.forEach(permission => codes.push(permission.code));
+      return codes;
+    }, []);
+  }
+
   // Helpers para Checkboxes/Switches
   isPermissionSelected(code: string): boolean {
-    const permissionsArray = this.roleForm.get('permissionCodes') as FormArray;
-    return permissionsArray.value.includes(code);
+    return this.permissionsArray.value.includes(code);
   }
 
   togglePermission(code: string, event: Event): void {
     const isChecked = (event.target as HTMLInputElement).checked;
-    const permissionsArray = this.roleForm.get('permissionCodes') as FormArray;
 
     if (isChecked) {
-      permissionsArray.push(new FormControl(code));
-    } else {
-      const index = permissionsArray.controls.findIndex(x => x.value === code);
-      if (index >= 0) {
-        permissionsArray.removeAt(index);
+      if (!this.isPermissionSelected(code)) {
+        this.permissionsArray.push(new FormControl(code));
       }
+    } else {
+      const index = this.permissionsArray.controls.findIndex(x => x.value === code);
+      if (index >= 0) {
+        this.permissionsArray.removeAt(index);
+      }
+    }
+  }
+
+  areAllPermissionsSelected(): boolean {
+    const totalPermissions = this.getAllPermissionCodes().length;
+    if (totalPermissions === 0) return false;
+    return this.permissionsArray.length === totalPermissions;
+  }
+
+  areSomePermissionsSelected(): boolean {
+    return this.permissionsArray.length > 0 && !this.areAllPermissionsSelected();
+  }
+
+  toggleAllPermissions(event: Event): void {
+    const isChecked = (event.target as HTMLInputElement).checked;
+    if (isChecked) {
+      this.syncPermissionCodes(this.getAllPermissionCodes());
+    } else {
+      this.permissionsArray.clear();
     }
   }
 
@@ -121,21 +159,24 @@ export class RoleFormComponent implements OnInit, OnChanges {
     return modulePermissions.every(p => this.isPermissionSelected(p.code));
   }
 
+  isModuleIndeterminate(modulePermissions: SystemPermissionResponse[]): boolean {
+    if (modulePermissions.length === 0) return false;
+    const selectedCount = modulePermissions.filter(permission => this.isPermissionSelected(permission.code)).length;
+    return selectedCount > 0 && selectedCount < modulePermissions.length;
+  }
+
   toggleModule(modulePermissions: SystemPermissionResponse[], event: Event): void {
     const isChecked = (event.target as HTMLInputElement).checked;
-    const permissionsArray = this.roleForm.get('permissionCodes') as FormArray;
 
-    modulePermissions.forEach(p => {
-      const isCurrentlySelected = this.isPermissionSelected(p.code);
-      if (isChecked && !isCurrentlySelected) {
-        permissionsArray.push(new FormControl(p.code));
-      } else if (!isChecked && isCurrentlySelected) {
-        const index = permissionsArray.controls.findIndex(x => x.value === p.code);
-        if (index >= 0) {
-          permissionsArray.removeAt(index);
-        }
-      }
-    });
+    if (isChecked) {
+      const merged = [...this.permissionsArray.value, ...modulePermissions.map(p => p.code)];
+      this.syncPermissionCodes(merged);
+      return;
+    }
+
+    const codesToRemove = new Set(modulePermissions.map(p => p.code));
+    const remaining = this.permissionsArray.value.filter((code: string) => !codesToRemove.has(code));
+    this.syncPermissionCodes(remaining);
   }
 
   onSubmit(): void {

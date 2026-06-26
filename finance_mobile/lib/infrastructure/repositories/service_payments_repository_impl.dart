@@ -116,6 +116,8 @@ class ServicePaymentsRepositoryImpl implements ServicePaymentsRepository {
   Future<List<ServicePayment>> getServicePayments({
     String? providerId,
     String? receiptNumber,
+    String? accountNumber,
+    String? userId,
     String? billId,
     int page = 0,
     int size = 50,
@@ -123,6 +125,8 @@ class ServicePaymentsRepositoryImpl implements ServicePaymentsRepository {
     final models = await remoteDataSource.getServicePayments(
       providerId: providerId,
       receiptNumber: receiptNumber,
+      accountNumber: accountNumber,
+      userId: userId,
       billId: billId,
       page: page,
       size: size,

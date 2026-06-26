@@ -44,6 +44,10 @@ class ServicePaymentsViewModel extends ChangeNotifier {
   bool _creatingEnrollment = false;
   bool _deletingEnrollment = false;
   bool _creatingPayment = false;
+  bool _loadingMorePayments = false;
+  int _paymentsPage = 0;
+  int _paymentsPageSize = 20;
+  bool _hasMorePayments = false;
   String? _errorMessage;
   bool _enrollmentCreated = false;
   bool _enrollmentDeleted = false;
@@ -76,6 +80,8 @@ class ServicePaymentsViewModel extends ChangeNotifier {
   bool get creatingEnrollment => _creatingEnrollment;
   bool get deletingEnrollment => _deletingEnrollment;
   bool get creatingPayment => _creatingPayment;
+  bool get loadingMorePayments => _loadingMorePayments;
+  bool get hasMorePayments => _hasMorePayments;
   String? get errorMessage => _errorMessage;
   bool get enrollmentCreated => _enrollmentCreated;
   bool get enrollmentDeleted => _enrollmentDeleted;
@@ -112,13 +118,16 @@ class ServicePaymentsViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadData() async {
+  Future<void> loadData({
+    bool includeEnrollments = true,
+    bool includePayments = true,
+  }) async {
     await Future.wait([
       loadProviders(),
       loadProviderCatalog(),
-      loadEnrollments(),
+      if (includeEnrollments) loadEnrollments(),
       loadAccounts(),
-      loadPayments(),
+      if (includePayments) loadPayments(),
     ]);
   }
 
@@ -160,16 +169,70 @@ class ServicePaymentsViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> loadPayments() async {
-    _loadingPayments = true;
+  Future<void> loadPayments({
+    String? providerId,
+    String? receiptNumber,
+    String? accountNumber,
+    String? userId,
+    String? billId,
+    int page = 0,
+    int size = 20,
+    bool append = false,
+  }) async {
+    _loadingPayments = !append;
     notifyListeners();
     try {
-      _payments = await getServicePaymentsUseCase(size: 20);
+      final items = await getServicePaymentsUseCase(
+        providerId: providerId,
+        receiptNumber: receiptNumber,
+        accountNumber: accountNumber,
+        userId: userId,
+        billId: billId,
+        page: page,
+        size: size,
+      );
+      _paymentsPage = page;
+      _paymentsPageSize = size;
+      _hasMorePayments = items.length >= size;
+      if (append) {
+        _payments = [..._payments, ...items];
+      } else {
+        _payments = items;
+      }
       _errorMessage = null;
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
       _loadingPayments = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadMorePayments({
+    String? providerId,
+    String? receiptNumber,
+    String? accountNumber,
+    String? userId,
+    String? billId,
+  }) async {
+    if (_loadingPayments || _loadingMorePayments || !_hasMorePayments) {
+      return;
+    }
+    _loadingMorePayments = true;
+    notifyListeners();
+    try {
+      await loadPayments(
+        providerId: providerId,
+        receiptNumber: receiptNumber,
+        accountNumber: accountNumber,
+        userId: userId,
+        billId: billId,
+        page: _paymentsPage + 1,
+        size: _paymentsPageSize,
+        append: true,
+      );
+    } finally {
+      _loadingMorePayments = false;
       notifyListeners();
     }
   }
