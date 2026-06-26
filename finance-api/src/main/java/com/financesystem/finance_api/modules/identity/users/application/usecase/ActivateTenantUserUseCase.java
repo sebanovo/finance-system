@@ -41,9 +41,11 @@ public class ActivateTenantUserUseCase {
                 .orElseThrow(() -> new TenantUserNotFoundException("Tenant user not found with id: " + id));
 
         if (!existingUser.active()) {
-            tenantPlanEnforcementService.assertCanActivateUser(
-                    tenantUserRepository.countActiveUsers()
-            );
+            if (existingUser.status() != TenantUserStatus.PENDING) {
+                tenantPlanEnforcementService.assertCanActivateUser(
+                        tenantUserRepository.countActiveAndPendingUsers()
+                );
+            }
         }
 
         TenantUser updatedUser = new TenantUser(

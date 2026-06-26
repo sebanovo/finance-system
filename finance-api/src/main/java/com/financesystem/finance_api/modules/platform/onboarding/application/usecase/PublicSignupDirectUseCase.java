@@ -57,7 +57,7 @@ public class PublicSignupDirectUseCase {
         PlatformTenant createdTenant = platformTenantRepository.findById(createdTenantResponse.id())
                 .orElseThrow();
 
-        tenantOwnerAdminProvisioningService.provisionOwnerAdminWithoutVerification(
+        tenantOwnerAdminProvisioningService.provisionOwnerAdmin(
                 createdTenant.schemaName(),
                 createdTenant.slug(),
                 request.adminEmail(),
@@ -95,8 +95,8 @@ public class PublicSignupDirectUseCase {
                 currentPlan.code(),
                 currentSubscription.status().name(),
                 currentSubscription.expiresAt(),
-                "Cuenta creada sin validación por correo. Usa X-Tenant-Slug = "
-                        + createdTenant.slug() + " para iniciar sesión."
+                "Revisa tu correo y activa la cuenta antes de iniciar sesión (X-Tenant-Slug = "
+                        + createdTenant.slug() + ")."
         );
     }
 }

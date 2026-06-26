@@ -1,6 +1,7 @@
 package com.financesystem.finance_api.modules.identity.users.infrastructure.persistence;
 
 import com.financesystem.finance_api.modules.identity.users.domain.model.TenantUser;
+import com.financesystem.finance_api.modules.identity.users.domain.model.TenantUserStatus;
 import com.financesystem.finance_api.modules.identity.users.domain.repository.TenantUserRepository;
 import org.springframework.stereotype.Repository;
 
@@ -50,6 +51,11 @@ public class TenantUserRepositoryAdapter implements TenantUserRepository {
     @Override
     public long countActiveUsers() {
         return jpaRepository.countByActiveTrue();
+    }
+
+    @Override
+    public long countActiveAndPendingUsers() {
+        return jpaRepository.countByActiveTrueOrStatus(TenantUserStatus.PENDING);
     }
 
     private TenantUserEntity toEntity(TenantUser tenantUser) {

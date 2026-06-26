@@ -6,6 +6,7 @@ import { LucideAngularModule } from 'lucide-angular';
 import { AuthFacade } from '../../shared/lib/auth/auth.facade';
 import { AuthStorageService } from '../../shared/lib/storage/auth-storage.service';
 import { PlatformSuperadminMeUseCase } from '../../features/platform/application/platform-superadmin-me.usecase';
+import { PermissionService } from '../../shared/lib/auth/permission.service';
 
 interface QuickAction {
   label: string;
@@ -182,6 +183,7 @@ export class SettingsPageComponent implements OnInit {
   private readonly authFacade = inject(AuthFacade);
   private readonly authStorage = inject(AuthStorageService);
   private readonly platformSuperadminMeUseCase = inject(PlatformSuperadminMeUseCase);
+  private readonly permissionService = inject(PermissionService);
 
   readonly isPlatformRoute = this.router.url.startsWith('/platform');
 
@@ -227,19 +229,34 @@ export class SettingsPageComponent implements OnInit {
     }
   ];
 
-  readonly quickActions: QuickAction[] = this.isPlatformRoute
-    ? [
+  get quickActions(): QuickAction[] {
+    if (this.isPlatformRoute) {
+      return [
         { label: 'Dashboard', route: '/platform/dashboard', icon: 'layout-dashboard', description: 'Resumen general de la plataforma' },
         { label: 'Mi perfil', route: '/platform/profile', icon: 'user-circle-2', description: 'Datos visibles de tu cuenta' },
         { label: 'Seguridad', route: '/platform/security', icon: 'lock', description: 'Cambio de contraseña y acceso' },
         { label: 'Respaldos', route: '/platform/backups', icon: 'database', description: 'Administración de backups' }
-      ]
-    : [
-        { label: 'Dashboard', route: this.dashboardRoute, icon: 'layout-dashboard', description: 'Resumen principal del tenant' },
-        { label: 'Mis cuentas', route: '/dashboard/me/accounts', icon: 'wallet', description: 'Cuentas disponibles del usuario' },
-        { label: 'Mis movimientos', route: '/dashboard/me/transactions', icon: 'arrow-right-left', description: 'Historial y actividad reciente' },
-        { label: 'Reportes', route: '/dashboard/reporting', icon: 'clipboard-list', description: 'Reportes controlados y por IA' }
       ];
+    }
+
+    const quickActions: QuickAction[] = [
+      { label: 'Dashboard', route: this.dashboardRoute, icon: 'layout-dashboard', description: 'Resumen principal del tenant' },
+      { label: 'Mis cuentas', route: '/dashboard/me/accounts', icon: 'wallet', description: 'Cuentas disponibles del usuario' },
+      { label: 'Mis movimientos', route: '/dashboard/me/transactions', icon: 'arrow-right-left', description: 'Historial y actividad reciente' },
+      { label: 'Reportes', route: '/dashboard/reporting', icon: 'clipboard-list', description: 'Reportes controlados y por IA' }
+    ];
+
+    if (this.canAccessSubscription()) {
+      quickActions.push({
+        label: 'Suscripción',
+        route: '/dashboard/subscription',
+        icon: 'credit-card',
+        description: 'Plan y facturación'
+      });
+    }
+
+    return quickActions;
+  }
 
   readonly form = this.fb.nonNullable.group(DEFAULT_SETTINGS);
 
@@ -255,6 +272,11 @@ export class SettingsPageComponent implements OnInit {
 
   get dashboardRoute(): string {
     return this.authFacade.getTenantLandingRoute();
+  }
+
+  private canAccessSubscription(): boolean {
+    return this.permissionService.hasPermission('billing.subscription.manage')
+      || this.permissionService.hasRole('OWNER_ADMIN');
   }
 
   async ngOnInit(): Promise<void> {

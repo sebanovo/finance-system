@@ -16,22 +16,24 @@ interface Bar {
   imports: [CommonModule],
   template: `
     @if (bars().length > 0) {
-      <div class="space-y-2">
+      <div class="min-w-0 space-y-2">
         <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[#6B7D6C]">
           {{ valueLabel() }} por {{ categoryLabel() }}
         </p>
-        @for (bar of bars(); track bar.label) {
-          <div class="flex items-center gap-3">
-            <span class="w-40 shrink-0 truncate text-xs text-[#4F5D4F]" [title]="bar.label">{{ bar.label }}</span>
-            <div class="h-5 flex-1 overflow-hidden rounded-full bg-[#EEF5EA]">
+        <div class="grid gap-3">
+          @for (bar of bars(); track bar.label) {
+            <div class="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(140px,1.2fr)_auto] items-center gap-3">
+              <span class="min-w-0 truncate text-xs text-[#4F5D4F]" [title]="bar.label">{{ bar.label }}</span>
+              <div class="h-5 min-w-0 overflow-hidden rounded-full bg-[#EEF5EA]">
               <div class="h-full rounded-full bg-gradient-to-r from-[#4CAF50] to-[#2E7D32]"
                    [style.width.%]="bar.percent"></div>
+              </div>
+              <span class="text-right text-xs font-semibold text-[#1B5E20]">
+                {{ formatNumber(bar.value) }}
+              </span>
             </div>
-            <span class="w-24 shrink-0 text-right text-xs font-semibold text-[#1B5E20]">
-              {{ formatNumber(bar.value) }}
-            </span>
-          </div>
-        }
+          }
+        </div>
       </div>
     }
   `

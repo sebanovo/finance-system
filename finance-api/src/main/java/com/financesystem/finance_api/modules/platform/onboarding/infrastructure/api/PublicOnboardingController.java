@@ -58,7 +58,7 @@ public class PublicOnboardingController {
     }
 
     /**
-     * Registro directo sin verificación por correo.
+     * Registro directo con verificación por correo.
      * Mantiene compatibilidad con el flujo agregado por el equipo.
      */
     @PostMapping("/signup-direct")
@@ -66,7 +66,7 @@ public class PublicOnboardingController {
             @Valid @RequestBody PublicSignupRequest request
     ) {
         return ApiResponse.success(
-                "Public signup completed without email verification",
+                "Public signup completed successfully",
                 publicSignupDirectUseCase.execute(request)
         );
     }

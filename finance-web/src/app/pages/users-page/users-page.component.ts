@@ -70,7 +70,7 @@ import { PlatformPaginationComponent } from '../../features/platform/ui/platform
         </div>
       </section>
 
-      <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <div class="rounded-2xl border border-[#C8E6C9] bg-white p-5 shadow-sm">
           <p class="text-sm font-semibold text-[#567157]">Usuarios en página</p>
           <p class="mt-4 text-3xl font-black text-[#1B5E20]">{{ stats().total }}</p>
@@ -82,9 +82,14 @@ import { PlatformPaginationComponent } from '../../features/platform/ui/platform
           <p class="mt-2 text-xs text-[#6B7D6C]">Pueden acceder al sistema</p>
         </div>
         <div class="rounded-2xl border border-[#C8E6C9] bg-white p-5 shadow-sm">
+          <p class="text-sm font-semibold text-[#567157]">Pendientes</p>
+          <p class="mt-4 text-3xl font-black text-[#1B5E20]">{{ stats().pending }}</p>
+          <p class="mt-2 text-xs text-[#6B7D6C]">Esperan activación por correo</p>
+        </div>
+        <div class="rounded-2xl border border-[#C8E6C9] bg-white p-5 shadow-sm">
           <p class="text-sm font-semibold text-[#567157]">Inactivos</p>
           <p class="mt-4 text-3xl font-black text-[#1B5E20]">{{ stats().inactive }}</p>
-          <p class="mt-2 text-xs text-[#6B7D6C]">Suspendidos o pendientes</p>
+          <p class="mt-2 text-xs text-[#6B7D6C]">Suspendidos o deshabilitados</p>
         </div>
         <div class="rounded-2xl border border-[#C8E6C9] bg-white p-5 shadow-sm">
           <p class="text-sm font-semibold text-[#567157]">Filtrados</p>
@@ -114,6 +119,7 @@ import { PlatformPaginationComponent } from '../../features/platform/ui/platform
               class="h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-4 text-sm text-[#1B5E20] outline-none transition-colors focus:border-[#2E7D32] focus:bg-white">
               <option value="all">Todos los estados</option>
               <option value="ACTIVE">Activos</option>
+              <option value="PENDING">Pendientes de activación</option>
               <option value="INACTIVE">Inactivos</option>
             </select>
           </div>
@@ -162,11 +168,13 @@ import { PlatformPaginationComponent } from '../../features/platform/ui/platform
                     <td class="px-4 py-3">
                       <span
                         class="inline-flex rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em]"
-                        [class.bg-[#E8F5E9]]="user.active"
-                        [class.text-[#2E7D32]]="user.active"
-                        [class.bg-red-100]="!user.active"
-                        [class.text-red-700]="!user.active">
-                        {{ user.active ? 'Activo' : 'Inactivo' }}
+                        [class.bg-[#E8F5E9]]="userStatus(user) === 'ACTIVE'"
+                        [class.text-[#2E7D32]]="userStatus(user) === 'ACTIVE'"
+                        [class.bg-amber-100]="userStatus(user) === 'PENDING'"
+                        [class.text-amber-800]="userStatus(user) === 'PENDING'"
+                        [class.bg-red-100]="userStatus(user) === 'INACTIVE'"
+                        [class.text-red-700]="userStatus(user) === 'INACTIVE'">
+                        {{ userStatusLabel(user) }}
                       </span>
                     </td>
                     <td class="px-4 py-3">
@@ -299,7 +307,7 @@ export class UsersPageComponent implements OnInit {
   readonly selectedUserToEdit = signal<TenantUserResponse | null>(null);
   readonly pageSize = 20;
   readonly searchQuery = signal('');
-  readonly statusFilter = signal<'all' | 'ACTIVE' | 'INACTIVE'>('all');
+  readonly statusFilter = signal<'all' | 'ACTIVE' | 'PENDING' | 'INACTIVE'>('all');
 
   readonly currentPage = computed(() => this.userListUseCase.page()?.number ?? 0);
   readonly totalPages = computed(() => this.userListUseCase.page()?.totalPages ?? 0);
@@ -315,17 +323,18 @@ export class UsersPageComponent implements OnInit {
         user.email.toLowerCase().includes(query) ||
         String(user.id).includes(query);
 
-      const matchesStatus = status === 'all' ? true : (status === 'ACTIVE' ? user.active : !user.active);
+      const matchesStatus = status === 'all' ? true : this.userStatus(user) === status;
       return matchesQuery && matchesStatus;
     });
   });
 
   readonly stats = computed(() => {
     const users = this.userListUseCase.data();
-    const active = users.filter((user) => user.active).length;
-    const inactive = users.length - active;
+    const active = users.filter((user) => this.userStatus(user) === 'ACTIVE').length;
+    const pending = users.filter((user) => this.userStatus(user) === 'PENDING').length;
+    const inactive = users.filter((user) => this.userStatus(user) === 'INACTIVE').length;
     const filtered = this.filteredUsers().length;
-    return { total: users.length, active, inactive, filtered };
+    return { total: users.length, active, pending, inactive, filtered };
   });
   private readonly toastService = inject(ToastService);
 
@@ -335,7 +344,7 @@ export class UsersPageComponent implements OnInit {
         this.closeCreateModal();
         this.userCreateUseCase.resetState();
         this.reload();
-        this.toastService.success('Usuario creado correctamente');
+        this.toastService.success('Usuario creado. Se envió un correo de activación.');
       }
     }, { allowSignalWrites: true });
 
@@ -370,6 +379,26 @@ export class UsersPageComponent implements OnInit {
   }
 
   applyFilters(): void {}
+
+  userStatus(user: TenantUserResponse): 'ACTIVE' | 'PENDING' | 'INACTIVE' {
+    const raw = (user.status || '').toString().trim().toUpperCase();
+    if (raw === 'ACTIVE' || raw === 'PENDING' || raw === 'INACTIVE') {
+      return raw;
+    }
+
+    return user.active ? 'ACTIVE' : 'INACTIVE';
+  }
+
+  userStatusLabel(user: TenantUserResponse): string {
+    const status = this.userStatus(user);
+    if (status === 'PENDING') {
+      return 'Pendiente de activación';
+    }
+    if (status === 'ACTIVE') {
+      return 'Activo';
+    }
+    return 'Inactivo';
+  }
 
   openCreateModal(): void {
     this.userCreateUseCase.resetState();

@@ -17,6 +17,7 @@ import com.financesystem.finance_api.modules.identity.auth.domain.model.TenantUs
 import com.financesystem.finance_api.modules.identity.auth.domain.repository.TenantUserFaceLoginProfileRepository;
 import com.financesystem.finance_api.modules.identity.audit.IdentityAuditPayloads;
 import com.financesystem.finance_api.modules.identity.users.domain.model.TenantUser;
+import com.financesystem.finance_api.modules.identity.users.domain.model.TenantUserStatus;
 import com.financesystem.finance_api.modules.identity.users.domain.repository.TenantUserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -74,7 +75,10 @@ public class LoginTenantUserWithFaceUseCase {
         TenantUser tenantUser = tenantUserRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new AuthenticationFailedException("Invalid credentials"));
 
-        if (!tenantUser.active()) {
+        if (tenantUser.status() == TenantUserStatus.PENDING || !tenantUser.active()) {
+            if (tenantUser.status() == TenantUserStatus.PENDING) {
+                throw new AuthenticationFailedException("Tu cuenta aún no está activada. Revisa tu correo.");
+            }
             throw new AuthenticationFailedException("User is inactive");
         }
 

@@ -1,5 +1,4 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { PendingCheckoutStorageService } from '../../../entities/billing';
 import { PublicPaidSignupRequest, PublicSignupRequest, TenantService } from '../../../entities/tenant';
@@ -18,7 +17,6 @@ export const CHECKOUT_PENDING_KEY = 'finance.checkout.pending';
 })
 export class SignupUseCase {
   private readonly tenantService = inject(TenantService);
-  private readonly router = inject(Router);
   private readonly pendingCheckoutStorage = inject(PendingCheckoutStorageService);
 
   private readonly state = signal<SignupState>({
@@ -41,14 +39,6 @@ export class SignupUseCase {
 
       if (response.success && response.data) {
         this.state.set({ loading: false, error: null, success: true, redirectingToPayment: false });
-
-        await this.router.navigate(['/login'], {
-          queryParams: {
-            tenant: response.data.tenantSlug,
-            signup: 'demo-success'
-          }
-        });
-
         return;
       }
 

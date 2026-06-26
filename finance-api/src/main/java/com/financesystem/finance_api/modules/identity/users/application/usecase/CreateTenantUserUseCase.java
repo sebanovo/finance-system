@@ -67,7 +67,7 @@ public class CreateTenantUserUseCase {
         }
 
         tenantPlanEnforcementService.assertCanCreateUser(
-                tenantUserRepository.countActiveUsers()
+                tenantUserRepository.countActiveAndPendingUsers()
         );
 
         TenantUser tenantUserToCreate = new TenantUser(

@@ -16,7 +16,7 @@ public record BillingPlanResponse(
         boolean publicVisible,
         int sortOrder,
         boolean active,
-        boolean current,
-        boolean upgradeAvailable
+        boolean currentPlan,
+        boolean availableForCheckout
 ) {
 }

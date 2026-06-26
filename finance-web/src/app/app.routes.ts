@@ -141,6 +141,21 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/limits-rules-page/limits-rules-page.component').then(m => m.LimitsRulesPageComponent)
       },
       { path: 'settings', loadComponent: () => import('./pages/settings-page/settings-page.component').then(m => m.SettingsPageComponent) },
+      {
+        path: 'subscription',
+        canActivate: [permissionGuard('billing.subscription.manage')],
+        loadComponent: () => import('./pages/subscription-settings-page/subscription-settings-page.component').then(m => m.SubscriptionSettingsPageComponent)
+      },
+      {
+        path: 'subscription/success',
+        canActivate: [permissionGuard('billing.subscription.manage')],
+        loadComponent: () => import('./pages/subscription-upgrade-success-page/subscription-upgrade-success-page.component').then(m => m.SubscriptionUpgradeSuccessPageComponent)
+      },
+      {
+        path: 'subscription/cancel',
+        canActivate: [permissionGuard('billing.subscription.manage')],
+        loadComponent: () => import('./pages/subscription-upgrade-cancel-page/subscription-upgrade-cancel-page.component').then(m => m.SubscriptionUpgradeCancelPageComponent)
+      },
       { path: 'profile', loadComponent: () => import('./pages/profile-page/profile-page.component').then(m => m.ProfilePageComponent) },
       {
         path: 'accounting/periods',
@@ -196,6 +211,21 @@ export const routes: Routes = [
       {
         path: 'settings',
         loadComponent: () => import('./pages/settings-page/settings-page.component').then(m => m.SettingsPageComponent)
+      },
+      {
+        path: 'subscription',
+        canActivate: [permissionGuard('billing.subscription.manage')],
+        loadComponent: () => import('./pages/subscription-settings-page/subscription-settings-page.component').then(m => m.SubscriptionSettingsPageComponent)
+      },
+      {
+        path: 'subscription/success',
+        canActivate: [permissionGuard('billing.subscription.manage')],
+        loadComponent: () => import('./pages/subscription-upgrade-success-page/subscription-upgrade-success-page.component').then(m => m.SubscriptionUpgradeSuccessPageComponent)
+      },
+      {
+        path: 'subscription/cancel',
+        canActivate: [permissionGuard('billing.subscription.manage')],
+        loadComponent: () => import('./pages/subscription-upgrade-cancel-page/subscription-upgrade-cancel-page.component').then(m => m.SubscriptionUpgradeCancelPageComponent)
       },
       {
         path: 'backups',
