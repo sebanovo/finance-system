@@ -19,7 +19,7 @@ import { PublicNavItem } from './public-nav-item.model';
           routerLink="/"
           fragment="inicio"
           (click)="closeMobileMenu()"
-          class="flex min-w-0 items-center gap-3"
+          class="flex min-w-0 items-center gap-3 text-left"
         >
           <span
             class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[#C8E6C9] bg-[#F3FAF1] shadow-sm"
@@ -91,7 +91,7 @@ import { PublicNavItem } from './public-nav-item.model';
                   [routerLink]="item.routerLink"
                   [fragment]="item.fragment"
                   (click)="closeMobileMenu()"
-                  class="rounded-2xl px-4 py-3 text-sm font-black text-[#1B5E20] transition-colors hover:bg-[#F3FAF1]"
+                  class="rounded-2xl px-4 py-3 text-left text-sm font-black text-[#1B5E20] transition-colors hover:bg-[#F3FAF1]"
                 >
                   {{ item.label }}
                 </a>
@@ -130,7 +130,7 @@ export class PublicNavbarComponent {
     { label: 'Tutoriales', routerLink: '/', fragment: 'tutoriales' },
     { label: 'Plataforma', routerLink: '/', fragment: 'plataforma-web' },
     { label: 'App móvil', routerLink: '/', fragment: 'app-movil' },
-    { label: 'Precios', routerLink: '/prices' },
+    { label: 'Precios', routerLink: '/', fragment: 'precios' },
   ];
 
   @HostListener('window:resize')

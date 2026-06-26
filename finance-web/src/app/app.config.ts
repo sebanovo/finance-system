@@ -1,5 +1,5 @@
 import { ApplicationConfig, importProvidersFrom, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { authTokenInterceptor } from './shared/api';
@@ -28,6 +28,8 @@ import {
   Upload,
   Star,
   QrCode,
+  CircleHelp,
+  Minus,
   Facebook,
   Instagram,
   Youtube,
@@ -43,7 +45,10 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(routes),
+    provideRouter(routes, withInMemoryScrolling({
+      anchorScrolling: 'enabled',
+      scrollPositionRestoration: 'enabled'
+    })),
     provideHttpClient(withInterceptors([authTokenInterceptor])),
     provideAnimationsAsync(),
     importProvidersFrom(LucideAngularModule.pick({
@@ -57,7 +62,7 @@ export const appConfig: ApplicationConfig = {
       Building, Clock, Info, PauseCircle, PlayCircle, Sparkles, Wand2,
       BarChart3, FileChartColumn, Database, Search, Archive,
       Camera, Trash2, ShieldCheck, Smartphone, Download, LoaderCircle,
-      TriangleAlert, CircleAlert, Upload, Star, QrCode,
+      TriangleAlert, CircleAlert, Upload, Star, QrCode, CircleHelp, Minus,
       Facebook, Instagram, Youtube, ExternalLink, LogIn, UserCog
     }))
 
