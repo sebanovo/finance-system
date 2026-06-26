@@ -10,6 +10,10 @@ import { environment } from '../../../../environments/environment';
 const PLATFORM_REFRESH_HEADER = 'X-Platform-Refresh-Retry';
 
 export const authTokenInterceptor: HttpInterceptorFn = (req, next) => {
+  if (isPublicApiRequest(req.url)) {
+    return next(req);
+  }
+
   const authStorage = inject(AuthStorageService);
   const platformStorage = inject(PlatformStorageService);
   const httpBackend = inject(HttpBackend);
@@ -47,6 +51,10 @@ function addAuthorizationHeaders(
   authStorage: AuthStorageService,
   platformStorage: PlatformStorageService
 ) {
+  if (isPublicApiRequest(req.url)) {
+    return req;
+  }
+
   if (
     req.url.includes('/api/platform/auth/login') ||
     req.url.includes('/api/platform/auth/refresh') ||
@@ -93,6 +101,10 @@ function addAuthorizationHeaders(
   return req;
 }
 
+function isPublicApiRequest(url: string): boolean {
+  return url.includes('/api/public/');
+}
+
 function shouldAttemptPlatformRefresh(
   req: Parameters<HttpInterceptorFn>[0],
   error: unknown,
@@ -103,6 +115,10 @@ function shouldAttemptPlatformRefresh(
   }
 
   if (error.status !== 401) {
+    return false;
+  }
+
+  if (isPublicApiRequest(req.url)) {
     return false;
   }
 

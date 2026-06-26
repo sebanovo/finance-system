@@ -17,6 +17,11 @@ public class PlatformPlanMapper {
                 plan.maxRoles(),
                 plan.planType(),
                 plan.trialDays(),
+                plan.monthlyAmount(),
+                plan.yearlyAmount(),
+                plan.currency(),
+                plan.publicVisible(),
+                plan.sortOrder(),
                 plan.active(),
                 plan.createdAt(),
                 plan.updatedAt()

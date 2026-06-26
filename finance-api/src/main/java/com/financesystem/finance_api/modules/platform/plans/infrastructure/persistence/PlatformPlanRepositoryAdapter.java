@@ -43,6 +43,14 @@ public class PlatformPlanRepositoryAdapter implements PlatformPlanRepository {
     }
 
     @Override
+    public List<PlatformPlan> findActivePublicPlans() {
+        return jpaRepository.findByActiveTrueAndPublicVisibleTrueOrderBySortOrderAscCodeAsc()
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
     public boolean existsByCode(String code) {
         return jpaRepository.existsByCode(code);
     }
@@ -57,6 +65,11 @@ public class PlatformPlanRepositoryAdapter implements PlatformPlanRepository {
         entity.setMaxRoles(plan.maxRoles());
         entity.setPlanType(plan.planType());
         entity.setTrialDays(plan.trialDays());
+        entity.setMonthlyAmount(plan.monthlyAmount());
+        entity.setYearlyAmount(plan.yearlyAmount());
+        entity.setCurrency(plan.currency());
+        entity.setPublicVisible(plan.publicVisible());
+        entity.setSortOrder(plan.sortOrder());
         entity.setActive(plan.active());
         return entity;
     }
@@ -71,6 +84,11 @@ public class PlatformPlanRepositoryAdapter implements PlatformPlanRepository {
                 entity.getMaxRoles(),
                 entity.getPlanType(),
                 entity.getTrialDays(),
+                entity.getMonthlyAmount(),
+                entity.getYearlyAmount(),
+                entity.getCurrency(),
+                entity.isPublicVisible(),
+                entity.getSortOrder(),
                 entity.isActive(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()

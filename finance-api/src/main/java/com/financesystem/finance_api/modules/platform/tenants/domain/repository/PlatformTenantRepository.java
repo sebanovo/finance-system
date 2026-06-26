@@ -14,6 +14,8 @@ public interface PlatformTenantRepository {
 
     Optional<PlatformTenant> findBySlug(String slug);
 
+    Optional<PlatformTenant> findByStripeCustomerId(String stripeCustomerId);
+
     List<PlatformTenant> findAll();
 
     boolean existsBySlug(String slug);

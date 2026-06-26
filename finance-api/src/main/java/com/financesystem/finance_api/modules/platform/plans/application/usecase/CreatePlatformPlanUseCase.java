@@ -52,6 +52,11 @@ public class CreatePlatformPlanUseCase {
                 request.maxRoles(),
                 normalizedPlanType,
                 request.trialDays(),
+                request.monthlyAmount(),
+                request.yearlyAmount(),
+                normalizeCurrency(request.currency()),
+                request.publicVisible() == null || request.publicVisible(),
+                request.sortOrder() == null ? 0 : request.sortOrder(),
                 true,
                 null,
                 null
@@ -77,8 +82,8 @@ public class CreatePlatformPlanUseCase {
     }
 
     private void validatePlanType(String planType, Integer trialDays) {
-        if (!planType.equals("DEMO") && !planType.equals("PAID") && !planType.equals("FREE")) {
-            throw new BusinessException("planType must be DEMO, PAID or FREE");
+        if (!planType.equals("DEMO") && !planType.equals("PAID") && !planType.equals("ENTERPRISE")) {
+            throw new BusinessException("planType must be DEMO, PAID or ENTERPRISE");
         }
 
         if (planType.equals("DEMO")) {
@@ -86,5 +91,12 @@ public class CreatePlatformPlanUseCase {
                 throw new BusinessException("trialDays must be greater than zero for DEMO plans");
             }
         }
+    }
+
+    private String normalizeCurrency(String currency) {
+        if (currency == null || currency.isBlank()) {
+            return "USD";
+        }
+        return currency.trim().toUpperCase();
     }
 }

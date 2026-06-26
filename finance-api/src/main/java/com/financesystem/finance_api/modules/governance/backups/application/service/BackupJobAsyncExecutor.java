@@ -85,13 +85,13 @@ public class BackupJobAsyncExecutor {
             BackupJob running = status(restore, BackupStatus.RESTORING, null, Instant.now(), null);
             record(running, BackupAuditEventTypes.RESTORE_STARTED, null);
             Path src = storage.resolvePath(source.storagePath());
-            BackupCommandResult restoreResult = null;
+            String restoreOutput = null;
             Exception postRestoreIssue = null;
 
             if (running.scope() == BackupScope.TENANT_SCHEMA) {
                 maintenance.enableMaintenance(running.tenantSlug(), "Restoring backup " + source.id());
                 try {
-                    restoreResult = engine.restoreSchema(running.schemaName(), src);
+                    restoreOutput = engine.restoreSchema(running.schemaName(), src);
                 } finally {
                     try {
                         maintenance.disableMaintenance(running.tenantSlug());
@@ -122,7 +122,7 @@ public class BackupJobAsyncExecutor {
                 }
             } else {
                 prepareForFullDatabaseRestore();
-                restoreResult = engine.restoreFullDatabase(src);
+                restoreOutput = engine.restoreFullDatabase(src);
 
                 try {
                     reportingSecurityService.backfillRegisteredTenants();
@@ -136,8 +136,8 @@ public class BackupJobAsyncExecutor {
                 }
             }
 
-            boolean hasWarnings = restoreResult.warnings() || postRestoreIssue != null;
-            String warningMessage = buildWarningMessage(restoreResult, postRestoreIssue);
+            boolean hasWarnings = restoreOutput != null || postRestoreIssue != null;
+            String warningMessage = buildWarningMessage(restoreOutput, postRestoreIssue);
 
             BackupJob done = status(
                     get(id),
@@ -235,14 +235,14 @@ public class BackupJobAsyncExecutor {
         jdbcTemplate.execute("DROP SCHEMA IF EXISTS " + schemaName + " CASCADE");
     }
 
-    private String buildWarningMessage(BackupCommandResult restoreResult, Exception postRestoreIssue) {
+    private String buildWarningMessage(String restoreOutput, Exception postRestoreIssue) {
         StringBuilder builder = new StringBuilder();
 
-        if (restoreResult != null && restoreResult.warnings()) {
+        if (restoreOutput != null) {
             builder.append("Restore completed with pg_restore warnings.");
 
-            if (restoreResult.output() != null && !restoreResult.output().isBlank()) {
-                builder.append(" Output: ").append(restoreResult.output());
+            if (!restoreOutput.isBlank()) {
+                builder.append(" Output: ").append(restoreOutput);
             }
         }
 

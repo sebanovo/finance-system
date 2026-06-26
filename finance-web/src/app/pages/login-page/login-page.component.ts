@@ -5,6 +5,7 @@ import { LoginUseCase, FaceLoginUseCase } from '../../features/auth';
 import { LoginFormComponent } from '../../features/auth/ui/login-form/login-form.component';
 import { FaceLoginRequest, LoginRequest } from '../../entities/auth';
 import { AuthFacade } from '../../shared/lib/auth/auth.facade';
+import { PendingCheckoutStorageService } from '../../entities/billing';
 
 @Component({
   selector: 'app-login-page',
@@ -31,6 +32,7 @@ export class LoginPageComponent implements OnInit {
   public readonly loginUseCase = inject(LoginUseCase);
   public readonly faceLoginUseCase = inject(FaceLoginUseCase);
   private readonly authFacade = inject(AuthFacade);
+  private readonly pendingCheckoutStorage = inject(PendingCheckoutStorageService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   passwordResetSuccess = false;
@@ -38,6 +40,7 @@ export class LoginPageComponent implements OnInit {
   ngOnInit(): void {
     this.loginUseCase.resetState();
     this.faceLoginUseCase.resetState();
+    this.pendingCheckoutStorage.clear();
     this.passwordResetSuccess = this.route.snapshot.queryParamMap.get('passwordReset') === 'success';
   }
 

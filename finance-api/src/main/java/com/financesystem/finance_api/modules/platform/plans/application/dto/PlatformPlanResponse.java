@@ -1,5 +1,6 @@
 package com.financesystem.finance_api.modules.platform.plans.application.dto;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -12,6 +13,11 @@ public record PlatformPlanResponse(
         int maxRoles,
         String planType,
         Integer trialDays,
+        BigDecimal monthlyAmount,
+        BigDecimal yearlyAmount,
+        String currency,
+        boolean publicVisible,
+        int sortOrder,
         boolean active,
         Instant createdAt,
         Instant updatedAt

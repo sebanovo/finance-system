@@ -10,6 +10,7 @@ public final class AuditEventTypes {
     public static final String SUBSCRIPTION_ASSIGNED = "SUBSCRIPTION_ASSIGNED";
     public static final String SUBSCRIPTION_EXPIRED = "SUBSCRIPTION_EXPIRED";
     public static final String PUBLIC_SIGNUP_COMPLETED = "PUBLIC_SIGNUP_COMPLETED";
+    public static final String PUBLIC_SIGNUP_CHECKOUT_CREATED = "PUBLIC_SIGNUP_CHECKOUT_CREATED";
     public static final String PLATFORM_PLAN_CREATED = "PLATFORM_PLAN_CREATED";
     public static final String PLATFORM_PLAN_ACTIVATED = "PLATFORM_PLAN_ACTIVATED";
     public static final String PLATFORM_PLAN_DEACTIVATED = "PLATFORM_PLAN_DEACTIVATED";
@@ -77,6 +78,15 @@ public final class AuditEventTypes {
     public static final String SERVICE_PAYMENT_ASSISTED_CREATED = "SERVICE_PAYMENT_ASSISTED_CREATED";
     public static final String SERVICE_PAYMENT_COMPLETED = "SERVICE_PAYMENT_COMPLETED";
     public static final String SERVICE_PAYMENT_FAILED = "SERVICE_PAYMENT_FAILED";
+
+    public static final String SUBSCRIPTION_CHECKOUT_COMPLETED = "SUBSCRIPTION_CHECKOUT_COMPLETED";
+    public static final String SUBSCRIPTION_PAYMENT_SUCCEEDED = "SUBSCRIPTION_PAYMENT_SUCCEEDED";
+    public static final String SUBSCRIPTION_PAYMENT_FAILED = "SUBSCRIPTION_PAYMENT_FAILED";
+    public static final String SUBSCRIPTION_UPGRADED = "SUBSCRIPTION_UPGRADED";
+    public static final String SUBSCRIPTION_RENEWED = "SUBSCRIPTION_RENEWED";
+    public static final String SUBSCRIPTION_CANCELLED = "SUBSCRIPTION_CANCELLED";
+    public static final String STRIPE_WEBHOOK_RECEIVED = "STRIPE_WEBHOOK_RECEIVED";
+    public static final String STRIPE_WEBHOOK_PROCESSED = "STRIPE_WEBHOOK_PROCESSED";
 
     private AuditEventTypes() {
     }

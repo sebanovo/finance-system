@@ -67,6 +67,7 @@ class PublicSignupUseCaseTest {
                 "tenant_financruz",
                 "ACTIVE",
                 planId,
+                null,
                 true,
                 now,
                 now

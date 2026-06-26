@@ -32,6 +32,9 @@ export class SignupFormComponent {
   @Input() loading = false;
   @Input() error: string | null = null;
   @Input() success = false;
+  @Input() redirectingToPayment = false;
+  @Input() selectedPlanCode = 'DEMO';
+  @Input() selectedBillingInterval: 'MONTHLY' | 'YEARLY' = 'MONTHLY';
   
   @Output() formSubmit = new EventEmitter<PublicSignupRequest>();
 
@@ -66,5 +69,14 @@ export class SignupFormComponent {
 
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
+  }
+
+  isPaidSignup(): boolean {
+    const code = this.selectedPlanCode.trim().toUpperCase();
+    return code !== 'DEMO' && code !== 'ENTERPRISE';
+  }
+
+  shouldShowSuccessCard(): boolean {
+    return this.success && !this.redirectingToPayment;
   }
 }

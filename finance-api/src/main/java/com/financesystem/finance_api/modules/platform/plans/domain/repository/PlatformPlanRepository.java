@@ -16,5 +16,7 @@ public interface PlatformPlanRepository {
 
     List<PlatformPlan> findAll();
 
+    List<PlatformPlan> findActivePublicPlans();
+
     boolean existsByCode(String code);
 }

@@ -12,6 +12,10 @@ export const routes: Routes = [
   
   // Landing page
   { path: '', component: LandingPageComponent },
+  {
+    path: 'prices',
+    loadComponent: () => import('./pages/prices-page/prices-page.component').then(m => m.PricesPageComponent)
+  },
   
   // Login de tenant
   { path: 'login', loadComponent: () => import('./pages/login-page/login-page.component').then(m => m.LoginPageComponent) },
@@ -27,6 +31,15 @@ export const routes: Routes = [
 
   // Registro público de tenant
   { path: 'onboarding', loadComponent: () => import('./pages/onboarding-page/onboarding-page.component').then(m => m.OnboardingPageComponent) },
+
+  {
+    path: 'billing/success',
+    loadComponent: () => import('./pages/billing-success-page/billing-success-page.component').then(m => m.BillingSuccessPageComponent)
+  },
+  {
+    path: 'billing/cancel',
+    loadComponent: () => import('./pages/billing-cancel-page/billing-cancel-page.component').then(m => m.BillingCancelPageComponent)
+  },
   
   // Login de SuperAdmin
   { path: 'platform/login', loadComponent: () => import('./pages/platform-login-page/platform-login-page.component').then(m => m.PlatformLoginPageComponent) },

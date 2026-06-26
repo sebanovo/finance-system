@@ -24,6 +24,15 @@ public class HeaderTenantResolver implements TenantResolver {
 
     @Override
     public TenantContext resolve(HttpServletRequest request) {
+        String requestPath = request.getRequestURI();
+        if (tenancyProperties.isPublicPath(requestPath) || tenancyProperties.isGlobalPath(requestPath)) {
+            return new TenantContext(
+                    null,
+                    tenancyProperties.getPublicSchema(),
+                    true
+            );
+        }
+
         String rawTenantSlug = request.getHeader(tenancyProperties.getHeaderName());
 
         if (!StringUtils.hasText(rawTenantSlug)) {

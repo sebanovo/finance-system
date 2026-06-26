@@ -1,5 +1,6 @@
 package com.financesystem.finance_api.modules.platform.subscriptions.infrastructure.persistence;
 
+import com.financesystem.finance_api.modules.platform.subscriptions.domain.model.BillingInterval;
 import com.financesystem.finance_api.modules.platform.subscriptions.domain.model.PlatformSubscriptionStatus;
 import jakarta.persistence.*;
 
@@ -30,11 +31,33 @@ public class PlatformSubscriptionEntity {
     @Column(nullable = false)
     private boolean currentSubscription;
 
+    @Column(length = 120)
+    private String stripeSubscriptionId;
+
+    @Column(length = 120)
+    private String stripePriceId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private BillingInterval billingInterval;
+
     @Column(nullable = false)
     private Instant startedAt;
 
     @Column
     private Instant expiresAt;
+
+    @Column
+    private Instant currentPeriodStart;
+
+    @Column
+    private Instant currentPeriodEnd;
+
+    @Column(nullable = false)
+    private boolean cancelAtPeriodEnd;
+
+    @Column
+    private Instant cancelledAt;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -102,6 +125,30 @@ public class PlatformSubscriptionEntity {
         this.currentSubscription = currentSubscription;
     }
 
+    public String getStripeSubscriptionId() {
+        return stripeSubscriptionId;
+    }
+
+    public void setStripeSubscriptionId(String stripeSubscriptionId) {
+        this.stripeSubscriptionId = stripeSubscriptionId;
+    }
+
+    public String getStripePriceId() {
+        return stripePriceId;
+    }
+
+    public void setStripePriceId(String stripePriceId) {
+        this.stripePriceId = stripePriceId;
+    }
+
+    public BillingInterval getBillingInterval() {
+        return billingInterval;
+    }
+
+    public void setBillingInterval(BillingInterval billingInterval) {
+        this.billingInterval = billingInterval;
+    }
+
     public Instant getStartedAt() {
         return startedAt;
     }
@@ -116,6 +163,38 @@ public class PlatformSubscriptionEntity {
 
     public void setExpiresAt(Instant expiresAt) {
         this.expiresAt = expiresAt;
+    }
+
+    public Instant getCurrentPeriodStart() {
+        return currentPeriodStart;
+    }
+
+    public void setCurrentPeriodStart(Instant currentPeriodStart) {
+        this.currentPeriodStart = currentPeriodStart;
+    }
+
+    public Instant getCurrentPeriodEnd() {
+        return currentPeriodEnd;
+    }
+
+    public void setCurrentPeriodEnd(Instant currentPeriodEnd) {
+        this.currentPeriodEnd = currentPeriodEnd;
+    }
+
+    public boolean isCancelAtPeriodEnd() {
+        return cancelAtPeriodEnd;
+    }
+
+    public void setCancelAtPeriodEnd(boolean cancelAtPeriodEnd) {
+        this.cancelAtPeriodEnd = cancelAtPeriodEnd;
+    }
+
+    public Instant getCancelledAt() {
+        return cancelledAt;
+    }
+
+    public void setCancelledAt(Instant cancelledAt) {
+        this.cancelledAt = cancelledAt;
     }
 
     public Instant getCreatedAt() {

@@ -15,6 +15,7 @@ public class PlatformTenantMapper {
                 tenant.schemaName(),
                 tenant.status().name(),
                 tenant.planId(),
+                tenant.stripeCustomerId(),
                 tenant.active(),
                 tenant.createdAt(),
                 tenant.updatedAt()

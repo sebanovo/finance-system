@@ -110,6 +110,8 @@ public class TenantBootstrapService {
             "notifications.templates.detail",
             "notifications.deliveries.read",
 
+            "billing.subscription.manage",
+
             "reports.analytic.read",
             "reports.managerial.read",
             "reports.analytic.run",

@@ -35,6 +35,11 @@ public class PlatformTenantRepositoryAdapter implements PlatformTenantRepository
     }
 
     @Override
+    public Optional<PlatformTenant> findByStripeCustomerId(String stripeCustomerId) {
+        return jpaRepository.findByStripeCustomerId(stripeCustomerId).map(this::toDomain);
+    }
+
+    @Override
     public List<PlatformTenant> findAll() {
         return jpaRepository.findAll()
                 .stream()
@@ -60,6 +65,7 @@ public class PlatformTenantRepositoryAdapter implements PlatformTenantRepository
         entity.setSchemaName(tenant.schemaName());
         entity.setStatus(tenant.status());
         entity.setPlanId(tenant.planId());
+        entity.setStripeCustomerId(tenant.stripeCustomerId());
         entity.setActive(tenant.active());
         return entity;
     }
@@ -72,6 +78,7 @@ public class PlatformTenantRepositoryAdapter implements PlatformTenantRepository
                 entity.getSchemaName(),
                 entity.getStatus(),
                 entity.getPlanId(),
+                entity.getStripeCustomerId(),
                 entity.isActive(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()

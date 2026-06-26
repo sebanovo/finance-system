@@ -10,6 +10,7 @@ public record PlatformTenantResponse(
         String schemaName,
         String status,
         UUID planId,
+        String stripeCustomerId,
         boolean active,
         Instant createdAt,
         Instant updatedAt

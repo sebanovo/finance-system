@@ -12,4 +12,6 @@ public interface PlatformTenantJpaRepository extends JpaRepository<PlatformTenan
     boolean existsBySchemaName(String schemaName);
 
     Optional<PlatformTenantEntity> findBySlug(String slug);
+
+    Optional<PlatformTenantEntity> findByStripeCustomerId(String stripeCustomerId);
 }

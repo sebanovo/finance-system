@@ -44,6 +44,7 @@ class CreatePlatformTenantUseCaseTest {
                 "tenant_financruz",
                 "ACTIVE",
                 UUID.randomUUID(),
+                null,
                 true,
                 now,
                 now
