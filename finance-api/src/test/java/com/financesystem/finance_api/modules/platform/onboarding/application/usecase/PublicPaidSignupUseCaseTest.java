@@ -210,7 +210,7 @@ class PublicPaidSignupUseCaseTest {
         assertEquals("cs_test_123", response.checkoutSessionId());
         assertEquals("https://checkout.example", response.checkoutUrl());
         assertEquals("OPEN", response.checkoutStatus());
-        verify(tenantOwnerAdminProvisioningService).provisionOwnerAdmin(
+        verify(tenantOwnerAdminProvisioningService).provisionOwnerAdminWithoutVerification(
                 "tenant_financruz",
                 "financruz",
                 "admin@financruz.com",
