@@ -239,6 +239,12 @@ export class SidebarComponent {
             route: '/dashboard/me/transactions',
             icon: 'arrow-right-left',
             permissions: ['me.transactions.read', 'me.transactions.detail']
+          },
+          {
+            label: 'Mis préstamos',
+            route: '/dashboard/me/loans',
+            icon: 'hand-coins',
+            permissions: ['me.loans.list', 'me.loans.view']
           }
         ]
       },
@@ -314,6 +320,12 @@ export class SidebarComponent {
           route: '/dashboard/transactions',
           icon: 'arrow-right-left',
           permissions: ['transactions.read', 'transactions.admin.read']
+        },
+        {
+          label: 'Préstamos',
+          route: '/dashboard/loans',
+          icon: 'hand-coins',
+          permissions: ['loans.list', 'loans.view']
         }
       ]
     },

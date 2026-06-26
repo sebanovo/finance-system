@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
+import { CustomerDashboardChartsComponent } from '../../features/dashboard';
 import { CustomerSummaryUseCase } from '../../features/dashboard/application/customer-summary.usecase';
 
 @Component({
   selector: 'app-customer-summary-page',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule, CustomerDashboardChartsComponent],
   template: `
     <div class="space-y-6">
       @if (customerSummaryUseCase.status() === 'loading') {
@@ -100,6 +101,10 @@ import { CustomerSummaryUseCase } from '../../features/dashboard/application/cus
               <p class="mt-2 text-xs text-[#6B7D6C]">Sin leer</p>
             </div>
           </section>
+
+          <div class="my-8">
+            <app-customer-dashboard-charts [data]="dashboard"></app-customer-dashboard-charts>
+          </div>
 
           <section class="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
             <div class="min-w-0 rounded-[24px] border border-[#C8E6C9] bg-white p-4 sm:p-6 shadow-sm">

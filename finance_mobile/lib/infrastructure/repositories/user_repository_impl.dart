@@ -30,8 +30,8 @@ class UserRepositoryImpl implements UserRepository {
   }
 
   @override
-  Future<void> assignRole(String userId, String roleId) async {
-    await remoteDataSource.assignRole(userId, roleId);
+  Future<void> assignRole(String userId, List<String> roleIds) async {
+    await remoteDataSource.assignRole(userId, roleIds);
   }
 
   @override
@@ -48,6 +48,11 @@ class UserRepositoryImpl implements UserRepository {
       lastName: lastName,
     );
     await remoteDataSource.createUser(request);
+  }
+
+  @override
+  Future<void> toggleUserStatus(String userId, bool currentlyActive) async {
+    await remoteDataSource.toggleUserStatus(userId, currentlyActive);
   }
 
   @override

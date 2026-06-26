@@ -76,6 +76,19 @@ public class ReportDefinitionRegistry {
     private static final List<String> BACKUP_SCOPES = List.of("TENANT_SCHEMA", "FULL_DATABASE");
     private static final List<String> SUBSCRIPTION_STATUSES = List.of("TRIAL", "ACTIVE", "EXPIRED", "CANCELLED");
     private static final List<String> AUDIT_OUTCOMES = List.of("SUCCESS", "FAILURE");
+    private static final List<String> AUDIT_EVENT_TYPES = List.of(
+            "LOGIN", "LOGIN_SUCCESS", "LOGOUT", "TOKEN_REFRESHED",
+            "PASSWORD_CHANGED", "PASSWORD_RESET_REQUESTED", "PASSWORD_RESET_COMPLETED",
+            "USER_CREATED", "USER_UPDATED", "USER_ACTIVATED", "USER_DEACTIVATED", "USER_ROLES_ASSIGNED",
+            "ROLE_CREATED", "ROLE_UPDATED", "ROLE_ACTIVATED", "ROLE_DEACTIVATED",
+            "ACCOUNT_CREATED", "ACCOUNT_UPDATED", "ACCOUNT_ACTIVATED", "ACCOUNT_BLOCKED",
+            "ACCOUNT_FROZEN", "ACCOUNT_CLOSED", "ACCOUNT_APPROVAL_REQUESTED",
+            "TRANSACTION_CREATED", "TRANSACTION_COMPLETED", "TRANSACTION_FAILED", "TRANSFER_RECEIVED",
+            "ACCOUNTING_PERIOD_CREATED", "ACCOUNTING_PERIOD_CLOSED",
+            "LIMIT_RULE_CREATED", "LIMIT_RULE_UPDATED", "LIMIT_RULE_DEACTIVATED",
+            "LOAN_REQUESTED", "LOAN_APPROVED", "LOAN_REJECTED", "LOAN_DISBURSED",
+            "LOAN_PAYMENT_RECORDED", "LOAN_PAID_OFF",
+            "REPORT_EXECUTED", "REPORT_EXPORTED", "REPORT_RERUN");
 
     private final Map<String, ReportDefinition> definitions = new LinkedHashMap<>();
 
@@ -173,8 +186,7 @@ public class ReportDefinitionRegistry {
                 "reporting_tenant_audit",
                 null,
                 List.of(
-                        new ReportParam("eventType", "event_type", ReportDataType.TEXT,
-                                ReportParamOperator.EQUALS, false),
+                        select("eventType", "event_type", AUDIT_EVENT_TYPES),
                         select("outcome", "outcome", AUDIT_OUTCOMES)
                 ),
                 new ReportSort("created_at", SortDirection.DESC),
@@ -310,8 +322,7 @@ public class ReportDefinitionRegistry {
                 "platform_audit",
                 null,
                 List.of(
-                        new ReportParam("eventType", "event_type", ReportDataType.TEXT,
-                                ReportParamOperator.EQUALS, false),
+                        select("eventType", "event_type", AUDIT_EVENT_TYPES),
                         select("outcome", "outcome", AUDIT_OUTCOMES)
                 ),
                 new ReportSort("created_at", SortDirection.DESC),

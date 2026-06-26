@@ -1,6 +1,7 @@
 import '../../domain/entities/service_bills_query_result.dart';
 import '../../domain/entities/service_enrollment.dart';
 import '../../domain/entities/service_payment.dart';
+import '../../domain/entities/service_provider_catalog.dart';
 import '../../domain/entities/service_provider.dart';
 import '../../domain/repositories/service_payments_repository.dart';
 import '../datasources/service_payments_remote_datasource.dart';
@@ -25,6 +26,12 @@ class ServicePaymentsRepositoryImpl implements ServicePaymentsRepository {
       page: page,
       size: size,
     );
+    return models.map((item) => item.toEntity()).toList();
+  }
+
+  @override
+  Future<List<ServiceProviderCatalog>> getServiceProviderCatalog() async {
+    final models = await remoteDataSource.getServiceProviderCatalog();
     return models.map((item) => item.toEntity()).toList();
   }
 
@@ -109,6 +116,8 @@ class ServicePaymentsRepositoryImpl implements ServicePaymentsRepository {
   Future<List<ServicePayment>> getServicePayments({
     String? providerId,
     String? receiptNumber,
+    String? accountNumber,
+    String? userId,
     String? billId,
     int page = 0,
     int size = 50,
@@ -116,6 +125,8 @@ class ServicePaymentsRepositoryImpl implements ServicePaymentsRepository {
     final models = await remoteDataSource.getServicePayments(
       providerId: providerId,
       receiptNumber: receiptNumber,
+      accountNumber: accountNumber,
+      userId: userId,
       billId: billId,
       page: page,
       size: size,

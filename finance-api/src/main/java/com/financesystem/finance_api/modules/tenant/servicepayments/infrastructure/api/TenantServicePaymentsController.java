@@ -3,8 +3,10 @@ package com.financesystem.finance_api.modules.tenant.servicepayments.infrastruct
 import com.financesystem.finance_api.common.response.ApiResponse;
 import com.financesystem.finance_api.modules.platform.servicepayments.application.dto.PlatformServiceProviderFilter;
 import com.financesystem.finance_api.modules.platform.servicepayments.application.dto.ServiceProviderResponse;
+import com.financesystem.finance_api.modules.platform.servicepayments.application.dto.ServiceProviderCatalogResponse;
 import com.financesystem.finance_api.modules.tenant.servicepayments.application.dto.*;
 import com.financesystem.finance_api.modules.tenant.servicepayments.application.usecase.*;
+import com.financesystem.finance_api.modules.platform.servicepayments.application.usecase.ListServiceProviderCatalogUseCase;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
@@ -22,6 +24,7 @@ import java.util.UUID;
 public class TenantServicePaymentsController {
 
     private final ListTenantServiceProvidersUseCase listTenantServiceProvidersUseCase;
+    private final ListServiceProviderCatalogUseCase listServiceProviderCatalogUseCase;
     private final QueryTenantServiceBillsUseCase queryTenantServiceBillsUseCase;
     private final CreateBankServicePaymentUseCase createBankServicePaymentUseCase;
     private final ListTenantServicePaymentsUseCase listTenantServicePaymentsUseCase;
@@ -29,12 +32,14 @@ public class TenantServicePaymentsController {
 
     public TenantServicePaymentsController(
             ListTenantServiceProvidersUseCase listTenantServiceProvidersUseCase,
+            ListServiceProviderCatalogUseCase listServiceProviderCatalogUseCase,
             QueryTenantServiceBillsUseCase queryTenantServiceBillsUseCase,
             CreateBankServicePaymentUseCase createBankServicePaymentUseCase,
             ListTenantServicePaymentsUseCase listTenantServicePaymentsUseCase,
             GetTenantServicePaymentUseCase getTenantServicePaymentUseCase
     ) {
         this.listTenantServiceProvidersUseCase = listTenantServiceProvidersUseCase;
+        this.listServiceProviderCatalogUseCase = listServiceProviderCatalogUseCase;
         this.queryTenantServiceBillsUseCase = queryTenantServiceBillsUseCase;
         this.createBankServicePaymentUseCase = createBankServicePaymentUseCase;
         this.listTenantServicePaymentsUseCase = listTenantServicePaymentsUseCase;
@@ -50,6 +55,15 @@ public class TenantServicePaymentsController {
         return ApiResponse.success(
                 "Service providers retrieved successfully",
                 listTenantServiceProvidersUseCase.execute(filter, pageable)
+        );
+    }
+
+    @GetMapping("/service-providers/catalog")
+    @PreAuthorize("hasAuthority('service-providers.read')")
+    public ApiResponse<java.util.List<ServiceProviderCatalogResponse>> listServiceProviderCatalog() {
+        return ApiResponse.success(
+                "Service provider catalog retrieved successfully",
+                listServiceProviderCatalogUseCase.execute()
         );
     }
 

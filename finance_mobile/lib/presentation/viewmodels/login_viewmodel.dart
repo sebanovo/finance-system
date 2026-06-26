@@ -1,4 +1,3 @@
-import 'package:finance_mobile/presentation/viewmodels/notifications_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:finance_mobile/core/network/api_client.dart';
@@ -11,10 +10,8 @@ class LoginViewModel extends ChangeNotifier {
   final FaceLoginUseCase faceLoginUseCase;
   final ApiClient apiClient;
 
-  LoginViewModel({
-    required this.loginUseCase,
-    required this.faceLoginUseCase,
-  }) : apiClient = di.sl<ApiClient>();
+  LoginViewModel({required this.loginUseCase, required this.faceLoginUseCase})
+    : apiClient = di.sl<ApiClient>();
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -73,12 +70,6 @@ class LoginViewModel extends ChangeNotifier {
         tenantSlug: tenantSlug,
       );
 
-      // El registro de dispositivo no debe bloquear el login.
-      try {
-        final notifViewModel = di.sl<NotificationsViewModel>();
-        await notifViewModel.registerCurrentDevice();
-      } catch (_) {}
-
       return true;
     } catch (e) {
       _errorMessage = e.toString();
@@ -110,11 +101,6 @@ class LoginViewModel extends ChangeNotifier {
         refreshToken: refreshToken,
         tenantSlug: tenantSlug,
       );
-
-      try {
-        final notifViewModel = di.sl<NotificationsViewModel>();
-        await notifViewModel.registerCurrentDevice();
-      } catch (_) {}
 
       return true;
     } catch (e) {

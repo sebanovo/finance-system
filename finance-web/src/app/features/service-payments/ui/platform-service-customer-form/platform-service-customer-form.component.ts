@@ -38,6 +38,7 @@ import {
               <label class="text-sm font-semibold text-[#567157]">Proveedor</label>
               <select
                 formControlName="providerId"
+                (change)="onProviderChange()"
                 class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition-colors focus:border-[#2E7D32] focus:bg-white">
                 <option value="" disabled>Selecciona proveedor</option>
                 <option *ngFor="let provider of providers" [value]="provider.id">
@@ -48,10 +49,22 @@ import {
 
             <div class="space-y-2">
               <label class="text-sm font-semibold text-[#567157]">Código de servicio</label>
-              <input
-                type="text"
+              <select
                 formControlName="serviceCustomerCode"
-                placeholder="Ej. 100001"
+                (change)="onServiceCodeChange($any($event.target).value)"
+                class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition-colors focus:border-[#2E7D32] focus:bg-white">
+                <option value="" disabled>Selecciona un código</option>
+                <option *ngFor="let code of serviceCustomerCodeOptions" [value]="code">
+                  {{ code }}
+                </option>
+                <option value="__custom__">Otro código...</option>
+              </select>
+
+              <input
+                *ngIf="serviceCustomerCodeOptions.length === 0 || useCustomCode"
+                type="text"
+                formControlName="customServiceCustomerCode"
+                placeholder="Código manual"
                 class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition-colors placeholder:text-[#9AA99A] focus:border-[#2E7D32] focus:bg-white" />
             </div>
 
@@ -101,6 +114,7 @@ export class PlatformServiceCustomerFormComponent implements OnChanges {
   @Input() isOpen = false;
   @Input() customer: ServiceCustomerResponse | null = null;
   @Input() providers: ServiceProviderResponse[] = [];
+  @Input() serviceCustomerCodesByProvider: Record<string, string[]> = {};
   @Input() isSubmitting = false;
 
   @Output() closed = new EventEmitter<void>();
@@ -115,6 +129,7 @@ export class PlatformServiceCustomerFormComponent implements OnChanges {
   form = this.fb.group({
     providerId: ['', Validators.required],
     serviceCustomerCode: ['', Validators.required],
+    customServiceCustomerCode: [''],
     customerName: ['', Validators.required],
     status: ['ACTIVE']
   });
@@ -133,6 +148,7 @@ export class PlatformServiceCustomerFormComponent implements OnChanges {
     this.form = this.fb.group({
       providerId: [this.customer?.providerId ?? '', Validators.required],
       serviceCustomerCode: [this.customer?.serviceCustomerCode ?? '', Validators.required],
+      customServiceCustomerCode: [''],
       customerName: [this.customer?.customerName ?? '', Validators.required],
       status: [this.customer?.status ?? 'ACTIVE']
     });
@@ -141,6 +157,21 @@ export class PlatformServiceCustomerFormComponent implements OnChanges {
       this.form.get('providerId')?.disable({ emitEvent: false });
       this.form.get('serviceCustomerCode')?.disable({ emitEvent: false });
     }
+
+    this.onProviderChange();
+  }
+
+  get selectedProviderId(): string {
+    return this.form.get('providerId')?.value ?? '';
+  }
+
+  get serviceCustomerCodeOptions(): string[] {
+    const providerId = this.selectedProviderId;
+    return providerId ? this.serviceCustomerCodesByProvider[providerId] ?? [] : [];
+  }
+
+  get useCustomCode(): boolean {
+    return this.form.get('serviceCustomerCode')?.value === '__custom__';
   }
 
   close(): void {
@@ -156,6 +187,12 @@ export class PlatformServiceCustomerFormComponent implements OnChanges {
     }
 
     const raw = this.form.getRawValue();
+    const selectedCode = raw.serviceCustomerCode ?? '';
+    const customCode = raw.customServiceCustomerCode?.trim() || '';
+    const serviceCustomerCode =
+      this.serviceCustomerCodeOptions.length === 0 || selectedCode === '__custom__'
+        ? customCode
+        : selectedCode.trim();
 
     if (this.isEditing && this.customer) {
       this.saved.emit({
@@ -173,10 +210,51 @@ export class PlatformServiceCustomerFormComponent implements OnChanges {
       isEditing: false,
       request: {
         providerId: raw.providerId ?? '',
-        serviceCustomerCode: (raw.serviceCustomerCode ?? '').trim(),
+        serviceCustomerCode,
         customerName: raw.customerName ?? ''
       }
     });
+  }
+
+  onProviderChange(): void {
+    if (this.isEditing) {
+      return;
+    }
+
+    const serviceCodeControl = this.form.get('serviceCustomerCode');
+    const customCodeControl = this.form.get('customServiceCustomerCode');
+    const hasOptions = this.serviceCustomerCodeOptions.length > 0;
+
+    if (hasOptions) {
+      serviceCodeControl?.setValidators([Validators.required]);
+      customCodeControl?.clearValidators();
+      serviceCodeControl?.setValue('');
+      customCodeControl?.setValue('');
+    } else {
+      serviceCodeControl?.clearValidators();
+      customCodeControl?.setValidators([Validators.required]);
+      serviceCodeControl?.setValue('');
+      customCodeControl?.setValue('');
+    }
+
+    serviceCodeControl?.updateValueAndValidity({ emitEvent: false });
+    customCodeControl?.updateValueAndValidity({ emitEvent: false });
+  }
+
+  onServiceCodeChange(value: string): void {
+    if (value === '__custom__') {
+      this.form.get('serviceCustomerCode')?.setValue('__custom__', { emitEvent: false });
+      const customCodeControl = this.form.get('customServiceCustomerCode');
+      customCodeControl?.setValidators([Validators.required]);
+      customCodeControl?.updateValueAndValidity({ emitEvent: false });
+      return;
+    }
+
+    this.form.get('serviceCustomerCode')?.setValue(value, { emitEvent: false });
+    const customCodeControl = this.form.get('customServiceCustomerCode');
+    customCodeControl?.clearValidators();
+    customCodeControl?.setValue('');
+    customCodeControl?.updateValueAndValidity({ emitEvent: false });
   }
 
   categoryLabel(category: string): string {

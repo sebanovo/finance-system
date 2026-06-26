@@ -48,6 +48,11 @@ public class NotificationDeviceRepositoryAdapter implements NotificationDeviceRe
     }
 
     @Override
+    public Optional<NotificationDevice> findByFcmToken(String fcmToken) {
+        return repository.findByFcmToken(fcmToken).map(this::toDomain);
+    }
+
+    @Override
     public List<NotificationDevice> findActiveByUserId(UUID userId) {
         return repository.findByUserIdAndStatus(userId, NotificationDeviceStatus.ACTIVE.name())
                 .stream()

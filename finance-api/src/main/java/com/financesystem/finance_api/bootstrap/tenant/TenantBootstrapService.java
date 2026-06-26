@@ -33,6 +33,11 @@ public class TenantBootstrapService {
             "me.transactions.release",
             "me.transactions.qr.confirm",
 
+            "me.loans.request",
+            "me.loans.list",
+            "me.loans.view",
+            "me.loans.pay",
+
             "accounts.create",
             "accounts.list",
             "accounts.view",
@@ -85,6 +90,14 @@ public class TenantBootstrapService {
             "limits.update",
             "limits.delete",
             "limits.evaluate",
+
+            "loans.request",
+            "loans.list",
+            "loans.view",
+            "loans.approve",
+            "loans.reject",
+            "loans.disburse",
+            "loans.repay",
 
             "accounting.journal.read",
             "accounting.journal.detail",
@@ -154,6 +167,11 @@ public class TenantBootstrapService {
             "me.transactions.hold",
             "me.transactions.release",
             "me.transactions.qr.confirm",
+
+            "me.loans.request",
+            "me.loans.list",
+            "me.loans.view",
+            "me.loans.pay",
 
             "accounts.list",
             "accounts.view",
@@ -253,6 +271,11 @@ public class TenantBootstrapService {
             "me.transactions.qr.read",
             "me.transactions.qr.cancel",
             "me.transactions.qr.confirm",
+
+            "me.loans.request",
+            "me.loans.list",
+            "me.loans.view",
+            "me.loans.pay",
 
             "me.service-providers.read",
             "me.service-enrollments.read",

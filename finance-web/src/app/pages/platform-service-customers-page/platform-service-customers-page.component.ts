@@ -5,6 +5,7 @@ import {
   PlatformServiceCustomerFormComponent,
   PlatformServiceCustomerListUseCase,
   PlatformServiceCustomerTableComponent,
+  PlatformServiceProviderCatalogUseCase,
   PlatformServiceProviderListUseCase
 } from '../../features/service-payments';
 import { PlatformPaginationComponent } from '../../features/platform/ui/platform-pagination/platform-pagination.component';
@@ -117,6 +118,7 @@ import { ToastService } from '../../shared/ui/toast/toast.service';
         [isOpen]="formOpen()"
         [customer]="selectedCustomer()"
         [providers]="providerUseCase.data()"
+        [serviceCustomerCodesByProvider]="serviceCustomerCodesByProvider"
         [isSubmitting]="submitting()"
         (closed)="closeForm()"
         (saved)="saveCustomer($event)">
@@ -127,6 +129,7 @@ import { ToastService } from '../../shared/ui/toast/toast.service';
 export class PlatformServiceCustomersPageComponent implements OnInit {
   readonly useCase = inject(PlatformServiceCustomerListUseCase);
   readonly providerUseCase = inject(PlatformServiceProviderListUseCase);
+  readonly providerCatalogUseCase = inject(PlatformServiceProviderCatalogUseCase);
   private readonly toast = inject(ToastService);
 
   readonly formOpen = signal(false);
@@ -140,7 +143,15 @@ export class PlatformServiceCustomersPageComponent implements OnInit {
 
   ngOnInit(): void {
     void this.providerUseCase.loadProviders(0, 200, { status: 'ACTIVE' });
+    void this.providerCatalogUseCase.loadCatalog();
     void this.useCase.loadCustomers();
+  }
+
+  get serviceCustomerCodesByProvider(): Record<string, string[]> {
+    return this.providerCatalogUseCase.catalog().reduce<Record<string, string[]>>((acc, provider) => {
+      acc[provider.id] = provider.serviceCustomers.map(item => item.serviceCustomerCode);
+      return acc;
+    }, {});
   }
 
   changePage(page: number): void {

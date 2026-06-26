@@ -30,6 +30,23 @@ export interface ServiceProviderResponse {
   updatedAt: string;
 }
 
+export interface ServiceCustomerCatalogResponse {
+  id: string;
+  serviceCustomerCode: string;
+  customerName: string;
+  status: ServiceCustomerStatus;
+}
+
+export interface ServiceProviderCatalogResponse {
+  id: string;
+  code: string;
+  name: string;
+  category: ServiceProviderCategory;
+  serviceCustomerCodeLabel: string | null;
+  status: ServiceProviderStatus;
+  serviceCustomers: ServiceCustomerCatalogResponse[];
+}
+
 export interface CreateServiceProviderRequest {
   code: string;
   name: string;

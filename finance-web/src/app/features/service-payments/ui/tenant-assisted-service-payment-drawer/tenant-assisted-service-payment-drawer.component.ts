@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
+import { AccountOwnerResponse } from '../../../../entities/accounts';
 import {
   QueryServiceBillsRequest,
   QueryServiceBillsResponse,
@@ -58,11 +59,16 @@ import { ServicePaymentDetailComponent } from '../service-payment-detail/service
               <form [formGroup]="form" class="space-y-5">
                 <div class="space-y-2">
                   <label class="text-sm font-semibold text-[#567157]">Cuenta origen</label>
-                  <input
-                    type="text"
+                  <select
                     formControlName="sourceAccountNumber"
-                    placeholder="Ej. WAL-BOB-2026-000001"
-                    class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition-colors placeholder:text-[#9AA99A] focus:border-[#2E7D32] focus:bg-white" />
+                    class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition-colors focus:border-[#2E7D32] focus:bg-white">
+                    <option value="" disabled>Selecciona una cuenta</option>
+                    @for (account of accounts; track account.accountNumber) {
+                      <option [value]="account.accountNumber">
+                        {{ account.displayName || account.accountNameLabel }} - {{ account.accountNumber }} ({{ account.currency }})
+                      </option>
+                    }
+                  </select>
                   <p *ngIf="form.get('sourceAccountNumber')?.invalid && form.get('sourceAccountNumber')?.touched" class="text-xs text-red-600">
                     La cuenta origen es obligatoria.
                   </p>
@@ -72,6 +78,7 @@ import { ServicePaymentDetailComponent } from '../service-payment-detail/service
                   <label class="text-sm font-semibold text-[#567157]">Proveedor</label>
                   <select
                     formControlName="providerId"
+                    (change)="onProviderChange()"
                     class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition-colors focus:border-[#2E7D32] focus:bg-white">
                     <option value="" disabled>Selecciona proveedor</option>
                     <option *ngFor="let provider of providers" [value]="provider.id">
@@ -85,11 +92,18 @@ import { ServicePaymentDetailComponent } from '../service-payment-detail/service
 
                 <div class="space-y-2">
                   <label class="text-sm font-semibold text-[#567157]">Código de servicio</label>
-                  <input
-                    type="text"
+                  <select
                     formControlName="serviceCustomerCode"
-                    placeholder="Ej. 100001"
-                    class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition-colors placeholder:text-[#9AA99A] focus:border-[#2E7D32] focus:bg-white" />
+                    class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition-colors focus:border-[#2E7D32] focus:bg-white">
+                    <option value="" disabled>Selecciona un código</option>
+                    <option *ngFor="let code of serviceCustomerCodeOptions" [value]="code">
+                      {{ code }}
+                    </option>
+                  </select>
+
+                  <div *ngIf="serviceCustomerCodeOptions.length === 0" class="rounded-2xl border border-dashed border-[#C8E6C9] bg-[#FAFCF8] px-4 py-3 text-sm text-[#6B7D6C]">
+                    No hay códigos sugeridos disponibles para este proveedor.
+                  </div>
                   <p *ngIf="form.get('serviceCustomerCode')?.invalid && form.get('serviceCustomerCode')?.touched" class="text-xs text-red-600">
                     El código de servicio es obligatorio.
                   </p>
@@ -243,6 +257,8 @@ import { ServicePaymentDetailComponent } from '../service-payment-detail/service
 export class TenantBankServicePaymentDrawerComponent implements OnChanges {
   @Input() isOpen = false;
   @Input() providers: ServiceProviderResponse[] = [];
+  @Input() accounts: AccountOwnerResponse[] = [];
+  @Input() serviceCustomerCodesByProvider: Record<string, string[]> = {};
   @Input() queryResult: QueryServiceBillsResponse | null = null;
   @Input() queryLoading = false;
   @Input() paymentLoading = false;
@@ -269,6 +285,11 @@ export class TenantBankServicePaymentDrawerComponent implements OnChanges {
     serviceCustomerCode: ['', Validators.required]
   });
 
+  get serviceCustomerCodeOptions(): string[] {
+    const providerId = this.form.get('providerId')?.value ?? '';
+    return this.serviceCustomerCodesByProvider[providerId] ?? [];
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen'] && this.isOpen) {
       this.reset();
@@ -282,6 +303,25 @@ export class TenantBankServicePaymentDrawerComponent implements OnChanges {
     if (changes['payment'] && this.payment) {
       this.step.set(4);
     }
+  }
+
+  onProviderChange(): void {
+    const serviceCodeControl = this.form.get('serviceCustomerCode');
+    const hasOptions = this.serviceCustomerCodeOptions.length > 0;
+
+    if (hasOptions) {
+      serviceCodeControl?.setValidators([Validators.required]);
+      serviceCodeControl?.setValue('');
+    } else {
+      serviceCodeControl?.clearValidators();
+      serviceCodeControl?.setValue('');
+    }
+
+    serviceCodeControl?.updateValueAndValidity({ emitEvent: false });
+  }
+
+  onServiceCodeChange(value: string): void {
+    this.form.get('serviceCustomerCode')?.setValue(value, { emitEvent: false });
   }
 
   close(): void {

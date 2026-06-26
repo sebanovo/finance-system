@@ -38,6 +38,7 @@ interface BillingPeriodOption {
               <label class="text-sm font-semibold text-[#567157]">Proveedor</label>
               <select
                 formControlName="providerId"
+                (change)="onProviderChange()"
                 class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition-colors focus:border-[#2E7D32] focus:bg-white">
                 <option value="" disabled>Selecciona proveedor</option>
                 <option *ngFor="let provider of providers" [value]="provider.id">
@@ -50,10 +51,22 @@ interface BillingPeriodOption {
               <label class="text-sm font-semibold text-[#567157]">
                 {{ serviceCustomerCodeLabel() }}
               </label>
-              <input
-                type="text"
+              <select
                 formControlName="serviceCustomerCode"
-                placeholder="Ej. 100001"
+                (change)="onServiceCodeChange($any($event.target).value)"
+                class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition-colors focus:border-[#2E7D32] focus:bg-white">
+                <option value="" disabled>Selecciona un código</option>
+                <option *ngFor="let code of serviceCustomerCodeOptions" [value]="code">
+                  {{ code }}
+                </option>
+                <option value="__custom__">Otro código...</option>
+              </select>
+
+              <input
+                *ngIf="serviceCustomerCodeOptions.length === 0 || useCustomCode"
+                type="text"
+                formControlName="customServiceCustomerCode"
+                placeholder="Código manual"
                 class="flex h-11 w-full rounded-2xl border border-[#DDEED8] bg-[#FAFCF8] px-3 py-2 text-sm text-[#1B5E20] outline-none transition-colors placeholder:text-[#9AA99A] focus:border-[#2E7D32] focus:bg-white" />
               <p class="text-xs text-[#6B7D6C]">Usa el código indicado por el proveedor para identificar la deuda.</p>
             </div>
@@ -132,6 +145,7 @@ interface BillingPeriodOption {
 export class PlatformServiceBillFormComponent implements OnChanges {
   @Input() isOpen = false;
   @Input() providers: ServiceProviderResponse[] = [];
+  @Input() serviceCustomerCodesByProvider: Record<string, string[]> = {};
   @Input() isSubmitting = false;
 
   @Output() closed = new EventEmitter<void>();
@@ -143,11 +157,25 @@ export class PlatformServiceBillFormComponent implements OnChanges {
   form = this.fb.group({
     providerId: ['', Validators.required],
     serviceCustomerCode: ['', Validators.required],
+    customServiceCustomerCode: [''],
     billingPeriod: ['', Validators.required],
     amount: [0, [Validators.required, Validators.min(0.01)]],
     currency: ['BOB', Validators.required],
     dueDate: ['', Validators.required]
   });
+
+  get selectedProviderId(): string {
+    return this.form.get('providerId')?.value ?? '';
+  }
+
+  get serviceCustomerCodeOptions(): string[] {
+    const providerId = this.selectedProviderId;
+    return providerId ? this.serviceCustomerCodesByProvider[providerId] ?? [] : [];
+  }
+
+  get useCustomCode(): boolean {
+    return this.form.get('serviceCustomerCode')?.value === '__custom__';
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen'] && this.isOpen) {
@@ -159,11 +187,13 @@ export class PlatformServiceBillFormComponent implements OnChanges {
     this.form.reset({
       providerId: '',
       serviceCustomerCode: '',
+      customServiceCustomerCode: '',
       billingPeriod: '',
       amount: 0,
       currency: 'BOB',
       dueDate: ''
     });
+    this.onProviderChange();
   }
 
   close(): void {
@@ -179,15 +209,58 @@ export class PlatformServiceBillFormComponent implements OnChanges {
     }
 
     const raw = this.form.getRawValue();
+    const selectedCode = raw.serviceCustomerCode ?? '';
+    const customCode = raw.customServiceCustomerCode?.trim() || '';
+    const serviceCustomerCode =
+      this.serviceCustomerCodeOptions.length === 0 || selectedCode === '__custom__'
+        ? customCode
+        : selectedCode.trim();
 
     this.saved.emit({
       providerId: raw.providerId ?? '',
-      serviceCustomerCode: (raw.serviceCustomerCode ?? '').trim(),
+      serviceCustomerCode,
       billingPeriod: raw.billingPeriod ?? '',
       amount: Number(raw.amount ?? 0),
       currency: raw.currency ?? 'BOB',
       dueDate: raw.dueDate ?? ''
     });
+  }
+
+  onProviderChange(): void {
+    const serviceCodeControl = this.form.get('serviceCustomerCode');
+    const customCodeControl = this.form.get('customServiceCustomerCode');
+    const hasOptions = this.serviceCustomerCodeOptions.length > 0;
+
+    if (hasOptions) {
+      serviceCodeControl?.setValidators([Validators.required]);
+      customCodeControl?.clearValidators();
+      serviceCodeControl?.setValue('');
+      customCodeControl?.setValue('');
+    } else {
+      serviceCodeControl?.clearValidators();
+      customCodeControl?.setValidators([Validators.required]);
+      serviceCodeControl?.setValue('');
+      customCodeControl?.setValue('');
+    }
+
+    serviceCodeControl?.updateValueAndValidity({ emitEvent: false });
+    customCodeControl?.updateValueAndValidity({ emitEvent: false });
+  }
+
+  onServiceCodeChange(value: string): void {
+    if (value === '__custom__') {
+      this.form.get('serviceCustomerCode')?.setValue('__custom__', { emitEvent: false });
+      const customCodeControl = this.form.get('customServiceCustomerCode');
+      customCodeControl?.setValidators([Validators.required]);
+      customCodeControl?.updateValueAndValidity({ emitEvent: false });
+      return;
+    }
+
+    this.form.get('serviceCustomerCode')?.setValue(value, { emitEvent: false });
+    const customCodeControl = this.form.get('customServiceCustomerCode');
+    customCodeControl?.clearValidators();
+    customCodeControl?.setValue('');
+    customCodeControl?.updateValueAndValidity({ emitEvent: false });
   }
 
   serviceCustomerCodeLabel(): string {

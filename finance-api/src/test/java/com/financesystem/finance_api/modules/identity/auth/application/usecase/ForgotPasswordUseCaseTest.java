@@ -42,7 +42,8 @@ class ForgotPasswordUseCaseTest {
 
         PasswordResetNotificationProperties properties = new PasswordResetNotificationProperties();
         properties.setExpirationMinutes(30);
-        properties.setResetUrlBase("http://localhost:4200/reset-password");
+        properties.setFrontendUrlBase("http://localhost:4200");
+        properties.setResetUrlPath("/reset-password");
 
         ForgotPasswordUseCase useCase = new ForgotPasswordUseCase(
                 tenantUserRepository,

@@ -5,6 +5,7 @@ import '../entities/transaction.dart';
 
 abstract class AccountRepository {
   Future<List<Account>> getAccounts();
+  Future<List<Account>> getTenantAccounts();
   Future<Account> getAccountById(String accountId);
   Future<AccountLookup> getAccountByNumber(String accountNumber);
   Future<AccountBalance> getAccountBalance(String accountId);

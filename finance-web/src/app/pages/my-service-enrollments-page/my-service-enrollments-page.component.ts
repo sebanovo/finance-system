@@ -10,6 +10,7 @@ import {
   MyServiceEnrollmentFormComponent,
   MyServiceEnrollmentListUseCase,
   MyServicePaymentUseCase,
+  MyServiceProviderCatalogUseCase,
   MyServiceProviderListUseCase,
   ServicePaymentsConfirmDialogComponent,
   ServicePaymentsErrorCardComponent,
@@ -154,6 +155,7 @@ import { ToastService } from '../../shared/ui/toast/toast.service';
       <app-my-service-enrollment-form
         [isOpen]="enrollmentFormOpen()"
         [providers]="providerUseCase.data()"
+        [serviceCustomerCodesByProvider]="serviceCustomerCodesByProvider"
         [isSubmitting]="submittingEnrollment()"
         (closed)="closeEnrollmentForm()"
         (saved)="createEnrollment($event)">
@@ -166,6 +168,7 @@ import { ToastService } from '../../shared/ui/toast/toast.service';
         [enrollment]="selectedEnrollment()"
         [providers]="providerUseCase.data()"
         [accounts]="accountUseCase.data()"
+        [serviceCustomerCodesByProvider]="serviceCustomerCodesByProvider"
         [queryResult]="billQueryUseCase.result()"
         [queryLoading]="billQueryUseCase.status() === 'loading'"
         [paymentLoading]="paymentUseCase.status() === 'loading'"
@@ -190,6 +193,7 @@ import { ToastService } from '../../shared/ui/toast/toast.service';
 export class MyServiceEnrollmentsPageComponent implements OnInit {
   readonly enrollmentUseCase = inject(MyServiceEnrollmentListUseCase);
   readonly providerUseCase = inject(MyServiceProviderListUseCase);
+  readonly providerCatalogUseCase = inject(MyServiceProviderCatalogUseCase);
   readonly billQueryUseCase = inject(MyServiceBillQueryUseCase);
   readonly paymentUseCase = inject(MyServicePaymentUseCase);
   readonly accountUseCase = inject(MyAccountListUseCase);
@@ -211,6 +215,7 @@ export class MyServiceEnrollmentsPageComponent implements OnInit {
 
   ngOnInit(): void {
     void this.providerUseCase.loadProviders(0, 100, { status: 'ACTIVE' });
+    void this.providerCatalogUseCase.loadCatalog();
     void this.accountUseCase.loadAccounts(0, 100);
     void this.enrollmentUseCase.loadEnrollments(0, 20, { status: 'ACTIVE' });
   }
@@ -233,6 +238,37 @@ export class MyServiceEnrollmentsPageComponent implements OnInit {
       category: this.category() || undefined,
       status: this.status() || undefined
     });
+  }
+
+  get serviceCustomerCodesByProvider(): Record<string, string[]> {
+    const grouped: Record<string, Set<string>> = {};
+    for (const provider of this.providerCatalogUseCase.catalog()) {
+      const providerId = provider.id;
+      if (!grouped[providerId]) {
+        grouped[providerId] = new Set<string>();
+      }
+      for (const serviceCustomer of provider.serviceCustomers ?? []) {
+        const code = serviceCustomer.serviceCustomerCode?.trim();
+        if (code) {
+          grouped[providerId].add(code);
+        }
+      }
+    }
+
+    for (const enrollment of this.enrollmentUseCase.data()) {
+      const providerId = enrollment.provider.id;
+      if (!grouped[providerId]) {
+        grouped[providerId] = new Set<string>();
+      }
+      const code = enrollment.serviceCustomerCode?.trim();
+      if (code) {
+        grouped[providerId].add(code);
+      }
+    }
+
+    return Object.fromEntries(
+      Object.entries(grouped).map(([providerId, codes]) => [providerId, Array.from(codes).sort()])
+    );
   }
 
   openEnrollmentForm(): void {

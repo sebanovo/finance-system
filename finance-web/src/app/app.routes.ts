@@ -23,7 +23,12 @@ export const routes: Routes = [
   // Recuperación de contraseña
   { path: 'forgot-password', loadComponent: () => import('./pages/forgot-password-page/forgot-password-page.component').then(m => m.ForgotPasswordPageComponent) },
   { path: 'reset-password', loadComponent: () => import('./pages/reset-password-page/reset-password-page.component').then(m => m.ResetPasswordPageComponent) },
-  
+
+  // Activación de cuenta (confirmación de correo)
+  { path: 'activate', loadComponent: () => import('./pages/activate-account-page/activate-account-page.component').then(m => m.ActivateAccountPageComponent) },
+  { path: 'verify-email', loadComponent: () => import('./pages/activate-account-page/activate-account-page.component').then(m => m.ActivateAccountPageComponent) },
+  { path: 'activate-account', loadComponent: () => import('./pages/activate-account-page/activate-account-page.component').then(m => m.ActivateAccountPageComponent) },
+
   // Registro público de tenant
   { path: 'onboarding', loadComponent: () => import('./pages/onboarding-page/onboarding-page.component').then(m => m.OnboardingPageComponent) },
 
@@ -109,6 +114,16 @@ export const routes: Routes = [
         path: 'me/transactions',
         canActivate: [permissionGuard('me.transactions.read', 'me.transactions.detail')],
         loadComponent: () => import('./pages/my-transactions-page/my-transactions-page.component').then(m => m.MyTransactionsPageComponent)
+      },
+      {
+        path: 'loans',
+        canActivate: [permissionGuard('loans.list', 'loans.view')],
+        loadComponent: () => import('./pages/loans-page/loans-page.component').then(m => m.LoansPageComponent)
+      },
+      {
+        path: 'me/loans',
+        canActivate: [permissionGuard('me.loans.list', 'me.loans.view')],
+        loadComponent: () => import('./pages/my-loans-page/my-loans-page.component').then(m => m.MyLoansPageComponent)
       },
       {
         path: 'fx/rates',

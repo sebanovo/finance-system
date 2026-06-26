@@ -96,7 +96,10 @@ import { FaceLoginRequest } from '../../../../entities/auth/model/face-login-req
               <span *ngIf="isFieldInvalid('password')" class="mt-1 text-xs text-red-600">La contraseña es requerida.</span>
             </div>
 
-            <div class="flex justify-end">
+            <div class="flex items-center justify-between gap-3">
+              <a routerLink="/activate" class="text-sm font-semibold text-[#2E7D32] transition-colors hover:text-[#256428] hover:underline">
+                Activar cuenta
+              </a>
               <a routerLink="/forgot-password" class="text-sm font-semibold text-[#2E7D32] transition-colors hover:text-[#256428] hover:underline">
                 Olvidé mi contraseña
               </a>

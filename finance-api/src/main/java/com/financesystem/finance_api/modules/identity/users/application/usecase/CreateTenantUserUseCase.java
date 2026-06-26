@@ -5,6 +5,7 @@ import com.financesystem.finance_api.modules.governance.audit.domain.model.Audit
 import com.financesystem.finance_api.modules.identity.audit.IdentityAuditPayloads;
 import com.financesystem.finance_api.modules.identity.access.domain.repository.TenantRoleRepository;
 import com.financesystem.finance_api.modules.identity.access.domain.repository.TenantUserRoleRepository;
+import com.financesystem.finance_api.modules.identity.auth.application.usecase.IssueAccountActivationUseCase;
 import com.financesystem.finance_api.modules.identity.users.application.dto.CreateTenantUserRequest;
 import com.financesystem.finance_api.modules.identity.users.application.dto.TenantUserResponse;
 import com.financesystem.finance_api.modules.identity.users.application.mapper.TenantUserMapper;
@@ -33,6 +34,7 @@ public class CreateTenantUserUseCase {
     private final PasswordEncoder passwordEncoder;
     private final AuditTrailService auditTrailService;
     private final TenantPlanEnforcementService tenantPlanEnforcementService;
+    private final IssueAccountActivationUseCase issueAccountActivationUseCase;
 
     public CreateTenantUserUseCase(
             TenantUserRepository tenantUserRepository,
@@ -41,7 +43,8 @@ public class CreateTenantUserUseCase {
             TenantUserMapper tenantUserMapper,
             PasswordEncoder passwordEncoder,
             AuditTrailService auditTrailService,
-            TenantPlanEnforcementService tenantPlanEnforcementService
+            TenantPlanEnforcementService tenantPlanEnforcementService,
+            IssueAccountActivationUseCase issueAccountActivationUseCase
     ) {
         this.tenantUserRepository = tenantUserRepository;
         this.tenantRoleRepository = tenantRoleRepository;
@@ -50,6 +53,7 @@ public class CreateTenantUserUseCase {
         this.passwordEncoder = passwordEncoder;
         this.auditTrailService = auditTrailService;
         this.tenantPlanEnforcementService = tenantPlanEnforcementService;
+        this.issueAccountActivationUseCase = issueAccountActivationUseCase;
     }
 
     @Transactional
@@ -72,8 +76,8 @@ public class CreateTenantUserUseCase {
                 passwordEncoder.encode(request.password()),
                 normalizeNullable(request.firstName()),
                 normalizeNullable(request.lastName()),
-                true,
-                TenantUserStatus.ACTIVE,
+                false,
+                TenantUserStatus.PENDING,
                 null,
                 null
         );
@@ -93,6 +97,10 @@ public class CreateTenantUserUseCase {
                     );
                     return false;
                 });
+
+        // Email-verification flow: the user stays PENDING/inactive until they
+        // confirm ownership of the inbox through the activation link/token.
+        issueAccountActivationUseCase.execute(createdTenantUser.email());
 
         auditTrailService.recordTenantEvent(
                 AuditEventTypes.USER_CREATED,

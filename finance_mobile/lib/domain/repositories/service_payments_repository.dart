@@ -1,4 +1,5 @@
 import '../entities/service_bills_query_result.dart';
+import '../entities/service_provider_catalog.dart';
 import '../entities/service_enrollment.dart';
 import '../entities/service_payment.dart';
 import '../entities/service_provider.dart';
@@ -11,6 +12,8 @@ abstract class ServicePaymentsRepository {
     int page,
     int size,
   });
+
+  Future<List<ServiceProviderCatalog>> getServiceProviderCatalog();
 
   Future<List<ServiceEnrollment>> getServiceEnrollments({
     String? providerId,
@@ -47,6 +50,8 @@ abstract class ServicePaymentsRepository {
   Future<List<ServicePayment>> getServicePayments({
     String? providerId,
     String? receiptNumber,
+    String? accountNumber,
+    String? userId,
     String? billId,
     int page,
     int size,

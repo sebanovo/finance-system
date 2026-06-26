@@ -21,6 +21,8 @@ public class AuthController {
     private final RefreshTenantTokenUseCase refreshTenantTokenUseCase;
     private final ForgotPasswordUseCase forgotPasswordUseCase;
     private final ResetPasswordUseCase resetPasswordUseCase;
+    private final ActivateUserAccountUseCase activateUserAccountUseCase;
+    private final ResendAccountActivationUseCase resendAccountActivationUseCase;
     private final GetCurrentAuthenticatedTenantUserUseCase getCurrentAuthenticatedTenantUserUseCase;
     private final ChangePasswordUseCase changePasswordUseCase;
     private final LogoutTenantUserUseCase logoutTenantUserUseCase;
@@ -34,6 +36,8 @@ public class AuthController {
             RefreshTenantTokenUseCase refreshTenantTokenUseCase,
             ForgotPasswordUseCase forgotPasswordUseCase,
             ResetPasswordUseCase resetPasswordUseCase,
+            ActivateUserAccountUseCase activateUserAccountUseCase,
+            ResendAccountActivationUseCase resendAccountActivationUseCase,
             GetCurrentAuthenticatedTenantUserUseCase getCurrentAuthenticatedTenantUserUseCase,
             ChangePasswordUseCase changePasswordUseCase,
             LogoutTenantUserUseCase logoutTenantUserUseCase,
@@ -46,6 +50,8 @@ public class AuthController {
         this.refreshTenantTokenUseCase = refreshTenantTokenUseCase;
         this.forgotPasswordUseCase = forgotPasswordUseCase;
         this.resetPasswordUseCase = resetPasswordUseCase;
+        this.activateUserAccountUseCase = activateUserAccountUseCase;
+        this.resendAccountActivationUseCase = resendAccountActivationUseCase;
         this.getCurrentAuthenticatedTenantUserUseCase = getCurrentAuthenticatedTenantUserUseCase;
         this.changePasswordUseCase = changePasswordUseCase;
         this.logoutTenantUserUseCase = logoutTenantUserUseCase;
@@ -87,6 +93,26 @@ public class AuthController {
 
         return ApiResponse.success(
                 "Password reset successfully",
+                Map.of("status", "ok")
+        );
+    }
+
+    @PostMapping("/activate-account")
+    public ApiResponse<Map<String, String>> activateAccount(@Valid @RequestBody ActivateAccountRequest request) {
+        activateUserAccountUseCase.execute(request);
+
+        return ApiResponse.success(
+                "Account activated successfully",
+                Map.of("status", "ok")
+        );
+    }
+
+    @PostMapping("/resend-activation")
+    public ApiResponse<Map<String, String>> resendActivation(@Valid @RequestBody ResendActivationRequest request) {
+        resendAccountActivationUseCase.execute(request);
+
+        return ApiResponse.success(
+                "If the account exists and is pending, an activation email has been sent",
                 Map.of("status", "ok")
         );
     }

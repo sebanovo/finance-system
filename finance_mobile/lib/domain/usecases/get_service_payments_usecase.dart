@@ -9,6 +9,8 @@ class GetServicePaymentsUseCase {
   Future<List<ServicePayment>> call({
     String? providerId,
     String? receiptNumber,
+    String? accountNumber,
+    String? userId,
     String? billId,
     int page = 0,
     int size = 50,
@@ -16,6 +18,8 @@ class GetServicePaymentsUseCase {
     return repository.getServicePayments(
       providerId: providerId,
       receiptNumber: receiptNumber,
+      accountNumber: accountNumber,
+      userId: userId,
       billId: billId,
       page: page,
       size: size,

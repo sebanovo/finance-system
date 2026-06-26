@@ -23,6 +23,7 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   bool _isSubmitting = false;
+  bool _obscurePassword = true;
 
   String? _validateEmail(String? value) {
     if (value == null || value.trim().isEmpty) {
@@ -90,8 +91,18 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
               const SizedBox(height: 8),
               TextFormField(
                 controller: _passwordController,
-                decoration: const InputDecoration(labelText: 'Contraseña'),
-                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Contraseña',
+                  suffixIcon: IconButton(
+                    onPressed: () {
+                      setState(() => _obscurePassword = !_obscurePassword);
+                    },
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                    ),
+                  ),
+                ),
+                obscureText: _obscurePassword,
                 validator: _validatePassword,
               ),
               const SizedBox(height: 8),

@@ -170,11 +170,15 @@ class _HomePageState extends State<HomePage> {
                   errorMessage: _viewModel.dashboardErrorMessage,
                   onOpenAccounts: () => context.push('/accounts'),
                   onOpenTransactions: () => context.push('/transactions'),
+                  onOpenLoans: _viewModel.hasAnyPermissionPrefix('me.loans.')
+                      ? () => context.push('/loans')
+                      : null,
                   onOpenLimits: _viewModel.hasAnyPermissionPrefix('limits.')
                       ? () => context.push('/limits')
                       : null,
                   onOpenNotifications: () => context.push('/notifications'),
-                  onOpenServicePayments: () => context.push('/service-payments'),
+                  onOpenServicePayments: () =>
+                      context.push('/service-payments'),
                 ),
                 const SizedBox(height: 16),
                 SubscriptionCard(

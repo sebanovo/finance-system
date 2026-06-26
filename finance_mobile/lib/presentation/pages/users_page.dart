@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart' as di;
+import '../../domain/entities/user.dart';
 import '../viewmodels/users_viewmodel.dart';
 import '../widgets/create_user_dialog.dart';
 import '../widgets/edit_role_dialog.dart';
@@ -57,10 +58,22 @@ class _UsersPageState extends State<UsersPage> {
     }
   }
 
-  Future<void> _assignRole(String userId, String roleId) async {
+  Future<void> _assignRoles(String userId, List<String> roleIds) async {
     try {
-      await _viewModel.assignRole(userId, roleId);
-      _showSnackBar('Rol asignado correctamente', isError: false);
+      await _viewModel.assignRole(userId, roleIds);
+      _showSnackBar('Roles asignados correctamente', isError: false);
+    } catch (e) {
+      _showSnackBar('Error: $e');
+    }
+  }
+
+  Future<void> _toggleUserStatus(User user) async {
+    try {
+      await _viewModel.toggleUserStatus(user.id, user.active);
+      _showSnackBar(
+        user.active ? 'Usuario desactivado correctamente' : 'Usuario activado correctamente',
+        isError: false,
+      );
     } catch (e) {
       _showSnackBar('Error: $e');
     }
@@ -73,14 +86,14 @@ class _UsersPageState extends State<UsersPage> {
     );
   }
 
-  void _showEditRoleDialog(String userId, String? currentRoleId) {
+  void _showEditRoleDialog(String userId) {
     showDialog(
       context: context,
       builder: (context) => EditRoleDialog(
         userId: userId,
-        currentRoleId: currentRoleId,
+        currentRoleIds: _viewModel.rolesMap[userId]?.map((role) => role.id).toList() ?? const [],
         availableRoles: _viewModel.availableRoles,
-        onAssignRole: _assignRole,
+        onAssignRoles: _assignRoles,
       ),
     );
   }
@@ -136,14 +149,12 @@ class _UsersPageState extends State<UsersPage> {
         final user = _viewModel.users[index];
         final roles = _viewModel.rolesMap[user.id] ?? [];
         final loadingRoles = _viewModel.loadingRolesMap[user.id] ?? false;
-        final currentRoleId = roles.isNotEmpty ? roles.first.id : null;
-
         return UserListItem(
           user: user,
           roles: roles,
           isLoadingRoles: loadingRoles,
-          currentRoleId: currentRoleId,
-          onEditRole: () => _showEditRoleDialog(user.id, currentRoleId),
+          onEditRole: () => _showEditRoleDialog(user.id),
+          onToggleStatus: () => _toggleUserStatus(user),
         );
       },
     );

@@ -6,5 +6,7 @@ public enum FxOperationCode {
     DEPOSIT,
     WITHDRAWAL,
     PAYMENT,
-    SERVICE_PAYMENT
+    SERVICE_PAYMENT,
+    LOAN_DISBURSEMENT,
+    LOAN_REPAYMENT
 }

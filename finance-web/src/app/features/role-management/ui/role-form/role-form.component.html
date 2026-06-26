@@ -33,6 +33,34 @@
     <!-- Permisos Agrupados -->
     <section class="space-y-4">
       <h4 class="border-b border-[#E8F2E2] pb-2 text-sm font-bold uppercase tracking-[0.14em] text-[#6B7D6C]">Asignación de permisos</h4>
+
+      <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#DDEED8] bg-[#F7FBF3] px-4 py-3">
+        <div>
+          <p class="text-sm font-semibold text-[#1B5E20]">Seleccionar todos los permisos</p>
+          <p class="text-xs text-[#6B7D6C]">Marca o quita todos los permisos del rol de una sola vez.</p>
+        </div>
+        <label class="flex cursor-pointer items-center gap-3">
+          <span class="text-xs font-semibold text-[#6B7D6C]">
+            @if (areAllPermissionsSelected()) {
+              Todos
+            } @else if (areSomePermissionsSelected()) {
+              Parcial
+            } @else {
+              Ninguno
+            }
+          </span>
+          <div class="relative">
+            <input
+              type="checkbox"
+              class="peer sr-only"
+              [checked]="areAllPermissionsSelected()"
+              [indeterminate]="areSomePermissionsSelected()"
+              (change)="toggleAllPermissions($event)">
+            <div class="block h-5 w-10 rounded-full bg-[#DDEED8] transition-colors duration-300 peer-checked:bg-[#2E7D32]"></div>
+            <div class="absolute left-1 top-1 h-3.5 w-3.5 rounded-full bg-white transition-transform duration-300 peer-checked:translate-x-4.5"></div>
+          </div>
+        </label>
+      </div>
       
       @if (groupedPermissions.length === 0) {
         <div class="rounded-2xl border border-dashed border-[#DDEED8] p-4 text-center text-sm text-[#6B7D6C]">
@@ -50,8 +78,13 @@
                 <span class="text-xs font-semibold text-[#6B7D6C]">Seleccionar todo</span>
                 <!-- Switch nativo estilizado -->
                 <div class="relative">
-                  <input type="checkbox" class="peer sr-only" [checked]="isModuleFullySelected(group.permissions)" (change)="toggleModule(group.permissions, $event)">
-                  <div class="block h-5.5 w-10 rounded-full bg-[#DDEED8] transition-colors duration-300 peer-checked:bg-[#2E7D32]"></div>
+                  <input
+                    type="checkbox"
+                    class="peer sr-only"
+                    [checked]="isModuleFullySelected(group.permissions)"
+                    [indeterminate]="isModuleIndeterminate(group.permissions)"
+                    (change)="toggleModule(group.permissions, $event)">
+                  <div class="block h-5 w-10 rounded-full bg-[#DDEED8] transition-colors duration-300 peer-checked:bg-[#2E7D32]"></div>
                   <div class="absolute left-1 top-1 bg-white w-3.5 h-3.5 rounded-full transition-transform duration-300 peer-checked:translate-x-4.5"></div>
                 </div>
               </label>

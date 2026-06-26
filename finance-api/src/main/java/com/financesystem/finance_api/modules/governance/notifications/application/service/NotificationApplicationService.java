@@ -425,7 +425,7 @@ public class NotificationApplicationService implements NotificationPublisherPort
 
         NotificationDevice existing = notificationDeviceRepository
                 .findByUserIdAndDeviceId(userId, request.deviceId())
-                .or(() -> notificationDeviceRepository.findByUserIdAndFcmToken(userId, request.fcmToken()))
+                .or(() -> notificationDeviceRepository.findByFcmToken(request.fcmToken()))
                 .orElse(null);
 
         NotificationDevice device = new NotificationDevice(

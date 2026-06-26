@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../core/network/api_client.dart';
 import '../models/model_parsers.dart';
 import '../models/service_bill_model.dart';
+import '../models/service_provider_catalog_model.dart';
 import '../models/service_enrollment_model.dart';
 import '../models/service_payment_model.dart';
 import '../models/service_provider_model.dart';
@@ -15,6 +16,8 @@ abstract class ServicePaymentsRemoteDataSource {
     int page,
     int size,
   });
+
+  Future<List<ServiceProviderCatalogModel>> getServiceProviderCatalog();
 
   Future<List<ServiceEnrollmentModel>> getServiceEnrollments({
     String? providerId,
@@ -42,6 +45,8 @@ abstract class ServicePaymentsRemoteDataSource {
   Future<List<ServicePaymentModel>> getServicePayments({
     String? providerId,
     String? receiptNumber,
+    String? accountNumber,
+    String? userId,
     String? billId,
     int page,
     int size,
@@ -64,8 +69,11 @@ class ServicePaymentsRemoteDataSourceImpl
     int page = 0,
     int size = 50,
   }) async {
+    final endpoint = apiClient.isOwnerAdmin
+        ? '/api/service-providers'
+        : '/api/me/service-providers';
     final response = await apiClient.get(
-      '/api/me/service-providers',
+      endpoint,
       queryParameters: {
         if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
         if (category != null && category.trim().isNotEmpty) 'category': category.trim(),
@@ -78,6 +86,19 @@ class ServicePaymentsRemoteDataSourceImpl
       response,
       (json) => ServiceProviderModel.fromJson(json),
       fallbackMessage: 'Error al obtener proveedores de servicios',
+    );
+  }
+
+  @override
+  Future<List<ServiceProviderCatalogModel>> getServiceProviderCatalog() async {
+    final endpoint = apiClient.isOwnerAdmin
+        ? '/api/service-providers/catalog'
+        : '/api/me/service-providers/catalog';
+    final response = await apiClient.get(endpoint);
+    return _parseListResponse(
+      response,
+      (json) => ServiceProviderCatalogModel.fromJson(json),
+      fallbackMessage: 'Error al obtener catálogo de proveedores de servicios',
     );
   }
 
@@ -136,7 +157,10 @@ class ServicePaymentsRemoteDataSourceImpl
   Future<ServiceBillsQueryResultModel> queryServiceBills(
     Map<String, dynamic> request,
   ) async {
-    final response = await apiClient.post('/api/me/service-bills/query', request);
+    final endpoint = apiClient.isOwnerAdmin
+        ? '/api/service-bills/query'
+        : '/api/me/service-bills/query';
+    final response = await apiClient.post(endpoint, request);
     return _parseSingleResponse(
       response,
       (json) => ServiceBillsQueryResultModel.fromJson(json),
@@ -148,7 +172,10 @@ class ServicePaymentsRemoteDataSourceImpl
   Future<ServicePaymentModel> createServicePayment(
     Map<String, dynamic> request,
   ) async {
-    final response = await apiClient.post('/api/me/service-payments', request);
+    final endpoint = apiClient.isOwnerAdmin
+        ? '/api/service-payments'
+        : '/api/me/service-payments';
+    final response = await apiClient.post(endpoint, request);
     return _parseSingleResponse(
       response,
       (json) => ServicePaymentModel.fromJson(json),
@@ -160,15 +187,22 @@ class ServicePaymentsRemoteDataSourceImpl
   Future<List<ServicePaymentModel>> getServicePayments({
     String? providerId,
     String? receiptNumber,
+    String? accountNumber,
+    String? userId,
     String? billId,
     int page = 0,
     int size = 50,
   }) async {
+    final endpoint = apiClient.isOwnerAdmin
+        ? '/api/service-payments'
+        : '/api/me/service-payments';
     final response = await apiClient.get(
-      '/api/me/service-payments',
+      endpoint,
       queryParameters: {
         if (providerId != null && providerId.trim().isNotEmpty) 'providerId': providerId.trim(),
         if (receiptNumber != null && receiptNumber.trim().isNotEmpty) 'receiptNumber': receiptNumber.trim(),
+        if (accountNumber != null && accountNumber.trim().isNotEmpty) 'accountNumber': accountNumber.trim(),
+        if (userId != null && userId.trim().isNotEmpty) 'userId': userId.trim(),
         if (billId != null && billId.trim().isNotEmpty) 'billId': billId.trim(),
         'page': page,
         'size': size,

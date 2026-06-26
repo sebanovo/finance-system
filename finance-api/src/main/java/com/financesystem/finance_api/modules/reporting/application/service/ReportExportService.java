@@ -1,7 +1,9 @@
 package com.financesystem.finance_api.modules.reporting.application.service;
 
 import com.financesystem.finance_api.modules.governance.audit.application.service.AuditTrailService;
+import com.financesystem.finance_api.modules.reporting.application.ReportLabels;
 import com.financesystem.finance_api.modules.reporting.application.config.ReportingProperties;
+import com.financesystem.finance_api.modules.reporting.application.registry.ReportDefinitionRegistry;
 import com.financesystem.finance_api.modules.reporting.application.exception.ReportNotFoundException;
 import com.financesystem.finance_api.modules.reporting.domain.ReportActorScope;
 import com.financesystem.finance_api.modules.reporting.application.export.ReportExportException;
@@ -35,16 +37,19 @@ public class ReportExportService {
     private final ReportExportJpaRepository exportRepository;
     private final ReportingProperties properties;
     private final AuditTrailService auditTrailService;
+    private final ReportDefinitionRegistry registry;
     private final Map<ReportFormat, ReportExporter> exporters = new EnumMap<>(ReportFormat.class);
 
     public ReportExportService(ReportExecutionStore executionStore, ReportSnapshotMapper snapshotMapper,
                                ReportExportJpaRepository exportRepository, ReportingProperties properties,
-                               AuditTrailService auditTrailService, List<ReportExporter> exporterBeans) {
+                               AuditTrailService auditTrailService, ReportDefinitionRegistry registry,
+                               List<ReportExporter> exporterBeans) {
         this.executionStore = executionStore;
         this.snapshotMapper = snapshotMapper;
         this.exportRepository = exportRepository;
         this.properties = properties;
         this.auditTrailService = auditTrailService;
+        this.registry = registry;
         for (ReportExporter exporter : exporterBeans) {
             exporters.put(exporter.format(), exporter);
         }
@@ -62,10 +67,14 @@ public class ReportExportService {
         }
 
         ReportSnapshotMapper.SnapshotData snapshot = snapshotMapper.fromSnapshot(execution.getResultJson());
-        String title = execution.getDefinitionKey() != null ? execution.getDefinitionKey() : "Reporte IA";
+        String definitionKey = execution.getDefinitionKey();
+        String definitionTitle = definitionKey == null ? null
+                : registry.find(definitionKey).map(d -> d.title()).orElse(null);
+        String title = ReportLabels.reportTitle(definitionTitle, definitionKey);
         byte[] content = exporter.export(title, snapshot.columns(), snapshot.rows());
 
-        String fileName = (title + "-" + STAMP.format(java.time.Instant.now()) + "." + exporter.fileExtension())
+        String fileBase = definitionKey != null ? definitionKey : (title == null ? "reporte" : title);
+        String fileName = (fileBase + "-" + STAMP.format(java.time.Instant.now()) + "." + exporter.fileExtension())
                 .replaceAll("[^A-Za-z0-9._-]", "_");
         Path path = writeFile(executionId, exporter.fileExtension(), content);
 

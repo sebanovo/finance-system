@@ -5,6 +5,7 @@ import { MyAccountListUseCase } from '../../features/account-management';
 import { PlatformPaginationComponent } from '../../features/platform/ui/platform-pagination/platform-pagination.component';
 import {
   MyServiceBillQueryUseCase,
+  MyServiceProviderCatalogUseCase,
   MyServicePaymentDrawerComponent,
   MyServicePaymentHistoryTableComponent,
   MyServicePaymentHistoryUseCase,
@@ -144,6 +145,7 @@ import { ToastService } from '../../shared/ui/toast/toast.service';
         [enrollment]="null"
         [providers]="providerUseCase.data()"
         [accounts]="accountUseCase.data()"
+        [serviceCustomerCodesByProvider]="serviceCustomerCodesByProvider"
         [queryResult]="billQueryUseCase.result()"
         [queryLoading]="billQueryUseCase.status() === 'loading'"
         [paymentLoading]="paymentUseCase.status() === 'loading'"
@@ -165,6 +167,7 @@ import { ToastService } from '../../shared/ui/toast/toast.service';
 export class MyServicePaymentsPageComponent implements OnInit {
   readonly historyUseCase = inject(MyServicePaymentHistoryUseCase);
   readonly providerUseCase = inject(MyServiceProviderListUseCase);
+  readonly providerCatalogUseCase = inject(MyServiceProviderCatalogUseCase);
   readonly accountUseCase = inject(MyAccountListUseCase);
   readonly billQueryUseCase = inject(MyServiceBillQueryUseCase);
   readonly paymentUseCase = inject(MyServicePaymentUseCase);
@@ -181,8 +184,16 @@ export class MyServicePaymentsPageComponent implements OnInit {
 
   ngOnInit(): void {
     void this.providerUseCase.loadProviders(0, 100, { status: 'ACTIVE' });
+    void this.providerCatalogUseCase.loadCatalog();
     void this.accountUseCase.loadAccounts(0, 100);
     void this.historyUseCase.loadPayments();
+  }
+
+  get serviceCustomerCodesByProvider(): Record<string, string[]> {
+    return this.providerCatalogUseCase.catalog().reduce<Record<string, string[]>>((acc, provider) => {
+      acc[provider.id] = provider.serviceCustomers.map(item => item.serviceCustomerCode);
+      return acc;
+    }, {});
   }
 
   reloadHistory(): void {

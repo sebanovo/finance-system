@@ -4,6 +4,7 @@ import '../../../domain/entities/role.dart';
 import '../../../domain/usecases/get_users_usecase.dart';
 import '../../../domain/usecases/get_user_roles_usecase.dart';
 import '../../../domain/usecases/assign_role_usecase.dart';
+import '../../../domain/usecases/toggle_user_status_usecase.dart';
 import '../../../domain/usecases/create_user_usecase.dart';
 import '../../../domain/usecases/get_available_roles_usecase.dart';
 
@@ -11,6 +12,7 @@ class UsersViewModel extends ChangeNotifier {
   final GetUsersUseCase getUsersUseCase;
   final GetUserRolesUseCase getUserRolesUseCase;
   final AssignRoleUseCase assignRoleUseCase;
+  final ToggleUserStatusUseCase toggleUserStatusUseCase;
   final CreateUserUseCase createUserUseCase;
   final GetAvailableRolesUseCase getAvailableRolesUseCase;
 
@@ -26,6 +28,7 @@ class UsersViewModel extends ChangeNotifier {
     required this.getUsersUseCase,
     required this.getUserRolesUseCase,
     required this.assignRoleUseCase,
+    required this.toggleUserStatusUseCase,
     required this.createUserUseCase,
     required this.getAvailableRolesUseCase,
   }) {
@@ -116,10 +119,21 @@ class UsersViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> assignRole(String userId, String roleId) async {
+  Future<void> assignRole(String userId, List<String> roleIds) async {
     try {
-      await assignRoleUseCase(userId, roleId);
+      await assignRoleUseCase(userId, roleIds);
       await loadUserRoles(userId);
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  Future<void> toggleUserStatus(String userId, bool currentlyActive) async {
+    try {
+      await toggleUserStatusUseCase(userId, currentlyActive);
+      await loadUsers();
     } catch (e) {
       _errorMessage = e.toString();
       notifyListeners();

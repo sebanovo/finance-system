@@ -10,7 +10,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
@@ -21,6 +27,7 @@ public class PlatformServiceProviderController {
 
     private final CreateServiceProviderUseCase createServiceProviderUseCase;
     private final ListServiceProvidersUseCase listServiceProvidersUseCase;
+    private final ListServiceProviderCatalogUseCase listServiceProviderCatalogUseCase;
     private final GetServiceProviderUseCase getServiceProviderUseCase;
     private final UpdateServiceProviderUseCase updateServiceProviderUseCase;
     private final ChangeServiceProviderStatusUseCase changeServiceProviderStatusUseCase;
@@ -28,12 +35,14 @@ public class PlatformServiceProviderController {
     public PlatformServiceProviderController(
             CreateServiceProviderUseCase createServiceProviderUseCase,
             ListServiceProvidersUseCase listServiceProvidersUseCase,
+            ListServiceProviderCatalogUseCase listServiceProviderCatalogUseCase,
             GetServiceProviderUseCase getServiceProviderUseCase,
             UpdateServiceProviderUseCase updateServiceProviderUseCase,
             ChangeServiceProviderStatusUseCase changeServiceProviderStatusUseCase
     ) {
         this.createServiceProviderUseCase = createServiceProviderUseCase;
         this.listServiceProvidersUseCase = listServiceProvidersUseCase;
+        this.listServiceProviderCatalogUseCase = listServiceProviderCatalogUseCase;
         this.getServiceProviderUseCase = getServiceProviderUseCase;
         this.updateServiceProviderUseCase = updateServiceProviderUseCase;
         this.changeServiceProviderStatusUseCase = changeServiceProviderStatusUseCase;
@@ -52,6 +61,15 @@ public class PlatformServiceProviderController {
             @ParameterObject @PageableDefault(size = 50) Pageable pageable
     ) {
         return ApiResponse.success("Service providers retrieved successfully", listServiceProvidersUseCase.execute(filter, pageable));
+    }
+
+    @GetMapping("/catalog")
+    @PreAuthorize("@authorizationGuards.isPlatformAdmin()")
+    public ApiResponse<java.util.List<ServiceProviderCatalogResponse>> catalog() {
+        return ApiResponse.success(
+                "Service provider catalog retrieved successfully",
+                listServiceProviderCatalogUseCase.execute()
+        );
     }
 
     @GetMapping("/{providerId}")
