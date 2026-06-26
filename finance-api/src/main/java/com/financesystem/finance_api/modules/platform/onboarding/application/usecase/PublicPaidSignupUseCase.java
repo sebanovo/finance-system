@@ -84,7 +84,7 @@ public class PublicPaidSignupUseCase {
         PlatformTenant createdTenant = platformTenantRepository.findById(createdTenantResponse.id())
                 .orElseThrow();
 
-        tenantOwnerAdminProvisioningService.provisionOwnerAdmin(
+        tenantOwnerAdminProvisioningService.provisionOwnerAdminWithoutVerification(
                 createdTenant.schemaName(),
                 createdTenant.slug(),
                 request.adminEmail().trim().toLowerCase(),
