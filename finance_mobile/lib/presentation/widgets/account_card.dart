@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/account.dart';
 
+const _green = Color(0xFF166534);
+const _surface = Color(0xFFFFFFFF);
+const _surfaceVariant = Color(0xFFF9FAFB);
+const _outline = Color(0xFFE5E7EB);
+
 class AccountCard extends StatelessWidget {
   final Account account;
   final VoidCallback onTap;
@@ -14,12 +19,16 @@ class AccountCard extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: _surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: _outline),
+      ),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           border: account.primary
-              ? Border.all(color: const Color(0xFF2E7D32), width: 2)
+              ? Border.all(color: _green, width: 2)
               : null,
         ),
         child: InkWell(
@@ -75,7 +84,7 @@ class AccountCard extends StatelessWidget {
               fontWeight: FontWeight.bold,
               fontSize: 18,
               color: account.availableBalance > 0
-                  ? const Color(0xFF2E7D32)
+                  ? _green
                   : Colors.grey.shade700,
             ),
           ),
@@ -110,7 +119,7 @@ class AccountCard extends StatelessWidget {
               fontWeight: FontWeight.bold,
               fontSize: 16,
               color: account.availableBalance > 0
-                  ? const Color(0xFF2E7D32)
+                  ? _green
                   : Colors.grey.shade700,
             ),
           ),
@@ -123,11 +132,11 @@ class AccountCard extends StatelessWidget {
   Widget _buildAvatar() {
     return CircleAvatar(
       backgroundColor: account.primary
-          ? const Color(0xFF2E7D32)
-          : const Color(0xFFE8F5E9),
+          ? _green
+          : _surfaceVariant,
       child: Icon(
         _getAccountIcon(account.accountType),
-        color: account.primary ? Colors.white : const Color(0xFF2E7D32),
+        color: account.primary ? Colors.white : _green,
       ),
     );
   }
@@ -137,7 +146,7 @@ class AccountCard extends StatelessWidget {
       margin: const EdgeInsets.only(left: 8),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: const Color(0xFF2E7D32),
+        color: _green,
         borderRadius: BorderRadius.circular(12),
       ),
       child: const Text(

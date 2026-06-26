@@ -26,7 +26,10 @@ class MainDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Drawer(
       child: Container(
-        color: Colors.white,
+        decoration: const BoxDecoration(
+          color: Color(0xFFF9FAFB),
+          border: Border(right: BorderSide(color: Color(0xFF111827))),
+        ),
         child: ListView(
           children: [
             _buildDrawerHeader(),
@@ -148,31 +151,28 @@ class MainDrawer extends StatelessWidget {
               onTap: onLogout,
               isDestructive: true,
             ),
-            if (viewModel.shouldAutoRegisterDevice)
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: ElevatedButton(
-                  onPressed: () async {
-                    await notifViewModel.registerCurrentDevice();
-                  },
-                  // style: ButtonStyle(textStyle: ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green, // Button background
-                    foregroundColor: Colors.white, // Text/Icon color
-                    elevation: 5, // Shadow depth
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 30,
-                      vertical: 15,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(
-                        10,
-                      ), // Rounded corners
-                    ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: () async {
+                  await notifViewModel.registerCurrentDevice();
+                },
+                // style: ButtonStyle(textStyle: ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green, // Button background
+                  foregroundColor: Colors.white, // Text/Icon color
+                  elevation: 5, // Shadow depth
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 30,
+                    vertical: 15,
                   ),
-                  child: const Text('Registrar dispositivo'),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10), // Rounded corners
+                  ),
                 ),
+                child: const Text('Registrar dispositivo'),
               ),
+            ),
           ],
         ),
       ),
@@ -241,16 +241,17 @@ class MainDrawer extends StatelessWidget {
     return ListTile(
       leading: Icon(
         icon,
-        color: isDestructive ? Colors.red.shade700 : const Color(0xFF4CAF50),
+        color: isDestructive ? Colors.red.shade700 : const Color(0xFF166534),
       ),
       title: Text(
         title,
         style: TextStyle(
           color: isDestructive ? Colors.red.shade700 : Colors.black87,
+          fontWeight: FontWeight.w600,
         ),
       ),
       onTap: onTap,
-      hoverColor: Colors.grey.shade50,
+      hoverColor: const Color(0xFFF0FDF4),
     );
   }
 }

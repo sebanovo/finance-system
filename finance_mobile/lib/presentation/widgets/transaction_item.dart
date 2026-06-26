@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/transaction.dart';
 
+const _green = Color(0xFF166534);
+const _surface = Color(0xFFFFFFFF);
+const _surfaceVariant = Color(0xFFF9FAFB);
+const _outline = Color(0xFFE5E7EB);
+const _ink = Color(0xFF111827);
+
 class TransactionItem extends StatelessWidget {
   final Transaction transaction;
   final VoidCallback? onTap;
@@ -14,7 +20,11 @@ class TransactionItem extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: _surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: _outline),
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: onTap,
@@ -48,7 +58,7 @@ class TransactionItem extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       _formatDateTime(transaction.processedAt),
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -116,10 +126,10 @@ class TransactionItem extends StatelessWidget {
   Widget _buildIcon() {
     return CircleAvatar(
       backgroundColor: transaction.isDeposit
-          ? const Color(0xFFE8F5E9)
+          ? _surfaceVariant
           : transaction.isWithdrawal
           ? Colors.red.shade50
-          : Colors.grey.shade100,
+          : _surfaceVariant,
       child: Icon(
         transaction.isDeposit
             ? Icons.arrow_downward
@@ -133,7 +143,7 @@ class TransactionItem extends StatelessWidget {
             ? Icons.check_circle
             : Icons.payment,
         color: transaction.isDeposit
-            ? const Color(0xFF2E7D32)
+            ? _green
             : transaction.isWithdrawal
             ? Colors.red.shade700
             : Colors.grey.shade600,
@@ -150,7 +160,7 @@ class TransactionItem extends StatelessWidget {
       style: TextStyle(
         fontWeight: FontWeight.bold,
         color: transaction.isDeposit
-            ? const Color(0xFF2E7D32)
+            ? _green
             : Colors.red.shade700,
         fontSize: 16,
       ),
@@ -197,7 +207,7 @@ class TransactionItem extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: transaction.isCompleted
-            ? const Color(0xFFE8F5E9)
+            ? _surfaceVariant
             : transaction.isFailed
             ? Colors.red.shade50
             : Colors.grey.shade200,
@@ -208,7 +218,7 @@ class TransactionItem extends StatelessWidget {
         style: TextStyle(
           fontSize: 10,
           color: transaction.isCompleted
-              ? const Color(0xFF2E7D32)
+              ? _green
               : transaction.isFailed
               ? Colors.red.shade700
               : Colors.grey.shade600,

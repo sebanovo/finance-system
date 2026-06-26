@@ -99,12 +99,9 @@ class _HeroCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF102A43), Color(0xFF1F7A8C), Color(0xFF3FB8AF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: const Color(0xFF166534),
         borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: const Color(0xFF111827), width: 1.2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,7 +126,7 @@ class _HeroCard extends StatelessWidget {
             child: LinearProgressIndicator(
               minHeight: 12,
               value: usage / 100,
-              backgroundColor: Colors.white.withValues(alpha: 0.2),
+              backgroundColor: Colors.black.withValues(alpha: 0.2),
               valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
             ),
           ),
@@ -196,11 +193,12 @@ class _QuickActions extends StatelessWidget {
       children: actions
           .map(
             (action) => ActionChip(
-              avatar: Icon(action.icon, size: 18, color: const Color(0xFF0F766E)),
+              avatar: Icon(action.icon, size: 18, color: const Color(0xFF166534)),
               label: Text(action.label),
               onPressed: action.onTap,
               backgroundColor: Colors.white,
-              side: const BorderSide(color: Color(0xFFE2E8F0)),
+              side: const BorderSide(color: Color(0xFF111827)),
+              labelStyle: const TextStyle(color: Color(0xFF111827), fontWeight: FontWeight.w600),
             ),
           )
           .toList(),
@@ -216,10 +214,10 @@ class _SummaryGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      _ItemData('Usuarios', summary.totalUsers.toString(), Icons.people_outline, const Color(0xFF2563EB), 'Activos: ${summary.totalUsers}'),
-      _ItemData('Plan', summary.activePlan, Icons.workspace_premium_outlined, const Color(0xFF7C3AED), 'Max users ${summary.maxUsers}'),
-      _ItemData('Uso', '${summary.userUsagePercent.toStringAsFixed(0)}%', Icons.bar_chart_outlined, const Color(0xFF10B981), 'Capacidad utilizada'),
-      _ItemData('Trial', '${summary.trialDaysLeft} días', Icons.schedule_outlined, const Color(0xFFF59E0B), 'Tiempo restante'),
+      _ItemData('Usuarios', summary.totalUsers.toString(), Icons.people_outline, const Color(0xFF166534), 'Activos ${summary.totalUsers}'),
+      _ItemData('Plan', summary.activePlan, Icons.workspace_premium_outlined, const Color(0xFF111827), 'Max users ${summary.maxUsers}'),
+      _ItemData('Uso', '${summary.userUsagePercent.toStringAsFixed(0)}%', Icons.bar_chart_outlined, const Color(0xFF14532D), 'Capacidad utilizada'),
+      _ItemData('Trial', '${summary.trialDaysLeft} días', Icons.schedule_outlined, const Color(0xFF166534), 'Tiempo restante'),
     ];
 
     return LayoutBuilder(
@@ -261,7 +259,7 @@ class _StatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFF111827)),
       ),
       child: Row(
         children: [

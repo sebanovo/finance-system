@@ -12,7 +12,11 @@ class MyLoansPage extends StatefulWidget {
 }
 
 class _MyLoansPageState extends State<MyLoansPage> {
-  static const _green = Color(0xFF2E7D32);
+  static const _green = Color(0xFF166534);
+  static const _surface = Color(0xFFFFFFFF);
+  static const _surfaceVariant = Color(0xFFF9FAFB);
+  static const _outline = Color(0xFFE5E7EB);
+  static const _ink = Color(0xFF111827);
   late final LoansViewModel _vm;
   final _formKey = GlobalKey<FormState>();
 
@@ -138,7 +142,11 @@ class _MyLoansPageState extends State<MyLoansPage> {
   Widget _buildForm() {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: _surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: _outline),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -218,7 +226,11 @@ class _MyLoansPageState extends State<MyLoansPage> {
     final expanded = _vm.expandedLoanId == loan.id;
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: _surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: _outline),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -291,21 +303,21 @@ class _MyLoansPageState extends State<MyLoansPage> {
     Color fg;
     switch (status) {
       case 'DISBURSED':
-        bg = const Color(0xFFE8F5E9);
+        bg = const Color(0xFFF0FDF4);
         fg = _green;
         break;
       case 'PAID_OFF':
-        bg = Colors.blue.shade50;
-        fg = Colors.blue.shade700;
+        bg = const Color(0xFFE5E7EB);
+        fg = _ink;
         break;
       case 'REJECTED':
       case 'CANCELLED':
-        bg = Colors.red.shade50;
-        fg = Colors.red.shade700;
+        bg = const Color(0xFFFEE2E2);
+        fg = const Color(0xFF991B1B);
         break;
       default:
-        bg = Colors.amber.shade50;
-        fg = Colors.amber.shade800;
+        bg = _surfaceVariant;
+        fg = const Color(0xFF4B5563);
     }
     final label = {
           'REQUESTED': 'Solicitado',
@@ -318,7 +330,11 @@ class _MyLoansPageState extends State<MyLoansPage> {
         status;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _outline),
+      ),
       child: Text(label, style: TextStyle(color: fg, fontWeight: FontWeight.bold, fontSize: 12)),
     );
   }

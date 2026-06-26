@@ -4,6 +4,11 @@ import '../../../../core/di/injection_container.dart' as di;
 import '../../domain/entities/notification_preference.dart';
 import '../viewmodels/notification_preferences_viewmodel.dart';
 
+const _green = Color(0xFF166534);
+const _surface = Color(0xFFFFFFFF);
+const _outline = Color(0xFFE5E7EB);
+const _ink = Color(0xFF111827);
+
 class NotificationPreferencesPage extends StatefulWidget {
   const NotificationPreferencesPage({super.key});
 
@@ -52,9 +57,9 @@ class _NotificationPreferencesPageState
     return Scaffold(
       appBar: AppBar(
         title: const Text('Preferencias'),
-        backgroundColor: Colors.white,
+        backgroundColor: _surface,
         elevation: 0,
-        foregroundColor: const Color(0xFF2E7D32),
+        foregroundColor: _green,
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications),
@@ -74,21 +79,20 @@ class _NotificationPreferencesPageState
 
     return RefreshIndicator(
       onRefresh: () => _viewModel.loadPreferences(),
-      color: const Color(0xFF2E7D32),
+      color: _green,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF66BB6A)],
-              ),
+              color: _surface,
               borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: _outline),
             ),
             child: const Text(
               'Controla qué tipo de alertas quieres recibir por categoría.',
-              style: TextStyle(color: Colors.white, fontSize: 15),
+              style: TextStyle(color: _ink, fontSize: 15),
             ),
           ),
           const SizedBox(height: 16),
@@ -109,7 +113,11 @@ class _NotificationPreferencesPageState
 
   Widget _buildPreferenceCard(NotificationPreferenceDraft draft) {
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      color: _surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(color: _outline),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -117,7 +125,7 @@ class _NotificationPreferencesPageState
           children: [
             Row(
               children: [
-                Icon(_iconForCategory(draft.category), color: const Color(0xFF2E7D32)),
+                Icon(_iconForCategory(draft.category), color: _green),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -125,6 +133,7 @@ class _NotificationPreferencesPageState
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      color: _ink,
                     ),
                   ),
                 ),
@@ -162,12 +171,10 @@ class _NotificationPreferencesPageState
                 onPressed: _viewModel.saving
                     ? null
                     : () async {
-                        await _viewModel.savePreference(
-                          draft.toPreference(),
-                        );
+                        await _viewModel.savePreference(draft.toPreference());
                       },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2E7D32),
+                  backgroundColor: _green,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
@@ -194,7 +201,7 @@ class _NotificationPreferencesPageState
       subtitle: Text(subtitle),
       value: value,
       onChanged: onChanged,
-      activeThumbColor: const Color(0xFF2E7D32),
+      activeThumbColor: _green,
     );
   }
 

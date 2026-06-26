@@ -11,7 +11,7 @@ docker build -t sebastiandevjs/finance-api:1.0.0         ./finance-api    -f ./f
 docker build -t sebastiandevjs/reports-ai:1.0.0          ./reports-ai    -f ./reports-ai/Dockerfile.prod
 docker build -t sebastiandevjs/finance-web:1.0.0         ./finance-web    -f ./finance-web/Dockerfile.prod
 
-docker build -t sebastiandevjs/finance-flutter-web:1.0.0 ./finance_mobile -f ./finance_mobile/Dockerfile.prod
+# docker build -t sebastiandevjs/finance-flutter-web:1.0.0 ./finance_mobile -f ./finance_mobile/Dockerfile.prod
 ```
 
 # 2. Login en Docker Hub
@@ -24,5 +24,6 @@ docker login
 docker push sebastiandevjs/finance-api:1.0.0
 docker push sebastiandevjs/reports-ai:1.0.0
 docker push sebastiandevjs/finance-web:1.0.0
-docker push sebastiandevjs/finance-flutter-web:1.0.0
+
+# docker push sebastiandevjs/finance-flutter-web:1.0.0
 ```

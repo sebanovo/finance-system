@@ -7,6 +7,12 @@ import '../widgets/account_detail_skeleton.dart';
 import '../widgets/transaction_item.dart';
 import '../widgets/edit_alias_dialog.dart';
 
+const _green = Color(0xFF166534);
+const _surface = Color(0xFFFFFFFF);
+const _surfaceVariant = Color(0xFFF9FAFB);
+const _outline = Color(0xFFE5E7EB);
+const _ink = Color(0xFF111827);
+
 class AccountDetailPage extends StatefulWidget {
   final String accountId;
 
@@ -76,9 +82,9 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detalle de Cuenta'),
-        backgroundColor: Colors.white,
+        backgroundColor: _surface,
         elevation: 0,
-        foregroundColor: const Color(0xFF2E7D32),
+        foregroundColor: _green,
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
@@ -120,7 +126,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
 
     return RefreshIndicator(
       onRefresh: () => _loadData(),
-      color: const Color(0xFF2E7D32),
+      color: _green,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -143,7 +149,11 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
 
   Widget _buildAdditionalInfoCard(Account account) {
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      color: _surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: const BorderSide(color: _outline),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -154,7 +164,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
+                color: _ink,
               ),
             ),
             const SizedBox(height: 12),
@@ -214,7 +224,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
             ElevatedButton(
               onPressed: _loadData,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2E7D32),
+                backgroundColor: _green,
                 foregroundColor: Colors.white,
               ),
               child: const Text('Reintentar'),
@@ -234,7 +244,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF2E7D32),
+            color: _ink,
           ),
         ),
         const SizedBox(height: 12),
@@ -282,8 +292,9 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F8E9),
+        color: _surfaceVariant,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -301,7 +312,7 @@ class _AccountDetailPageState extends State<AccountDetailPage> {
           Text(
             value,
             style: const TextStyle(
-              color: Color(0xFF2E7D32),
+              color: _green,
               fontWeight: FontWeight.bold,
             ),
           ),

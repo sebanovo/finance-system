@@ -9,6 +9,12 @@ import '../viewmodels/home_viewmodel.dart';
 import '../viewmodels/profile_viewmodel.dart';
 import '../widgets/change_password_dialog.dart';
 
+const _green = Color(0xFF166534);
+const _surface = Color(0xFFFFFFFF);
+const _surfaceVariant = Color(0xFFF9FAFB);
+const _outline = Color(0xFFE5E7EB);
+const _ink = Color(0xFF111827);
+
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
@@ -161,8 +167,8 @@ class _ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mi perfil'),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF2E7D32),
+        backgroundColor: _surface,
+        foregroundColor: _green,
         elevation: 0,
         actions: [
           IconButton(
@@ -173,18 +179,20 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       body: RefreshIndicator(
         onRefresh: () => _viewModel.loadProfile(),
-        color: const Color(0xFF2E7D32),
+        color: _green,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
             _buildHeader(profile),
             const SizedBox(height: 16),
             if (isLoading)
-              const Center(child: CircularProgressIndicator())
+              const Center(child: CircularProgressIndicator(color: _green))
             else if (profile != null) ...[
               Card(
+                color: _surface,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
+                  side: const BorderSide(color: _outline),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -198,6 +206,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
+                            color: _ink,
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -232,8 +241,10 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               const SizedBox(height: 12),
               Card(
+                color: _surface,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
+                  side: const BorderSide(color: _outline),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -241,12 +252,13 @@ class _ProfilePageState extends State<ProfilePage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const Text(
-                        'Foto de perfil',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          'Foto de perfil',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: _ink,
+                          ),
                         ),
-                      ),
                       const SizedBox(height: 12),
                       _ProfilePhotoPreview(
                         localPhoto: _selectedPhoto,
@@ -298,7 +310,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   : const Icon(Icons.save_outlined),
                               label: const Text('Guardar cambios'),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF2E7D32),
+                                backgroundColor: _green,
                                 foregroundColor: Colors.white,
                               ),
                             ),
@@ -317,8 +329,10 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               const SizedBox(height: 12),
               Card(
+                color: _surface,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
+                  side: const BorderSide(color: _outline),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -326,19 +340,20 @@ class _ProfilePageState extends State<ProfilePage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const Text(
-                        'Seguridad',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          'Seguridad',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: _ink,
+                          ),
                         ),
-                      ),
                       const SizedBox(height: 12),
                       ElevatedButton.icon(
                         onPressed: _showChangePasswordDialog,
                         icon: const Icon(Icons.lock_reset),
                         label: const Text('Cambiar contraseña'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2E7D32),
+                          backgroundColor: _green,
                           foregroundColor: Colors.white,
                         ),
                       ),
@@ -348,8 +363,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         icon: const Icon(Icons.logout),
                         label: const Text('Cerrar sesión'),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red.shade700,
-                          side: BorderSide(color: Colors.red.shade300),
+                          foregroundColor: _ink,
+                          side: const BorderSide(color: _outline),
                         ),
                       ),
                     ],
@@ -358,8 +373,10 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ] else
               Card(
+                color: _surface,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
+                  side: const BorderSide(color: _outline),
                 ),
                 child: const Padding(
                   padding: EdgeInsets.all(20),
@@ -389,22 +406,21 @@ class _ProfilePageState extends State<ProfilePage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF66BB6A)],
-        ),
+        color: _green,
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _outline),
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 30,
-            backgroundColor: Colors.white,
+            backgroundColor: _surface,
             backgroundImage: imageProvider,
             child: (_selectedPhoto == null && remoteUrl.isEmpty)
                 ? Text(
                     profile?.initial ?? 'U',
                     style: const TextStyle(
-                      color: Color(0xFF2E7D32),
+                      color: _green,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
@@ -459,9 +475,9 @@ class _ProfilePhotoPreview extends StatelessWidget {
     return Container(
       height: 180,
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: _surfaceVariant,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: _outline),
       ),
       child: Stack(
         fit: StackFit.expand,
@@ -480,7 +496,7 @@ class _ProfilePhotoPreview extends StatelessWidget {
             Center(
               child: CircleAvatar(
                 radius: 42,
-                backgroundColor: const Color(0xFF2E7D32),
+                backgroundColor: _green,
                 child: Text(
                   fallbackInitial,
                   style: const TextStyle(
@@ -501,7 +517,7 @@ class _ProfilePhotoPreview extends StatelessWidget {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.55),
+                  color: Colors.black,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(

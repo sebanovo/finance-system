@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/account.dart';
 
+const _green = Color(0xFF166534);
+const _surface = Color(0xFFFFFFFF);
+const _outline = Color(0xFFE5E7EB);
+const _surfaceVariant = Color(0xFFF9FAFB);
+const _ink = Color(0xFF111827);
+
 class AccountInfoCard extends StatelessWidget {
   final Account account;
   final double? totalBalance;
@@ -18,7 +24,11 @@ class AccountInfoCard extends StatelessWidget {
     final isSmallScreen = MediaQuery.of(context).size.width < 500;
 
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      color: _surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: const BorderSide(color: _outline),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -47,7 +57,7 @@ class AccountInfoCard extends StatelessWidget {
       style: TextStyle(
         fontSize: isSmallScreen ? 20 : 24,
         fontWeight: FontWeight.bold,
-        color: const Color(0xFF2E7D32),
+        color: _ink,
       ),
       textAlign: TextAlign.center,
     );
@@ -67,7 +77,7 @@ class AccountInfoCard extends StatelessWidget {
       style: const TextStyle(
         fontSize: 36,
         fontWeight: FontWeight.bold,
-        color: Color(0xFF2E7D32),
+        color: _green,
       ),
     );
   }
@@ -84,14 +94,15 @@ class AccountInfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: account.active ? const Color(0xFFE8F5E9) : Colors.grey.shade200,
+        color: account.active ? _surfaceVariant : Colors.grey.shade200,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _outline),
       ),
       child: Text(
         account.status,
         style: TextStyle(
           color: account.active
-              ? const Color(0xFF2E7D32)
+              ? _green
               : Colors.grey.shade600,
           fontWeight: FontWeight.w500,
         ),

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,12 @@ import '../../core/di/injection_container.dart' as di;
 import '../../core/utils/backup_file_saver.dart';
 import '../../domain/entities/backup_record.dart';
 import '../viewmodels/backups_viewmodel.dart';
+
+const _green = Color(0xFF166534);
+const _surface = Color(0xFFFFFFFF);
+const _surfaceVariant = Color(0xFFF9FAFB);
+const _outline = Color(0xFFE5E7EB);
+const _ink = Color(0xFF111827);
 
 class BackupsPage extends StatefulWidget {
   const BackupsPage({super.key});
@@ -108,13 +115,13 @@ class _BackupsPageState extends State<BackupsPage> {
                       'Nuevo respaldo',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF1B5E20),
+                        color: _ink,
                       ),
                     ),
                     const SizedBox(height: 8),
                     const Text(
                       'Se generará un respaldo del tenant actual. Puedes agregar un motivo opcional.',
-                      style: TextStyle(color: Color(0xFF6B7D6C)),
+                      style: TextStyle(color: Color(0xFF6B7280)),
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
@@ -190,155 +197,7 @@ class _BackupsPageState extends State<BackupsPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      builder: (sheetContext) {
-        PlatformFile? selectedFile;
-        Uint8List? fileBytes;
-        var confirmationText = 'RESTORE_TENANT_BACKUP';
-        var reason = '';
-
-        return DraggableScrollableSheet(
-          initialChildSize: 0.68,
-          minChildSize: 0.48,
-          maxChildSize: 0.92,
-          expand: false,
-          builder: (context, scrollController) {
-            return StatefulBuilder(
-              builder: (context, setSheetState) {
-                Future<void> pickBackupFile() async {
-                  final result = await FilePicker.platform.pickFiles(
-                    type: FileType.any,
-                    withData: true,
-                  );
-                  if (result == null || result.files.isEmpty) {
-                    return;
-                  }
-                  final picked = result.files.first;
-                  if (!context.mounted) {
-                    return;
-                  }
-                  setSheetState(() {
-                    selectedFile = picked;
-                    fileBytes = picked.bytes;
-                  });
-                }
-
-                return Padding(
-                  padding: EdgeInsets.only(
-                    left: 16,
-                    right: 16,
-                    top: 20,
-                    bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-                  ),
-                  child: SingleChildScrollView(
-                    controller: scrollController,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Restaurar desde archivo',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF1B5E20),
-                              ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Selecciona el archivo del respaldo y confirma la operación.',
-                          style: TextStyle(color: Color(0xFF6B7D6C)),
-                        ),
-                        const SizedBox(height: 16),
-                        OutlinedButton.icon(
-                          onPressed: pickBackupFile,
-                          icon: const Icon(Icons.attach_file),
-                          label: Text(
-                            selectedFile == null
-                                ? 'Seleccionar archivo'
-                                : selectedFile!.name,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          initialValue: confirmationText,
-                          decoration: const InputDecoration(
-                            labelText: 'Confirmación',
-                            hintText: 'RESTORE_TENANT_BACKUP',
-                          ),
-                          onChanged: (value) => confirmationText = value,
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          initialValue: reason,
-                          decoration: const InputDecoration(
-                            labelText: 'Motivo',
-                            hintText: 'Opcional',
-                          ),
-                          maxLines: 3,
-                          onChanged: (value) => reason = value,
-                        ),
-                        const SizedBox(height: 20),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: () => Navigator.of(context).pop(),
-                                child: const Text('Cancelar'),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: FilledButton(
-                                onPressed:
-                                    _viewModel.saving ||
-                                        selectedFile == null ||
-                                        fileBytes == null
-                                    ? null
-                                    : () {
-                                        final backupBytes = fileBytes!;
-                                        final backupFileName =
-                                            selectedFile!.name;
-                                        final confirmation = confirmationText
-                                            .trim();
-                                        final restoreReason = reason.trim();
-                                        Navigator.of(context).pop();
-                                        WidgetsBinding.instance
-                                            .addPostFrameCallback((_) {
-                                              if (!mounted) return;
-                                              unawaited(
-                                                _viewModel
-                                                    .restoreBackupFromFile(
-                                                      fileBytes: backupBytes,
-                                                      fileName: backupFileName,
-                                                      confirmationText:
-                                                          confirmation,
-                                                      reason: restoreReason,
-                                                    ),
-                                              );
-                                            });
-                                      },
-                                child: _viewModel.saving
-                                    ? const SizedBox(
-                                        height: 18,
-                                        width: 18,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : const Text('Restaurar'),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            );
-          },
-        );
-      },
+      builder: (_) => _RestoreBackupSheet(viewModel: _viewModel),
     );
   }
 
@@ -387,15 +246,15 @@ class _BackupsPageState extends State<BackupsPage> {
     switch (status.toUpperCase()) {
       case 'COMPLETED':
       case 'RESTORED':
-        return Colors.green;
+        return _green;
       case 'RESTORED_WITH_WARNINGS':
       case 'PENDING':
-        return Colors.orange;
+        return const Color(0xFF374151);
       case 'RUNNING':
       case 'RESTORING':
-        return Colors.amber.shade800;
+        return const Color(0xFF111827);
       default:
-        return Colors.red;
+        return const Color(0xFFB91C1C);
     }
   }
 
@@ -425,8 +284,8 @@ class _BackupsPageState extends State<BackupsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Respaldos'),
-        backgroundColor: const Color(0xFF2E7D32),
-        foregroundColor: Colors.white,
+        backgroundColor: _surface,
+        foregroundColor: _green,
         actions: [
           IconButton(
             onPressed: _viewModel.loading ? null : _viewModel.refresh,
@@ -437,20 +296,16 @@ class _BackupsPageState extends State<BackupsPage> {
       ),
       body: RefreshIndicator(
         onRefresh: _viewModel.refresh,
-        color: const Color(0xFF2E7D32),
+        color: _green,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFEAF6EB), Colors.white],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: _surface,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: const Color(0xFFC8E6C9)),
+                border: Border.all(color: _outline),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -460,13 +315,13 @@ class _BackupsPageState extends State<BackupsPage> {
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w900,
-                      color: Color(0xFF1B5E20),
+                      color: _ink,
                     ),
                   ),
                   const SizedBox(height: 8),
                   const Text(
                     'Genera respaldos, descarga archivos e importa backups desde un archivo local.',
-                    style: TextStyle(color: Color(0xFF5F6F5F)),
+                    style: TextStyle(color: Color(0xFF6B7280)),
                   ),
                   if (canOperate) ...[
                     const SizedBox(height: 16),
@@ -525,12 +380,12 @@ class _BackupsPageState extends State<BackupsPage> {
               ..._viewModel.backups.map(
                 (backup) => Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: Card(
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      side: const BorderSide(color: Color(0xFFC8E6C9)),
-                    ),
+                    child: Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: const BorderSide(color: Color(0xFFE5E7EB)),
+                      ),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
@@ -542,12 +397,12 @@ class _BackupsPageState extends State<BackupsPage> {
                               Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFF1F8E9),
+                                  color: _surfaceVariant,
                                   borderRadius: BorderRadius.circular(14),
                                 ),
                                 child: const Icon(
                                   Icons.archive,
-                                  color: Color(0xFF2E7D32),
+                                  color: Color(0xFF166534),
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -560,14 +415,14 @@ class _BackupsPageState extends State<BackupsPage> {
                                       style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w800,
-                                        color: Color(0xFF1B5E20),
+                                        color: Color(0xFF111827),
                                       ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       '${backup.operationType} • ${backup.scope}',
                                       style: const TextStyle(
-                                        color: Color(0xFF6B7D6C),
+                                        color: Color(0xFF6B7280),
                                         fontSize: 12,
                                       ),
                                     ),
@@ -629,7 +484,7 @@ class _BackupsPageState extends State<BackupsPage> {
                             const SizedBox(height: 10),
                             Text(
                               'Motivo: ${backup.reason}',
-                              style: const TextStyle(color: Color(0xFF5F6F5F)),
+                              style: const TextStyle(color: Color(0xFF6B7280)),
                             ),
                           ],
                           if (backup.failureReason != null &&
@@ -637,7 +492,7 @@ class _BackupsPageState extends State<BackupsPage> {
                             const SizedBox(height: 10),
                             Text(
                               'Fallo: ${backup.failureReason}',
-                              style: const TextStyle(color: Colors.red),
+                              style: const TextStyle(color: Color(0xFFB91C1C)),
                             ),
                           ],
                           const SizedBox(height: 12),
@@ -663,7 +518,7 @@ class _BackupsPageState extends State<BackupsPage> {
                                         ),
                                       )
                                     : const Icon(Icons.download),
-                                color: const Color(0xFF2E7D32),
+                                color: const Color(0xFF166534),
                                 tooltip: 'Descargar',
                               ),
                             ],
@@ -690,7 +545,7 @@ class _BackupsPageState extends State<BackupsPage> {
                     'Página ${_viewModel.page + 1} de ${_viewModel.totalPages}',
                     style: const TextStyle(
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF1B5E20),
+                      color: Color(0xFF111827),
                     ),
                   ),
                   OutlinedButton(
@@ -720,9 +575,9 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFC8E6C9)),
+        border: Border.all(color: _outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -730,7 +585,7 @@ class _StatCard extends StatelessWidget {
           Text(
             label,
             style: const TextStyle(
-              color: Color(0xFF6B7D6C),
+              color: Color(0xFF6B7280),
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -741,7 +596,7 @@ class _StatCard extends StatelessWidget {
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF1B5E20),
+              color: _ink,
             ),
           ),
         ],
@@ -761,9 +616,9 @@ class _InfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FBF5),
+        color: _surfaceVariant,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFDDEED8)),
+        border: Border.all(color: _outline),
       ),
       child: Text(
         '$label: $value',
@@ -783,19 +638,19 @@ class _EmptyState extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFC8E6C9)),
+        border: Border.all(color: _outline),
       ),
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFFF1F8E9),
+              color: _surfaceVariant,
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Icon(Icons.backup, color: Color(0xFF2E7D32), size: 34),
+            child: const Icon(Icons.backup, color: Color(0xFF166534), size: 34),
           ),
           const SizedBox(height: 16),
           const Text(
@@ -803,19 +658,173 @@ class _EmptyState extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w800,
-              color: Color(0xFF1B5E20),
+              color: _ink,
             ),
           ),
           const SizedBox(height: 8),
           const Text(
             'Crea un respaldo para empezar a construir el historial.',
-            style: TextStyle(color: Color(0xFF6B7D6C)),
+            style: TextStyle(color: Color(0xFF6B7280)),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           OutlinedButton(onPressed: onRetry, child: const Text('Recargar')),
         ],
       ),
+    );
+  }
+}
+
+class _RestoreBackupSheet extends StatefulWidget {
+  final BackupsViewModel viewModel;
+
+  const _RestoreBackupSheet({required this.viewModel});
+
+  @override
+  State<_RestoreBackupSheet> createState() => _RestoreBackupSheetState();
+}
+
+class _RestoreBackupSheetState extends State<_RestoreBackupSheet> {
+  final _confirmationController =
+      TextEditingController(text: 'RESTORE_TENANT_BACKUP');
+  final _reasonController = TextEditingController();
+  PlatformFile? _selectedFile;
+  Uint8List? _fileBytes;
+  bool _submitting = false;
+
+  @override
+  void dispose() {
+    _confirmationController.dispose();
+    _reasonController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickBackupFile() async {
+    FocusScope.of(context).unfocus();
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.any,
+      withData: true,
+    );
+    if (!mounted || result == null || result.files.isEmpty) {
+      return;
+    }
+    final picked = result.files.first;
+    setState(() {
+      _selectedFile = picked;
+      _fileBytes = picked.bytes;
+    });
+  }
+
+  Future<void> _restore() async {
+    if (_selectedFile == null || _fileBytes == null || _submitting) return;
+    final backupBytes = _fileBytes!;
+    final backupFileName = _selectedFile!.name;
+    final confirmation = _confirmationController.text.trim();
+    final restoreReason = _reasonController.text.trim();
+
+    setState(() => _submitting = true);
+    Navigator.of(context).pop();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.viewModel.restoreBackupFromFile(
+        fileBytes: backupBytes,
+        fileName: backupFileName,
+        confirmationText: confirmation,
+        reason: restoreReason,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.68,
+      minChildSize: 0.48,
+      maxChildSize: 0.92,
+      expand: false,
+      builder: (context, scrollController) {
+        return AnimatedPadding(
+          duration: const Duration(milliseconds: 180),
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          child: SingleChildScrollView(
+            controller: scrollController,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Restaurar desde archivo',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF111827),
+                      ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Selecciona el archivo del respaldo y confirma la operación.',
+                  style: TextStyle(color: Color(0xFF6B7280)),
+                ),
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: _pickBackupFile,
+                  icon: const Icon(Icons.attach_file),
+                  label: Text(
+                    _selectedFile == null ? 'Seleccionar archivo' : _selectedFile!.name,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _confirmationController,
+                  decoration: const InputDecoration(
+                    labelText: 'Confirmación',
+                    hintText: 'RESTORE_TENANT_BACKUP',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _reasonController,
+                  decoration: const InputDecoration(
+                    labelText: 'Motivo',
+                    hintText: 'Opcional',
+                  ),
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Cancelar'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: _selectedFile == null || _fileBytes == null || _submitting
+                            ? null
+                            : _restore,
+                        child: _submitting
+                            ? const SizedBox(
+                                height: 18,
+                                width: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Text('Restaurar'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

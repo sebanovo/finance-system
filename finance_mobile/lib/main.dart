@@ -71,12 +71,88 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const primaryGreen = Color(0xFF166534);
+    const primaryBlack = Color(0xFF111827);
+    const surface = Color(0xFFFFFFFF);
+    const surfaceVariant = Color(0xFFF9FAFB);
+    const outline = Color(0xFFE5E7EB);
+
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: Env.systemName,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
+        colorScheme: const ColorScheme.light(
+          primary: primaryGreen,
+          secondary: primaryBlack,
+          surface: surface,
+          error: Color(0xFFDC2626),
+          onPrimary: Colors.white,
+          onSecondary: Colors.white,
+          onSurface: primaryBlack,
+          onError: Colors.white,
+        ),
+        scaffoldBackgroundColor: surfaceVariant,
         useMaterial3: true,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: surface,
+          foregroundColor: primaryBlack,
+          elevation: 0,
+          centerTitle: false,
+          surfaceTintColor: surface,
+        ),
+        cardTheme: CardThemeData(
+          color: surface,
+          surfaceTintColor: surface,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: const BorderSide(color: outline),
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: primaryGreen,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+              side: const BorderSide(color: primaryBlack),
+            ),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: primaryBlack,
+            side: const BorderSide(color: primaryBlack, width: 1.2),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: surface,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: primaryBlack),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: primaryBlack),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: primaryGreen, width: 1.5),
+          ),
+          labelStyle: const TextStyle(color: primaryBlack),
+          hintStyle: const TextStyle(color: Color(0xFF6B7280)),
+        ),
+        chipTheme: const ChipThemeData(
+          backgroundColor: surface,
+          selectedColor: Color(0xFFDCFCE7),
+          side: BorderSide(color: outline),
+          labelStyle: TextStyle(color: primaryBlack),
+        ),
       ),
       routerConfig: appRouter,
     );
