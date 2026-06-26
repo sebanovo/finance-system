@@ -583,13 +583,13 @@ class _LoginPageState extends State<LoginPage> {
             style: TextStyle(color: Color(0xFF2E7D32)),
           ),
         ),
-        TextButton(
-          onPressed: () => context.push('/signup'),
-          child: const Text(
-            'Crear tenant nuevo',
-            style: TextStyle(color: Color(0xFF2E7D32)),
-          ),
-        ),
+        // TextButton(
+        //   onPressed: () => context.push('/signup'),
+        //   child: const Text(
+        //     'Crear tenant nuevo',
+        //     style: TextStyle(color: Color(0xFF2E7D32)),
+        //   ),
+        // ),
       ],
     );
   }
@@ -619,7 +619,7 @@ class _ModeChip extends StatelessWidget {
           boxShadow: selected
               ? [
                   BoxShadow(
-                    color: const Color(0xFF2E7D32).withOpacity(0.14),
+                    color: const Color(0xFF2E7D32).withValues(alpha: 0.14),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -686,7 +686,7 @@ class _FacePreviewCard extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.55),
+                      color: Colors.black.withValues(alpha: 0.55),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(

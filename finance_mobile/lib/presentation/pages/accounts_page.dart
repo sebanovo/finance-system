@@ -8,6 +8,12 @@ import '../widgets/account_card_skeleton.dart';
 import '../widgets/create_account_sheet.dart';
 import '../widgets/total_balance_card.dart';
 
+const _green = Color(0xFF166534);
+const _surface = Color(0xFFFFFFFF);
+const _surfaceVariant = Color(0xFFF9FAFB);
+const _outline = Color(0xFFE5E7EB);
+const _ink = Color(0xFF111827);
+
 class AccountsPage extends StatefulWidget {
   const AccountsPage({super.key});
 
@@ -123,12 +129,9 @@ class _AccountsPageState extends State<AccountsPage> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF66BB6A)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: _surface,
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,7 +139,7 @@ class _AccountsPageState extends State<AccountsPage> {
           const Text(
             'Tus cuentas',
             style: TextStyle(
-              color: Colors.white,
+              color: _ink,
               fontSize: 22,
               fontWeight: FontWeight.bold,
             ),
@@ -145,7 +148,7 @@ class _AccountsPageState extends State<AccountsPage> {
           Text(
             'Resumen compacto de tus cuentas y saldos.',
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.9),
+              color: Colors.grey.shade700,
               fontSize: 13,
             ),
           ),
@@ -169,8 +172,9 @@ class _AccountsPageState extends State<AccountsPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
+        color: _surfaceVariant,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -179,7 +183,7 @@ class _AccountsPageState extends State<AccountsPage> {
           Text(
             label,
             style: const TextStyle(
-              color: Colors.white70,
+              color: Color(0xFF6B7280),
               fontSize: 11,
               fontWeight: FontWeight.w600,
             ),
@@ -188,7 +192,7 @@ class _AccountsPageState extends State<AccountsPage> {
           Text(
             value,
             style: const TextStyle(
-              color: Colors.white,
+              color: _ink,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -203,9 +207,9 @@ class _AccountsPageState extends State<AccountsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mis Cuentas'),
-        backgroundColor: Colors.white,
+        backgroundColor: _surface,
         elevation: 0,
-        foregroundColor: const Color(0xFF2E7D32),
+        foregroundColor: _green,
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications),
@@ -217,7 +221,7 @@ class _AccountsPageState extends State<AccountsPage> {
       floatingActionButton: _canCreateAccount
           ? FloatingActionButton.extended(
               onPressed: _openCreateAccountDialog,
-              backgroundColor: const Color(0xFF2E7D32),
+              backgroundColor: _green,
               foregroundColor: Colors.white,
               icon: const Icon(Icons.add),
               label: const Text('Nueva Cuenta'),
@@ -237,7 +241,7 @@ class _AccountsPageState extends State<AccountsPage> {
 
     return RefreshIndicator(
       onRefresh: () => _viewModel.loadAccounts(),
-      color: const Color(0xFF2E7D32),
+      color: _green,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
@@ -299,11 +303,11 @@ class _AccountsPageState extends State<AccountsPage> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () => _viewModel.loadAccounts(),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2E7D32),
-              foregroundColor: Colors.white,
+            ElevatedButton(
+              onPressed: () => _viewModel.loadAccounts(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _green,
+                foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
               ),
@@ -372,7 +376,7 @@ class _AccountsPageState extends State<AccountsPage> {
             ElevatedButton(
               onPressed: _openCreateAccountDialog,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2E7D32),
+                backgroundColor: _green,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),

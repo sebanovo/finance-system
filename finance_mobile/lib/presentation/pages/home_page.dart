@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart' as di;
 import '../viewmodels/home_viewmodel.dart';
 import '../widgets/customer_dashboard_view.dart';
+import '../widgets/owner_dashboard_view.dart';
 import '../widgets/change_password_dialog.dart';
 import '../widgets/main_drawer.dart';
 import '../widgets/subscription_card.dart';
@@ -133,78 +134,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Dashboard"),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        foregroundColor: const Color(0xFF2E7D32),
-        actions: [_buildNotificationBadge()],
-      ),
-      drawer: MainDrawer(
-        viewModel: _viewModel,
-        notifViewModel: _notifViewModel,
-        onChangePassword: _showChangePasswordDialog,
-        onLogout: _logout,
-      ),
-      body: RefreshIndicator(
-        onRefresh: () => _viewModel.loadData(),
-        color: const Color(0xFF2E7D32),
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (_viewModel.isClient) ...[
-                Text(
-                  "Bienvenido al Dashboard",
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                CustomerDashboardView(
-                  dashboard: _viewModel.customerDashboard,
-                  isLoading: _viewModel.loadingDashboard,
-                  errorMessage: _viewModel.dashboardErrorMessage,
-                  onOpenAccounts: () => context.push('/accounts'),
-                  onOpenTransactions: () => context.push('/transactions'),
-                  onOpenLoans: _viewModel.hasAnyPermissionPrefix('me.loans.')
-                      ? () => context.push('/loans')
-                      : null,
-                  onOpenLimits: _viewModel.hasAnyPermissionPrefix('limits.')
-                      ? () => context.push('/limits')
-                      : null,
-                  onOpenNotifications: () => context.push('/notifications'),
-                  onOpenServicePayments: () =>
-                      context.push('/service-payments'),
-                ),
-                const SizedBox(height: 16),
-                SubscriptionCard(
-                  subscription: _viewModel.subscription,
-                  errorMessage: _viewModel.errorMessage,
-                  isLoading: _viewModel.loadingSubscription,
-                ),
-              ] else ...[
-                Text(
-                  "Bienvenido al Dashboard",
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                SubscriptionCard(
-                  subscription: _viewModel.subscription,
-                  errorMessage: _viewModel.errorMessage,
-                  isLoading: _viewModel.loadingSubscription,
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildNotificationBadge() {
     final unreadCount = NotificationCounter().count;
 
@@ -233,6 +162,106 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
       ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Dashboard"),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        foregroundColor: const Color(0xFF2E7D32),
+        actions: _viewModel.isOwnerAdmin ? const [] : [_buildNotificationBadge()],
+      ),
+      drawer: MainDrawer(
+        viewModel: _viewModel,
+        notifViewModel: _notifViewModel,
+        onChangePassword: _showChangePasswordDialog,
+        onLogout: _logout,
+      ),
+      body: RefreshIndicator(
+        onRefresh: () => _viewModel.loadData(),
+        color: const Color(0xFF2E7D32),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (_viewModel.isOwnerAdmin) ...[
+                Text(
+                  "Bienvenido al Dashboard",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                OwnerDashboardView(
+                  summary: _viewModel.tenantSummary,
+                  isLoading: _viewModel.loadingDashboard,
+                  errorMessage: _viewModel.dashboardErrorMessage,
+                  onOpenAccounts: () => context.push('/accounts'),
+                  onOpenTransactions: () => context.push('/transactions'),
+                  onOpenUsers: () => context.push('/users'),
+                  onOpenLoans: () => context.push('/loans'),
+                  onOpenFxRates: () => context.push('/fx/rates'),
+                  onOpenFxFees: () => context.push('/fx/fees'),
+                  onOpenAccountingPeriods: () => context.push('/accounting/periods'),
+                  onOpenJournalEntries: () => context.push('/accounting/journal-entries'),
+                  onOpenLimits: () => context.push('/limits'),
+                  onOpenServicePayments: () => context.push('/service-payments'),
+                  onOpenNotifications: () => context.push('/notifications'),
+                  onOpenBackups: () => context.push('/backups'),
+                ),
+                const SizedBox(height: 16),
+                SubscriptionCard(
+                  subscription: _viewModel.subscription,
+                  errorMessage: _viewModel.errorMessage,
+                  isLoading: _viewModel.loadingSubscription,
+                ),
+              ] else if (_viewModel.isClient) ...[
+                Text(
+                  "Bienvenido al Dashboard",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                CustomerDashboardView(
+                  dashboard: _viewModel.customerDashboard,
+                  isLoading: _viewModel.loadingDashboard,
+                  errorMessage: _viewModel.dashboardErrorMessage,
+                  onOpenAccounts: () => context.push('/accounts'),
+                  onOpenTransactions: () => context.push('/transactions'),
+                  onOpenLoans: _viewModel.hasAnyPermissionPrefix('me.loans.')
+                      ? () => context.push('/loans')
+                      : null,
+                  onOpenLimits: _viewModel.hasAnyPermissionPrefix('limits.')
+                      ? () => context.push('/limits')
+                      : null,
+                  onOpenNotifications: () => context.push('/notifications'),
+                  onOpenServicePayments: () => context.push('/service-payments'),
+                ),
+                const SizedBox(height: 16),
+                SubscriptionCard(
+                  subscription: _viewModel.subscription,
+                  errorMessage: _viewModel.errorMessage,
+                  isLoading: _viewModel.loadingSubscription,
+                ),
+              ] else ...[
+                Text(
+                  "Bienvenido al Dashboard",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                SubscriptionCard(
+                  subscription: _viewModel.subscription,
+                  errorMessage: _viewModel.errorMessage,
+                  isLoading: _viewModel.loadingSubscription,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 

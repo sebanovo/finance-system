@@ -1,9 +1,11 @@
 import 'package:finance_mobile/core/network/api_client.dart';
 
 import '../../domain/entities/customer_dashboard.dart';
+import '../../domain/entities/tenant_summary.dart';
 
 abstract class DashboardRemoteDataSource {
   Future<CustomerDashboard> getCustomerDashboard();
+  Future<TenantSummary> getTenantSummary();
 }
 
 class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
@@ -14,25 +16,55 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
   @override
   Future<CustomerDashboard> getCustomerDashboard() async {
     final response = await apiClient.get('/api/me/dashboard/summary');
+    return _parseCustomerDashboardResponse(response.data, response.statusCode ?? 0);
+  }
 
-    if (response.statusCode == 200) {
-      final root = response.data as Map<String, dynamic>;
+  @override
+  Future<TenantSummary> getTenantSummary() async {
+    final response = await apiClient.get('/api/dashboard/tenant/summary');
+    return _parseTenantSummaryResponse(response.data, response.statusCode ?? 0);
+  }
+
+  CustomerDashboard _parseCustomerDashboardResponse(dynamic raw, int statusCode) {
+    if (statusCode == 200) {
+      final root = raw as Map<String, dynamic>;
       if (root['success'] == true) {
         final data = root['data'];
         if (data is Map<String, dynamic>) {
-          return _mapDashboard(data);
+          return _mapCustomerDashboard(data);
         }
         throw Exception('Formato inválido del dashboard de cliente');
       }
       throw Exception(root['message'] ?? 'Error al obtener dashboard');
-    } else if (response.statusCode == 401) {
+    } else if (statusCode == 401) {
       throw Exception('Sesión expirada');
     }
-
-    throw Exception('Error ${response.statusCode}');
+    throw Exception('Error $statusCode');
   }
 
-  CustomerDashboard _mapDashboard(Map<String, dynamic> json) {
+  TenantSummary _parseTenantSummaryResponse(dynamic raw, int statusCode) {
+    if (statusCode == 200) {
+      final root = raw as Map<String, dynamic>;
+      if (root['success'] == true) {
+        final data = root['data'];
+        if (data is Map<String, dynamic>) {
+          return TenantSummary(
+            totalUsers: _int(data['totalUsers']),
+            maxUsers: _int(data['maxUsers']),
+            activePlan: _string(data['activePlan']),
+            trialDaysLeft: _int(data['trialDaysLeft']),
+          );
+        }
+        throw Exception('Formato inválido del resumen del tenant');
+      }
+      throw Exception(root['message'] ?? 'Error al obtener resumen del tenant');
+    } else if (statusCode == 401) {
+      throw Exception('Sesión expirada');
+    }
+    throw Exception('Error $statusCode');
+  }
+
+  CustomerDashboard _mapCustomerDashboard(Map<String, dynamic> json) {
     return CustomerDashboard(
       metadata: CustomerDashboardMetadata(
         generatedAt: _dateTime(json['metadata']?['generatedAt']),
@@ -44,9 +76,9 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
       ),
       summary: CustomerDashboardSummary(
         accounts: _int(json['summary']?['accounts']),
-        totalBalance: _money(json['summary']?['totalBalance']),
-        monthlyIncome: _money(json['summary']?['monthlyIncome']),
-        monthlyExpenses: _money(json['summary']?['monthlyExpenses']),
+        totalBalance: _customerMoney(json['summary']?['totalBalance']),
+        monthlyIncome: _customerMoney(json['summary']?['monthlyIncome']),
+        monthlyExpenses: _customerMoney(json['summary']?['monthlyExpenses']),
         pendingTransactions: _int(json['summary']?['pendingTransactions']),
         unreadNotifications: _int(json['summary']?['unreadNotifications']),
       ),
@@ -60,7 +92,7 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
             type: _string(item['type']),
             currency: _string(item['currency']),
             status: _string(item['status']),
-            balance: _money(item['balance']),
+            balance: _customerMoney(item['balance']),
             createdAt: _dateTime(item['createdAt']),
           ),
         ),
@@ -70,7 +102,7 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
           json['balances']?['byCurrency'],
           (item) => CustomerDashboardCurrencyBalanceItem(
             currency: _string(item['currency']),
-            balance: _money(item['balance']),
+            balance: _customerMoney(item['balance']),
           ),
         ),
       ),
@@ -79,7 +111,7 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
           json['transactions']?['monthlyVolume'],
           (item) => CustomerDashboardDailyMoneyPoint(
             date: _dateTime(item['date']),
-            amount: _money(item['amount']),
+            amount: _customerMoney(item['amount']),
           ),
         ),
         byType: _mapList(
@@ -87,31 +119,31 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
           (item) => CustomerDashboardTransactionAggregateItem(
             type: _string(item['type']),
             total: _int(item['total']),
-            amount: _money(item['amount']),
+            amount: _customerMoney(item['amount']),
           ),
         ),
-        recent: _bucket(
+        recent: _customerBucket(
           json['transactions']?['recent'],
           (item) => CustomerDashboardTransactionItem(
             id: _string(item['id']),
             reference: _string(item['reference']),
             type: _string(item['type']),
             status: _string(item['status']),
-            amount: _money(item['amount']),
+            amount: _customerMoney(item['amount']),
             description: _nullableString(item['description']),
             sourceAccountNumber: _nullableString(item['sourceAccountNumber']),
             targetAccountNumber: _nullableString(item['targetAccountNumber']),
             createdAt: _dateTime(item['createdAt']),
           ),
         ),
-        pending: _bucket(
+        pending: _customerBucket(
           json['transactions']?['pending'],
           (item) => CustomerDashboardTransactionItem(
             id: _string(item['id']),
             reference: _string(item['reference']),
             type: _string(item['type']),
             status: _string(item['status']),
-            amount: _money(item['amount']),
+            amount: _customerMoney(item['amount']),
             description: _nullableString(item['description']),
             sourceAccountNumber: _nullableString(item['sourceAccountNumber']),
             targetAccountNumber: _nullableString(item['targetAccountNumber']),
@@ -121,11 +153,11 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
       ),
       limits: CustomerDashboardLimitsSection(
         transfer: CustomerDashboardTransferLimits(
-          daily: _limitUsage(json['limits']?['transfer']?['daily']),
-          monthly: _limitUsage(json['limits']?['transfer']?['monthly']),
+          daily: _customerLimitUsage(json['limits']?['transfer']?['daily']),
+          monthly: _customerLimitUsage(json['limits']?['transfer']?['monthly']),
         ),
         withdrawal: CustomerDashboardWithdrawalLimits(
-          daily: _limitUsage(json['limits']?['withdrawal']?['daily']),
+          daily: _customerLimitUsage(json['limits']?['withdrawal']?['daily']),
         ),
         activeRules: _mapList(
           json['limits']?['activeRules'],
@@ -183,7 +215,7 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
     );
   }
 
-  CustomerDashboardSectionBucket<T> _bucket<T>(
+  CustomerDashboardSectionBucket<T> _customerBucket<T>(
     dynamic raw,
     T Function(Map<String, dynamic>) mapper,
   ) {
@@ -194,12 +226,12 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
     );
   }
 
-  CustomerDashboardLimitWindowUsage _limitUsage(dynamic raw) {
+  CustomerDashboardLimitWindowUsage _customerLimitUsage(dynamic raw) {
     final map = raw is Map<String, dynamic> ? raw : <String, dynamic>{};
     return CustomerDashboardLimitWindowUsage(
       period: _string(map['period']),
-      used: _money(map['used']),
-      limit: _money(map['limit']),
+      used: _customerMoney(map['used']),
+      limit: _customerMoney(map['limit']),
       usedCount: _int(map['usedCount']),
       limitCount: _intNullable(map['limitCount']),
       activeRules: _int(map['activeRules']),
@@ -210,13 +242,10 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
 
   List<T> _mapList<T>(dynamic raw, T Function(Map<String, dynamic>) mapper) {
     if (raw is! List) return const [];
-    return raw
-        .whereType<Map>()
-        .map((item) => mapper(Map<String, dynamic>.from(item)))
-        .toList();
+    return raw.whereType<Map>().map((item) => mapper(Map<String, dynamic>.from(item))).toList();
   }
 
-  CustomerDashboardMoney _money(dynamic raw) {
+  CustomerDashboardMoney _customerMoney(dynamic raw) {
     final map = raw is Map<String, dynamic> ? raw : <String, dynamic>{};
     return CustomerDashboardMoney(
       amount: _double(map['amount']),

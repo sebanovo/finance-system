@@ -46,6 +46,7 @@ import 'package:finance_mobile/domain/usecases/evaluate_limit_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_limit_rules_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_available_roles_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_customer_dashboard_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_tenant_summary_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_devices_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_service_enrollments_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_service_provider_catalog_usecase.dart';
@@ -307,6 +308,7 @@ void initDashboardModule() {
     () => DashboardRepositoryImpl(sl()),
   );
   sl.registerLazySingleton(() => GetCustomerDashboardUseCase(sl()));
+  sl.registerLazySingleton(() => GetTenantSummaryUseCase(sl()));
 }
 
 void initLimitsModule() {
@@ -334,6 +336,7 @@ void initHomeModule() {
     () => HomeViewModel(
       getSubscriptionUseCase: sl(),
       getCustomerDashboardUseCase: sl(),
+      getTenantSummaryUseCase: sl(),
       getUserInfoUseCase: sl(),
       changePasswordUseCase: sl(),
       logoutUseCase: sl(),

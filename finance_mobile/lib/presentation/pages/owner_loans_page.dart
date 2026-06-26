@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:finance_mobile/core/di/injection_container.dart' as di;
 import 'package:finance_mobile/domain/entities/account.dart';
 import 'package:finance_mobile/domain/entities/user.dart';
@@ -13,7 +14,11 @@ class OwnerLoansPage extends StatefulWidget {
 }
 
 class _OwnerLoansPageState extends State<OwnerLoansPage> {
-  static const _green = Color(0xFF2E7D32);
+  static const _green = Color(0xFF166534);
+  static const _surface = Color(0xFFFFFFFF);
+  static const _surfaceVariant = Color(0xFFF9FAFB);
+  static const _outline = Color(0xFFE5E7EB);
+  static const _ink = Color(0xFF111827);
 
   late final OwnerLoansViewModel _vm;
   final _formKey = GlobalKey<FormState>();
@@ -63,6 +68,22 @@ class _OwnerLoansPageState extends State<OwnerLoansPage> {
     final userId = _selectedUserId;
     if (userId == null || userId.isEmpty) return const [];
     return _vm.accounts.where((account) => account.userId == userId).toList();
+  }
+
+  String _userDropdownLabel(User user) {
+    final name = _displayUserName(user);
+    final parts = <String>[name];
+    if (user.email.trim().isNotEmpty) {
+      parts.add(user.email.trim());
+    }
+    final label = parts.join(' · ');
+    return label.length > 42 ? '${label.substring(0, 39)}...' : label;
+  }
+
+  String _accountDropdownLabel(Account account) {
+    final label =
+        '${account.accountNumber} · ${account.displayName} · ${account.currency}';
+    return label.length > 42 ? '${label.substring(0, 39)}...' : label;
   }
 
   Future<void> _submit() async {
@@ -119,38 +140,38 @@ class _OwnerLoansPageState extends State<OwnerLoansPage> {
   Color _statusBg(String status) {
     switch (status.toUpperCase()) {
       case 'REQUESTED':
-        return const Color(0xFFFFF8E1);
+        return const Color(0xFFF9FAFB);
       case 'APPROVED':
-        return const Color(0xFFE8F5E9);
+        return const Color(0xFFF0FDF4);
       case 'DISBURSED':
-        return const Color(0xFFE3F2FD);
+        return const Color(0xFFE5E7EB);
       case 'REJECTED':
-        return const Color(0xFFFFEBEE);
+        return const Color(0xFFFEE2E2);
       case 'PAID_OFF':
-        return const Color(0xFFF1F8E9);
+        return const Color(0xFFD1FAE5);
       case 'CANCELLED':
-        return const Color(0xFFFFF3E0);
+        return const Color(0xFFF3F4F6);
       default:
-        return const Color(0xFFF5F5F5);
+        return const Color(0xFFF9FAFB);
     }
   }
 
   Color _statusFg(String status) {
     switch (status.toUpperCase()) {
       case 'REQUESTED':
-        return const Color(0xFF8A6D00);
+        return _ink;
       case 'APPROVED':
-        return const Color(0xFF2E7D32);
+        return _green;
       case 'DISBURSED':
-        return const Color(0xFF1565C0);
+        return const Color(0xFF111827);
       case 'REJECTED':
         return const Color(0xFFC62828);
       case 'PAID_OFF':
-        return const Color(0xFF558B2F);
+        return const Color(0xFF166534);
       case 'CANCELLED':
-        return const Color(0xFFEF6C00);
+        return const Color(0xFF374151);
       default:
-        return const Color(0xFF5F6F5F);
+        return const Color(0xFF4B5563);
     }
   }
 
@@ -196,15 +217,16 @@ class _OwnerLoansPageState extends State<OwnerLoansPage> {
       constraints: const BoxConstraints(minWidth: 96),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.16),
+        color: _surfaceVariant,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600)),
+          Text(label, style: TextStyle(color: Colors.grey.shade700, fontSize: 11, fontWeight: FontWeight.w600)),
           const SizedBox(height: 2),
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(value, style: const TextStyle(color: _ink, fontSize: 16, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -218,24 +240,21 @@ class _OwnerLoansPageState extends State<OwnerLoansPage> {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF66BB6A)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: _surface,
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Préstamos',
-            style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900),
+            style: TextStyle(color: _ink, fontSize: 24, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 6),
           Text(
             'Gestiona solicitudes, desembolsos, pagos y cronogramas del tenant.',
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13),
+            style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
           ),
           const SizedBox(height: 14),
           Wrap(
@@ -246,6 +265,13 @@ class _OwnerLoansPageState extends State<OwnerLoansPage> {
               _metric('Desembolsados', '$disbursed'),
               _metric('Pagados', '$paid'),
               _metric('Total', '${_vm.loans.length}'),
+              ActionChip(
+                label: const Text('Pagos de servicios'),
+                backgroundColor: const Color(0xFFF0FDF4),
+                labelStyle: const TextStyle(color: _green, fontWeight: FontWeight.w700),
+                side: const BorderSide(color: _outline),
+                onPressed: () => context.push('/service-payments'),
+              ),
             ],
           ),
         ],
@@ -256,7 +282,11 @@ class _OwnerLoansPageState extends State<OwnerLoansPage> {
   Widget _buildForm() {
     return Card(
       margin: const EdgeInsets.only(top: 16, bottom: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      color: _surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(color: _outline),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -266,12 +296,25 @@ class _OwnerLoansPageState extends State<OwnerLoansPage> {
             children: [
               const Text(
                 'Nuevo préstamo',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _green),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _ink),
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: _selectedUserId,
                 decoration: const InputDecoration(labelText: 'Usuario prestatario'),
+                isExpanded: true,
+                selectedItemBuilder: (context) => _vm.users
+                    .map(
+                      (user) => Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          _userDropdownLabel(user),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    )
+                    .toList(),
                 items: _vm.users
                     .map(
                       (user) => DropdownMenuItem<String>(
@@ -289,12 +332,26 @@ class _OwnerLoansPageState extends State<OwnerLoansPage> {
                     _selectedAccountId = null;
                   });
                 },
+                menuMaxHeight: 320,
                 validator: (_) => _selectedUserId == null ? 'Selecciona un usuario' : null,
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: _selectedAccountId,
                 decoration: const InputDecoration(labelText: 'Cuenta de desembolso'),
+                isExpanded: true,
+                selectedItemBuilder: (context) => _filteredAccounts
+                    .map(
+                      (account) => Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          _accountDropdownLabel(account),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    )
+                    .toList(),
                 items: _filteredAccounts
                     .map(
                       (account) => DropdownMenuItem<String>(
@@ -309,6 +366,7 @@ class _OwnerLoansPageState extends State<OwnerLoansPage> {
                 onChanged: _selectedUserId == null
                     ? null
                     : (value) => setState(() => _selectedAccountId = value),
+                menuMaxHeight: 320,
                 validator: (_) => _selectedAccountId == null ? 'Selecciona una cuenta' : null,
               ),
               const SizedBox(height: 12),
@@ -396,9 +454,13 @@ class _OwnerLoansPageState extends State<OwnerLoansPage> {
       }
     }
 
-    return Card(
+      return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      color: _surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(color: _outline),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -416,7 +478,7 @@ class _OwnerLoansPageState extends State<OwnerLoansPage> {
                       const SizedBox(height: 8),
                       Text(
                         '${loan.principal.toStringAsFixed(2)} ${loan.currency}',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: _green),
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: _ink),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -500,21 +562,21 @@ class _OwnerLoansPageState extends State<OwnerLoansPage> {
               ],
             ),
             if (expanded) ...[
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF7FBF6),
+                  color: _surfaceVariant,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFDDEED8)),
+                  border: Border.all(color: _outline),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
                       'Cronograma',
-                      style: TextStyle(fontWeight: FontWeight.w800, color: _green),
+                      style: TextStyle(fontWeight: FontWeight.w800, color: _ink),
                     ),
                     const SizedBox(height: 10),
                     if (_vm.schedule.isEmpty)
@@ -527,9 +589,9 @@ class _OwnerLoansPageState extends State<OwnerLoansPage> {
                             child: Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: _surface,
                                 borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: const Color(0xFFE5EFE3)),
+                                border: Border.all(color: _outline),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -576,8 +638,9 @@ class _OwnerLoansPageState extends State<OwnerLoansPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F9F4),
+        color: _surfaceVariant,
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: _outline),
       ),
       child: Text(
         '$label: $value',
@@ -591,7 +654,7 @@ class _OwnerLoansPageState extends State<OwnerLoansPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Préstamos'),
-        backgroundColor: Colors.white,
+        backgroundColor: _surface,
         foregroundColor: _green,
         elevation: 0,
         actions: [

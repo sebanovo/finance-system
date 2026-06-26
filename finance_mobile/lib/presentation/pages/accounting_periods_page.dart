@@ -432,8 +432,9 @@ class _AccountingPeriodsPageState extends State<AccountingPeriodsPage> {
                               helperText: 'Ejemplo: 2026-06',
                             ),
                             validator: (value) {
-                              if ((value ?? '').trim().isEmpty)
+                              if ((value ?? '').trim().isEmpty) {
                                 return 'Ingresa un código';
+                              }
                               return null;
                             },
                           ),

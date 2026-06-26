@@ -77,11 +77,11 @@ services:
     networks:
       - finance-net
 
-  serv-finance-flutter-web:
-    image: sebastiandevjs/finance-flutter-web:1.0.0
-    restart: unless-stopped
-    networks:
-      - finance-net
+  # serv-finance-flutter-web:
+  #   image: sebastiandevjs/finance-flutter-web:1.0.0
+  #   restart: unless-stopped
+  #   networks:
+  #     - finance-net
 
   serv-nginx:
     image: nginx:stable-alpine
@@ -90,7 +90,7 @@ services:
     depends_on:
       - serv-finance-web
       - serv-finance-api
-      - serv-finance-flutter-web
+      # - serv-finance-flutter-web
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       # - ./nginx/ssl:/etc/nginx/ssl:ro

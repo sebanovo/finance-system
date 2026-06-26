@@ -7,6 +7,7 @@ public class StripeBillingProperties {
 
     private String secretKey;
     private String webhookSecret;
+    private String frontendUrlBase;
     private String successUrl;
     private String cancelUrl;
     private String customerPortalReturnUrl;
@@ -27,8 +28,16 @@ public class StripeBillingProperties {
         this.webhookSecret = webhookSecret;
     }
 
+    public String getFrontendUrlBase() {
+        return frontendUrlBase;
+    }
+
+    public void setFrontendUrlBase(String frontendUrlBase) {
+        this.frontendUrlBase = frontendUrlBase;
+    }
+
     public String getSuccessUrl() {
-        return successUrl;
+        return resolveFrontendUrl(successUrl);
     }
 
     public void setSuccessUrl(String successUrl) {
@@ -36,7 +45,7 @@ public class StripeBillingProperties {
     }
 
     public String getCancelUrl() {
-        return cancelUrl;
+        return resolveFrontendUrl(cancelUrl);
     }
 
     public void setCancelUrl(String cancelUrl) {
@@ -44,10 +53,37 @@ public class StripeBillingProperties {
     }
 
     public String getCustomerPortalReturnUrl() {
-        return customerPortalReturnUrl;
+        return resolveFrontendUrl(customerPortalReturnUrl);
     }
 
     public void setCustomerPortalReturnUrl(String customerPortalReturnUrl) {
         this.customerPortalReturnUrl = customerPortalReturnUrl;
+    }
+
+    private String resolveFrontendUrl(String value) {
+        if (value == null || value.isBlank()) {
+            return value;
+        }
+
+        String trimmed = value.trim();
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+            return trimmed;
+        }
+
+        String base = frontendUrlBase == null ? "" : frontendUrlBase.trim();
+        if (base.isBlank()) {
+            return trimmed;
+        }
+
+        boolean baseEndsWithSlash = base.endsWith("/");
+        boolean valueStartsWithSlash = trimmed.startsWith("/");
+
+        if (baseEndsWithSlash && valueStartsWithSlash) {
+            return base + trimmed.substring(1);
+        }
+        if (!baseEndsWithSlash && !valueStartsWithSlash) {
+            return base + "/" + trimmed;
+        }
+        return base + trimmed;
     }
 }

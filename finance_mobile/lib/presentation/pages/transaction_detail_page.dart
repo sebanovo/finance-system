@@ -7,6 +7,11 @@ import '../widgets/transaction_details_card.dart';
 import '../widgets/transaction_movements_card.dart';
 import '../widgets/transaction_detail_skeleton.dart';
 
+const _green = Color(0xFF166534);
+const _surface = Color(0xFFFFFFFF);
+const _outline = Color(0xFFE5E7EB);
+const _ink = Color(0xFF111827);
+
 class TransactionDetailPage extends StatefulWidget {
   final String transactionId;
 
@@ -59,9 +64,9 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detalle de Movimiento'),
-        backgroundColor: Colors.white,
+        backgroundColor: _surface,
         elevation: 0,
-        foregroundColor: const Color(0xFF2E7D32),
+        foregroundColor: _green,
       ),
       body: _buildBody(),
     );
@@ -83,7 +88,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
             ElevatedButton(
               onPressed: () => context.pop(),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2E7D32),
+                backgroundColor: _green,
                 foregroundColor: Colors.white,
               ),
               child: const Text('Volver'),
@@ -95,7 +100,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
 
     return RefreshIndicator(
       onRefresh: () => _viewModel.loadTransactionById(widget.transactionId),
-      color: const Color(0xFF2E7D32),
+      color: _green,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(

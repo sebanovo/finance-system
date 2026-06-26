@@ -35,9 +35,9 @@ class _FxFeesPageState extends State<FxFeesPage> {
   void _onChanged() {
     if (!mounted) return;
     if (_viewModel.errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_viewModel.errorMessage!)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_viewModel.errorMessage!)));
       _viewModel.clearError();
     }
     setState(() {});
@@ -114,12 +114,28 @@ class _FxFeesPageState extends State<FxFeesPage> {
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Tarifas', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF4E7B54))),
+          Text(
+            'Tarifas',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF4E7B54),
+            ),
+          ),
           SizedBox(height: 6),
-          Text('Comisiones Operativas', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Color(0xFF1B5E20))),
+          Text(
+            'Comisiones Operativas',
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF1B5E20),
+            ),
+          ),
           SizedBox(height: 8),
-          Text('Define tarifas fijas o porcentuales para las operaciones del sistema.',
-              style: TextStyle(color: Color(0xFF5F765B))),
+          Text(
+            'Define tarifas fijas o porcentuales para las operaciones del sistema.',
+            style: TextStyle(color: Color(0xFF5F765B)),
+          ),
         ],
       ),
     );
@@ -127,7 +143,9 @@ class _FxFeesPageState extends State<FxFeesPage> {
 
   Widget _buildStats() {
     final active = _viewModel.items.where((e) => e.active).length;
-    final percentage = _viewModel.items.where((e) => e.feeType == 'PERCENTAGE').length;
+    final percentage = _viewModel.items
+        .where((e) => e.feeType == 'PERCENTAGE')
+        .length;
     final fixed = _viewModel.items.where((e) => e.feeType == 'FIXED').length;
     final none = _viewModel.items.where((e) => e.feeType == 'NONE').length;
     return Row(
@@ -156,9 +174,19 @@ class _FxFeesPageState extends State<FxFeesPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7D6C))),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 11, color: Color(0xFF6B7D6C)),
+          ),
           const SizedBox(height: 6),
-          Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFF1B5E20))),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF1B5E20),
+            ),
+          ),
         ],
       ),
     );
@@ -179,20 +207,37 @@ class _FxFeesPageState extends State<FxFeesPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(_operationLabel(fee.operationCode), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                      Text(
+                        _operationLabel(fee.operationCode),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(fee.description ?? 'Sin descripción', style: const TextStyle(color: Colors.black54)),
+                      Text(
+                        fee.description ?? 'Sin descripción',
+                        style: const TextStyle(color: Colors.black54),
+                      ),
                     ],
                   ),
                 ),
-                _badge(fee.active ? 'Activa' : 'Inactiva', fee.active ? Colors.green : Colors.grey),
+                _badge(
+                  fee.active ? 'Activa' : 'Inactiva',
+                  fee.active ? Colors.green : Colors.grey,
+                ),
               ],
             ),
             const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(child: _miniInfo('Tipo', _feeTypeLabel(fee.feeType))),
-                Expanded(child: _miniInfo('Modo', _calculationModeLabel(fee.calculationMode))),
+                Expanded(
+                  child: _miniInfo(
+                    'Modo',
+                    _calculationModeLabel(fee.calculationMode),
+                  ),
+                ),
                 Expanded(child: _miniInfo('Valor', _feeValueLabel(fee))),
               ],
             ),
@@ -203,12 +248,17 @@ class _FxFeesPageState extends State<FxFeesPage> {
                 spacing: 8,
                 children: [
                   TextButton(
-                    onPressed: _viewModel.saving ? null : () => _showFeeDialog(fee: fee),
+                    onPressed: _viewModel.saving
+                        ? null
+                        : () => _showFeeDialog(fee: fee),
                     child: const Text('Editar'),
                   ),
                   TextButton(
                     onPressed: _viewModel.saving ? null : () => _deleteFee(fee),
-                    child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+                    child: const Text(
+                      'Eliminar',
+                      style: TextStyle(color: Colors.red),
+                    ),
                   ),
                 ],
               ),
@@ -223,10 +273,17 @@ class _FxFeesPageState extends State<FxFeesPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 11)),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w700,
+          fontSize: 11,
+        ),
+      ),
     );
   }
 
@@ -234,7 +291,10 @@ class _FxFeesPageState extends State<FxFeesPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 11, color: Colors.black54)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 11, color: Colors.black54),
+        ),
         const SizedBox(height: 4),
         Text(value, style: const TextStyle(fontWeight: FontWeight.w700)),
       ],
@@ -264,12 +324,16 @@ class _FxFeesPageState extends State<FxFeesPage> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         OutlinedButton(
-          onPressed: _viewModel.hasPreviousPage ? () => _viewModel.loadFees(page: _viewModel.page - 1) : null,
+          onPressed: _viewModel.hasPreviousPage
+              ? () => _viewModel.loadFees(page: _viewModel.page - 1)
+              : null,
           child: const Text('Anterior'),
         ),
         Text('Página ${_viewModel.page + 1} de ${_viewModel.totalPages}'),
         OutlinedButton(
-          onPressed: _viewModel.hasNextPage ? () => _viewModel.loadFees(page: _viewModel.page + 1) : null,
+          onPressed: _viewModel.hasNextPage
+              ? () => _viewModel.loadFees(page: _viewModel.page + 1)
+              : null,
           child: const Text('Siguiente'),
         ),
       ],
@@ -279,25 +343,19 @@ class _FxFeesPageState extends State<FxFeesPage> {
   Future<void> _showFeeDialog({OperationFee? fee}) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (_) => FxFeeDialog(
-        viewModel: _viewModel,
-        initialFee: fee,
-      ),
+      builder: (_) => FxFeeDialog(viewModel: _viewModel, initialFee: fee),
     );
     if (result == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(fee == null ? 'Comisión creada exitosamente' : 'Comisión actualizada exitosamente'),
+          content: Text(
+            fee == null
+                ? 'Comisión creada exitosamente'
+                : 'Comisión actualizada exitosamente',
+          ),
         ),
       );
     }
-  }
-
-  InputDecoration _inputDecoration(String label) {
-    return InputDecoration(
-      labelText: label,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-    );
   }
 
   Future<void> _deleteFee(OperationFee fee) async {
@@ -305,10 +363,18 @@ class _FxFeesPageState extends State<FxFeesPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Eliminar comisión'),
-        content: Text('¿Deseas eliminar la comisión de ${_operationLabel(fee.operationCode)}?'),
+        content: Text(
+          '¿Deseas eliminar la comisión de ${_operationLabel(fee.operationCode)}?',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Eliminar')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Eliminar'),
+          ),
         ],
       ),
     );
@@ -324,34 +390,49 @@ class _FxFeesPageState extends State<FxFeesPage> {
 
   String _operationLabel(String code) {
     switch (code) {
-      case 'TRANSFER': return 'Transferencia';
-      case 'CONVERSION': return 'Conversión';
-      case 'DEPOSIT': return 'Depósito';
-      case 'WITHDRAWAL': return 'Retiro';
-      case 'PAYMENT': return 'Pago';
-      default: return code;
+      case 'TRANSFER':
+        return 'Transferencia';
+      case 'CONVERSION':
+        return 'Conversión';
+      case 'DEPOSIT':
+        return 'Depósito';
+      case 'WITHDRAWAL':
+        return 'Retiro';
+      case 'PAYMENT':
+        return 'Pago';
+      default:
+        return code;
     }
   }
 
   String _feeTypeLabel(String code) {
     switch (code) {
-      case 'NONE': return 'Sin comisión';
-      case 'FIXED': return 'Fija';
-      case 'PERCENTAGE': return 'Porcentaje';
-      default: return code;
+      case 'NONE':
+        return 'Sin comisión';
+      case 'FIXED':
+        return 'Fija';
+      case 'PERCENTAGE':
+        return 'Porcentaje';
+      default:
+        return code;
     }
   }
 
   String _calculationModeLabel(String code) {
     switch (code) {
-      case 'SEPARATE': return 'Separado';
-      case 'INCLUDED': return 'Incluido';
-      default: return code;
+      case 'SEPARATE':
+        return 'Separado';
+      case 'INCLUDED':
+        return 'Incluido';
+      default:
+        return code;
     }
   }
 
   String _feeValueLabel(OperationFee fee) {
-    return fee.feeType == 'PERCENTAGE' ? '${fee.feeValue.toStringAsFixed(2)}%' : fee.feeValue.toStringAsFixed(2);
+    return fee.feeType == 'PERCENTAGE'
+        ? '${fee.feeValue.toStringAsFixed(2)}%'
+        : fee.feeValue.toStringAsFixed(2);
   }
 }
 
@@ -395,7 +476,9 @@ class _FxFeeDialogState extends State<FxFeeDialog> {
   Widget build(BuildContext context) {
     final isEditing = widget.initialFee != null;
     return AlertDialog(
-      title: Text(isEditing ? 'Editar Comisión Operativa' : 'Nueva Comisión Operativa'),
+      title: Text(
+        isEditing ? 'Editar Comisión Operativa' : 'Nueva Comisión Operativa',
+      ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       content: SizedBox(
         width: 420,
@@ -406,40 +489,72 @@ class _FxFeeDialogState extends State<FxFeeDialog> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 DropdownButtonFormField<String>(
-                  value: _operationCode,
+                  initialValue: _operationCode,
                   decoration: _inputDecoration('Operación'),
-                  items: const ['TRANSFER', 'CONVERSION', 'DEPOSIT', 'WITHDRAWAL', 'PAYMENT']
-                      .map((value) => DropdownMenuItem(value: value, child: Text(value)))
-                      .toList(),
-                  onChanged: _submitting ? null : (value) => setState(() => _operationCode = value ?? _operationCode),
+                  items:
+                      const [
+                            'TRANSFER',
+                            'CONVERSION',
+                            'DEPOSIT',
+                            'WITHDRAWAL',
+                            'PAYMENT',
+                          ]
+                          .map(
+                            (value) => DropdownMenuItem(
+                              value: value,
+                              child: Text(value),
+                            ),
+                          )
+                          .toList(),
+                  onChanged: _submitting
+                      ? null
+                      : (value) => setState(
+                          () => _operationCode = value ?? _operationCode,
+                        ),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _feeType,
+                  initialValue: _feeType,
                   decoration: _inputDecoration('Tipo'),
                   items: const ['NONE', 'FIXED', 'PERCENTAGE']
-                      .map((value) => DropdownMenuItem(value: value, child: Text(value)))
+                      .map(
+                        (value) =>
+                            DropdownMenuItem(value: value, child: Text(value)),
+                      )
                       .toList(),
-                  onChanged: _submitting ? null : (value) => setState(() => _feeType = value ?? _feeType),
+                  onChanged: _submitting
+                      ? null
+                      : (value) => setState(() => _feeType = value ?? _feeType),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _calculationMode,
+                  initialValue: _calculationMode,
                   decoration: _inputDecoration('Modo'),
                   items: const ['SEPARATE', 'INCLUDED']
-                      .map((value) => DropdownMenuItem(value: value, child: Text(value)))
+                      .map(
+                        (value) =>
+                            DropdownMenuItem(value: value, child: Text(value)),
+                      )
                       .toList(),
-                  onChanged: _submitting ? null : (value) => setState(() => _calculationMode = value ?? _calculationMode),
+                  onChanged: _submitting
+                      ? null
+                      : (value) => setState(
+                          () => _calculationMode = value ?? _calculationMode,
+                        ),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   initialValue: _feeValueText,
                   enabled: !_submitting,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   decoration: _inputDecoration('Valor'),
                   onChanged: (value) => _feeValueText = value,
                   validator: (value) {
-                    final parsed = double.tryParse((value ?? '').replaceAll(',', '.'));
+                    final parsed = double.tryParse(
+                      (value ?? '').replaceAll(',', '.'),
+                    );
                     if (parsed == null) return 'Ingresa un valor válido';
                     if (_feeType == 'NONE' && parsed != 0) {
                       return 'Si es sin comisión, el valor debe ser 0';
@@ -459,7 +574,9 @@ class _FxFeeDialogState extends State<FxFeeDialog> {
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   value: _active,
-                  onChanged: _submitting ? null : (value) => setState(() => _active = value),
+                  onChanged: _submitting
+                      ? null
+                      : (value) => setState(() => _active = value),
                   title: const Text('Activa'),
                 ),
               ],

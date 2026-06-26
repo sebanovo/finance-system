@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/transaction.dart';
 
+const _green = Color(0xFF166534);
+const _surface = Color(0xFFFFFFFF);
+const _outline = Color(0xFFE5E7EB);
+const _ink = Color(0xFF111827);
+
 class TransactionMovementsCard extends StatelessWidget {
   final List<Movement> movements;
 
@@ -9,7 +14,11 @@ class TransactionMovementsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      color: _surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: const BorderSide(color: _outline),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -20,7 +29,7 @@ class TransactionMovementsCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2E7D32),
+                color: _ink,
               ),
             ),
             const SizedBox(height: 12),
@@ -60,9 +69,9 @@ class TransactionMovementsCard extends StatelessWidget {
                 ),
                 Text(
                   '${movement.movementType == 'CREDIT' ? '+' : '-'}${movement.amount.toStringAsFixed(2)} ${movement.currency}',
-                  style: TextStyle(
+                    style: TextStyle(
                     color: movement.movementType == 'CREDIT'
-                        ? const Color(0xFF2E7D32)
+                        ? _green
                         : Colors.red.shade700,
                     fontWeight: FontWeight.bold,
                   ),
@@ -106,10 +115,10 @@ class TransactionMovementsCard extends StatelessWidget {
                 ),
                 Text(
                   '${movement.movementType == 'CREDIT' ? '+' : '-'}${movement.amount.toStringAsFixed(2)} ${movement.currency}',
-                  style: TextStyle(
-                  color: movement.movementType == 'CREDIT'
-                      ? const Color(0xFF2E7D32)
-                      : Colors.red.shade700,
+                    style: TextStyle(
+                    color: movement.movementType == 'CREDIT'
+                        ? _green
+                        : Colors.red.shade700,
                   fontWeight: FontWeight.bold,
                 ),
               ),

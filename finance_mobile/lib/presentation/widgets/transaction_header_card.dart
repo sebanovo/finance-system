@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/transaction.dart';
 
+const _green = Color(0xFF166534);
+const _surface = Color(0xFFFFFFFF);
+const _outline = Color(0xFFE5E7EB);
+const _surfaceVariant = Color(0xFFF9FAFB);
+const _ink = Color(0xFF111827);
+
 class TransactionHeaderCard extends StatelessWidget {
   final Transaction transaction;
 
@@ -11,7 +17,11 @@ class TransactionHeaderCard extends StatelessWidget {
     final isSmallScreen = MediaQuery.of(context).size.width < 500;
 
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      color: _surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: const BorderSide(color: _outline),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -32,7 +42,7 @@ class TransactionHeaderCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: transaction.isCompleted
-            ? const Color(0xFFE8F5E9)
+            ? _surfaceVariant
             : transaction.isFailed
             ? Colors.red.shade50
             : Colors.grey.shade200,
@@ -43,7 +53,7 @@ class TransactionHeaderCard extends StatelessWidget {
         style: TextStyle(
           fontWeight: FontWeight.w600,
           color: transaction.isCompleted
-              ? const Color(0xFF2E7D32)
+              ? _green
               : transaction.isFailed
               ? Colors.red.shade700
               : Colors.grey.shade600,
@@ -58,7 +68,7 @@ class TransactionHeaderCard extends StatelessWidget {
       style: TextStyle(
         fontSize: isSmallScreen ? 28 : 36,
         fontWeight: FontWeight.bold,
-        color: const Color(0xFF2E7D32),
+        color: _ink,
       ),
     );
   }

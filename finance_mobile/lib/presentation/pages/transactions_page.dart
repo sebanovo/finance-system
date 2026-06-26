@@ -8,6 +8,12 @@ import '../widgets/transaction_item.dart';
 import '../widgets/transaction_item_skeleton.dart';
 import '../widgets/transactions_empty_widget.dart';
 
+const _green = Color(0xFF166534);
+const _surface = Color(0xFFFFFFFF);
+const _surfaceVariant = Color(0xFFF9FAFB);
+const _outline = Color(0xFFE5E7EB);
+const _ink = Color(0xFF111827);
+
 class TransactionsPage extends StatefulWidget {
   const TransactionsPage({super.key});
 
@@ -125,9 +131,9 @@ class _TransactionsPageState extends State<TransactionsPage> with RouteAware {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mis Movimientos'),
-        backgroundColor: Colors.white,
+        backgroundColor: _surface,
         elevation: 0,
-        foregroundColor: const Color(0xFF2E7D32),
+        foregroundColor: _green,
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications),
@@ -161,7 +167,7 @@ class _TransactionsPageState extends State<TransactionsPage> with RouteAware {
           value: item['value'] as String,
           child: Row(
             children: [
-              Icon(item['icon'] as IconData, color: const Color(0xFF2E7D32)),
+              Icon(item['icon'] as IconData, color: _green),
               const SizedBox(width: 8),
               Text(item['label'] as String),
             ],
@@ -193,7 +199,7 @@ class _TransactionsPageState extends State<TransactionsPage> with RouteAware {
 
     return RefreshIndicator(
       onRefresh: () async => _viewModel.loadTransactions(),
-      color: const Color(0xFF2E7D32),
+      color: _green,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -215,7 +221,9 @@ class _TransactionsPageState extends State<TransactionsPage> with RouteAware {
 
   Widget _buildTransactionsOverview() {
     final pending = _viewModel.transactions.where((tx) => tx.isPending).length;
-    final completed = _viewModel.transactions.where((tx) => tx.isCompleted).length;
+    final completed = _viewModel.transactions
+        .where((tx) => tx.isCompleted)
+        .length;
     final failed = _viewModel.transactions.where((tx) => tx.isFailed).length;
     final total = _viewModel.transactions.length;
 
@@ -223,12 +231,9 @@ class _TransactionsPageState extends State<TransactionsPage> with RouteAware {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF66BB6A)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: _surface,
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,7 +241,7 @@ class _TransactionsPageState extends State<TransactionsPage> with RouteAware {
           const Text(
             'Movimientos',
             style: TextStyle(
-              color: Colors.white,
+              color: _ink,
               fontSize: 22,
               fontWeight: FontWeight.bold,
             ),
@@ -244,10 +249,7 @@ class _TransactionsPageState extends State<TransactionsPage> with RouteAware {
           const SizedBox(height: 6),
           Text(
             'Historial resumido y acciones disponibles según tus permisos.',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.9),
-              fontSize: 13,
-            ),
+            style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
           ),
           const SizedBox(height: 14),
           Wrap(
@@ -294,8 +296,9 @@ class _TransactionsPageState extends State<TransactionsPage> with RouteAware {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
+        color: _surfaceVariant,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,7 +307,7 @@ class _TransactionsPageState extends State<TransactionsPage> with RouteAware {
           Text(
             label,
             style: const TextStyle(
-              color: Colors.white70,
+              color: Color(0xFF6B7280),
               fontSize: 11,
               fontWeight: FontWeight.w600,
             ),
@@ -313,7 +316,7 @@ class _TransactionsPageState extends State<TransactionsPage> with RouteAware {
           Text(
             value,
             style: const TextStyle(
-              color: Colors.white,
+              color: _ink,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -329,7 +332,7 @@ class _TransactionsPageState extends State<TransactionsPage> with RouteAware {
     required VoidCallback onTap,
   }) {
     return Material(
-      color: Colors.white,
+      color: _surface,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
@@ -339,12 +342,12 @@ class _TransactionsPageState extends State<TransactionsPage> with RouteAware {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 18, color: const Color(0xFF2E7D32)),
+              Icon(icon, size: 18, color: _green),
               const SizedBox(width: 8),
               Text(
                 label,
                 style: const TextStyle(
-                  color: Color(0xFF2E7D32),
+                  color: _green,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -371,7 +374,7 @@ class _TransactionsPageState extends State<TransactionsPage> with RouteAware {
           ElevatedButton(
             onPressed: () => _viewModel.loadTransactions(),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2E7D32),
+              backgroundColor: _green,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
@@ -394,7 +397,6 @@ class _TransactionsPageState extends State<TransactionsPage> with RouteAware {
     appRouteObserver.unsubscribe(this);
     _viewModel.removeListener(_onViewModelChanged);
     super.dispose();
-    }
   }
 
   Widget _buildPermissionDeniedWidget(String title, String message) {
@@ -422,3 +424,4 @@ class _TransactionsPageState extends State<TransactionsPage> with RouteAware {
       ),
     );
   }
+}
