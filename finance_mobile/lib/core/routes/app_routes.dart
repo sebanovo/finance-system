@@ -12,6 +12,10 @@ import 'package:finance_mobile/presentation/pages/limits_page.dart';
 import 'package:finance_mobile/presentation/pages/notification_preferences_page.dart';
 import 'package:finance_mobile/presentation/pages/notifications_page.dart';
 import 'package:finance_mobile/presentation/pages/backups_page.dart';
+import 'package:finance_mobile/presentation/pages/accounting_periods_page.dart';
+import 'package:finance_mobile/presentation/pages/accounting_journal_entries_page.dart';
+import 'package:finance_mobile/presentation/pages/fx_fees_page.dart';
+import 'package:finance_mobile/presentation/pages/fx_rates_page.dart';
 import 'package:finance_mobile/presentation/pages/service_payments_page.dart';
 import 'package:finance_mobile/presentation/pages/qr_payment_page.dart';
 import 'package:finance_mobile/presentation/pages/transaction_detail_page.dart';
@@ -28,6 +32,7 @@ import 'package:finance_mobile/presentation/pages/login_page.dart';
 import 'package:finance_mobile/presentation/pages/reset_password_page.dart';
 import 'package:finance_mobile/presentation/pages/verify_email_page.dart';
 import 'package:finance_mobile/presentation/pages/my_loans_page.dart';
+import 'package:finance_mobile/presentation/pages/owner_loans_page.dart';
 import 'package:finance_mobile/presentation/pages/signup_page.dart';
 import 'package:finance_mobile/presentation/pages/forgot_password_page.dart';
 import 'package:finance_mobile/presentation/pages/users_page.dart';
@@ -132,7 +137,13 @@ final GoRouter appRouter = GoRouter(
       },
     ),
     GoRoute(path: '/accounts', builder: (context, _) => const AccountsPage()),
-    GoRoute(path: '/loans', builder: (context, _) => const MyLoansPage()),
+    GoRoute(
+      path: '/loans',
+      builder: (context, _) {
+        final apiClient = di.sl<ApiClient>();
+        return apiClient.isOwnerAdmin ? const OwnerLoansPage() : const MyLoansPage();
+      },
+    ),
     GoRoute(
       path: '/accounts/:id',
       builder: (context, state) {
@@ -195,6 +206,22 @@ final GoRouter appRouter = GoRouter(
       path: '/backups',
       builder: (context, _) => const BackupsPage(),
     ),
+    GoRoute(
+      path: '/accounting/periods',
+      builder: (context, _) => const AccountingPeriodsPage(),
+    ),
+    GoRoute(
+      path: '/accounting/journal-entries',
+      builder: (context, _) => const AccountingJournalEntriesPage(),
+    ),
+    GoRoute(
+      path: '/fx/rates',
+      builder: (context, _) => const FxRatesPage(),
+    ),
+    GoRoute(
+      path: '/fx/fees',
+      builder: (context, _) => const FxFeesPage(),
+    ),
     GoRoute(path: '/limits', builder: (context, _) => const LimitsPage()),
     GoRoute(path: '/devices', builder: (context, _) => const DevicesPage()),
     GoRoute(
@@ -226,6 +253,10 @@ const Set<String> _serviceOnlyRoutes = {
 
 const Set<String> _ownerOnlyRoutes = {
   '/backups',
+  '/accounting/periods',
+  '/accounting/journal-entries',
+  '/fx/rates',
+  '/fx/fees',
 };
 
 String _initialLocation() {

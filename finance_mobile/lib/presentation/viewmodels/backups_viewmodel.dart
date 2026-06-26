@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/foundation.dart';
 
 import '../../core/network/api_client.dart';
@@ -31,7 +29,7 @@ class BackupsViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? _successMessage;
   int _page = 0;
-  int _size = 10;
+  final int _size = 10;
   int _totalPages = 0;
   int _totalElements = 0;
   String? _downloadingBackupId;

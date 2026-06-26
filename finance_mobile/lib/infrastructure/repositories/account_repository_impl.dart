@@ -18,6 +18,12 @@ class AccountRepositoryImpl implements AccountRepository {
   }
 
   @override
+  Future<List<Account>> getTenantAccounts() async {
+    final models = await remoteDataSource.getTenantAccounts();
+    return models.map((model) => model.toEntity()).toList();
+  }
+
+  @override
   Future<Account> getAccountById(String accountId) async {
     final model = await remoteDataSource.getAccountById(accountId);
     return model.toEntity();

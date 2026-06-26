@@ -37,7 +37,7 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
   String? _selectedBillId;
   String? _selectedSourceAccountNumber;
   String? _historyProviderId;
-  int _historyPageSize = 20;
+  final int _historyPageSize = 20;
 
   @override
   void initState() {
@@ -58,9 +58,11 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
       if (!mounted) {
         return;
       }
-      if (_selectedSourceAccountNumber == null && _viewModel.accounts.isNotEmpty) {
+      if (_selectedSourceAccountNumber == null &&
+          _viewModel.accounts.isNotEmpty) {
         setState(() {
-          _selectedSourceAccountNumber = _viewModel.accounts.first.accountNumber;
+          _selectedSourceAccountNumber =
+              _viewModel.accounts.first.accountNumber;
         });
       }
     });
@@ -233,16 +235,16 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
         .toList();
     final codes = catalogProvider.isNotEmpty
         ? catalogProvider
-            .expand((entry) => entry.serviceCustomerCodes)
-            .where((code) => code.isNotEmpty)
-            .toSet()
-            .toList()
+              .expand((entry) => entry.serviceCustomerCodes)
+              .where((code) => code.isNotEmpty)
+              .toSet()
+              .toList()
         : _viewModel.enrollments
-            .where((enrollment) => enrollment.provider.id == providerId)
-            .map((enrollment) => enrollment.serviceCustomerCode.trim())
-            .where((code) => code.isNotEmpty)
-            .toSet()
-            .toList();
+              .where((enrollment) => enrollment.provider.id == providerId)
+              .map((enrollment) => enrollment.serviceCustomerCode.trim())
+              .where((code) => code.isNotEmpty)
+              .toSet()
+              .toList();
     codes.sort();
 
     return codes;
@@ -268,7 +270,9 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
     final aliasController = TextEditingController();
     final codeOptions = _serviceCustomerCodeOptionsForProvider(provider.id);
     final initialCode = _serviceCodeController.text.trim();
-    String codeMode = codeOptions.contains(initialCode) ? initialCode : '__custom__';
+    String codeMode = codeOptions.contains(initialCode)
+        ? initialCode
+        : '__custom__';
     final manualCodeController = TextEditingController(
       text: codeMode == '__custom__' ? initialCode : codeMode,
     );
@@ -283,8 +287,11 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
         builder: (context) {
           return StatefulBuilder(
             builder: (context, setSheetState) {
-            final useCustomCode = codeMode == '__custom__' || codeOptions.isEmpty;
-              final currentCode = useCustomCode ? manualCodeController.text.trim() : codeMode;
+              final useCustomCode =
+                  codeMode == '__custom__' || codeOptions.isEmpty;
+              final currentCode = useCustomCode
+                  ? manualCodeController.text.trim()
+                  : codeMode;
               return Padding(
                 padding: EdgeInsets.only(
                   left: 16,
@@ -296,132 +303,151 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                  Text(
-                    'Afiliar servicio',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF2E7D32),
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    provider.name,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Código cliente: ${provider.serviceCustomerCodeLabel ?? 'Código'}',
-                    style: TextStyle(color: Colors.grey.shade700),
-                  ),
-                  const SizedBox(height: 16),
-                  if (codeOptions.isNotEmpty)
-                    DropdownButtonFormField<String>(
-                      key: ValueKey('service-code-${provider.id}-$codeMode'),
-                      initialValue: codeMode == '__custom__' ? '__custom__' : codeMode,
-                      isExpanded: true,
-                      decoration: InputDecoration(
-                        labelText: provider.serviceCustomerCodeLabel ?? 'Código de servicio',
-                        border: const OutlineInputBorder(),
-                        prefixIcon: const Icon(Icons.confirmation_number_outlined),
-                      ),
-                      items: [
-                        ...codeOptions.map(
-                          (code) => DropdownMenuItem(
-                            value: code,
-                            child: Text(
-                              code,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                        const DropdownMenuItem(
-                          value: '__custom__',
-                          child: Text('Otro código...'),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        setSheetState(() {
-                          codeMode = value ?? '__custom__';
-                          if (codeMode != '__custom__') {
-                            manualCodeController.text = codeMode;
-                          }
-                        });
-                      },
-                    )
-                  else
-                    TextField(
-                      controller: manualCodeController,
-                      decoration: InputDecoration(
-                        labelText: provider.serviceCustomerCodeLabel ?? 'Código de servicio',
-                        border: const OutlineInputBorder(),
-                        prefixIcon: const Icon(Icons.confirmation_number_outlined),
+                    Text(
+                      'Afiliar servicio',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF2E7D32),
                       ),
                     ),
-                  if (codeOptions.isNotEmpty && useCustomCode) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      provider.name,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Código cliente: ${provider.serviceCustomerCodeLabel ?? 'Código'}',
+                      style: TextStyle(color: Colors.grey.shade700),
+                    ),
+                    const SizedBox(height: 16),
+                    if (codeOptions.isNotEmpty)
+                      DropdownButtonFormField<String>(
+                        key: ValueKey('service-code-${provider.id}-$codeMode'),
+                        initialValue: codeMode == '__custom__'
+                            ? '__custom__'
+                            : codeMode,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          labelText:
+                              provider.serviceCustomerCodeLabel ??
+                              'Código de servicio',
+                          border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(
+                            Icons.confirmation_number_outlined,
+                          ),
+                        ),
+                        items: [
+                          ...codeOptions.map(
+                            (code) => DropdownMenuItem(
+                              value: code,
+                              child: Text(
+                                code,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                          const DropdownMenuItem(
+                            value: '__custom__',
+                            child: Text('Otro código...'),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          setSheetState(() {
+                            codeMode = value ?? '__custom__';
+                            if (codeMode != '__custom__') {
+                              manualCodeController.text = codeMode;
+                            }
+                          });
+                        },
+                      )
+                    else
+                      TextField(
+                        controller: manualCodeController,
+                        decoration: InputDecoration(
+                          labelText:
+                              provider.serviceCustomerCodeLabel ??
+                              'Código de servicio',
+                          border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(
+                            Icons.confirmation_number_outlined,
+                          ),
+                        ),
+                      ),
+                    if (codeOptions.isNotEmpty && useCustomCode) ...[
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: manualCodeController,
+                        decoration: InputDecoration(
+                          labelText:
+                              provider.serviceCustomerCodeLabel ??
+                              'Código de servicio',
+                          border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(
+                            Icons.confirmation_number_outlined,
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     TextField(
-                      controller: manualCodeController,
-                      decoration: InputDecoration(
-                        labelText: provider.serviceCustomerCodeLabel ?? 'Código de servicio',
-                        border: const OutlineInputBorder(),
-                        prefixIcon: const Icon(Icons.confirmation_number_outlined),
+                      controller: aliasController,
+                      decoration: const InputDecoration(
+                        labelText: 'Alias opcional',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.label_outline),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _viewModel.creatingEnrollment
+                            ? null
+                            : () async {
+                                final navigator = Navigator.of(context);
+                                final code = currentCode.trim();
+                                if (code.isEmpty) {
+                                  _showSnackBar(
+                                    'Selecciona o ingresa el código del servicio',
+                                  );
+                                  return;
+                                }
+                                await _viewModel.createEnrollment(
+                                  providerId: provider.id,
+                                  serviceCustomerCode: code,
+                                  alias: aliasController.text.trim().isEmpty
+                                      ? null
+                                      : aliasController.text.trim(),
+                                );
+                                if (mounted &&
+                                    _viewModel.errorMessage == null) {
+                                  _serviceCodeController.text = code;
+                                  navigator.pop();
+                                }
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2E7D32),
+                          foregroundColor: Colors.white,
+                        ),
+                        icon: _viewModel.creatingEnrollment
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.check_circle_outline),
+                        label: Text(
+                          _viewModel.creatingEnrollment
+                              ? 'Afiliando...'
+                              : 'Afiliar',
+                        ),
                       ),
                     ),
                   ],
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: aliasController,
-                    decoration: const InputDecoration(
-                      labelText: 'Alias opcional',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.label_outline),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: _viewModel.creatingEnrollment
-                          ? null
-                          : () async {
-                              final navigator = Navigator.of(context);
-                              final code = currentCode.trim();
-                              if (code.isEmpty) {
-                                _showSnackBar('Selecciona o ingresa el código del servicio');
-                                return;
-                              }
-                              await _viewModel.createEnrollment(
-                                providerId: provider.id,
-                                serviceCustomerCode: code,
-                                alias: aliasController.text.trim().isEmpty
-                                    ? null
-                                    : aliasController.text.trim(),
-                              );
-                              if (mounted && _viewModel.errorMessage == null) {
-                                _serviceCodeController.text = code;
-                                navigator.pop();
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2E7D32),
-                        foregroundColor: Colors.white,
-                      ),
-                      icon: _viewModel.creatingEnrollment
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Icon(Icons.check_circle_outline),
-                      label: Text(
-                        _viewModel.creatingEnrollment ? 'Afiliando...' : 'Afiliar',
-                      ),
-                    ),
-                  ),
-                ],
                 ),
               );
             },
@@ -542,7 +568,9 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
                 return Container(
                   decoration: const BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(28),
+                    ),
                   ),
                   child: SafeArea(
                     top: false,
@@ -608,7 +636,9 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
       builder: (context) {
         return Dialog(
           insetPadding: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+          ),
           child: ConstrainedBox(
             constraints: BoxConstraints(
               maxWidth: 560,
@@ -647,13 +677,16 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
                         children: [
                           ServicePaymentDetailCard(payment: payment),
                           const SizedBox(height: 12),
-                          if (payment.transactionId != null && payment.transactionId!.isNotEmpty)
+                          if (payment.transactionId != null &&
+                              payment.transactionId!.isNotEmpty)
                             SizedBox(
                               width: double.infinity,
                               child: OutlinedButton.icon(
                                 onPressed: () {
                                   Navigator.of(context).pop();
-                                  context.push('/transactions/${payment.transactionId}');
+                                  context.push(
+                                    '/transactions/${payment.transactionId}',
+                                  );
                                 },
                                 icon: const Icon(Icons.open_in_new),
                                 label: const Text('Ver transacción'),
@@ -745,13 +778,19 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
     }
   }
 
-  Future<void> _consultBillsFromEnrollment(ServiceEnrollment enrollment, {required bool paymentMode}) async {
+  Future<void> _consultBillsFromEnrollment(
+    ServiceEnrollment enrollment, {
+    required bool paymentMode,
+  }) async {
     if (!_canQueryBills) {
       _showSnackBar('No tienes permisos para consultar deudas');
       return;
     }
 
-    await _openAffiliateBillsSheet(enrollment: enrollment, paymentMode: paymentMode);
+    await _openAffiliateBillsSheet(
+      enrollment: enrollment,
+      paymentMode: paymentMode,
+    );
   }
 
   Future<void> _openAffiliateBillsSheet({
@@ -769,8 +808,11 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
     }
 
     var selectedBillId = _preferredBillId(query.bills);
-    var selectedAccountNumber = _selectedSourceAccountNumber ??
-        (_viewModel.accounts.isNotEmpty ? _viewModel.accounts.first.accountNumber : null);
+    var selectedAccountNumber =
+        _selectedSourceAccountNumber ??
+        (_viewModel.accounts.isNotEmpty
+            ? _viewModel.accounts.first.accountNumber
+            : null);
 
     await showModalBottomSheet<void>(
       context: context,
@@ -787,7 +829,9 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
                 return Container(
                   decoration: const BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(28),
+                    ),
                   ),
                   child: SafeArea(
                     top: false,
@@ -821,7 +865,9 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
                                     const SizedBox(height: 4),
                                     Text(
                                       '${query.provider.name} · ${query.serviceCustomerCode}',
-                                      style: TextStyle(color: Colors.grey.shade700),
+                                      style: TextStyle(
+                                        color: Colors.grey.shade700,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -842,7 +888,8 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
                               if (query.bills.isEmpty)
                                 const _EmptyCard(
                                   title: 'Sin deudas pendientes',
-                                  message: 'No hay deudas disponibles para este servicio.',
+                                  message:
+                                      'No hay deudas disponibles para este servicio.',
                                 )
                               else ...[
                                 ...query.bills.map(
@@ -878,31 +925,44 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
                                         ? null
                                         : () async {
                                             final selectedBill = selectedBillId;
-                                            final accountNumber = selectedAccountNumber;
+                                            final accountNumber =
+                                                selectedAccountNumber;
                                             if (selectedBill == null) {
-                                              _showSnackBar('Selecciona una deuda');
+                                              _showSnackBar(
+                                                'Selecciona una deuda',
+                                              );
                                               return;
                                             }
-                                            if (accountNumber == null || accountNumber.isEmpty) {
-                                              _showSnackBar('Selecciona una cuenta a debitar');
+                                            if (accountNumber == null ||
+                                                accountNumber.isEmpty) {
+                                              _showSnackBar(
+                                                'Selecciona una cuenta a debitar',
+                                              );
                                               return;
                                             }
                                             await _viewModel.createPayment(
-                                              sourceAccountNumber: accountNumber,
+                                              sourceAccountNumber:
+                                                  accountNumber,
                                               providerId: query.provider.id,
-                                              serviceCustomerCode: query.serviceCustomerCode,
+                                              serviceCustomerCode:
+                                                  query.serviceCustomerCode,
                                               billId: selectedBill,
                                               enrollmentId: enrollment.id,
-                                              idempotencyKey: _generateIdempotencyKey(),
+                                              idempotencyKey:
+                                                  _generateIdempotencyKey(),
                                             );
-                                            if (mounted && _viewModel.errorMessage == null) {
+                                            if (mounted &&
+                                                _viewModel.errorMessage ==
+                                                    null) {
                                               await _closeSheetAndShowPaymentDetail();
                                             }
                                           },
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: const Color(0xFF2E7D32),
                                       foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 16,
+                                      ),
                                       minimumSize: const Size.fromHeight(54),
                                     ),
                                     icon: _viewModel.creatingPayment
@@ -915,7 +975,11 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
                                             ),
                                           )
                                         : const Icon(Icons.payments_outlined),
-                                    label: Text(_viewModel.creatingPayment ? 'Procesando...' : 'Pagar'),
+                                    label: Text(
+                                      _viewModel.creatingPayment
+                                          ? 'Procesando...'
+                                          : 'Pagar',
+                                    ),
                                   ),
                                 ),
                               ],
@@ -975,7 +1039,9 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
     }
 
     return DropdownButtonFormField<String>(
-      key: ValueKey('payment-code-$providerId-${_selectedServiceCode ?? 'none'}'),
+      key: ValueKey(
+        'payment-code-$providerId-${_selectedServiceCode ?? 'none'}',
+      ),
       initialValue: _selectedServiceCode ?? codeOptions.first,
       isExpanded: true,
       decoration: InputDecoration(
@@ -987,10 +1053,7 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
         ...codeOptions.map(
           (code) => DropdownMenuItem(
             value: code,
-            child: Text(
-              code,
-              overflow: TextOverflow.ellipsis,
-            ),
+            child: Text(code, overflow: TextOverflow.ellipsis),
           ),
         ),
         const DropdownMenuItem(
@@ -1207,7 +1270,9 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: _canCreateEnrollment ? _openProviderSelectionSheet : null,
+              onPressed: _canCreateEnrollment
+                  ? _openProviderSelectionSheet
+                  : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2E7D32),
                 foregroundColor: Colors.white,
@@ -1246,14 +1311,18 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
         ),
         const SizedBox(height: 12),
         Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 DropdownButtonFormField<String>(
-                  key: ValueKey('main-provider-${_selectedProviderId ?? 'none'}'),
+                  key: ValueKey(
+                    'main-provider-${_selectedProviderId ?? 'none'}',
+                  ),
                   initialValue: _selectedProviderId,
                   isExpanded: true,
                   decoration: const InputDecoration(
@@ -1276,7 +1345,8 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
                       _selectedProviderId = value;
                       _selectedBillId = null;
                       _manualCodeController.clear();
-                      final codeOptions = _serviceCustomerCodeOptionsForProvider(value);
+                      final codeOptions =
+                          _serviceCustomerCodeOptionsForProvider(value);
                       if (codeOptions.isEmpty) {
                         _useCustomServiceCode = true;
                         _selectedServiceCode = null;
@@ -1352,7 +1422,9 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
                 final isWide = constraints.maxWidth >= 700;
                 final fields = <Widget>[
                   DropdownButtonFormField<String?>(
-                    key: ValueKey('history-provider-${_historyProviderId ?? 'all'}'),
+                    key: ValueKey(
+                      'history-provider-${_historyProviderId ?? 'all'}',
+                    ),
                     initialValue: _historyProviderId,
                     isExpanded: true,
                     decoration: const InputDecoration(
@@ -1410,49 +1482,64 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
                 return Wrap(
                   spacing: 12,
                   runSpacing: 12,
-                  children: fields
-                      .map(
-                        (field) => SizedBox(
-                          width: isWide ? (constraints.maxWidth - 12) / 2 : constraints.maxWidth,
-                          child: field,
-                        ),
-                      )
-                      .toList()
-                    ..add(
-                      SizedBox(
-                        width: isWide ? (constraints.maxWidth - 12) / 2 : constraints.maxWidth,
-                        child: Wrap(
-                          spacing: 10,
-                          runSpacing: 10,
-                          children: [
-                            SizedBox(
-                              width: isWide ? 180 : double.infinity,
-                              child: ElevatedButton.icon(
-                                onPressed: _viewModel.loadingPayments ? null : () => _reloadPaymentsHistory(),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF2E7D32),
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                ),
-                                icon: const Icon(Icons.filter_alt_outlined),
-                                label: const Text('Aplicar'),
-                              ),
+                  children:
+                      fields
+                          .map(
+                            (field) => SizedBox(
+                              width: isWide
+                                  ? (constraints.maxWidth - 12) / 2
+                                  : constraints.maxWidth,
+                              child: field,
                             ),
-                            SizedBox(
-                              width: isWide ? 180 : double.infinity,
-                              child: OutlinedButton.icon(
-                                onPressed: _viewModel.loadingPayments ? null : _clearPaymentHistoryFilters,
-                                style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                          )
+                          .toList()
+                        ..add(
+                          SizedBox(
+                            width: isWide
+                                ? (constraints.maxWidth - 12) / 2
+                                : constraints.maxWidth,
+                            child: Wrap(
+                              spacing: 10,
+                              runSpacing: 10,
+                              children: [
+                                SizedBox(
+                                  width: isWide ? 180 : double.infinity,
+                                  child: ElevatedButton.icon(
+                                    onPressed: _viewModel.loadingPayments
+                                        ? null
+                                        : () => _reloadPaymentsHistory(),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF2E7D32),
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 16,
+                                      ),
+                                    ),
+                                    icon: const Icon(Icons.filter_alt_outlined),
+                                    label: const Text('Aplicar'),
+                                  ),
                                 ),
-                                icon: const Icon(Icons.cleaning_services_outlined),
-                                label: const Text('Limpiar'),
-                              ),
+                                SizedBox(
+                                  width: isWide ? 180 : double.infinity,
+                                  child: OutlinedButton.icon(
+                                    onPressed: _viewModel.loadingPayments
+                                        ? null
+                                        : _clearPaymentHistoryFilters,
+                                    style: OutlinedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 16,
+                                      ),
+                                    ),
+                                    icon: const Icon(
+                                      Icons.cleaning_services_outlined,
+                                    ),
+                                    label: const Text('Limpiar'),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
                 );
               },
             ),
@@ -1468,7 +1555,8 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
     VoidCallback? onTap,
   }) {
     return InkWell(
-      onTap: onTap ??
+      onTap:
+          onTap ??
           () {
             setState(() {
               _selectedBillId = bill.id;
@@ -1567,9 +1655,7 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
     );
   }
 
-  Widget _buildSheetBillsResults({
-    required StateSetter setSheetState,
-  }) {
+  Widget _buildSheetBillsResults({required StateSetter setSheetState}) {
     final query = _viewModel.currentBillsQuery;
     if (_viewModel.queryingBills) {
       return const _LoadingCard(message: 'Consultando deudas...');
@@ -1586,8 +1672,11 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
     if (selectedBillId != _selectedBillId) {
       _selectedBillId = selectedBillId;
     }
-    var selectedAccountNumber = _selectedSourceAccountNumber ??
-        (_viewModel.accounts.isNotEmpty ? _viewModel.accounts.first.accountNumber : null);
+    var selectedAccountNumber =
+        _selectedSourceAccountNumber ??
+        (_viewModel.accounts.isNotEmpty
+            ? _viewModel.accounts.first.accountNumber
+            : null);
 
     return Column(
       children: [
@@ -1647,7 +1736,9 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
                       ),
                     )
                   : const Icon(Icons.payments_outlined),
-              label: Text(_viewModel.creatingPayment ? 'Procesando...' : 'Pagar'),
+              label: Text(
+                _viewModel.creatingPayment ? 'Procesando...' : 'Pagar',
+              ),
             ),
           ),
         ],
@@ -1689,7 +1780,10 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
                 ),
                 if (bills.isNotEmpty)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.green.shade50,
                       borderRadius: BorderRadius.circular(999),
@@ -1735,7 +1829,8 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
     if (_viewModel.payments.isEmpty) {
       return const _EmptyCard(
         title: 'Sin pagos registrados',
-        message: 'Los pagos de servicios aparecerán aquí cuando el tenant comience a operar.',
+        message:
+            'Los pagos de servicios aparecerán aquí cuando el tenant comience a operar.',
       );
     }
 
@@ -1763,7 +1858,9 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
                     )
                   : const Icon(Icons.expand_more),
               label: Text(
-                _viewModel.loadingMorePayments ? 'Cargando más...' : 'Cargar más',
+                _viewModel.loadingMorePayments
+                    ? 'Cargando más...'
+                    : 'Cargar más',
               ),
             ),
           ),
@@ -1777,10 +1874,14 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: payment.isCompleted ? Colors.green.shade100 : Colors.orange.shade100,
+          backgroundColor: payment.isCompleted
+              ? Colors.green.shade100
+              : Colors.orange.shade100,
           child: Icon(
             Icons.receipt_long,
-            color: payment.isCompleted ? Colors.green.shade700 : Colors.orange.shade700,
+            color: payment.isCompleted
+                ? Colors.green.shade700
+                : Colors.orange.shade700,
           ),
         ),
         title: Text(
@@ -1825,10 +1926,11 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
         final columns = constraints.maxWidth >= 720
             ? 3
             : constraints.maxWidth >= 500
-                ? 2
-                : 1;
+            ? 2
+            : 1;
         final spacing = 12.0;
-        final itemWidth = (constraints.maxWidth - ((columns - 1) * spacing)) / columns;
+        final itemWidth =
+            (constraints.maxWidth - ((columns - 1) * spacing)) / columns;
 
         return Wrap(
           spacing: spacing,
@@ -1877,15 +1979,22 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
-                    color: provider.isActive ? Colors.green.shade50 : Colors.grey.shade200,
+                    color: provider.isActive
+                        ? Colors.green.shade50
+                        : Colors.grey.shade200,
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
                     provider.displayCategory,
                     style: TextStyle(
-                      color: provider.isActive ? Colors.green.shade800 : Colors.grey.shade700,
+                      color: provider.isActive
+                          ? Colors.green.shade800
+                          : Colors.grey.shade700,
                       fontWeight: FontWeight.w700,
                       fontSize: 11,
                     ),
@@ -1902,7 +2011,9 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _canCreateEnrollment ? () => _openEnrollmentDialog(provider) : null,
+                onPressed: _canCreateEnrollment
+                    ? () => _openEnrollmentDialog(provider)
+                    : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF2E7D32),
                   foregroundColor: Colors.white,
@@ -1970,15 +2081,22 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
-                    color: enrollment.isActive ? Colors.green.shade50 : Colors.orange.shade50,
+                    color: enrollment.isActive
+                        ? Colors.green.shade50
+                        : Colors.orange.shade50,
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
                     enrollment.status,
                     style: TextStyle(
-                      color: enrollment.isActive ? Colors.green.shade800 : Colors.orange.shade800,
+                      color: enrollment.isActive
+                          ? Colors.green.shade800
+                          : Colors.orange.shade800,
                       fontWeight: FontWeight.w700,
                       fontSize: 11,
                     ),
@@ -2000,13 +2118,19 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
               children: [
                 OutlinedButton(
                   onPressed: _canQueryBills
-                      ? () => _consultBillsFromEnrollment(enrollment, paymentMode: false)
+                      ? () => _consultBillsFromEnrollment(
+                          enrollment,
+                          paymentMode: false,
+                        )
                       : null,
                   child: const Text('Consultar'),
                 ),
                 ElevatedButton(
                   onPressed: _canQueryBills
-                      ? () => _consultBillsFromEnrollment(enrollment, paymentMode: true)
+                      ? () => _consultBillsFromEnrollment(
+                          enrollment,
+                          paymentMode: true,
+                        )
                       : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2E7D32),
@@ -2016,8 +2140,12 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
                 ),
                 if (_canDeleteEnrollment)
                   TextButton(
-                    onPressed: _viewModel.deletingEnrollment ? null : () => _deleteEnrollment(enrollment),
-                    style: TextButton.styleFrom(foregroundColor: Colors.red.shade700),
+                    onPressed: _viewModel.deletingEnrollment
+                        ? null
+                        : () => _deleteEnrollment(enrollment),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.red.shade700,
+                    ),
                     child: const Text('Eliminar'),
                   ),
               ],
@@ -2028,10 +2156,7 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
     );
   }
 
-  Widget _sectionHeader({
-    required String title,
-    required String subtitle,
-  }) {
+  Widget _sectionHeader({required String title, required String subtitle}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2044,10 +2169,7 @@ class _ServicePaymentsPageState extends State<ServicePaymentsPage> {
           ),
         ),
         const SizedBox(height: 4),
-        Text(
-          subtitle,
-          style: TextStyle(color: Colors.grey.shade700),
-        ),
+        Text(subtitle, style: TextStyle(color: Colors.grey.shade700)),
       ],
     );
   }
@@ -2084,10 +2206,7 @@ class _EmptyCard extends StatelessWidget {
   final String title;
   final String message;
 
-  const _EmptyCard({
-    required this.title,
-    required this.message,
-  });
+  const _EmptyCard({required this.title, required this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -2100,16 +2219,10 @@ class _EmptyCard extends StatelessWidget {
           children: [
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
-            Text(
-              message,
-              style: TextStyle(color: Colors.grey.shade700),
-            ),
+            Text(message, style: TextStyle(color: Colors.grey.shade700)),
           ],
         ),
       ),

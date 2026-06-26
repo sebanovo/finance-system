@@ -53,6 +53,7 @@
     <!-- Para que la app se inicie con el dispositivo (recepción de notificaciones) -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <application
+        android:enableOnBackInvokedCallback="true"
         android:usesCleartextTraffic="true"
         android:label="finance_mobile"
         android:name="${applicationName}"

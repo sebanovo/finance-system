@@ -14,6 +14,8 @@ import 'package:finance_mobile/domain/repositories/transaction_repository.dart';
 import 'package:finance_mobile/domain/repositories/user_repository.dart';
 import 'package:finance_mobile/domain/repositories/service_payments_repository.dart';
 import 'package:finance_mobile/domain/repositories/backups_repository.dart';
+import 'package:finance_mobile/domain/repositories/fx_repository.dart';
+import 'package:finance_mobile/domain/repositories/accounting_repository.dart';
 import 'package:finance_mobile/domain/usecases/archive_notification_usecase.dart';
 import 'package:finance_mobile/domain/usecases/assign_role_usecase.dart';
 import 'package:finance_mobile/domain/usecases/change_password_usecase.dart';
@@ -39,6 +41,7 @@ import 'package:finance_mobile/domain/usecases/get_account_by_id_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_account_by_number_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_account_transactions_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_accounts_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_tenant_accounts_usecase.dart';
 import 'package:finance_mobile/domain/usecases/evaluate_limit_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_limit_rules_usecase.dart';
 import 'package:finance_mobile/domain/usecases/get_available_roles_usecase.dart';
@@ -87,6 +90,19 @@ import 'package:finance_mobile/domain/usecases/get_backups_usecase.dart';
 import 'package:finance_mobile/domain/usecases/create_backup_usecase.dart';
 import 'package:finance_mobile/domain/usecases/restore_backup_from_file_usecase.dart';
 import 'package:finance_mobile/domain/usecases/download_backup_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_fx_rates_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_fx_fees_usecase.dart';
+import 'package:finance_mobile/domain/usecases/create_fx_rate_usecase.dart';
+import 'package:finance_mobile/domain/usecases/update_fx_rate_usecase.dart';
+import 'package:finance_mobile/domain/usecases/delete_fx_rate_usecase.dart';
+import 'package:finance_mobile/domain/usecases/create_fx_fee_usecase.dart';
+import 'package:finance_mobile/domain/usecases/update_fx_fee_usecase.dart';
+import 'package:finance_mobile/domain/usecases/delete_fx_fee_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_accounting_periods_usecase.dart';
+import 'package:finance_mobile/domain/usecases/create_accounting_period_usecase.dart';
+import 'package:finance_mobile/domain/usecases/close_accounting_period_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_journal_entries_usecase.dart';
+import 'package:finance_mobile/domain/usecases/get_journal_entry_by_id_usecase.dart';
 import 'package:finance_mobile/infrastructure/datasources/account_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/loan_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/auth_remote_datasource.dart';
@@ -100,6 +116,8 @@ import 'package:finance_mobile/infrastructure/datasources/transaction_remote_dat
 import 'package:finance_mobile/infrastructure/datasources/user_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/service_payments_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/datasources/backups_remote_datasource.dart';
+import 'package:finance_mobile/infrastructure/datasources/fx_remote_datasource.dart';
+import 'package:finance_mobile/infrastructure/datasources/accounting_remote_datasource.dart';
 import 'package:finance_mobile/infrastructure/repositories/account_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/loan_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/auth_repository_impl.dart';
@@ -113,8 +131,11 @@ import 'package:finance_mobile/infrastructure/repositories/transaction_repositor
 import 'package:finance_mobile/infrastructure/repositories/user_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/service_payments_repository_impl.dart';
 import 'package:finance_mobile/infrastructure/repositories/backups_repository_impl.dart';
+import 'package:finance_mobile/infrastructure/repositories/fx_repository_impl.dart';
+import 'package:finance_mobile/infrastructure/repositories/accounting_repository_impl.dart';
 import 'package:finance_mobile/presentation/viewmodels/backups_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/accounts_viewmodel.dart';
+import 'package:finance_mobile/presentation/viewmodels/owner_loans_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/loans_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/devices_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/forgot_password_viewmodel.dart';
@@ -128,6 +149,10 @@ import 'package:finance_mobile/presentation/viewmodels/profile_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/service_payments_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/reset_password_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/activate_account_viewmodel.dart';
+import 'package:finance_mobile/presentation/viewmodels/fx_rates_viewmodel.dart';
+import 'package:finance_mobile/presentation/viewmodels/fx_fees_viewmodel.dart';
+import 'package:finance_mobile/presentation/viewmodels/accounting_periods_viewmodel.dart';
+import 'package:finance_mobile/presentation/viewmodels/journal_entries_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/roles_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/signup_viewmodel.dart';
 import 'package:finance_mobile/presentation/viewmodels/transactions_viewmodel.dart';
@@ -152,6 +177,8 @@ Future<void> init() async {
   initLoansModule();
   initTransactionModule();
   initServicePaymentsModule();
+  initFxModule();
+  initAccountingModule();
   initBackupsModule();
   initNotifationsModule();
   initDevicesNotifications();
@@ -324,6 +351,7 @@ void initAccountsModule() {
     () => AccountRepositoryImpl(sl()),
   );
   sl.registerLazySingleton(() => GetAccountsUseCase(sl()));
+  sl.registerLazySingleton(() => GetTenantAccountsUseCase(sl()));
   sl.registerLazySingleton(() => GetAccountByIdUseCase(sl()));
   sl.registerLazySingleton(() => GetAccountByNumberUseCase(sl()));
   sl.registerLazySingleton(() => GetAccountBalanceUseCase(sl()));
@@ -354,6 +382,13 @@ void initLoansModule() {
     () => LoansViewModel(
       loanRepository: sl(),
       getAccountsUseCase: sl(),
+    ),
+  );
+  sl.registerFactory(
+    () => OwnerLoansViewModel(
+      loanRepository: sl(),
+      getUsersUseCase: sl(),
+      getTenantAccountsUseCase: sl(),
     ),
   );
 }
@@ -424,6 +459,67 @@ void initServicePaymentsModule() {
       getServicePaymentsUseCase: sl(),
       getServicePaymentUseCase: sl(),
       getAccountsUseCase: sl(),
+    ),
+  );
+}
+
+void initFxModule() {
+  sl.registerLazySingleton<FxRemoteDataSource>(() => FxRemoteDataSourceImpl(sl()));
+  sl.registerLazySingleton<FxRepository>(() => FxRepositoryImpl(sl()));
+
+  sl.registerLazySingleton(() => GetFxRatesUseCase(sl()));
+  sl.registerLazySingleton(() => CreateFxRateUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateFxRateUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteFxRateUseCase(sl()));
+
+  sl.registerLazySingleton(() => GetFxFeesUseCase(sl()));
+  sl.registerLazySingleton(() => CreateFxFeeUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateFxFeeUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteFxFeeUseCase(sl()));
+
+  sl.registerFactory(
+    () => FxRatesViewModel(
+      getFxRatesUseCase: sl(),
+      createFxRateUseCase: sl(),
+      updateFxRateUseCase: sl(),
+      deleteFxRateUseCase: sl(),
+    ),
+  );
+  sl.registerFactory(
+    () => FxFeesViewModel(
+      getFxFeesUseCase: sl(),
+      createFxFeeUseCase: sl(),
+      updateFxFeeUseCase: sl(),
+      deleteFxFeeUseCase: sl(),
+    ),
+  );
+}
+
+void initAccountingModule() {
+  sl.registerLazySingleton<AccountingRemoteDataSource>(
+    () => AccountingRemoteDataSourceImpl(sl()),
+  );
+  sl.registerLazySingleton<AccountingRepository>(
+    () => AccountingRepositoryImpl(sl()),
+  );
+
+  sl.registerLazySingleton(() => GetAccountingPeriodsUseCase(sl()));
+  sl.registerLazySingleton(() => CreateAccountingPeriodUseCase(sl()));
+  sl.registerLazySingleton(() => CloseAccountingPeriodUseCase(sl()));
+  sl.registerLazySingleton(() => GetJournalEntriesUseCase(sl()));
+  sl.registerLazySingleton(() => GetJournalEntryByIdUseCase(sl()));
+
+  sl.registerFactory(
+    () => AccountingPeriodsViewModel(
+      getAccountingPeriodsUseCase: sl(),
+      createAccountingPeriodUseCase: sl(),
+      closeAccountingPeriodUseCase: sl(),
+    ),
+  );
+  sl.registerFactory(
+    () => JournalEntriesViewModel(
+      getJournalEntriesUseCase: sl(),
+      getJournalEntryByIdUseCase: sl(),
     ),
   );
 }

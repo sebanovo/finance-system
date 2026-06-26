@@ -7,6 +7,7 @@ import '../models/create_account_request.dart';
 
 abstract class AccountRemoteDataSource {
   Future<List<AccountModel>> getAccounts();
+  Future<List<AccountModel>> getTenantAccounts();
   Future<AccountModel> getAccountById(String accountId);
   Future<AccountLookupModel> getAccountByNumber(String accountNumber);
   Future<AccountBalanceModel> getAccountBalance(String accountId);
@@ -20,6 +21,17 @@ class AccountRemoteDataSourceImpl implements AccountRemoteDataSource {
 
   AccountRemoteDataSourceImpl(this.apiClient);
 
+  List<AccountModel> _parseAccounts(dynamic data) {
+    final payload = data is Map<String, dynamic> ? data['data'] : data;
+    final list = payload is Map<String, dynamic>
+        ? (payload['content'] as List<dynamic>? ?? const [])
+        : (payload as List<dynamic>? ?? const []);
+    return list
+        .whereType<Map<String, dynamic>>()
+        .map((json) => AccountModel.fromJson(json))
+        .toList();
+  }
+
   @override
   Future<List<AccountModel>> getAccounts() async {
     final response = await apiClient.get('/api/me/accounts');
@@ -28,6 +40,23 @@ class AccountRemoteDataSourceImpl implements AccountRemoteDataSource {
       if (data['success'] == true) {
         final list = data['data'] as List<dynamic>? ?? [];
         return list.map((json) => AccountModel.fromJson(json)).toList();
+      } else {
+        throw Exception(data['message'] ?? 'Error al obtener cuentas');
+      }
+    } else if (response.statusCode == 401) {
+      throw Exception('Sesión expirada');
+    } else {
+      throw Exception('Error ${response.statusCode}');
+    }
+  }
+
+  @override
+  Future<List<AccountModel>> getTenantAccounts() async {
+    final response = await apiClient.get('/api/accounts');
+    if (response.statusCode == 200) {
+      final data = response.data as Map<String, dynamic>;
+      if (data['success'] == true) {
+        return _parseAccounts(data);
       } else {
         throw Exception(data['message'] ?? 'Error al obtener cuentas');
       }

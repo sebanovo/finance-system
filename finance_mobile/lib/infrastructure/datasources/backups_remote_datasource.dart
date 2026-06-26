@@ -61,7 +61,10 @@ class BackupsRemoteDataSourceImpl implements BackupsRemoteDataSource {
       if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
     });
 
-    final response = await apiClient.post('/api/backups/restore/upload', formData);
+    final response = await apiClient.post(
+      '/api/backups/restore/upload',
+      formData,
+    );
     return _parseSingleResponse(
       response,
       (json) => BackupRecordModel.fromJson(json),
@@ -81,7 +84,9 @@ class BackupsRemoteDataSourceImpl implements BackupsRemoteDataSource {
     }
 
     if (response.statusCode == 200 && response.data is List) {
-      return Uint8List.fromList((response.data as List).whereType<int>().toList());
+      return Uint8List.fromList(
+        (response.data as List).whereType<int>().toList(),
+      );
     }
 
     if (response.statusCode == 200 && response.data is Uint8List) {
@@ -132,11 +137,5 @@ class BackupsRemoteDataSourceImpl implements BackupsRemoteDataSource {
     }
     final body = asMap(response.data);
     throw Exception(body?['message'] ?? fallbackMessage);
-  }
-
-  int _asInt(dynamic value) {
-    if (value is int) return value;
-    if (value is num) return value.toInt();
-    return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 }

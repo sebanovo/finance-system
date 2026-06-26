@@ -43,6 +43,31 @@ class MainDrawer extends StatelessWidget {
                 onTap: () => context.push('/users'),
               ),
               _buildDrawerItem(
+                icon: Icons.currency_exchange,
+                title: 'Tipos de cambio',
+                onTap: () => context.push('/fx/rates'),
+              ),
+              _buildDrawerItem(
+                icon: Icons.event_note,
+                title: 'Períodos contables',
+                onTap: () => context.push('/accounting/periods'),
+              ),
+              _buildDrawerItem(
+                icon: Icons.receipt_long,
+                title: 'Asientos contables',
+                onTap: () => context.push('/accounting/journal-entries'),
+              ),
+              _buildDrawerItem(
+                icon: Icons.percent,
+                title: 'Comisiones',
+                onTap: () => context.push('/fx/fees'),
+              ),
+              _buildDrawerItem(
+                icon: Icons.account_balance,
+                title: 'Préstamos',
+                onTap: () => context.push('/loans'),
+              ),
+              _buildDrawerItem(
                 icon: Icons.receipt_long,
                 title: 'Pagos de servicios',
                 onTap: () => context.push('/service-payments'),
@@ -75,6 +100,11 @@ class MainDrawer extends StatelessWidget {
                   title: 'Movimientos',
                   onTap: () => context.push('/transactions'),
                 ),
+              _buildDrawerItem(
+                icon: Icons.account_balance,
+                title: 'Préstamos',
+                onTap: () => context.push('/loans'),
+              ),
               if (_hasClientPermissionPrefix('me.service-'))
                 _buildDrawerItem(
                   icon: Icons.receipt_long,
@@ -118,7 +148,7 @@ class MainDrawer extends StatelessWidget {
               onTap: onLogout,
               isDestructive: true,
             ),
-            if (viewModel.isClient)
+            if (viewModel.shouldAutoRegisterDevice)
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: ElevatedButton(
@@ -176,7 +206,10 @@ class MainDrawer extends StatelessWidget {
           child: photoImage == null
               ? Text(
                   viewModel.userInfo!.initial,
-                  style: const TextStyle(fontSize: 24, color: Color(0xFF2E7D32)),
+                  style: const TextStyle(
+                    fontSize: 24,
+                    color: Color(0xFF2E7D32),
+                  ),
                 )
               : null,
         ),
