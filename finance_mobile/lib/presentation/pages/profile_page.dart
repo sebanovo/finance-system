@@ -38,9 +38,9 @@ class _ProfilePageState extends State<ProfilePage> {
   void _onChanged() {
     if (!mounted) return;
     if (_viewModel.errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_viewModel.errorMessage!)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_viewModel.errorMessage!)));
       _viewModel.clearError();
     }
     final profile = _viewModel.profile;
@@ -69,14 +69,15 @@ class _ProfilePageState extends State<ProfilePage> {
       if (picked == null || !mounted) return;
       setState(() {
         _selectedPhoto = picked;
-        _selectedPhotoLabel =
-            source == ImageSource.camera ? 'Foto capturada' : 'Foto seleccionada';
+        _selectedPhotoLabel = source == ImageSource.camera
+            ? 'Foto capturada'
+            : 'Foto seleccionada';
       });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo obtener la foto: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('No se pudo obtener la foto: $e')));
     }
   }
 
@@ -282,7 +283,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         children: [
                           Expanded(
                             child: ElevatedButton.icon(
-                              onPressed: _viewModel.saving ? null : _saveProfile,
+                              onPressed: _viewModel.saving
+                                  ? null
+                                  : _saveProfile,
                               icon: _viewModel.saving
                                   ? const SizedBox(
                                       height: 18,
@@ -302,8 +305,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           const SizedBox(width: 12),
                           OutlinedButton.icon(
-                            onPressed:
-                                _viewModel.saving ? null : _removePhoto,
+                            onPressed: _viewModel.saving ? null : _removePhoto,
                             icon: const Icon(Icons.delete_outline),
                             label: const Text('Quitar foto'),
                           ),
@@ -361,7 +363,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 child: const Padding(
                   padding: EdgeInsets.all(20),
-                  child: Text('No pudimos cargar tu perfil. Intenta refrescar.'),
+                  child: Text(
+                    'No pudimos cargar tu perfil. Intenta refrescar.',
+                  ),
                 ),
               ),
           ],
@@ -379,8 +383,8 @@ class _ProfilePageState extends State<ProfilePage> {
     final ImageProvider? imageProvider = _selectedPhoto != null
         ? FileImage(File(_selectedPhoto!.path))
         : remoteUrl.isNotEmpty
-            ? NetworkImage(remoteUrl)
-            : null;
+        ? NetworkImage(remoteUrl)
+        : null;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -492,10 +496,12 @@ class _ProfilePhotoPreview extends StatelessWidget {
               left: 12,
               bottom: 12,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.55),
+                  color: Colors.black.withValues(alpha: 0.55),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(

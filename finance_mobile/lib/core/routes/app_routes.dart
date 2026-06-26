@@ -82,6 +82,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/signup', builder: (context, _) => const SignupPage()),
     GoRoute(path: '/home', builder: (context, _) => const HomePage()),
     GoRoute(
+      path: '/dashboard/summary',
+      builder: (context, _) => const HomePage(),
+    ),
+    GoRoute(
       path: '/forgot-password',
       builder: (context, _) => const ForgotPasswordPage(),
     ),
@@ -257,6 +261,7 @@ const Set<String> _ownerOnlyRoutes = {
   '/accounting/journal-entries',
   '/fx/rates',
   '/fx/fees',
+  '/dashboard/summary',
 };
 
 String _initialLocation() {

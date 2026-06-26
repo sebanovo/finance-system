@@ -1,10 +1,7 @@
 import 'dart:async';
-import 'dart:typed_data';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/di/injection_container.dart' as di;
 import '../../core/utils/backup_file_saver.dart';
@@ -585,12 +582,12 @@ class _BackupsPageState extends State<BackupsPage> {
                                 decoration: BoxDecoration(
                                   color: _statusColor(
                                     backup.status,
-                                  ).withOpacity(0.10),
+                                  ).withValues(alpha: 0.10),
                                   borderRadius: BorderRadius.circular(999),
                                   border: Border.all(
                                     color: _statusColor(
                                       backup.status,
-                                    ).withOpacity(0.25),
+                                    ).withValues(alpha: 0.25),
                                   ),
                                 ),
                                 child: Text(

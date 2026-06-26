@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../core/network/api_client.dart';
 import '../../../domain/entities/customer_dashboard.dart';
+import '../../../domain/entities/tenant_summary.dart';
 import '../../../domain/usecases/get_subscription_usecase.dart';
 import '../../../domain/usecases/get_customer_dashboard_usecase.dart';
+import '../../../domain/usecases/get_tenant_summary_usecase.dart';
 import '../../../domain/usecases/get_user_info_usecase.dart';
 import '../../../domain/usecases/change_password_usecase.dart';
 import '../../../domain/usecases/logout_usecase.dart';
@@ -12,12 +14,14 @@ import '../../../../domain/entities/user_info.dart';
 class HomeViewModel extends ChangeNotifier {
   final GetSubscriptionUseCase getSubscriptionUseCase;
   final GetCustomerDashboardUseCase getCustomerDashboardUseCase;
+  final GetTenantSummaryUseCase getTenantSummaryUseCase;
   final GetUserInfoUseCase getUserInfoUseCase;
   final ChangePasswordUseCase changePasswordUseCase;
   final LogoutUseCase logoutUseCase;
   final ApiClient apiClient;
 
   CustomerDashboard? _customerDashboard;
+  TenantSummary? _tenantSummary;
   Subscription? _subscription;
   UserInfo? _userInfo;
   bool _loadingDashboard = true;
@@ -29,6 +33,7 @@ class HomeViewModel extends ChangeNotifier {
   HomeViewModel({
     required this.getSubscriptionUseCase,
     required this.getCustomerDashboardUseCase,
+    required this.getTenantSummaryUseCase,
     required this.getUserInfoUseCase,
     required this.changePasswordUseCase,
     required this.logoutUseCase,
@@ -37,6 +42,7 @@ class HomeViewModel extends ChangeNotifier {
 
   // Getters
   CustomerDashboard? get customerDashboard => _customerDashboard;
+  TenantSummary? get tenantSummary => _tenantSummary;
   Subscription? get subscription => _subscription;
   UserInfo? get userInfo => _userInfo;
   bool get loadingDashboard => _loadingDashboard;
@@ -60,14 +66,26 @@ class HomeViewModel extends ChangeNotifier {
     await Future.wait([
       loadSubscription(),
       loadUserInfo(),
-      if (isClient) loadCustomerDashboard() else Future<void>.value(),
     ]);
-    if (!isClient) {
+
+    if (isOwnerAdmin) {
+      await loadTenantSummary();
       _customerDashboard = null;
-      _loadingDashboard = false;
-      _dashboardErrorMessage = null;
       notifyListeners();
+      return;
     }
+
+    if (isClient) {
+      await loadCustomerDashboard();
+      _tenantSummary = null;
+      return;
+    }
+
+    _customerDashboard = null;
+    _tenantSummary = null;
+    _loadingDashboard = false;
+    _dashboardErrorMessage = null;
+    notifyListeners();
   }
 
   Future<void> loadCustomerDashboard() async {
@@ -79,6 +97,21 @@ class HomeViewModel extends ChangeNotifier {
     } catch (e) {
       _dashboardErrorMessage = e.toString();
       _customerDashboard = null;
+    } finally {
+      _loadingDashboard = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadTenantSummary() async {
+    _loadingDashboard = true;
+    notifyListeners();
+    try {
+      _tenantSummary = await getTenantSummaryUseCase();
+      _dashboardErrorMessage = null;
+    } catch (e) {
+      _dashboardErrorMessage = e.toString();
+      _tenantSummary = null;
     } finally {
       _loadingDashboard = false;
       notifyListeners();
