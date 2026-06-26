@@ -90,7 +90,7 @@ public class SendAccountActivationNotificationUseCase {
             String intro,
             String footerText
     ) {
-        String logoUrl = joinBaseUrl(appMailProperties.getPublicBaseUrl(), "/assets/logo.png");
+        String logoUrl = joinBaseUrl(appMailProperties.getPublicBaseUrl(), "/logo.png");
         return """
                 <!doctype html>
                 <html lang="es">
