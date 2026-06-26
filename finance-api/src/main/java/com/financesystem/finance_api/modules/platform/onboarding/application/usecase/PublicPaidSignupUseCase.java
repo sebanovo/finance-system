@@ -86,6 +86,7 @@ public class PublicPaidSignupUseCase {
 
         tenantOwnerAdminProvisioningService.provisionOwnerAdmin(
                 createdTenant.schemaName(),
+                createdTenant.slug(),
                 request.adminEmail().trim().toLowerCase(),
                 request.password(),
                 normalizeName(request.firstName()),

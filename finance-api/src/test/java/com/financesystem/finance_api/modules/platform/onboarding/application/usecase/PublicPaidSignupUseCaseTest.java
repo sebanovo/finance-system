@@ -212,6 +212,7 @@ class PublicPaidSignupUseCaseTest {
         assertEquals("OPEN", response.checkoutStatus());
         verify(tenantOwnerAdminProvisioningService).provisionOwnerAdmin(
                 "tenant_financruz",
+                "financruz",
                 "admin@financruz.com",
                 "Password123!",
                 "Carlos",
